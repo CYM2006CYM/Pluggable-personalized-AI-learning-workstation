@@ -1,0 +1,151 @@
+import { describe, expect, it, vi } from "vitest";
+import { GraphRegistry } from "../src/registry.js";
+import type { Edge, Entry, Graph, Node } from "../src/type.js";
+import { END } from "../src/type.js";
+
+function fakePi() {
+  return {
+    registerTool: vi.fn(),
+    registerCommand: vi.fn(),
+  } as any;
+}
+
+function minimalGraph(name = "graph_cmd"): Graph {
+  const node: Node = {
+    kind: "code",
+    id: "start",
+    subGoal: "测试节点",
+    async execute() {
+      return { nodeId: "start", status: "ok", result: {} };
+    },
+  };
+
+  const entry: Entry = {
+    id: "main",
+    guard: () => true,
+    startNodeId: "start",
+  };
+
+  const edge: Edge = {
+    id: "done",
+    from: "start",
+    to: END,
+    priority: 10,
+    guard: () => true,
+    migrate(_instance, completion) {
+      return {
+        frame: {
+          nodeId: completion.nodeId,
+          status: completion.status,
+          summary: "完成",
+          result: completion.result,
+        },
+      };
+    },
+  };
+
+  return {
+    id: `graph_${name}`,
+    goal: "测试图",
+    invocation: {
+      name,
+      description: "测试命令",
+      inputSchema: { type: "object", properties: {} },
+      parseArgs: (args) => ({ parsed: args.trim(), via: "parseArgs" }),
+    },
+    entries: [entry],
+    nodes: { start: node },
+    routing: {
+      start: { nodeId: "start", edges: [edge], router: { kind: "first-match" } },
+    },
+  };
+}
+
+describe("GraphRegistry", () => {
+  it("parses command args before executing a graph", async () => {
+    const pi = fakePi();
+    const graph = minimalGraph("review_turn");
+    const executeGraph = vi.fn().mockResolvedValue({
+      graphId: graph.id,
+      status: "ok",
+      result: {},
+      steps: 1,
+    });
+    const registry = new GraphRegistry(pi, { invoke: executeGraph });
+
+    registry.registerGraph(graph);
+
+    const commandOptions = pi.registerCommand.mock.calls[0][1];
+    await commandOptions.handler("  algebra  ", {
+      ui: { notify: vi.fn() },
+    });
+
+    expect(executeGraph).toHaveBeenCalledWith(
+      graph,
+      expect.objectContaining({
+        invocationKind: "command",
+        boundary: "delegate",
+        background: { parsed: "algebra", via: "parseArgs" },
+      }),
+      expect.anything(),
+    );
+  });
+
+  it("executes graph tools without relying on dynamic this binding", async () => {
+    const pi = fakePi();
+    const graph = minimalGraph("review_tool");
+    const graphResult = {
+      graphId: graph.id,
+      status: "ok" as const,
+      result: { subject: "math" },
+      steps: 1,
+    };
+    const executeGraph = vi.fn().mockResolvedValue(graphResult);
+    const registry = new GraphRegistry(pi, { invoke: executeGraph });
+
+    registry.registerGraph(graph);
+
+    const toolDefinition = pi.registerTool.mock.calls[0][0];
+    await expect(
+      toolDefinition.execute("tool-call-1", { subject: "math" }),
+    ).resolves.toEqual({
+      content: [{ type: "text", text: JSON.stringify(graphResult) }],
+      details: graphResult,
+    });
+
+    expect(executeGraph).toHaveBeenCalledWith(
+      graph,
+      expect.objectContaining({
+        invocationKind: "tool",
+        boundary: "delegate",
+        background: { subject: "math" },
+      }),
+      undefined,
+    );
+  });
+
+  it("graph tool 支持 formatToolResult，且 invocation formatter 优先于全局配置", async () => {
+    const pi = fakePi();
+    const graph = minimalGraph("formatted_tool");
+    graph.invocation!.formatToolResult = (result) => `LOCAL:${result.status}:${result.steps}`;
+    const graphResult = {
+      graphId: graph.id,
+      status: "ok" as const,
+      result: { hidden: "details-only" },
+      steps: 3,
+    };
+    const registry = new GraphRegistry(pi, {
+      invoke: vi.fn().mockResolvedValue(graphResult),
+    }, {
+      formatToolResult: () => "GLOBAL",
+      toolResultMaxBytes: 64,
+    });
+
+    registry.registerGraph(graph);
+    const tool = pi.registerTool.mock.calls[0][0];
+    const output = await tool.execute("call", {});
+
+    expect(output.content).toEqual([{ type: "text", text: "LOCAL:ok:3" }]);
+    expect(output.details).toBe(graphResult);
+  });
+});

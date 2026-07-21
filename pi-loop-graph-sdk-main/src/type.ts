@@ -1,0 +1,723 @@
+// ============================================================
+//  Loop Graph SDK — 核心类型定义
+// ============================================================
+//
+//  栈式子图编排
+
+import type {
+  ExtensionAPI,
+  ToolCallEvent,
+  ToolResultEvent,
+  TurnEndEvent,
+  TurnStartEvent,
+} from "@earendil-works/pi-coding-agent";
+//
+//    AgentInstance 持有一个有序逻辑帧栈（frames），节点离开时由边折叠；
+//    compose 以有界 frame segment 实现结构化生长与归约。
+//
+//    子图调用是一等公民：Node 可以引用另一个 Graph 作为其实现。
+//    graph node 缺省使用 call：Runtime 为子图创建新的 AgentInstance；
+//    compose 已可执行；delegate 保留在类型协议中，待独立 host 接线。
+//
+// ============================================================
+
+// ── 终止标记 ──
+
+/**
+ * 图的终止标记，也是图的「返回」出口。
+ *
+ * 当一条边的 to 指向 END，Runtime 弹出当前图的栈帧，
+ * 并将该边 migrate 产出的 output 作为本图的返回值：
+ *   · 子图调用   → 成为父图 kind="graph" 节点的 NodeCompletion.result
+ *   · tool 调用  → 成为返回给 agent 的工具结果
+ *   · 顶层调用   → 成为整次运行的最终产出
+ *
+ * 向后兼容：未声明 output 时依次回退到 frame.status/result、completion。
+ *
+ * END 边的 migrate 承担双重身份——既自由定义最后一层工作记忆，
+ * 又通过 output 声明「这张图对外交付什么」。
+ */
+export const END = Symbol("graph.end");
+
+// ── 节点完成信号 ──
+
+/**
+ * 节点执行完毕的原始产出。
+ */
+export interface NodeCompletion {
+  nodeId: string;
+  status: "ok" | "failed" | "cancelled";
+  result: Record<string, unknown>;
+  /** Runtime 生成的可信验收结果；与 AI 自报 result 严格分离。 */
+  verifiedResult?: Readonly<{
+    checks: readonly MechanismVerifiedResultEntry[];
+  }>;
+}
+
+// ── 栈帧 ──
+
+/**
+ * 栈中的一层。内容完全由开发者定义；SDK 控制元数据不进入该对象，也不
+ * 默认向 LLM 添加 nodeId/status 等内部概念。兼容字段全部可选。
+ */
+export interface ContextFrame extends Record<string, unknown> {
+  /** @deprecated 兼容字段；SDK 不再要求或特殊投影这些字段。 */
+  nodeId?: string;
+  /** @deprecated 兼容字段；图控制状态来自 NodeCompletion。 */
+  status?: "ok" | "failed" | "cancelled";
+  /** @deprecated 兼容字段；开发者可使用任意上下文结构。 */
+  summary?: string;
+  /** @deprecated END 返回值兼容通道；新代码优先使用 MigrationResult.output。 */
+  result?: Record<string, unknown>;
+}
+
+// ── 图调用协议 ──
+
+/** 图调用来源。只记录谁触发了运行，不决定上下文共享语义。 */
+export type GraphInvocationKind = "command" | "tool" | "graph-node" | "api";
+
+/** 图调用边界。来源和边界是两个正交维度。 */
+export type GraphInvocationBoundary = "compose" | "call" | "delegate";
+
+/** 一次图运行的稳定业务返回；frames/trace 不属于普通返回。 */
+export interface GraphRunResult {
+  graphId: string;
+  status: "ok" | "failed" | "cancelled";
+  result: Record<string, unknown>;
+  steps: number;
+}
+
+/** 一次图运行的显式请求。 */
+export interface GraphRunRequest {
+  background: Record<string, unknown>;
+  invocationKind: GraphInvocationKind;
+  boundary: GraphInvocationBoundary;
+  signal?: AbortSignal;
+}
+
+/** compose fold 接收的帧段只读快照与子图最终结果。 */
+export interface ComposeFoldInput {
+  segment: readonly ContextFrame[];
+  finalResult: GraphRunResult;
+}
+
+/** fold 不能伪造父 graph node 的 nodeId，该身份由 Runtime 补齐。 */
+export type ComposeFoldResult = Pick<NodeCompletion, "status" | "result">;
+
+export type ComposeFrameFolder = (input: ComposeFoldInput) => ComposeFoldResult;
+
+// ── Agent 实例 ──
+
+/**
+ * 回路图中的活动主体，持有一个有序帧栈。
+ *
+ *   background  — 进入当前图时的背景上下文（不变）
+ *   frames      — 模型可见的有序逻辑工作栈；普通 call 当前只由 Edge.migrate 追加
+ *   mechanisms  — 全局横切机制，跨节点持续生效
+ *   scratch     — mechanism 的唯一合法可变区（见下）
+ *
+ * 阶段性业务状态不挂在 AgentInstance 上。节点只能从 background 和 frames
+ * 读取已经显式进入历史的上下文。
+ *
+ * scratch 的契约：
+ *   1. 只有 Mechanism.apply 可写 scratch。execute 可读，不应写——
+ *      scratch 是代码侧横切通道，不应绕过 Edge/frame 做跨节点业务状态迁移
+ *   2. scratch 不进 agent 上下文。projection 永不渲染它，
+ *      它与 input 同侧（代码侧横切状态）。
+ *   3. scratch 随 AgentInstance 生命周期。子图新实例 = 新 scratch，
+ *      与 frames 隔离契约一致。
+ *   4. 跨节点的业务状态迁移仍走 Edge/frame，不走 scratch。scratch 只承载
+ *      横切基础设施的工作状态（计时器起点、重试计数等），不是业务迁移通道。
+ */
+export interface AgentInstance {
+  id: string;
+  globalGoal: string;
+  background: Record<string, unknown>;
+  frames: ContextFrame[];
+  mechanisms: Mechanism[];
+  scratch: Record<string, unknown>;
+}
+
+// ── 节点输入与执行能力 ──
+
+/**
+ * 当前节点的一次性入参。
+ *
+ * Entry 为第一个节点构造 input；Edge.migrate 为后继节点构造 input。
+ * input 不属于 AgentInstance 的持久状态，节点若希望后续阶段可见某些信息，
+ * 必须在完成信号中产出，并由 Edge 折叠进 ContextFrame。
+ */
+export interface NodeInput {
+  data: Record<string, unknown>;
+  source:
+    | { kind: "entry"; entryId: string }
+    | { kind: "edge"; edgeId: string; fromNodeId: string };
+}
+
+/**
+ * 节点执行所需的运行时能力。
+ *
+ * 这里保持框架级抽象，不绑定 pi 的具体 AgentSession 实现。
+ * pi extension 适配层负责把 runAgent/callTool 映射到真实会话、工具和 UI。
+ */
+export interface NodeContext {
+  signal: AbortSignal;
+  runAgent(request: AgentRunRequest): Promise<NodeCompletion>;
+  callTool(name: string, input: Record<string, unknown>): Promise<unknown>;
+}
+
+export interface AgentRunRequest {
+  prompt: string;
+  /** @deprecated 工具集由 Node.tools 统一声明。此字段不再生效。 */
+  tools?: string[];
+  skill?: string;
+  /** 单次 Agent Run 的模型可见输出契约，同时作为 Runtime validator 的唯一来源。 */
+  outputSchema?: JsonSchema;
+  /** 可选：验证 __graph_complete__ 的 result 是否满足节点要求。
+   *  不通过 → 当前工具结果立即返回拒绝原因，agent 可修正后再次提交。 */
+  validateCompletion?: (
+    result: Record<string, unknown>,
+  ) => CompletionValidationResult | Promise<CompletionValidationResult>;
+}
+
+export type JsonSchema = Readonly<Record<string, unknown>>;
+
+/** Agent 对 __graph_complete__ 的一次候选提交；通过检查前不等于 NodeCompletion。 */
+export interface CompletionSubmission {
+  reportedStatus: "ok" | "failed" | "cancelled";
+  result: Record<string, unknown>;
+}
+
+export type CompletionValidationStage =
+  | "outputSchema"
+  | "agent-run"
+  | "node"
+  | "mechanism"
+  | "agent-choice";
+
+export type CompletionSubmissionDecision =
+  | {
+      readonly decision: "accepted";
+      readonly completionStatus: NodeCompletion["status"];
+      readonly validation: "passed" | "skipped";
+      readonly schemaFingerprint?: string;
+    }
+  | {
+      readonly decision: "rejected";
+      readonly reason: string;
+      readonly validatorStage?: CompletionValidationStage;
+      readonly schemaFingerprint?: string;
+    }
+  | {
+      readonly decision: "failed";
+      readonly scope: "node" | "graph";
+      readonly reason: string;
+      readonly validatorStage?: CompletionValidationStage;
+      readonly schemaFingerprint?: string;
+    };
+
+export type CompletionValidationResult =
+  | { isValid: true }
+  | { isValid: false; reason: string };
+
+
+
+// ── 节点 ──
+
+/**
+ * 可运行工作阶段。
+ *
+ * 普通节点（kind: "code"）和复合节点（kind: "graph"）互斥：
+ *   code  → 提供 execute
+ *   graph → 提供 graph（子图调用），execute 由 Runtime 自动委托给子图
+ *
+ * code 节点的执行配置声明在 Node 自身：
+ *   - subGoal     本阶段的子目标（特殊的"构造函数"机制，必须存在）
+ *   - skill       关联的 skill 名称。节点进入时，对应 SKILL.md 的完整内容
+ *                 通过 sendUserMessage 追加到消息流中（不动 system prompt），
+ *                 辅助 agent 完成本阶段任务。
+ *   - tools       本阶段工具白名单
+ *   - mechanisms  局部横切机制，叠加在全局机制之上
+ *
+ * graph 节点声明被调用图及调用边界。缺省 call 创建新的 AgentInstance：
+ *   - globalGoal 来自子图 Graph.goal
+ *   - background 来自调用点传入的 NodeInput.data
+ *   - frames 从空数组开始，父图 frames 对子图不可见
+ *   - 子图 END 后归约为父图 graph 节点的一次 NodeCompletion
+ *     （即子图 END 边的 frame.result 成为该节点的 NodeCompletion.result）
+ *
+ * compose 在父 Instance 上建立临时帧段，退出时必须归约为当前 graph node 的
+ * completion；delegate 需要独立 GraphExecutionHost，未配置 createDelegateHost
+ * 时会在校验阶段明确拒绝，绝不静默按 call 执行。fold 只对 compose 合法。
+ */
+export type Node =
+  | {
+      kind: "code";
+      id: string;
+      subGoal: string;
+      skill?: string;
+      tools?: string[];
+      mechanisms?: Mechanism[];
+      execute(
+        instance: AgentInstance,
+        input: NodeInput,
+        ctx: NodeContext,
+      ): Promise<NodeCompletion>;
+      /** 可选：验证 __graph_complete__ 的 result。不通过则驳回让 agent 重试 */
+      validateCompletion?: AgentRunRequest["validateCompletion"];
+    }
+  | {
+      kind: "graph";
+      id: string;
+      subGoal: string;
+      graph: Graph;
+      /** 图调用边界。缺省 `call`，保持当前子图隔离语义。 */
+      boundary?: GraphInvocationBoundary;
+      /** compose 边界的帧段归约策略。非 compose 边界上配置 fold 在校验期报错。 */
+      fold?: ComposeFrameFolder;
+    };
+
+// ── 机制 ──
+
+/**
+ * Mechanism 运行时上下文。onNodeEnter 通过它拿到 pi、节点、入参与实例状态，
+ * 并可通过与当前 NodeScope 绑定的安全能力追加上下文和注册清理动作。
+ *
+ *   pi             — 全部 pi 能力（注册原生事件、改工具集、发消息等）
+ *   instance       — 当前 AgentInstance（可写 instance.scratch）
+ *   node           — 当前节点
+ *   input          — 代码侧一次性入参
+ *   scope          — 当前 mechanism invocation 的作用域、取消信号和 cleanup。
+ *   context.append — 向 agent 消息流追加文本或 SDK 内容块（append-only，不触发 turn）。
+ *   appendContext  — context.append 的兼容别名。
+ *
+ * context.append/appendContext 是 SDK 托管的安全通道：
+ *   · 仅当创建它的 NodeScope 仍为当前活动 scope 时写入；失效后返回 false。
+ *   · 遵循原则 7「追加不注入」：不改 system prompt，只在消息流侧追加。
+ * ctx.pi 保留完整 ExtensionAPI，是非托管逃生口；通过它产生的监听、消息和
+ * 后台任务不自动获得 NodeScope 隔离、取消或 cleanup 保证。
+ */
+export interface MechanismScope {
+  readonly scopeId: string;
+  readonly visit: number;
+  readonly signal: AbortSignal;
+  isActive(): boolean;
+  onCleanup(cleanup: () => void | Promise<void>): void;
+}
+
+export type MechanismEventView<T> =
+  T extends (...args: any[]) => any ? T
+    : T extends readonly (infer U)[] ? readonly MechanismEventView<U>[]
+    : T extends object ? { readonly [K in keyof T]: MechanismEventView<T[K]> }
+    : T;
+
+export type MechanismAgentRunId = number;
+
+export type MechanismToolResultEvent = MechanismEventView<ToolResultEvent> & {
+  readonly agentRunId: MechanismAgentRunId | null;
+  readonly truncated: boolean;
+};
+export type MechanismTurnStartEvent = MechanismEventView<TurnStartEvent> & {
+  readonly agentRunId: MechanismAgentRunId | null;
+};
+export type MechanismTurnEndEvent = MechanismEventView<TurnEndEvent> & {
+  readonly agentRunId: MechanismAgentRunId | null;
+};
+export type MechanismToolStartEvent = Readonly<{
+  type: "tool_execution_start";
+  toolCallId: string;
+  toolName: string;
+  args: unknown;
+  readonly agentRunId: MechanismAgentRunId;
+}>;
+export type MechanismToolCallEvent = MechanismEventView<ToolCallEvent> & {
+  readonly agentRunId: MechanismAgentRunId;
+};
+
+export interface MechanismEventSubscription {
+  readonly disposed: boolean;
+  dispose(): void;
+}
+
+export interface MechanismEvents {
+  onToolResult(
+    handler: (event: MechanismToolResultEvent) => void | Promise<void>,
+  ): MechanismEventSubscription;
+  onTurnStart(
+    handler: (event: MechanismTurnStartEvent) => void | Promise<void>,
+  ): MechanismEventSubscription;
+  onTurnEnd(
+    handler: (event: MechanismTurnEndEvent) => void | Promise<void>,
+  ): MechanismEventSubscription;
+}
+
+export interface MechanismExecRunOptions {
+  /** 默认使用 Extension 配置值；必须是正数。 */
+  timeoutMs?: number;
+  /** 默认使用受控根目录；除非 Extension 显式放行，否则不能逃出该目录。 */
+  cwd?: string;
+  /** stdout 与 stderr 各自的 UTF-8 字节上限。 */
+  maxOutputBytes?: number;
+}
+
+export interface MechanismExecResult {
+  readonly stdout: string;
+  readonly stderr: string;
+  readonly code: number;
+  readonly killed: boolean;
+  readonly stdoutTruncated: boolean;
+  readonly stderrTruncated: boolean;
+}
+
+export interface MechanismExec {
+  run(
+    command: string,
+    args?: readonly string[],
+    options?: MechanismExecRunOptions,
+  ): Promise<MechanismExecResult>;
+}
+
+export type MechanismDecisionKind =
+  | "tool-allow"
+  | "tool-deny"
+  | "tool-patch"
+  | "tool-result-keep"
+  | "tool-result-replace";
+
+export interface MechanismDecisionTraceEntry {
+  readonly timestamp: number;
+  readonly agentRunId: MechanismAgentRunId;
+  readonly mechanismName: string;
+  readonly toolName: string;
+  readonly toolCallId: string;
+  readonly decision: MechanismDecisionKind;
+  readonly reason?: string;
+}
+
+export interface MechanismDecisionLog {
+  list(): readonly MechanismDecisionTraceEntry[];
+}
+
+export interface MechanismContext<TState = Record<string, unknown>> {
+  pi: ExtensionAPI;
+  instance: AgentInstance;
+  node: Node;
+  input: NodeInput;
+  scope: MechanismScope;
+  events: MechanismEvents;
+  exec: MechanismExec;
+  decisions: MechanismDecisionLog;
+  state: TState;
+  context: MechanismContextAppender;
+  /** @deprecated 兼容别名；新代码优先使用 ctx.context.append。 */
+  appendContext(content: MechanismContextContent): boolean;
+}
+
+export type MechanismContextContentBlock =
+  | { readonly type: "text"; readonly text: string }
+  | { readonly type: "image"; readonly data: string; readonly mimeType: string };
+
+export type MechanismContextContent =
+  | string
+  | readonly MechanismContextContentBlock[];
+
+export interface MechanismContextAppender {
+  append(content: MechanismContextContent): boolean;
+}
+
+export type MechanismFailurePolicy = "continue" | "fail-node" | "fail-graph";//开发者注释:添加一个custom实现自己实现错误处理机制
+
+export interface MechanismCompletionView {
+  readonly nodeId: string;
+  readonly status: NodeCompletion["status"];
+  readonly result: Readonly<Record<string, unknown>>;
+  readonly verifiedResult?: Readonly<{
+    checks: readonly MechanismVerifiedResultEntry[];
+  }>;
+}
+
+export interface MechanismErrorView {
+  readonly name: string;
+  readonly message: string;
+  readonly stack?: string;
+}
+
+export interface MechanismExitContext<TState = Record<string, unknown>>
+  extends MechanismContext<TState> {
+  readonly completion: Readonly<MechanismCompletionView>;
+}
+
+export interface MechanismErrorContext<TState = Record<string, unknown>>
+  extends MechanismContext<TState> {
+  readonly error: Readonly<MechanismErrorView>;
+}
+
+export interface MechanismAgentRunRequestView {
+  readonly prompt: string;
+  readonly skill?: string;
+  readonly outputSchema?: JsonSchema;
+}
+
+export interface MechanismAgentRunContext<TState = Record<string, unknown>>
+  extends MechanismContext<TState> {
+  readonly agentRunId: MechanismAgentRunId;
+  readonly request: Readonly<MechanismAgentRunRequestView>;
+}
+
+export interface MechanismTurnStartContext<TState = Record<string, unknown>>
+  extends MechanismContext<TState> {
+  readonly agentRunId: MechanismAgentRunId;
+  readonly event: MechanismTurnStartEvent;
+}
+
+export interface MechanismTurnEndContext<TState = Record<string, unknown>>
+  extends MechanismContext<TState> {
+  readonly agentRunId: MechanismAgentRunId;
+  readonly event: MechanismTurnEndEvent;
+}
+
+export interface MechanismToolStartContext<TState = Record<string, unknown>>
+  extends MechanismContext<TState> {
+  readonly agentRunId: MechanismAgentRunId;
+  readonly event: MechanismToolStartEvent;
+}
+
+export interface MechanismToolResultContext<TState = Record<string, unknown>>
+  extends MechanismContext<TState> {
+  readonly agentRunId: MechanismAgentRunId;
+  readonly event: MechanismToolResultEvent;
+}
+
+export interface MechanismToolCallContext<TState = Record<string, unknown>>
+  extends MechanismContext<TState> {
+  readonly agentRunId: MechanismAgentRunId;
+  readonly event: MechanismToolCallEvent;
+}
+
+export type ToolCallDecision =
+  | { readonly action: "allow" }
+  | { readonly action: "deny"; readonly reason: string }
+  | { readonly action: "patch"; readonly input: Readonly<Record<string, unknown>> };
+
+export type ToolResultContent =
+  | { readonly type: "text"; readonly text: string }
+  | { readonly type: "image"; readonly data: string; readonly mimeType: string };
+
+export type ToolResultDecision =
+  | { readonly action: "keep" }
+  | {
+      readonly action: "replace";
+      readonly content?: readonly ToolResultContent[];
+      readonly isError?: boolean;
+    };
+
+export interface MechanismVerifiedResultEntry {
+  readonly mechanismName: string;
+  readonly result: Readonly<Record<string, unknown>>;
+}
+
+export type CompletionDecision =
+  | {
+      readonly action: "allow";
+      readonly verifiedResult?: Readonly<Record<string, unknown>>;
+    }
+  | { readonly action: "reject"; readonly reason: string }
+  | { readonly action: "fail-node"; readonly reason: string }
+  | { readonly action: "fail-graph"; readonly reason: string };
+
+export interface MechanismCompletionContext<TState = Record<string, unknown>>
+  extends MechanismContext<TState> {
+  readonly agentRunId: MechanismAgentRunId;
+  readonly completion: Readonly<MechanismCompletionView>;
+}
+
+/**
+ * 横切机制。框架在节点进入后、execute 之前自动分派 onNodeEnter。
+ *
+ * ctx.scope 提供与本次 node visit 绑定的 signal、active 检查和 LIFO cleanup。
+ * 直接使用 ctx.pi.on() 仍然允许，但 pi 没有 off，属于非托管高级用法：监听器
+ * 会持续到 Session 结束，开发者必须自行限制回调和处理副作用。
+ *
+ * 全局机制（Graph.mechanisms → AgentInstance.mechanisms）跨节点持续生效；
+ * 局部机制（Node.mechanisms）仅在本阶段叠加到全局之上。
+ *
+ * SDK 托管的产出通道：
+ *   · ctx.instance.scratch —— 代码侧横切工作状态（见 AgentInstance.scratch）
+ *   · ctx.context.append() —— 向 agent 消息流追加上下文（appendContext 为兼容别名）
+ * ctx.pi 提供完整非托管定制能力。不得直接写 frames/background，也不得依赖
+ * 闭包/模块变量传递跨节点业务状态。
+ * onNodeEnter 抛错统一记日志后继续（不中止节点）。
+ */
+export interface Mechanism<TState = Record<string, unknown>> {
+  name: string;
+  /** hook 抛错后的控制策略。默认 continue，保持向后兼容。 */
+  failurePolicy?: MechanismFailurePolicy;
+  /** 当前 AgentInstance 中按 mechanism 对象身份懒初始化一次。 */
+  createState?(): TState;
+  onNodeEnter?(ctx: MechanismContext<TState>): void | Promise<void>;
+  /** 每次 runAgent 发送 prompt 前调用；只读观察，不直接改写请求。 */
+  beforeAgentRun?(ctx: MechanismAgentRunContext<TState>): void | Promise<void>;
+  onTurnStart?(ctx: MechanismTurnStartContext<TState>): void | Promise<void>;
+  onTurnEnd?(ctx: MechanismTurnEndContext<TState>): void | Promise<void>;
+  /** 工具真正开始执行后的只读观察点。 */
+  onToolStart?(ctx: MechanismToolStartContext<TState>): void | Promise<void>;
+  /** 工具结果完成有限变换后收到只读、带预算的最终快照。 */
+  onToolResult?(ctx: MechanismToolResultContext<TState>): void | Promise<void>;
+  beforeToolCall?(ctx: MechanismToolCallContext<TState>): ToolCallDecision | void | Promise<ToolCallDecision | void>;
+  afterToolResult?(ctx: MechanismToolResultContext<TState>): ToolResultDecision | void | Promise<ToolResultDecision | void>;
+  validateCompletion?(ctx: MechanismCompletionContext<TState>): CompletionDecision | Promise<CompletionDecision>;
+  /** 节点主体已产出 completion、Router/Edge 尚未处理时调用。 */
+  onNodeExit?(ctx: MechanismExitContext<TState>): void | Promise<void>;
+  /** 当前 node visit 任意阶段抛错时调用；只观察原始错误，不能替换它。 */
+  onNodeError?(ctx: MechanismErrorContext<TState>): void | Promise<void>;
+}
+
+// ── 边 ──
+
+/**
+ * 边的迁移产出。
+ *
+ * 边只处置栈顶层（刚刚完成的节点）：
+ *   - frame   将该节点的 Completion 折叠为一帧，push 到栈顶
+ *   - input   可选，作为下一节点的一次性入参
+ *
+ * 当边的 to 为 END：frame 仍折叠进历史，且 frame.result 同时被 Runtime
+ * 取作本图的返回值（见 END 注释）；input 此时无后继节点，应省略。
+ */
+export interface MigrationResult {
+  /** 完全由开发者定义的模型工作记忆；SDK 不预设其字段。 */
+  frame: ContextFrame;
+  /** END 边可显式声明图返回。省略时兼容读取 frame.status/result，再回退到 NodeCompletion。 */
+  output?: Pick<NodeCompletion, "status" | "result">;
+  input?: Record<string, unknown>; // 下一节点的一次性入参，由 Runtime 包装为 NodeInput
+}
+
+/**
+ * 状态迁移的承载者。
+ *
+ * Edge 独占三件事：
+ *   1. guard   — 什么时候走这条边（只看 NodeCompletion）
+ *   2. migrate — 栈顶层怎么折叠进历史，并可生成下一节点入参
+ *   3. to      — 指向哪个节点（或 END 终止） //开发者注释:边不应该去管理from和to应该交给rout去做,node,edge应该被独立定义,然后用rout串起来,最后输入给图的只有rout和entry,保持代码高复用
+ *
+ * description 是边的可读描述，由开发者定义。
+ * 当路由策略为 agent-choice 时 description 必填——
+ * 它会被渲染进 CURRENT 段，供 agent 判断"此时该走哪条边"。
+ * 其他路由策略下 description 可选，仅作文档用途。
+ */
+export interface Edge {
+  id: string;
+  from: string;
+  to: string | typeof END;
+  priority: number;
+  /** 边的可读描述。agent-choice 路由下必填，渲染给 agent 辅助决策。 */
+  description?: string;
+
+  guard(completion: NodeCompletion): boolean;
+  migrate(instance: AgentInstance, completion: NodeCompletion): MigrationResult;
+}
+
+// ── 路由 ──
+
+export type RouterFn = (
+  edges: Edge[],
+  completion: NodeCompletion,
+  instance: AgentInstance,
+) => Edge | null | Promise<Edge | null>; // 允许异步：自定义路由可先问模型再裁决
+
+export type RouterStrategy =
+  | { kind: "priority-first" }
+  | { kind: "agent-choice" }
+  | { kind: "first-match" }
+  | { kind: "custom"; fn: RouterFn };
+
+export interface NodeRouting {
+  nodeId: string;
+  edges: Edge[];
+  router: RouterStrategy;
+  /** agent-choice 路由下，从 completion.result 读取边选择的字段名。默认 "chosen_edge_id"。 */
+  agentChoiceField?: string;
+}
+
+// ── 调用契约 ──
+
+/**
+ * 图的对外调用契约。让同一张图同时可被：
+ *   · 用户像 skill 调用   → Runtime 注册成 /name 命令
+ *   · agent 像 tool 调用  → Runtime 注册成一个 LLM 工具
+ *
+ * 二者共享 name / description / inputSchema。
+ * inputSchema 声明工具入参结构（agent 调用必需）；
+ * parseArgs 将命令调用的裸文本 args 解析成 inputSchema 的形状。
+ */
+export interface GraphInvocation {
+  name: string;
+  description: string;
+  inputSchema: Record<string, unknown>; // 工具入参 schema，agent 调用时 LLM 依此构造
+  /** 命令调用：把裸文本 args 解析成 inputSchema 的形状。默认 { args } */
+  parseArgs?(args: string): Record<string, unknown>;
+  /** 自定义 graph tool 返回给模型的文本；details 始终保留原始 GraphRunResult。 */
+  formatToolResult?(result: Readonly<GraphRunResult>): string;
+}
+
+
+// ── 触发（调用来源归一化）──
+
+/**
+ * 一次图调用的运行时信号。三种来源，Runtime 统一归约为 background：
+ *
+ *   command  — 用户 /name，parseArgs(args) → background
+ *   tool     — agent 工具调用，schema 校验过的 params 即 background
+ *   subgraph — 上游节点（父图中 kind="graph" 的 Node）的 completion.result 即 background
+ *
+ * 三种来源统一后，Entry.guard 只需关注 background 中的内容，
+ * 无需关心来源是用户还是 agent。
+ */
+export type Trigger =
+  | { source: "command"; args: string }
+  | { source: "tool"; params: Record<string, unknown> }
+  | { source: "subgraph"; background: Record<string, unknown> };
+
+
+// ── 入口 ──
+
+/**
+ * 图的入口声明。
+ *
+ * Runtime 将 Trigger 归一为 background 后，遍历 entries 调用 guard。
+ * guard 只根据 background 的内容判断是否匹配，不关心 Trigger 的来源。
+ */
+export interface Entry {
+  id: string;
+  guard(background: Record<string, unknown>): boolean;
+  startNodeId: string;
+  /** 可选：构造第一个节点的 NodeInput.data。默认 background 原样传入。 */
+  mapInput?(background: Record<string, unknown>): Record<string, unknown>;
+}
+
+
+// ── 回路图 ──
+
+/**
+ * 回路图。
+ *
+ * invocation?  可选。有 → 可被用户 /agent 直接调用（注册命令 + 工具）；
+ *              无 → 纯内部子图，只能被别的节点引用。天然区分
+ *              "库的公开 API"和"内部实现"。
+ *
+ * entries 声明入口；guard 只根据 background 内容判断，不关心来源。
+ *
+ * 子图组合：kind="graph" 的 Node 引用另一个 Graph，形成隔离栈调用。
+ * 顶层图调用 = 没有调用者的子图调用。
+ */
+export interface Graph {
+  id: string;
+  goal: string; // 图的总目标；Runtime 压帧时赋给该图 AgentInstance.globalGoal
+  invocation?: GraphInvocation;
+  entries: Entry[];
+  nodes: Record<string, Node>;
+  routing: Record<string, NodeRouting>;
+  /** 全局横切机制。Runtime 压帧时赋给 AgentInstance.mechanisms，跨节点持续生效。 */
+  mechanisms?: Mechanism[];//开发者注释:缺少全局的工具声明,该声明散落在register上,不合理
+  //开发者注释:存在有些类型已经被定义且固定,但是目前仍然使用unknow代替,需要清理完善
+}
