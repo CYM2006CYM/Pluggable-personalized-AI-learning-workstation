@@ -1,0 +1,27 @@
+{
+  "knowledgePoints": [
+    {
+      "id": "kp-core",
+      "title": "Core concept",
+      "chapterId": "chapter-introduction",
+      "sectionId": "section-core",
+      "prerequisiteIds": [],
+      "relatedKnowledgePointIds": ["kp-support"],
+      "sourceAnchorIds": [],
+      "activityIds": ["activity-explain"],
+      "importance": 1
+    },
+    {
+      "id": "kp-support",
+      "title": "Supporting concept",
+      "chapterId": "chapter-introduction",
+      "sectionId": "section-support",
+      "prerequisiteIds": ["kp-core"],
+      "relatedKnowledgePointIds": [],
+      "sourceAnchorIds": [],
+      "activityIds": [],
+      "importance": 0.5
+    }
+  ],
+  "x-fixture-owner": "A"
+}

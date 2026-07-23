@@ -1,0 +1,10 @@
+{
+  "goals": [
+    {
+      "goalId": "goal-core",
+      "title": "Dangling goal",
+      "targetKnowledgePointIds": ["kp-missing"],
+      "requiredActivityIds": ["activity-explain"]
+    }
+  ]
+}

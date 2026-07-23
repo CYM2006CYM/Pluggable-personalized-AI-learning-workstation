@@ -1,0 +1,22 @@
+{
+  "activities": [
+    {
+      "activityId": "activity-explain",
+      "profileRevision": 1,
+      "kind": "explain",
+      "allowedSources": ["profile_fixed"],
+      "primaryKnowledgePointId": "kp-core",
+      "supportingKnowledgePointIds": [],
+      "goalIds": ["goal-transfer", "goal-transfer"],
+      "title": "Duplicate goal reference",
+      "prompt": "Explain the concept.",
+      "difficulty": "S-U",
+      "estimatedMinutes": 5,
+      "sourceAnchorIds": [],
+      "templateVersion": "fixture-1",
+      "leakagePolicyId": "fixture-safe",
+      "allowedScaffolds": ["none"],
+      "responseContract": "Provide one paragraph."
+    }
+  ]
+}

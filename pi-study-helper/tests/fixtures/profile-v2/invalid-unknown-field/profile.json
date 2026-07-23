@@ -1,0 +1,19 @@
+{
+  "subjectId": "invalid-unknown",
+  "name": "Invalid unknown-field fixture",
+  "schemaVersion": 2,
+  "status": "draft",
+  "version": "fixture-1",
+  "revision": 1,
+  "revisionOf": null,
+  "legacyMode": "goal",
+  "capabilities": { "modalities": ["reading"], "runtimes": [], "diagnostic": false },
+  "paths": {
+    "subject": "subject.md",
+    "chapters": "chapters",
+    "knowledge": "knowledge/knowledge-points.json",
+    "goals": "goals/learning-goals.json",
+    "sources": "sources",
+    "quality": "quality"
+  }
+}

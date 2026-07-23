@@ -1,0 +1,24 @@
+{
+  "subjectId": "fixture-reading",
+  "name": "Structural reading fixture",
+  "schemaVersion": 2,
+  "status": "draft",
+  "version": "fixture-1",
+  "revision": 1,
+  "revisionOf": null,
+  "capabilities": {
+    "modalities": ["reading"],
+    "runtimes": [],
+    "diagnostic": false
+  },
+  "paths": {
+    "subject": "subject.md",
+    "chapters": "chapters",
+    "knowledge": "knowledge/knowledge-points.json",
+    "goals": "goals/learning-goals.json",
+    "activities": "activities/learning-activities.json",
+    "sources": "sources",
+    "quality": "quality"
+  },
+  "x-fixture-purpose": "Complete W1-C3 structural and cross-file closure validation."
+}

@@ -1,0 +1,18 @@
+{
+  "goals": [
+    {
+      "goalId": "goal-core",
+      "title": "Explain the core concept",
+      "targetKnowledgePointIds": ["kp-core"],
+      "requiredActivityIds": ["activity-explain"]
+    },
+    {
+      "goalId": "goal-transfer",
+      "title": "Transfer the concept",
+      "targetKnowledgePointIds": ["kp-support"],
+      "requiredActivityIds": [],
+      "finalActivityId": "activity-explain"
+    }
+  ],
+  "x-fixture-owner": "A"
+}

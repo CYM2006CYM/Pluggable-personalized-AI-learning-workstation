@@ -1,0 +1,23 @@
+{
+  "activities": [
+    {
+      "activityId": "activity-explain",
+      "profileRevision": 1,
+      "kind": "explain",
+      "allowedSources": ["profile_fixed"],
+      "primaryKnowledgePointId": "kp-core",
+      "supportingKnowledgePointIds": [],
+      "goalIds": ["goal-transfer"],
+      "title": "Explain the core concept",
+      "prompt": "Explain the concept in your own words.",
+      "difficulty": "S-U",
+      "estimatedMinutes": 5,
+      "sourceAnchorIds": [],
+      "templateVersion": "fixture-1",
+      "leakagePolicyId": "fixture-safe",
+      "allowedScaffolds": ["none", "hint"],
+      "responseContract": "Provide one concise paragraph."
+    }
+  ],
+  "x-fixture-owner": "A"
+}
