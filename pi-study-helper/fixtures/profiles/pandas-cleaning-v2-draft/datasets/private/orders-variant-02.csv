@@ -1,0 +1,21 @@
+order_id,customer_id,amount,city,order_date,status,note
+W201,C201,"￥20",北京市,2026-03-01,completed,a
+W202,C202, 25 ,京,2026-03-02,pending,b
+W203,C203,NaN,广州市,2026-03-03,cancelled,c
+W204,,35,穗,2026-03-04,completed,d
+,C205,40,上海市,2026-03-05,pending,e
+W206,C206,45,沪,March 6 2026,cancelled,f
+W207,C207,50,深圳,2026-03-07,unknown,g
+W208,C208,"2,008.5",上海市,2026-03-08,completed,
+W209,C209,inf,北京市,2026-03-09,pending,i
+W210,C210,70,广州市,2026-03-10,cancelled,j
+W211,C211,75,穗,2026-03-11,completed,old
+W211,C211,76,穗,2026-03-13,completed,new
+W212,C212,80,京,invalid,pending,first
+W212,C212,81,京,,pending,second
+W213,C213,85,未知城,2026-03-14,cancelled,m
+W214,C214,90,上海,2026-03-15,completed,n
+W215,C215,95,北京,2026-03-16,pending,o
+W216,C216,100,广州,2026-03-17,cancelled,p
+W217,C217,105,深圳,2026-03-18,completed,q
+W218,C218,110,上海市,2026-03-19,pending,r

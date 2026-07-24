@@ -1,0 +1,59 @@
+{
+  "tests": [
+    {
+      "testId": "test-structure-public",
+      "visibility": "public",
+      "fileRef": "assessments/public/tests/test-structure-public.py",
+      "fixtureRefs": [
+        "dataset-public-orders"
+      ],
+      "dimensionId": "structure",
+      "blocking": true,
+      "assetHash": "sha256:d3e1121ba3ee2661e7b3859cc68514f7ee807c22c39ad3d1d9a33f9d0a1f501d"
+    },
+    {
+      "testId": "test-missing-public",
+      "visibility": "public",
+      "fileRef": "assessments/public/tests/test-missing-public.py",
+      "fixtureRefs": [
+        "dataset-public-orders"
+      ],
+      "dimensionId": "missing",
+      "blocking": true,
+      "assetHash": "sha256:2dc5a6f931e45fbeeff890cd122aa3a5f52a42251228f1beb5a9f660a77ff1e2"
+    },
+    {
+      "testId": "test-duplicates-public",
+      "visibility": "public",
+      "fileRef": "assessments/public/tests/test-duplicates-public.py",
+      "fixtureRefs": [
+        "dataset-public-orders"
+      ],
+      "dimensionId": "duplicates",
+      "blocking": true,
+      "assetHash": "sha256:f494513463a02d3168a66d9bd5c312fbc50fcdec89b2a7c20a1cfb4f64bde7f1"
+    },
+    {
+      "testId": "test-types-public",
+      "visibility": "public",
+      "fileRef": "assessments/public/tests/test-types-public.py",
+      "fixtureRefs": [
+        "dataset-public-orders"
+      ],
+      "dimensionId": "types",
+      "blocking": true,
+      "assetHash": "sha256:2fef6131b9cf9b518aeb9d90f079b7de689fe5d3961cc06baeb1a78d338bd905"
+    },
+    {
+      "testId": "test-practical-public",
+      "visibility": "public",
+      "fileRef": "assessments/public/tests/test-practical-public.py",
+      "fixtureRefs": [
+        "dataset-public-orders"
+      ],
+      "dimensionId": "invariants",
+      "blocking": true,
+      "assetHash": "sha256:acaa0a8141a2d300452dd4bb786376da5b227c339f897325a20e4a359a0b3906"
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+{"rubricId":"rubric-types","version":"1.0.0-draft","passThreshold":1.0,"dimensions":[{"dimensionId":"types","label":"类型与格式","weight":1.0,"scoringMethod":"tests","blocking":true,"safeFeedbackCodes":["amount_invalid","date_invalid","city_invalid","status_invalid","string_dtype_invalid"]}]}

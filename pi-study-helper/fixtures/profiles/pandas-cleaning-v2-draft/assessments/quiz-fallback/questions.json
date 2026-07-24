@@ -1,0 +1,7 @@
+{
+  "status":"draft",
+  "questions":[
+    {"questionId":"fallback-missing-01","knowledgePointId":"kp-missing","type":"judgment","prompt":"缺失note应转换为空字符串。","options":["正确","错误"],"privateAnswerRef":"quiz-fallback/private/answer-key.json#fallback-missing-01"},
+    {"questionId":"fallback-duplicates-01","knowledgePointId":"kp-duplicates","type":"judgment","prompt":"日期相同的重复订单保留原始第一条。","options":["正确","错误"],"privateAnswerRef":"quiz-fallback/private/answer-key.json#fallback-duplicates-01"}
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "diagnosticId": "diagnostic-pandas-cleaning-v1-draft",
+  "visibility": "private",
+  "answers": [
+    {"questionId":"diag-01","correctOptionIndex":0},{"questionId":"diag-02","correctOptionIndex":1},{"questionId":"diag-03","correctOptionIndex":0},{"questionId":"diag-04","correctOptionIndex":0},{"questionId":"diag-05","correctOptionIndex":1},{"questionId":"diag-06","correctOptionIndex":0},{"questionId":"diag-07","correctOptionIndex":0},{"questionId":"diag-08","correctOptionIndex":0},{"questionId":"diag-09","correctOptionIndex":0},{"questionId":"diag-10","correctOptionIndex":0}
+  ]
+}

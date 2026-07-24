@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "status": "draft",
+  "comparisons": [
+    {"comparisonId":"dfcmp-orders-seven-columns","columnOrder":"exact","requiredColumns":["order_id","customer_id","amount","city","order_date","status","note"],"dtypeRules":{},"indexPolicy":"reset","rowOrder":"exact","nullPolicy":"pandas_equal","numericTolerance":0.000001},
+    {"comparisonId":"dfcmp-orders-missing","columnOrder":"exact","requiredColumns":["order_id","customer_id","amount","city","order_date","status","note"],"dtypeRules":{},"indexPolicy":"reset","rowOrder":"exact","nullPolicy":"pandas_equal","numericTolerance":0.000001},
+    {"comparisonId":"dfcmp-orders-deduplicated","columnOrder":"exact","requiredColumns":["order_id","customer_id","amount","city","order_date","status","note"],"dtypeRules":{},"indexPolicy":"reset","rowOrder":"exact","nullPolicy":"pandas_equal","numericTolerance":0.000001},
+    {"comparisonId":"dfcmp-orders-types","columnOrder":"exact","requiredColumns":["order_id","customer_id","amount","city","order_date","status","note"],"dtypeRules":{"order_id":["string"],"customer_id":["string"],"amount":["pending_C_prototype"],"city":["string"],"order_date":["pending_C_prototype"],"status":["string"],"note":["string"]},"indexPolicy":"reset","rowOrder":"exact","nullPolicy":"pandas_equal","numericTolerance":0.000001},
+    {"comparisonId":"dfcmp-orders-clean-final","columnOrder":"exact","requiredColumns":["order_id","customer_id","amount","city","order_date","status","note"],"dtypeRules":{"order_id":["string"],"customer_id":["string"],"amount":["pending_C_prototype"],"city":["string"],"order_date":["pending_C_prototype"],"status":["string"],"note":["string"]},"indexPolicy":"reset","rowOrder":"exact","nullPolicy":"pandas_equal","numericTolerance":0.000001}
+  ]
+}

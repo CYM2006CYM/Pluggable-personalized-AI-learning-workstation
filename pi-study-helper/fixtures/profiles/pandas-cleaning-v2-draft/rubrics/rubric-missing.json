@@ -1,0 +1,1 @@
+{"rubricId":"rubric-missing","version":"1.0.0-draft","passThreshold":1.0,"dimensions":[{"dimensionId":"missing","label":"缺失处理","weight":1.0,"scoringMethod":"tests","blocking":true,"safeFeedbackCodes":["order_id_missing","column_missing_policy_invalid"]}]}

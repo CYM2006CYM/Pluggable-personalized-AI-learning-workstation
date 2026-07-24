@@ -1,0 +1,11 @@
+{
+  "rubricId":"rubric-practical","version":"1.0.0-draft","passThreshold":0.8,
+  "dimensions":[
+    {"dimensionId":"structure","label":"读取与列结构","weight":0.10,"scoringMethod":"tests","blocking":true,"safeFeedbackCodes":["columns_invalid","column_order_invalid"]},
+    {"dimensionId":"missing","label":"缺失处理","weight":0.20,"scoringMethod":"tests","blocking":true,"safeFeedbackCodes":["missing_policy_invalid"]},
+    {"dimensionId":"duplicates","label":"重复处理","weight":0.15,"scoringMethod":"tests","blocking":true,"safeFeedbackCodes":["duplicate_selection_invalid","row_order_invalid"]},
+    {"dimensionId":"types","label":"类型与格式","weight":0.25,"scoringMethod":"tests","blocking":true,"safeFeedbackCodes":["dtype_invalid","value_normalization_invalid"]},
+    {"dimensionId":"invariants","label":"结果不变量","weight":0.20,"scoringMethod":"tests","blocking":true,"safeFeedbackCodes":["output_contract_invalid"]},
+    {"dimensionId":"engineering","label":"可读与安全","weight":0.10,"scoringMethod":"static_check","blocking":false,"safeFeedbackCodes":["unsafe_operation","readability_improvement"]}
+  ]
+}

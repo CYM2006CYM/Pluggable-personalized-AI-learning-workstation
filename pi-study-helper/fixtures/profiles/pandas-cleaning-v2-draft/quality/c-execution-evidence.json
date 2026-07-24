@@ -1,0 +1,248 @@
+{
+  "schemaVersion": 1,
+  "status": "candidate_evidence_only",
+  "harnessVersion": "b-candidate-evidence-v2",
+  "command": "PYTHONDONTWRITEBYTECODE=1 python quality/run-candidate-evidence.py",
+  "environment": {
+    "python": "3.12.13",
+    "pandas": "3.0.1",
+    "platform": "Windows-11-10.0.26200-SP0"
+  },
+  "inputHashes": {
+    "assessments/private/known-wrong/wrong-duplicates.py": "575bc318813c0864dccee46416acbe59810ea960c655dcaf2b812b9f2e9645ef",
+    "assessments/private/known-wrong/wrong-missing.py": "4998136540f88314c43a527186ec2411bc925e0184f0073bcd6aeec3c3695f28",
+    "assessments/private/known-wrong/wrong-practical.py": "74e323f2defd470a4693de54907421a054e3a4b53b0ed0cbcf4af26c0f39bc51",
+    "assessments/private/known-wrong/wrong-structure.py": "2d53ea84fde32cb917cc163b9b525224a9392c5369267755ccd3a5f1a5898501",
+    "assessments/private/known-wrong/wrong-types.py": "b0738bad062cada5c4c3b65cf3e32ff7ef6df8e1ca9676b75825e0e5f649cfc0",
+    "assessments/private/tests/test-duplicates-hidden.py": "7f9449a3e924c734314649ffd056465ce19e3971e15b9a806c928360472b3be3",
+    "assessments/private/tests/test-missing-hidden.py": "8d798c0cecd733579901a04630dbcdcb0333efaef731568467dda003abaa3e0f",
+    "assessments/private/tests/test-practical-hidden-01.py": "6d762bf0059d7fb77368dbcdd42eb810d565e3c593008c8eced76262d7b20829",
+    "assessments/private/tests/test-practical-hidden-02.py": "fd901d2cb955083a880cfa5c72248350252a8a5b3ba7d548a81b537fab1d2127",
+    "assessments/private/tests/test-structure-hidden.py": "4729487ecd0a3e8570ae30f91ff7bae29a61bb444659350455a7ee52f580afb1",
+    "assessments/private/tests/test-types-hidden.py": "b3153bab7097369623ae2d6bfa8eae11f8414646d006030836f07e5e1e3b3285",
+    "assessments/public/tests/test-duplicates-public.py": "f494513463a02d3168a66d9bd5c312fbc50fcdec89b2a7c20a1cfb4f64bde7f1",
+    "assessments/public/tests/test-missing-public.py": "2dc5a6f931e45fbeeff890cd122aa3a5f52a42251228f1beb5a9f660a77ff1e2",
+    "assessments/public/tests/test-practical-public.py": "acaa0a8141a2d300452dd4bb786376da5b227c339f897325a20e4a359a0b3906",
+    "assessments/public/tests/test-structure-public.py": "d3e1121ba3ee2661e7b3859cc68514f7ee807c22c39ad3d1d9a33f9d0a1f501d",
+    "assessments/public/tests/test-types-public.py": "2fef6131b9cf9b518aeb9d90f079b7de689fe5d3961cc06baeb1a78d338bd905",
+    "datasets/private/orders-variant-01.csv": "36368559a07599badb9fae32626369f34bcfdc9bd2b2aba48ab4c81eda1aee6a",
+    "datasets/private/orders-variant-02.csv": "a9ae876834d90b34d1a85f40d6452fa094e7fca38ebf89aa927634bba3633504",
+    "datasets/public/orders-learning.csv": "a9013431952401a68d52b07313a90755485d8b30e96e58d087e9ab1813de926b",
+    "harness": "b556fc2117138a4251340a1c8d480bf15be173e831da662593efe853eed877a4",
+    "reference-solutions/solution-duplicates.py": "36c04016fd4d14fbcc7b03f6bc4c19b1e83976c3c660641f9b47042416359f06",
+    "reference-solutions/solution-missing.py": "38875b16b36890674eba36211d88f0221eb84643595fc1bfdafe83601108e630",
+    "reference-solutions/solution-practical.py": "0c142feaf8ba469e9101807d6a33eceedead6ff99f63e14c071a88912bbf4e48",
+    "reference-solutions/solution-structure.py": "8bd79e59a4fecdbfd5881ec53bc5dfe9610abc9049062fb68be2ab7a3debf959",
+    "reference-solutions/solution-types.py": "92273b1b18f120b08174825f13986a73a8f7875182c2ee74192a69407a989386"
+  },
+  "results": [
+    {
+      "bundleId": "bundle-act-structure-v1",
+      "implementation": "reference",
+      "testId": "test-structure-public",
+      "fixtureId": "dataset-public-orders",
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null
+    },
+    {
+      "bundleId": "bundle-act-structure-v1",
+      "implementation": "starter",
+      "testId": "test-structure-public",
+      "fixtureId": "dataset-public-orders",
+      "exitCode": 1,
+      "errorType": "AssertionError",
+      "errorSummary": ""
+    },
+    {
+      "bundleId": "bundle-act-structure-v1",
+      "implementation": "known_wrong",
+      "testId": "test-structure-public",
+      "fixtureId": "dataset-public-orders",
+      "exitCode": 1,
+      "errorType": "AssertionError",
+      "errorSummary": ""
+    },
+    {
+      "bundleId": "bundle-act-structure-v1",
+      "implementation": "reference",
+      "testId": "test-structure-hidden",
+      "fixtureId": "dataset-public-orders",
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null
+    },
+    {
+      "bundleId": "bundle-act-missing-v1",
+      "implementation": "reference",
+      "testId": "test-missing-public",
+      "fixtureId": "dataset-public-orders",
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null
+    },
+    {
+      "bundleId": "bundle-act-missing-v1",
+      "implementation": "starter",
+      "testId": "test-missing-public",
+      "fixtureId": "dataset-public-orders",
+      "exitCode": 1,
+      "errorType": "AssertionError",
+      "errorSummary": ""
+    },
+    {
+      "bundleId": "bundle-act-missing-v1",
+      "implementation": "known_wrong",
+      "testId": "test-missing-public",
+      "fixtureId": "dataset-public-orders",
+      "exitCode": 1,
+      "errorType": "AssertionError",
+      "errorSummary": ""
+    },
+    {
+      "bundleId": "bundle-act-missing-v1",
+      "implementation": "reference",
+      "testId": "test-missing-hidden",
+      "fixtureId": "dataset-public-orders",
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null
+    },
+    {
+      "bundleId": "bundle-act-duplicates-v1",
+      "implementation": "reference",
+      "testId": "test-duplicates-public",
+      "fixtureId": "dataset-public-orders",
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null
+    },
+    {
+      "bundleId": "bundle-act-duplicates-v1",
+      "implementation": "starter",
+      "testId": "test-duplicates-public",
+      "fixtureId": "dataset-public-orders",
+      "exitCode": 1,
+      "errorType": "AssertionError",
+      "errorSummary": ""
+    },
+    {
+      "bundleId": "bundle-act-duplicates-v1",
+      "implementation": "known_wrong",
+      "testId": "test-duplicates-public",
+      "fixtureId": "dataset-public-orders",
+      "exitCode": 1,
+      "errorType": "AssertionError",
+      "errorSummary": ""
+    },
+    {
+      "bundleId": "bundle-act-duplicates-v1",
+      "implementation": "reference",
+      "testId": "test-duplicates-hidden",
+      "fixtureId": "dataset-public-orders",
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null
+    },
+    {
+      "bundleId": "bundle-act-types-v1",
+      "implementation": "reference",
+      "testId": "test-types-public",
+      "fixtureId": "dataset-public-orders",
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null
+    },
+    {
+      "bundleId": "bundle-act-types-v1",
+      "implementation": "starter",
+      "testId": "test-types-public",
+      "fixtureId": "dataset-public-orders",
+      "exitCode": 1,
+      "errorType": "AssertionError",
+      "errorSummary": ""
+    },
+    {
+      "bundleId": "bundle-act-types-v1",
+      "implementation": "known_wrong",
+      "testId": "test-types-public",
+      "fixtureId": "dataset-public-orders",
+      "exitCode": 1,
+      "errorType": "AssertionError",
+      "errorSummary": ""
+    },
+    {
+      "bundleId": "bundle-act-types-v1",
+      "implementation": "reference",
+      "testId": "test-types-hidden",
+      "fixtureId": "dataset-public-orders",
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null
+    },
+    {
+      "bundleId": "bundle-act-practical-v1",
+      "implementation": "reference",
+      "testId": "test-practical-public",
+      "fixtureId": "dataset-public-orders",
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null
+    },
+    {
+      "bundleId": "bundle-act-practical-v1",
+      "implementation": "starter",
+      "testId": "test-practical-public",
+      "fixtureId": "dataset-public-orders",
+      "exitCode": 1,
+      "errorType": "NotImplementedError",
+      "errorSummary": ""
+    },
+    {
+      "bundleId": "bundle-act-practical-v1",
+      "implementation": "known_wrong",
+      "testId": "test-practical-public",
+      "fixtureId": "dataset-public-orders",
+      "exitCode": 1,
+      "errorType": "AssertionError",
+      "errorSummary": ""
+    },
+    {
+      "bundleId": "bundle-act-practical-v1",
+      "implementation": "reference",
+      "testId": "test-practical-hidden-01",
+      "fixtureId": "dataset-private-variant-01",
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null
+    },
+    {
+      "bundleId": "bundle-act-practical-v1",
+      "implementation": "reference",
+      "testId": "test-practical-hidden-02",
+      "fixtureId": "dataset-private-variant-02",
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null
+    },
+    {
+      "bundleId": "bundle-act-practical-v1",
+      "implementation": "known_wrong",
+      "testId": "test-practical-hidden-02",
+      "fixtureId": "dataset-private-variant-02",
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null
+    }
+  ],
+  "summary": {
+    "referencePassed": true,
+    "allStartersRejected": true,
+    "allKnownWrongRejectedByAtLeastOneTest": true
+  },
+  "overallExitCode": 0,
+  "limitations": [
+    "Candidate evidence only; does not freeze EnvironmentLock values.",
+    "C/owner prototype remains authoritative."
+  ]
+}

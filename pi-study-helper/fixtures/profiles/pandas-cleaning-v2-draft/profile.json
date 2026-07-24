@@ -1,0 +1,31 @@
+{
+  "subjectId": "pandas-cleaning",
+  "name": "Pandas 数据清洗",
+  "schemaVersion": 2,
+  "status": "draft",
+  "version": "0.1.0-draft",
+  "revision": 1,
+  "revisionOf": null,
+  "capabilities": {
+    "modalities": ["reading", "quiz", "code", "practice"],
+    "runtimes": ["python-pandas-candidate"],
+    "diagnostic": true
+  },
+  "paths": {
+    "subject": "subject.md",
+    "chapters": "chapters",
+    "knowledge": "knowledge/knowledge-points.json",
+    "goals": "goals/learning-goals.json",
+    "sources": "sources/source-registry.json",
+    "quality": "quality/quality-report.json",
+    "cards": "cards",
+    "activities": "activities/learning-activities.json",
+    "diagnostic": "assessments/diagnostic/questions.json",
+    "assessments": "assessments",
+    "rubrics": "rubrics",
+    "datasets": "datasets",
+    "referenceSolutions": "reference-solutions",
+    "environments": "environments/environment-lock.json"
+  },
+  "x-candidateApproval": "pending_owner_decision"
+}

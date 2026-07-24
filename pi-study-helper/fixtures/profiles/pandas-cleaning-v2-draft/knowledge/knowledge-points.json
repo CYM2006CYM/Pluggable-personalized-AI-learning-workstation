@@ -1,0 +1,10 @@
+{
+  "knowledgePoints": [
+    {"id":"kp-structure","title":"读取与固定列结构","chapterId":"chapter-01","sectionId":"section-01-01","prerequisiteIds":[],"relatedKnowledgePointIds":["kp-invariants"],"sourceAnchorIds":["src-pandas-read-csv","src-pandas-dtypes"],"activityIds":["act-structure"],"importance":0.10},
+    {"id":"kp-missing","title":"按列处理缺失值","chapterId":"chapter-01","sectionId":"section-01-02","prerequisiteIds":["kp-structure"],"relatedKnowledgePointIds":["kp-types"],"sourceAnchorIds":["src-pandas-missing-data"],"activityIds":["act-missing"],"importance":0.20},
+    {"id":"kp-duplicates","title":"稳定选择重复订单","chapterId":"chapter-02","sectionId":"section-02-01","prerequisiteIds":["kp-structure"],"relatedKnowledgePointIds":["kp-invariants"],"sourceAnchorIds":["src-pandas-duplicates","src-pandas-sort-values"],"activityIds":["act-duplicates"],"importance":0.15},
+    {"id":"kp-types","title":"字段类型与格式规范化","chapterId":"chapter-02","sectionId":"section-02-02","prerequisiteIds":["kp-missing"],"relatedKnowledgePointIds":["kp-missing"],"sourceAnchorIds":["src-pandas-to-numeric","src-pandas-to-datetime","src-pandas-string"],"activityIds":["act-types"],"importance":0.25},
+    {"id":"kp-invariants","title":"验证clean_df结果不变量","chapterId":"chapter-03","sectionId":"section-03-01","prerequisiteIds":["kp-duplicates","kp-types"],"relatedKnowledgePointIds":["kp-structure"],"sourceAnchorIds":["src-pandas-testing"],"activityIds":["act-practical"],"importance":0.20},
+    {"id":"kp-engineering","title":"可读安全与可复现实现","chapterId":"chapter-03","sectionId":"section-03-02","prerequisiteIds":["kp-invariants"],"relatedKnowledgePointIds":[],"sourceAnchorIds":["src-python-security","src-pandas-testing"],"activityIds":["act-practical"],"importance":0.10}
+  ]
+}

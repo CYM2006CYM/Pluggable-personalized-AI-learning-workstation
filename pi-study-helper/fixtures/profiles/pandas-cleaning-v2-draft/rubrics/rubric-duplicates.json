@@ -1,0 +1,1 @@
+{"rubricId":"rubric-duplicates","version":"1.0.0-draft","passThreshold":1.0,"dimensions":[{"dimensionId":"duplicates","label":"重复处理","weight":1.0,"scoringMethod":"tests","blocking":true,"safeFeedbackCodes":["duplicate_order_id","duplicate_selection_invalid","row_order_invalid"]}]}

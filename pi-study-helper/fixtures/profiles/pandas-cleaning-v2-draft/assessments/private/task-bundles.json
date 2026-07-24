@@ -1,0 +1,796 @@
+{
+  "schemaVersion": 1,
+  "status": "draft",
+  "hashAlgorithm": {
+    "name": "sha256",
+    "canonicalization": "utf8-json-keys-sorted-arrays-preserved-no-whitespace-v1",
+    "excludes": [
+      "assetBundleHash"
+    ],
+    "additionalInputs": [
+      "resolved datasets/fixtures.json entries referenced by activity.datasetRefs"
+    ]
+  },
+  "bundles": [
+    {
+      "bundleId": "bundle-act-structure-v1",
+      "source": "profile_fixed",
+      "activity": {
+        "activityId": "act-structure",
+        "profileRevision": 1,
+        "kind": "code_completion",
+        "allowedSources": [
+          "profile_fixed"
+        ],
+        "primaryKnowledgePointId": "kp-structure",
+        "supportingKnowledgePointIds": [],
+        "goalIds": [
+          "goal-clean-orders"
+        ],
+        "title": "补全读取与列结构检查",
+        "prompt": "补全 clean_orders 的读取和固定列选择步骤。",
+        "difficulty": "S-U",
+        "estimatedMinutes": 15,
+        "sourceAnchorIds": [
+          "src-pandas-read-csv",
+          "src-pandas-dtypes"
+        ],
+        "templateVersion": "1.0.0-draft",
+        "leakagePolicyId": "policy-no-private-assets",
+        "runtimePolicyId": "python-pandas-candidate",
+        "allowedScaffolds": [
+          "hint",
+          "worked_example"
+        ],
+        "starterCode": "def clean_orders(df):\n    # TODO_BEGIN\n    clean_df = df.copy()\n    # TODO_END\n    return clean_df\n",
+        "editableRegions": [
+          {
+            "regionId": "region-main",
+            "startMarker": "# TODO_BEGIN",
+            "endMarker": "# TODO_END",
+            "required": true,
+            "maxCharacters": 2000
+          }
+        ],
+        "entryPoint": "clean_orders",
+        "outputContract": "返回恰好七列且列序固定的DataFrame。",
+        "datasetRefs": [
+          "dataset-public-orders"
+        ],
+        "publicTestRefs": [
+          "test-structure-public"
+        ],
+        "hiddenTestRefs": [
+          "test-structure-hidden"
+        ],
+        "rubricRef": "rubric-structure",
+        "referenceSolutionRef": "solution-structure",
+        "knownWrongSolutionRefs": [
+          "wrong-structure"
+        ],
+        "environmentRef": "env-python-pandas-candidate",
+        "allowedLibraries": [
+          "pandas"
+        ]
+      },
+      "contract": {
+        "entryPoint": {
+          "kind": "function",
+          "name": "clean_orders",
+          "argumentFixtureIds": [
+            "dataset-public-orders"
+          ]
+        },
+        "inputDescription": "固定七列订单DataFrame；测试可附加未声明列验证精确列选择。",
+        "output": {
+          "kind": "dataframe",
+          "comparisonRef": "dfcmp-orders-seven-columns",
+          "includeIndex": false
+        },
+        "outputDescription": "返回恰好七列且不修改输入的DataFrame。",
+        "invariants": [
+          "固定七列和顺序",
+          "输入DataFrame不被修改"
+        ],
+        "prohibitedBehaviors": [
+          "修改输入DataFrame",
+          "写宿主文件",
+          "访问网络",
+          "运行时安装依赖"
+        ]
+      },
+      "publicTests": [
+        {
+          "testId": "test-structure-public",
+          "visibility": "public",
+          "fileRef": "assessments/public/tests/test-structure-public.py",
+          "fixtureRefs": [
+            "dataset-public-orders"
+          ],
+          "dimensionId": "structure",
+          "blocking": true,
+          "assetHash": "sha256:d3e1121ba3ee2661e7b3859cc68514f7ee807c22c39ad3d1d9a33f9d0a1f501d"
+        }
+      ],
+      "hiddenTests": [
+        {
+          "testId": "test-structure-hidden",
+          "visibility": "hidden",
+          "fileRef": "assessments/private/tests/test-structure-hidden.py",
+          "fixtureRefs": [
+            "dataset-public-orders"
+          ],
+          "dimensionId": "structure",
+          "blocking": true,
+          "assetHash": "sha256:4729487ecd0a3e8570ae30f91ff7bae29a61bb444659350455a7ee52f580afb1"
+        }
+      ],
+      "rubric": {
+        "rubricId": "rubric-structure",
+        "version": "1.0.0-draft",
+        "passThreshold": 1,
+        "dimensions": [
+          {
+            "dimensionId": "structure",
+            "label": "列结构",
+            "weight": 1,
+            "scoringMethod": "tests",
+            "blocking": true,
+            "safeFeedbackCodes": [
+              "columns_invalid",
+              "column_order_invalid",
+              "input_mutated"
+            ]
+          }
+        ]
+      },
+      "environmentRef": "env-python-pandas-candidate",
+      "assetBundleHash": "229fdd197eaa3e8e3a02f25a04093985dd01ff7f0b9cc053d33f80241ca2eb7a"
+    },
+    {
+      "bundleId": "bundle-act-missing-v1",
+      "source": "profile_fixed",
+      "activity": {
+        "activityId": "act-missing",
+        "profileRevision": 1,
+        "kind": "code_completion",
+        "allowedSources": [
+          "profile_fixed"
+        ],
+        "primaryKnowledgePointId": "kp-missing",
+        "supportingKnowledgePointIds": [
+          "kp-structure"
+        ],
+        "goalIds": [
+          "goal-clean-orders"
+        ],
+        "title": "补全按列缺失处理",
+        "prompt": "按冻结规则处理order_id、customer_id、amount、order_date和note缺失。",
+        "difficulty": "M-U",
+        "estimatedMinutes": 20,
+        "sourceAnchorIds": [
+          "src-pandas-missing-data"
+        ],
+        "templateVersion": "1.0.0-draft",
+        "leakagePolicyId": "policy-no-private-assets",
+        "runtimePolicyId": "python-pandas-candidate",
+        "allowedScaffolds": [
+          "hint",
+          "worked_example"
+        ],
+        "starterCode": "def clean_missing(df):\n    clean_df = df.copy()\n    # TODO_BEGIN\n    pass\n    # TODO_END\n    return clean_df\n",
+        "editableRegions": [
+          {
+            "regionId": "region-main",
+            "startMarker": "# TODO_BEGIN",
+            "endMarker": "# TODO_END",
+            "required": true,
+            "maxCharacters": 3000
+          }
+        ],
+        "entryPoint": "clean_missing",
+        "outputContract": "仅缺失order_id删除行，其余列按合同保留或转换。",
+        "datasetRefs": [
+          "dataset-public-orders"
+        ],
+        "publicTestRefs": [
+          "test-missing-public"
+        ],
+        "hiddenTestRefs": [
+          "test-missing-hidden"
+        ],
+        "rubricRef": "rubric-missing",
+        "referenceSolutionRef": "solution-missing",
+        "knownWrongSolutionRefs": [
+          "wrong-missing"
+        ],
+        "environmentRef": "env-python-pandas-candidate",
+        "allowedLibraries": [
+          "pandas"
+        ]
+      },
+      "contract": {
+        "entryPoint": {
+          "kind": "function",
+          "name": "clean_missing",
+          "argumentFixtureIds": [
+            "dataset-public-orders"
+          ]
+        },
+        "inputDescription": "固定七列订单DataFrame，包含主键、客户、金额、日期和备注缺失样例。",
+        "output": {
+          "kind": "dataframe",
+          "comparisonRef": "dfcmp-orders-missing",
+          "includeIndex": false
+        },
+        "outputDescription": "仅删除缺失order_id行，保留客户缺失并将note缺失变为空字符串。",
+        "invariants": [
+          "order_id非空",
+          "customer_id缺失行保留",
+          "note无缺失"
+        ],
+        "prohibitedBehaviors": [
+          "修改输入DataFrame",
+          "删除非order_id缺失行",
+          "写宿主文件",
+          "访问网络"
+        ]
+      },
+      "publicTests": [
+        {
+          "testId": "test-missing-public",
+          "visibility": "public",
+          "fileRef": "assessments/public/tests/test-missing-public.py",
+          "fixtureRefs": [
+            "dataset-public-orders"
+          ],
+          "dimensionId": "missing",
+          "blocking": true,
+          "assetHash": "sha256:2dc5a6f931e45fbeeff890cd122aa3a5f52a42251228f1beb5a9f660a77ff1e2"
+        }
+      ],
+      "hiddenTests": [
+        {
+          "testId": "test-missing-hidden",
+          "visibility": "hidden",
+          "fileRef": "assessments/private/tests/test-missing-hidden.py",
+          "fixtureRefs": [
+            "dataset-public-orders"
+          ],
+          "dimensionId": "missing",
+          "blocking": true,
+          "assetHash": "sha256:8d798c0cecd733579901a04630dbcdcb0333efaef731568467dda003abaa3e0f"
+        }
+      ],
+      "rubric": {
+        "rubricId": "rubric-missing",
+        "version": "1.0.0-draft",
+        "passThreshold": 1,
+        "dimensions": [
+          {
+            "dimensionId": "missing",
+            "label": "缺失处理",
+            "weight": 1,
+            "scoringMethod": "tests",
+            "blocking": true,
+            "safeFeedbackCodes": [
+              "order_id_missing",
+              "column_missing_policy_invalid"
+            ]
+          }
+        ]
+      },
+      "environmentRef": "env-python-pandas-candidate",
+      "assetBundleHash": "f1cb5fe62336b8efa1416d44b58d2ff4b925486d05ebca6bc792d4c947634c14"
+    },
+    {
+      "bundleId": "bundle-act-duplicates-v1",
+      "source": "profile_fixed",
+      "activity": {
+        "activityId": "act-duplicates",
+        "profileRevision": 1,
+        "kind": "code_completion",
+        "allowedSources": [
+          "profile_fixed"
+        ],
+        "primaryKnowledgePointId": "kp-duplicates",
+        "supportingKnowledgePointIds": [
+          "kp-structure"
+        ],
+        "goalIds": [
+          "goal-clean-orders"
+        ],
+        "title": "补全稳定去重",
+        "prompt": "按可解析日期、最新日期、原始第一条的固定优先级选择重复订单。",
+        "difficulty": "M-A",
+        "estimatedMinutes": 25,
+        "sourceAnchorIds": [
+          "src-pandas-duplicates",
+          "src-pandas-sort-values"
+        ],
+        "templateVersion": "1.0.0-draft",
+        "leakagePolicyId": "policy-no-private-assets",
+        "runtimePolicyId": "python-pandas-candidate",
+        "allowedScaffolds": [
+          "hint",
+          "worked_example"
+        ],
+        "starterCode": "def deduplicate_orders(df):\n    clean_df = df.copy()\n    # TODO_BEGIN\n    pass\n    # TODO_END\n    return clean_df\n",
+        "editableRegions": [
+          {
+            "regionId": "region-main",
+            "startMarker": "# TODO_BEGIN",
+            "endMarker": "# TODO_END",
+            "required": true,
+            "maxCharacters": 4000
+          }
+        ],
+        "entryPoint": "deduplicate_orders",
+        "outputContract": "order_id唯一且保留被选记录的原始相对顺序。",
+        "datasetRefs": [
+          "dataset-public-orders"
+        ],
+        "publicTestRefs": [
+          "test-duplicates-public"
+        ],
+        "hiddenTestRefs": [
+          "test-duplicates-hidden"
+        ],
+        "rubricRef": "rubric-duplicates",
+        "referenceSolutionRef": "solution-duplicates",
+        "knownWrongSolutionRefs": [
+          "wrong-duplicates"
+        ],
+        "environmentRef": "env-python-pandas-candidate",
+        "allowedLibraries": [
+          "pandas"
+        ]
+      },
+      "contract": {
+        "entryPoint": {
+          "kind": "function",
+          "name": "deduplicate_orders",
+          "argumentFixtureIds": [
+            "dataset-public-orders"
+          ]
+        },
+        "inputDescription": "固定七列订单DataFrame，含可解析日期、不可解析日期和同日重复分支。",
+        "output": {
+          "kind": "dataframe",
+          "comparisonRef": "dfcmp-orders-deduplicated",
+          "includeIndex": false
+        },
+        "outputDescription": "按冻结优先级选择唯一order_id并保持被选记录原始相对顺序。",
+        "invariants": [
+          "order_id唯一",
+          "可解析且较新日期优先",
+          "平局保留原始第一条",
+          "被选记录原始相对顺序不变"
+        ],
+        "prohibitedBehaviors": [
+          "修改输入DataFrame",
+          "按order_id重排最终结果",
+          "写宿主文件",
+          "访问网络"
+        ]
+      },
+      "publicTests": [
+        {
+          "testId": "test-duplicates-public",
+          "visibility": "public",
+          "fileRef": "assessments/public/tests/test-duplicates-public.py",
+          "fixtureRefs": [
+            "dataset-public-orders"
+          ],
+          "dimensionId": "duplicates",
+          "blocking": true,
+          "assetHash": "sha256:f494513463a02d3168a66d9bd5c312fbc50fcdec89b2a7c20a1cfb4f64bde7f1"
+        }
+      ],
+      "hiddenTests": [
+        {
+          "testId": "test-duplicates-hidden",
+          "visibility": "hidden",
+          "fileRef": "assessments/private/tests/test-duplicates-hidden.py",
+          "fixtureRefs": [
+            "dataset-public-orders"
+          ],
+          "dimensionId": "duplicates",
+          "blocking": true,
+          "assetHash": "sha256:7f9449a3e924c734314649ffd056465ce19e3971e15b9a806c928360472b3be3"
+        }
+      ],
+      "rubric": {
+        "rubricId": "rubric-duplicates",
+        "version": "1.0.0-draft",
+        "passThreshold": 1,
+        "dimensions": [
+          {
+            "dimensionId": "duplicates",
+            "label": "重复处理",
+            "weight": 1,
+            "scoringMethod": "tests",
+            "blocking": true,
+            "safeFeedbackCodes": [
+              "duplicate_order_id",
+              "duplicate_selection_invalid",
+              "row_order_invalid"
+            ]
+          }
+        ]
+      },
+      "environmentRef": "env-python-pandas-candidate",
+      "assetBundleHash": "ba8f36281b83aa007753d96de3f19c08a9b223a0b059aed67ff5c5790ab9473e"
+    },
+    {
+      "bundleId": "bundle-act-types-v1",
+      "source": "profile_fixed",
+      "activity": {
+        "activityId": "act-types",
+        "profileRevision": 1,
+        "kind": "code_completion",
+        "allowedSources": [
+          "profile_fixed"
+        ],
+        "primaryKnowledgePointId": "kp-types",
+        "supportingKnowledgePointIds": [
+          "kp-missing"
+        ],
+        "goalIds": [
+          "goal-clean-orders"
+        ],
+        "title": "补全类型和格式规范化",
+        "prompt": "规范金额、城市、日期、状态与字符串列。",
+        "difficulty": "M-A",
+        "estimatedMinutes": 30,
+        "sourceAnchorIds": [
+          "src-pandas-to-numeric",
+          "src-pandas-to-datetime",
+          "src-pandas-string"
+        ],
+        "templateVersion": "1.0.0-draft",
+        "leakagePolicyId": "policy-no-private-assets",
+        "runtimePolicyId": "python-pandas-candidate",
+        "allowedScaffolds": [
+          "hint",
+          "worked_example"
+        ],
+        "starterCode": "def normalize_types(df):\n    clean_df = df.copy()\n    # TODO_BEGIN\n    pass\n    # TODO_END\n    return clean_df\n",
+        "editableRegions": [
+          {
+            "regionId": "region-main",
+            "startMarker": "# TODO_BEGIN",
+            "endMarker": "# TODO_END",
+            "required": true,
+            "maxCharacters": 5000
+          }
+        ],
+        "entryPoint": "normalize_types",
+        "outputContract": "金额为数值、日期无时区、字符串为StringDtype且业务取值合法。",
+        "datasetRefs": [
+          "dataset-public-orders"
+        ],
+        "publicTestRefs": [
+          "test-types-public"
+        ],
+        "hiddenTestRefs": [
+          "test-types-hidden"
+        ],
+        "rubricRef": "rubric-types",
+        "referenceSolutionRef": "solution-types",
+        "knownWrongSolutionRefs": [
+          "wrong-types"
+        ],
+        "environmentRef": "env-python-pandas-candidate",
+        "allowedLibraries": [
+          "pandas"
+        ]
+      },
+      "contract": {
+        "entryPoint": {
+          "kind": "function",
+          "name": "normalize_types",
+          "argumentFixtureIds": [
+            "dataset-public-orders"
+          ]
+        },
+        "inputDescription": "固定七列订单DataFrame，包含金额、城市、日期、状态和字符串异常。",
+        "output": {
+          "kind": "dataframe",
+          "comparisonRef": "dfcmp-orders-types",
+          "includeIndex": false
+        },
+        "outputDescription": "返回金额数值化、日期无时区、字符串为Pandas StringDtype的DataFrame。",
+        "invariants": [
+          "非法空值和无穷金额转缺失",
+          "非YYYY-MM-DD日期转缺失",
+          "六项城市映射生效",
+          "未知城市保留",
+          "状态仅限冻结集合",
+          "字符串列使用StringDtype"
+        ],
+        "prohibitedBehaviors": [
+          "修改输入DataFrame",
+          "新增未批准城市映射",
+          "宽松解析非标准日期",
+          "写宿主文件",
+          "访问网络"
+        ]
+      },
+      "publicTests": [
+        {
+          "testId": "test-types-public",
+          "visibility": "public",
+          "fileRef": "assessments/public/tests/test-types-public.py",
+          "fixtureRefs": [
+            "dataset-public-orders"
+          ],
+          "dimensionId": "types",
+          "blocking": true,
+          "assetHash": "sha256:2fef6131b9cf9b518aeb9d90f079b7de689fe5d3961cc06baeb1a78d338bd905"
+        }
+      ],
+      "hiddenTests": [
+        {
+          "testId": "test-types-hidden",
+          "visibility": "hidden",
+          "fileRef": "assessments/private/tests/test-types-hidden.py",
+          "fixtureRefs": [
+            "dataset-public-orders"
+          ],
+          "dimensionId": "types",
+          "blocking": true,
+          "assetHash": "sha256:b3153bab7097369623ae2d6bfa8eae11f8414646d006030836f07e5e1e3b3285"
+        }
+      ],
+      "rubric": {
+        "rubricId": "rubric-types",
+        "version": "1.0.0-draft",
+        "passThreshold": 1,
+        "dimensions": [
+          {
+            "dimensionId": "types",
+            "label": "类型与格式",
+            "weight": 1,
+            "scoringMethod": "tests",
+            "blocking": true,
+            "safeFeedbackCodes": [
+              "amount_invalid",
+              "date_invalid",
+              "city_invalid",
+              "status_invalid",
+              "string_dtype_invalid"
+            ]
+          }
+        ]
+      },
+      "environmentRef": "env-python-pandas-candidate",
+      "assetBundleHash": "ebe24e73ee621b40d0e29186cd2b13c56ff28d79b2fdc510d7e36558022bbc83"
+    },
+    {
+      "bundleId": "bundle-act-practical-v1",
+      "source": "profile_fixed",
+      "activity": {
+        "activityId": "act-practical",
+        "profileRevision": 1,
+        "kind": "coding_practical",
+        "allowedSources": [
+          "profile_fixed"
+        ],
+        "primaryKnowledgePointId": "kp-invariants",
+        "supportingKnowledgePointIds": [
+          "kp-structure",
+          "kp-missing",
+          "kp-duplicates",
+          "kp-types",
+          "kp-engineering"
+        ],
+        "goalIds": [
+          "goal-clean-orders"
+        ],
+        "title": "独立完成订单清洗",
+        "prompt": "实现clean_orders并满足完整七列业务契约和结果不变量。",
+        "difficulty": "C-A",
+        "estimatedMinutes": 60,
+        "sourceAnchorIds": [
+          "src-pandas-read-csv",
+          "src-pandas-missing-data",
+          "src-pandas-duplicates",
+          "src-pandas-to-numeric",
+          "src-pandas-to-datetime",
+          "src-pandas-testing"
+        ],
+        "templateVersion": "1.0.0-draft",
+        "leakagePolicyId": "policy-no-private-assets",
+        "runtimePolicyId": "python-pandas-candidate",
+        "allowedScaffolds": [
+          "none",
+          "hint"
+        ],
+        "starterCode": "def clean_orders(df):\n    # TODO_BEGIN\n    raise NotImplementedError\n    # TODO_END\n",
+        "editableRegions": [
+          {
+            "regionId": "region-main",
+            "startMarker": "# TODO_BEGIN",
+            "endMarker": "# TODO_END",
+            "required": true,
+            "maxCharacters": 8000
+          }
+        ],
+        "entryPoint": "clean_orders",
+        "outputContract": "返回满足七列、缺失、去重、dtype与行序不变量的clean_df。",
+        "datasetRefs": [
+          "dataset-public-orders",
+          "dataset-private-variant-01",
+          "dataset-private-variant-02"
+        ],
+        "publicTestRefs": [
+          "test-practical-public"
+        ],
+        "hiddenTestRefs": [
+          "test-practical-hidden-01",
+          "test-practical-hidden-02"
+        ],
+        "rubricRef": "rubric-practical",
+        "referenceSolutionRef": "solution-practical",
+        "knownWrongSolutionRefs": [
+          "wrong-practical"
+        ],
+        "environmentRef": "env-python-pandas-candidate",
+        "allowedLibraries": [
+          "pandas"
+        ],
+        "businessAcceptanceCriteria": [
+          "固定七列和顺序",
+          "order_id非空且唯一",
+          "金额和日期dtype符合环境锁",
+          "字符串列使用StringDtype",
+          "保持被选记录原始相对顺序"
+        ]
+      },
+      "contract": {
+        "entryPoint": {
+          "kind": "function",
+          "name": "clean_orders",
+          "argumentFixtureIds": [
+            "dataset-public-orders",
+            "dataset-private-variant-01",
+            "dataset-private-variant-02"
+          ]
+        },
+        "inputDescription": "固定七列公开订单数据及两份私有变体，由测试fixtureRefs决定当前阶段输入。",
+        "output": {
+          "kind": "dataframe",
+          "comparisonRef": "dfcmp-orders-clean-final",
+          "includeIndex": false
+        },
+        "outputDescription": "返回满足完整七列业务合同、dtype和行序不变量的clean_df。",
+        "invariants": [
+          "固定七列和顺序",
+          "order_id非空且唯一",
+          "金额与日期遵循冻结转换",
+          "字符串列使用StringDtype",
+          "被选记录原始相对顺序不变",
+          "输入DataFrame不被修改"
+        ],
+        "prohibitedBehaviors": [
+          "修改输入DataFrame",
+          "写宿主文件",
+          "访问网络",
+          "启动子进程",
+          "运行时安装依赖"
+        ]
+      },
+      "publicTests": [
+        {
+          "testId": "test-practical-public",
+          "visibility": "public",
+          "fileRef": "assessments/public/tests/test-practical-public.py",
+          "fixtureRefs": [
+            "dataset-public-orders"
+          ],
+          "dimensionId": "invariants",
+          "blocking": true,
+          "assetHash": "sha256:acaa0a8141a2d300452dd4bb786376da5b227c339f897325a20e4a359a0b3906"
+        }
+      ],
+      "hiddenTests": [
+        {
+          "testId": "test-practical-hidden-01",
+          "visibility": "hidden",
+          "fileRef": "assessments/private/tests/test-practical-hidden-01.py",
+          "fixtureRefs": [
+            "dataset-private-variant-01"
+          ],
+          "dimensionId": "invariants",
+          "blocking": true,
+          "assetHash": "sha256:6d762bf0059d7fb77368dbcdd42eb810d565e3c593008c8eced76262d7b20829"
+        },
+        {
+          "testId": "test-practical-hidden-02",
+          "visibility": "hidden",
+          "fileRef": "assessments/private/tests/test-practical-hidden-02.py",
+          "fixtureRefs": [
+            "dataset-private-variant-02"
+          ],
+          "dimensionId": "engineering",
+          "blocking": false,
+          "assetHash": "sha256:fd901d2cb955083a880cfa5c72248350252a8a5b3ba7d548a81b537fab1d2127"
+        }
+      ],
+      "rubric": {
+        "rubricId": "rubric-practical",
+        "version": "1.0.0-draft",
+        "passThreshold": 0.8,
+        "dimensions": [
+          {
+            "dimensionId": "structure",
+            "label": "读取与列结构",
+            "weight": 0.1,
+            "scoringMethod": "tests",
+            "blocking": true,
+            "safeFeedbackCodes": [
+              "columns_invalid",
+              "column_order_invalid"
+            ]
+          },
+          {
+            "dimensionId": "missing",
+            "label": "缺失处理",
+            "weight": 0.2,
+            "scoringMethod": "tests",
+            "blocking": true,
+            "safeFeedbackCodes": [
+              "missing_policy_invalid"
+            ]
+          },
+          {
+            "dimensionId": "duplicates",
+            "label": "重复处理",
+            "weight": 0.15,
+            "scoringMethod": "tests",
+            "blocking": true,
+            "safeFeedbackCodes": [
+              "duplicate_selection_invalid",
+              "row_order_invalid"
+            ]
+          },
+          {
+            "dimensionId": "types",
+            "label": "类型与格式",
+            "weight": 0.25,
+            "scoringMethod": "tests",
+            "blocking": true,
+            "safeFeedbackCodes": [
+              "dtype_invalid",
+              "value_normalization_invalid"
+            ]
+          },
+          {
+            "dimensionId": "invariants",
+            "label": "结果不变量",
+            "weight": 0.2,
+            "scoringMethod": "tests",
+            "blocking": true,
+            "safeFeedbackCodes": [
+              "output_contract_invalid"
+            ]
+          },
+          {
+            "dimensionId": "engineering",
+            "label": "可读与安全",
+            "weight": 0.1,
+            "scoringMethod": "static_check",
+            "blocking": false,
+            "safeFeedbackCodes": [
+              "unsafe_operation",
+              "readability_improvement"
+            ]
+          }
+        ]
+      },
+      "environmentRef": "env-python-pandas-candidate",
+      "assetBundleHash": "509bf70cdfcf49f10c2a5ec53a8c8ceaa08753d57f0bf4b5b98155c92efcb0aa"
+    }
+  ]
+}

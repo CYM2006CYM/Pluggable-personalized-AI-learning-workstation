@@ -1,0 +1,17 @@
+{
+  "diagnosticId": "diagnostic-pandas-cleaning-v1-draft",
+  "scoringVersion": "diagnostic-v1-draft",
+  "status": "draft",
+  "questions": [
+    {"questionId":"diag-01","knowledgePointId":"kp-structure","type":"single_choice","prompt":"固定七列输入中，第一步最需要确认什么？","options":["列名与列序","先按金额排序","删除所有缺失行","重建order_id"]},
+    {"questionId":"diag-02","knowledgePointId":"kp-missing","type":"judgment","prompt":"customer_id缺失时必须删除整行。","options":["正确","错误"]},
+    {"questionId":"diag-03","knowledgePointId":"kp-missing","type":"single_choice","prompt":"非法金额文本应如何处理？","options":["转缺失并保留行","转0","删除整行","保留原字符串"]},
+    {"questionId":"diag-04","knowledgePointId":"kp-duplicates","type":"single_choice","prompt":"重复order_id中只有一条日期可解析时保留哪条？","options":["日期可解析的记录","原始最后一条","金额最大的记录","任意一条"]},
+    {"questionId":"diag-05","knowledgePointId":"kp-duplicates","type":"judgment","prompt":"去重完成后可以按order_id重新排序。","options":["正确","错误"]},
+    {"questionId":"diag-06","knowledgePointId":"kp-types","type":"single_choice","prompt":"未知非空城市应如何处理？","options":["保留清洗后的原值","转缺失","自动加入映射表","删除整行"]},
+    {"questionId":"diag-07","knowledgePointId":"kp-types","type":"single_choice","prompt":"非YYYY-MM-DD日期应如何处理？","options":["转缺失","宽松猜测格式","保留字符串","删除整行"]},
+    {"questionId":"diag-08","knowledgePointId":"kp-types","type":"single_choice","prompt":"合法status集合是什么？","options":["completed/pending/cancelled","done/open/closed","completed/shipped/cancelled","任意小写文本"]},
+    {"questionId":"diag-09","knowledgePointId":"kp-invariants","type":"single_choice","prompt":"DataFrame比较前允许的统一处理是什么？","options":["重置索引","自动排序","自动改列名","填充所有缺失"]},
+    {"questionId":"diag-10","knowledgePointId":"kp-engineering","type":"judgment","prompt":"正式任务在无模型、无网络时仍应能够确定性评测。","options":["正确","错误"]}
+  ]
+}

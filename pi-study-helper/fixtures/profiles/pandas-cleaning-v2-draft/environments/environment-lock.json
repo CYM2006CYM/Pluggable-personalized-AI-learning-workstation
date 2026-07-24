@@ -1,0 +1,30 @@
+{
+  "environmentId": "env-python-pandas-candidate",
+  "schemaVersion": 1,
+  "status": "draft_pending_C_prototype",
+  "nodeVersion": null,
+  "pythonVersion": null,
+  "pandasVersion": null,
+  "pyodideVersion": null,
+  "allowedLibraries": [
+    {"name": "pandas", "version": null}
+  ],
+  "platform": null,
+  "evaluatorVersion": null,
+  "limits": {
+    "wallClockMs": null,
+    "stdoutBytes": null,
+    "stderrBytes": null,
+    "sourceBytes": null,
+    "datasetBytes": null
+  },
+  "capabilityFlags": {
+    "reliableMemoryLimit": false,
+    "networkIsolation": false,
+    "processTreeTermination": false
+  },
+  "prototypeEvidenceRef": "pending_C_prototype",
+  "environmentHash": "pending_C_prototype",
+  "createdAt": null,
+  "note": "Frozen field shape only. Null values are intentionally unmeasured and must be filled by C/owner prototype evidence."
+}

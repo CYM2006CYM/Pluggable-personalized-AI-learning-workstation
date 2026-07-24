@@ -1,0 +1,11 @@
+{
+  "goals": [
+    {
+      "goalId": "goal-clean-orders",
+      "title": "按冻结业务契约清洗订单数据",
+      "targetKnowledgePointIds": ["kp-structure", "kp-missing", "kp-duplicates", "kp-types", "kp-invariants", "kp-engineering"],
+      "requiredActivityIds": ["act-structure", "act-missing", "act-duplicates", "act-types", "act-practical"],
+      "finalActivityId": "act-practical"
+    }
+  ]
+}
