@@ -71,6 +71,7 @@ pandas-cleaning/                              # Pandas Profile v2根目录；Pro
 │  └─ evaluation/                              # 本包内部活动测试；不含05号保留评测集
 ├─ rubrics/                                   # 代码补全和最终实操Rubric
 ├─ datasets/                                  # 固定数据和维护脚本
+│  ├─ fixtures.json                           # 公开和私有CSV的稳定ID、可见性、路径和SHA-256索引
 │  ├─ public/orders-learning.csv              # 约30行公开教学数据
 │  ├─ private/orders-variant-01.csv           # 约20至30行私有变体
 │  ├─ private/orders-variant-02.csv           # 约20至30行私有变体
@@ -85,6 +86,8 @@ pandas-cleaning/                              # Pandas Profile v2根目录；Pro
 ├─ environments/environment-lock.json         # 实际原型验证后的运行环境锁
 └─ quality/                                   # 启用前质量报告和CIDPP摘要
 ```
+
+`datasets/fixtures.json`按21号D.6登记公开学习CSV和2至3份私有变体。活动`datasetRefs`列出任务允许的数据ID；每条公开/隐藏测试通过`fixtureRefs`选择本次实际数据。公开测试只能绑定公开学习CSV；隐藏测试既可复用公开CSV，也可分别绑定私有变体01、02和可选03。任何额外字段、重复/悬空引用、公开测试引用私有变体或哈希不一致都阻止Profile从`draft`提升为`active`。
 
 AI构建期生成精简、标准、详细三级中文代码注释；代码结构、可编辑区域、公开/私有测试、参考实现和通过标准固定。所有核心资产经过程序检查、单一CIDPP评价、必要的一次优化和人工确认。
 
