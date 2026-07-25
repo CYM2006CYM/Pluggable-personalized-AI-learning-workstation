@@ -1,0 +1,12 @@
+{
+  "contractVersion": "W1-C5",
+  "recipient": "A",
+  "importsActivityResultFrom": "src/domain/v2-types.ts",
+  "importsRuntimeErrorCodeFrom": "src/domain/v2-types.ts",
+  "canCommitEvidence": false,
+  "canUpdateMastery": false,
+  "canReorderPath": false,
+  "idempotencyBoundary": "requestId_plus_attemptId",
+  "idempotencyConflictCreatesEvidence": false,
+  "reviewFocus": ["public type uniqueness", "Evidence write boundary", "idempotency conflict classification"]
+}

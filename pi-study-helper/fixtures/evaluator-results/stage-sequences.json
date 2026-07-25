@@ -1,0 +1,12 @@
+{
+  "contractVersion": "W1-C5",
+  "valid": [
+    ["prepare", "user_code", "public_tests", "hidden_tests", "summarize"]
+  ],
+  "invalid": [
+    {"name": "skip-public", "stages": ["prepare", "user_code", "hidden_tests", "summarize"]},
+    {"name": "swap-tests", "stages": ["prepare", "user_code", "hidden_tests", "public_tests", "summarize"]},
+    {"name": "repeat-user-code", "stages": ["prepare", "user_code", "user_code", "public_tests", "hidden_tests", "summarize"]},
+    {"name": "unknown-stage", "stages": ["prepare", "user_code", "public_tests", "private_tests", "summarize"]}
+  ]
+}

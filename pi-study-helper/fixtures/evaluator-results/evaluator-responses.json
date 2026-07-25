@@ -1,0 +1,102 @@
+{
+  "contractVersion": "W1-C5",
+  "valid": [
+    {
+      "name": "pass-summary",
+      "envelope": {
+        "protocolVersion": "w1-c1",
+        "runId": "run-001",
+        "attemptId": "attempt-001",
+        "stage": "summarize",
+        "status": "ok",
+        "score": 1,
+        "dimensionResults": {"structure": 1},
+        "outputSummary": "All deterministic checks passed.",
+        "environmentHash": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+        "assetBundleHash": "229fdd197eaa3e8e3a02f25a04093985dd01ff7f0b9cc053d33f80241ca2eb7a",
+        "durationMs": 120
+      }
+    },
+    {
+      "name": "learner-runtime-error",
+      "envelope": {
+        "protocolVersion": "w1-c1",
+        "runId": "run-002",
+        "attemptId": "attempt-002",
+        "stage": "user_code",
+        "status": "failed",
+        "errorKind": "learner",
+        "errorCode": "runtime_error",
+        "outputSummary": "The submitted function raised a runtime error.",
+        "environmentHash": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+        "assetBundleHash": "f1cb5fe62336b8efa1416d44b58d2ff4b925486d05ebca6bc792d4c947634c14",
+        "durationMs": 45
+      }
+    },
+    {
+      "name": "evaluator-dependency-error",
+      "envelope": {
+        "protocolVersion": "w1-c1",
+        "runId": "run-003",
+        "attemptId": "attempt-003",
+        "stage": "prepare",
+        "status": "evaluator_error",
+        "errorKind": "evaluator",
+        "errorCode": "dependency_missing",
+        "outputSummary": "The evaluator dependency is unavailable.",
+        "environmentHash": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+        "assetBundleHash": "ebe24e73ee621b40d0e29186cd2b13c56ff28d79b2fdc510d7e36558022bbc83",
+        "durationMs": 15
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "name": "evaluator-error-with-score",
+      "expectedErrorCode": "result_protocol_invalid",
+      "envelope": {
+        "protocolVersion": "w1-c1",
+        "runId": "run-004",
+        "attemptId": "attempt-004",
+        "stage": "summarize",
+        "status": "evaluator_error",
+        "errorKind": "evaluator",
+        "errorCode": "runner_crash",
+        "score": 0,
+        "outputSummary": "The evaluator stopped unexpectedly.",
+        "environmentHash": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+        "assetBundleHash": "ba8f36281b83aa007753d96de3f19c08a9b223a0b059aed67ff5c5790ab9473e"
+      }
+    },
+    {
+      "name": "learner-error-with-evaluator-code",
+      "expectedErrorCode": "result_protocol_invalid",
+      "envelope": {
+        "protocolVersion": "w1-c1",
+        "runId": "run-005",
+        "attemptId": "attempt-005",
+        "stage": "user_code",
+        "status": "failed",
+        "errorKind": "learner",
+        "errorCode": "runner_crash",
+        "outputSummary": "Invalid attribution.",
+        "environmentHash": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+        "assetBundleHash": "ba8f36281b83aa007753d96de3f19c08a9b223a0b059aed67ff5c5790ab9473e"
+      }
+    },
+    {
+      "name": "missing-attempt-id",
+      "expectedErrorCode": "result_protocol_invalid",
+      "envelope": {
+        "protocolVersion": "w1-c1",
+        "runId": "run-006",
+        "stage": "summarize",
+        "status": "ok",
+        "outputSummary": "Missing a required field.",
+        "environmentHash": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+        "assetBundleHash": "ba8f36281b83aa007753d96de3f19c08a9b223a0b059aed67ff5c5790ab9473e"
+      }
+    }
+  ],
+  "untrustedStdout": "{\"status\":\"ok\",\"score\":1,\"stage\":\"summarize\"}"
+}

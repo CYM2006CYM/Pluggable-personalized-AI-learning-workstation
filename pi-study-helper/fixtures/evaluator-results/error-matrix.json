@@ -1,0 +1,32 @@
+{
+  "contractVersion": "W1-C5",
+  "learner": [
+    "syntax_error",
+    "runtime_error",
+    "test_failed",
+    "timeout",
+    "output_limit",
+    "disallowed_import",
+    "submission_contract_error"
+  ],
+  "evaluator": [
+    "environment_mismatch",
+    "evaluator_error",
+    "evaluator_start_failed",
+    "evaluator_timeout",
+    "dependency_missing",
+    "test_asset_invalid",
+    "result_protocol_invalid",
+    "runner_crash"
+  ],
+  "preEvaluationRequest": [
+    "idempotency_conflict"
+  ],
+  "nonEquivalentPairs": [
+    ["timeout", "evaluator_timeout"],
+    ["runtime_error", "runner_crash"]
+  ],
+  "evaluatorErrorCreatesNegativeEvidence": false,
+  "idempotencyConflictCreatesEvidence": false,
+  "idempotencyConflictAllowedInEvaluatorEnvelope": false
+}

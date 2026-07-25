@@ -1,0 +1,59 @@
+{
+  "contractVersion": "W1-C5",
+  "results": {
+    "pass": {
+      "executionStatus": "completed",
+      "verdict": "pass",
+      "score": 1,
+      "dimensionResults": {"structure": 1},
+      "safeFeedback": "All deterministic checks passed.",
+      "durationMs": 120,
+      "evaluatorVersion": "fixture-evaluator-w1-c1",
+      "environmentHash": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+      "assetBundleHash": "229fdd197eaa3e8e3a02f25a04093985dd01ff7f0b9cc053d33f80241ca2eb7a"
+    },
+    "partial": {
+      "executionStatus": "completed",
+      "verdict": "partial",
+      "score": 0.65,
+      "dimensionResults": {"missing": 0.5, "structure": 0.8},
+      "safeFeedback": "Some deterministic checks still need attention.",
+      "durationMs": 145,
+      "evaluatorVersion": "fixture-evaluator-w1-c1",
+      "environmentHash": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+      "assetBundleHash": "f1cb5fe62336b8efa1416d44b58d2ff4b925486d05ebca6bc792d4c947634c14"
+    },
+    "learnerFailure": {
+      "executionStatus": "failed",
+      "verdict": "fail",
+      "errorKind": "learner",
+      "errorCode": "test_failed",
+      "score": 0.4,
+      "dimensionResults": {"duplicates": 0.4},
+      "safeFeedback": "A deterministic assertion was not satisfied.",
+      "durationMs": 170,
+      "evaluatorVersion": "fixture-evaluator-w1-c1",
+      "environmentHash": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+      "assetBundleHash": "ba8f36281b83aa007753d96de3f19c08a9b223a0b059aed67ff5c5790ab9473e"
+    },
+    "evaluatorFailure": {
+      "executionStatus": "failed",
+      "verdict": "not_graded",
+      "errorKind": "evaluator",
+      "errorCode": "dependency_missing",
+      "safeFeedback": "The evaluator environment is unavailable; the draft remains available.",
+      "durationMs": 25,
+      "evaluatorVersion": "fixture-evaluator-w1-c1",
+      "environmentHash": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+      "assetBundleHash": "ebe24e73ee621b40d0e29186cd2b13c56ff28d79b2fdc510d7e36558022bbc83"
+    },
+    "cancelled": {
+      "executionStatus": "cancelled",
+      "verdict": "not_graded",
+      "safeFeedback": "Evaluation cancelled; the draft remains available.",
+      "evaluatorVersion": "fixture-evaluator-w1-c1",
+      "environmentHash": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+      "assetBundleHash": "509bf70cdfcf49f10c2a5ec53a8c8ceaa08753d57f0bf4b5b98155c92efcb0aa"
+    }
+  }
+}

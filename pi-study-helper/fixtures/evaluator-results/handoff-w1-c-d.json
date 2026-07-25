@@ -1,0 +1,9 @@
+{
+  "contractVersion": "W1-C5",
+  "recipient": "D",
+  "consumableField": "ActivityResult.safeFeedback",
+  "immutableFacts": ["executionStatus", "verdict", "errorKind", "errorCode", "score", "dimensionResults"],
+  "availableFixtureResults": ["pass", "partial", "learnerFailure", "evaluatorFailure", "cancelled"],
+  "hiddenAssetsAvailableToAgent": false,
+  "reviewFocus": ["read-only ActivityResult consumption", "no score or verdict rewriting"]
+}

@@ -1,0 +1,10 @@
+{
+  "contractVersion": "W1-C5",
+  "recipient": "B",
+  "baselineCommit": "f6c83968f66fbb173d6de6788c79080b8374138f",
+  "profileRef": "fixtures/profiles/pandas-cleaning-v2-draft/",
+  "taskBundleCount": 5,
+  "datasetFixtureCount": 3,
+  "businessRulesRedefined": false,
+  "reviewFocus": ["TaskContract projection", "fixture stage mapping", "Rubric semantics unchanged"]
+}

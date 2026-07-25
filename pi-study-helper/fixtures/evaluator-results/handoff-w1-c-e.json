@@ -1,0 +1,9 @@
+{
+  "contractVersion": "W1-C5",
+  "recipient": "E",
+  "authorTests": ["tests/evaluation-protocol.test.ts", "tests/code-evaluation-port.test.ts"],
+  "securityChecks": ["host path scan", "hidden asset scan", "stdout protocol separation", "B resource tree unchanged", "runner constraint fixture validation"],
+  "knownLimitations": ["fixture adapter only", "no Python process", "no HTTP", "no production sandbox", "environment limits unmeasured", "runner constraints lack prototype evidence"],
+  "fixedRunnerConstraints": ["unique temporary directory", "separate public and hidden processes", "Node-only hidden asset ownership", "fixed working directory", "minimal environment", "shell false", "process-tree timeout", "truncated escaped output", "cleanup on every outcome"],
+  "reviewFocus": ["error attribution", "requestId and attemptId idempotency", "determinism", "AbortSignal", "runner constraints", "leakage"]
+}

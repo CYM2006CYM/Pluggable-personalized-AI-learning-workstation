@@ -1,0 +1,74 @@
+{
+  "contractVersion": "W1-C5",
+  "valid": [
+    {
+      "name": "user-code-without-fixtures",
+      "expectedFixtureRefs": [],
+      "envelope": {
+        "protocolVersion": "w1-c1",
+        "executionId": "run-001",
+        "stage": "user_code",
+        "entryPoint": {"kind": "function", "name": "clean_orders"},
+        "output": {"kind": "dataframe", "comparisonRef": "dfcmp-orders-seven-columns"},
+        "fixtureRefs": [],
+        "deterministicSeed": 20260725
+      }
+    },
+    {
+      "name": "public-stage-public-fixture",
+      "expectedFixtureRefs": ["dataset-public-orders"],
+      "envelope": {
+        "protocolVersion": "w1-c1",
+        "executionId": "run-001",
+        "stage": "public_tests",
+        "entryPoint": {"kind": "function", "name": "clean_orders"},
+        "output": {"kind": "dataframe", "comparisonRef": "dfcmp-orders-seven-columns"},
+        "fixtureRefs": ["dataset-public-orders"],
+        "deterministicSeed": 20260725
+      }
+    },
+    {
+      "name": "hidden-stage-approved-fixtures",
+      "expectedFixtureRefs": ["dataset-public-orders", "dataset-private-variant-01", "dataset-private-variant-02"],
+      "envelope": {
+        "protocolVersion": "w1-c1",
+        "executionId": "run-001",
+        "stage": "hidden_tests",
+        "entryPoint": {"kind": "function", "name": "clean_orders"},
+        "output": {"kind": "dataframe", "comparisonRef": "dfcmp-orders-practical"},
+        "fixtureRefs": ["dataset-public-orders", "dataset-private-variant-01", "dataset-private-variant-02"],
+        "deterministicSeed": 20260725
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "name": "public-stage-private-fixture",
+      "expectedErrorCode": "result_protocol_invalid",
+      "expectedFixtureRefs": ["dataset-public-orders"],
+      "envelope": {
+        "protocolVersion": "w1-c1",
+        "executionId": "run-002",
+        "stage": "public_tests",
+        "entryPoint": {"kind": "function", "name": "clean_orders"},
+        "output": {"kind": "dataframe"},
+        "fixtureRefs": ["dataset-private-variant-01"],
+        "deterministicSeed": 20260725
+      }
+    },
+    {
+      "name": "unknown-field",
+      "expectedErrorCode": "result_protocol_invalid",
+      "envelope": {
+        "protocolVersion": "w1-c1",
+        "executionId": "run-003",
+        "stage": "user_code",
+        "entryPoint": {"kind": "function", "name": "clean_orders"},
+        "output": {"kind": "dataframe"},
+        "fixtureRefs": [],
+        "deterministicSeed": 20260725,
+        "hostPath": "not-allowed"
+      }
+    }
+  ]
+}

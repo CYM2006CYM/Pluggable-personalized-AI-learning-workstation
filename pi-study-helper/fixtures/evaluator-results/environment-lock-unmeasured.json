@@ -1,0 +1,113 @@
+{
+  "environmentId": "env-python-pandas-candidate",
+  "schemaVersion": 1,
+  "status": "draft_pending_C_prototype",
+  "nodeVersion": null,
+  "pythonVersion": null,
+  "pandasVersion": null,
+  "pyodideVersion": null,
+  "allowedLibraries": [{"name": "pandas", "version": null}],
+  "platform": null,
+  "evaluatorVersion": null,
+  "limits": {
+    "wallClockMs": null,
+    "stdoutBytes": null,
+    "stderrBytes": null,
+    "sourceBytes": null,
+    "datasetBytes": null,
+    "memoryBytes": null
+  },
+  "capabilityFlags": {
+    "reliableMemoryLimit": false,
+    "networkIsolation": false,
+    "processTreeTermination": false
+  },
+  "executionConstraints": {
+    "temporaryDirectory": "unique_per_run",
+    "cleanup": "always_on_success_failure_cancel",
+    "processIsolation": "separate_clean_public_hidden_processes",
+    "hiddenAssetsOwner": "node_parent_only",
+    "hiddenAssetsInUserDirectory": false,
+    "workingDirectory": "fixed_per_run",
+    "environmentVariables": "minimal_allowlist",
+    "shell": false,
+    "timeoutAction": "terminate_process_tree",
+    "outputHandling": "truncate_escape_stdout_stderr"
+  },
+  "prototypeMeasurements": [
+    {
+      "questionId": "temporary-directory-cleanup",
+      "constraint": "Prove unique per-run directories and cleanup after success, failure, and cancellation.",
+      "status": "pending_C_prototype",
+      "evidenceRef": null,
+      "ownerDecision": "pending_after_prototype_evidence"
+    },
+    {
+      "questionId": "public-hidden-process-isolation",
+      "constraint": "Prove public and hidden stages use separate clean Python processes.",
+      "status": "pending_C_prototype",
+      "evidenceRef": null,
+      "ownerDecision": "pending_after_prototype_evidence"
+    },
+    {
+      "questionId": "hidden-asset-ownership",
+      "constraint": "Prove hidden assertions stay with the Node parent and never enter the user directory.",
+      "status": "pending_C_prototype",
+      "evidenceRef": null,
+      "ownerDecision": "pending_after_prototype_evidence"
+    },
+    {
+      "questionId": "shell-working-directory",
+      "constraint": "Prove an explicit executable, fixed working directory, and shell false are used.",
+      "status": "pending_C_prototype",
+      "evidenceRef": null,
+      "ownerDecision": "pending_after_prototype_evidence"
+    },
+    {
+      "questionId": "minimal-environment",
+      "constraint": "Measure and approve the minimum child-process environment allowlist.",
+      "status": "pending_C_prototype",
+      "evidenceRef": null,
+      "ownerDecision": "pending_after_prototype_evidence"
+    },
+    {
+      "questionId": "process-tree-timeout",
+      "constraint": "Prove timeout and cancellation terminate the complete Windows process tree.",
+      "status": "pending_C_prototype",
+      "evidenceRef": null,
+      "ownerDecision": "pending_after_prototype_evidence"
+    },
+    {
+      "questionId": "output-truncation-escaping",
+      "constraint": "Measure byte limits and prove stdout and stderr are truncated and escaped.",
+      "status": "pending_C_prototype",
+      "evidenceRef": null,
+      "ownerDecision": "pending_after_prototype_evidence"
+    },
+    {
+      "questionId": "runtime-versions-dtype",
+      "constraint": "Measure Node, Python, Pandas, Pyodide, platform, evaluator, and dtype behavior.",
+      "status": "pending_C_prototype",
+      "evidenceRef": null,
+      "ownerDecision": "pending_after_prototype_evidence"
+    },
+    {
+      "questionId": "resource-limits",
+      "constraint": "Measure wall-clock, source, dataset, output, and memory limits under repeated runs.",
+      "status": "pending_C_prototype",
+      "evidenceRef": null,
+      "ownerDecision": "pending_after_prototype_evidence"
+    },
+    {
+      "questionId": "network-memory-capabilities",
+      "constraint": "Determine whether network isolation and reliable memory limits are enforceable on Windows.",
+      "status": "pending_C_prototype",
+      "evidenceRef": null,
+      "ownerDecision": "pending_after_prototype_evidence"
+    }
+  ],
+  "prototypeEvidenceRef": "pending_C_prototype",
+  "environmentHash": "pending_C_prototype",
+  "createdAt": null,
+  "validationStatus": "intentionally_invalid_for_formal_submit"
+}
