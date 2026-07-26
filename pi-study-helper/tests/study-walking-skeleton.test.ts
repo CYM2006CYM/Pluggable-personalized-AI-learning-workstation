@@ -15,7 +15,38 @@ import {
   validateProfileRevisionQuality,
   validateSummaryResult,
 } from "../src/graphs/study-walking-skeleton.js";
+import type { NodeDefinition, Stage } from "pi-loop-graph-sdk";
 import { ProfileFamilyRepository } from "../src/repositories/profile-family-repository.js";
+
+type AgentRun = (request: { prompt: string; output?: unknown }) => Promise<{ result: Record<string, unknown> }>;
+
+const gradeCompletion = {
+  is_correct: false,
+  correct_answer: "答案",
+  explanation_l1: "解析",
+  knowledge_chain_l3: [],
+  suggestion_next: "再次作答",
+  grading: "缺少核心要点",
+};
+
+/** 0.2 的 Code Node 只接收 { input, complete, runAgent } 一个执行上下文对象。 */
+function codeExecution(input: Record<string, unknown>, runAgent?: AgentRun) {
+  return {
+    input,
+    complete: (result: unknown) => result,
+    runAgent: runAgent ?? (async () => { throw new Error("not used"); }),
+  } as never;
+}
+
+/** Stage.node 是节点联合类型，测试里统一按 Code Node 执行并收窄结果。 */
+async function runCodeNode(
+  node: NodeDefinition | undefined,
+  input: Record<string, unknown>,
+  runAgent?: AgentRun,
+): Promise<Record<string, unknown>> {
+  if (!node || node.kind !== "code") throw new Error("code node missing");
+  return await node.execute(codeExecution(input, runAgent)) as Record<string, unknown>;
+}
 
 describe("学习 walking skeleton 图", () => {
   let dataRoot: string;
@@ -36,52 +67,50 @@ describe("学习 walking skeleton 图", () => {
 
   it("包含学习、画像和 Profile 构建所需的真实 Agent Run 节点", () => {
     const graphs = createStudyWalkingSkeletonGraphs(profiles);
-    expect(graphs.generateQuestion.nodes.prepare_question_context?.kind).toBe("code");
-    expect(graphs.generateQuestion.nodes.generate_question?.kind).toBe("code");
-    expect(graphs.gradeAnswer.nodes.grade_answer?.kind).toBe("code");
-    expect(graphs.discussQuestion.nodes.discuss_question?.kind).toBe("code");
-    expect(graphs.summarizeSession.nodes.summarize_session?.kind).toBe("code");
-    expect(graphs.updateLearningProfile.nodes.update_learning_profile?.kind).toBe("code");
-    expect(graphs.buildProfileFragment.nodes.build_profile_fragment?.kind).toBe("code");
-    expect(graphs.planProfileRevision.nodes.plan_profile_revision?.kind).toBe("code");
-    expect(graphs.reviseProfileDraft.nodes.revise_profile_draft?.kind).toBe("code");
-    expect(graphs.reviewProfileDraft.nodes.review_profile_draft?.kind).toBe("code");
-    expect(Object.keys(graphs.generateQuestion.routing)).toEqual(["prepare_question_context", "generate_question"]);
+    expect(graphs.generateQuestion.stages.prepare_question_context?.node.kind).toBe("code");
+    expect(graphs.generateQuestion.stages.generate_question?.node.kind).toBe("code");
+    expect(graphs.gradeAnswer.stages.grade_answer?.node.kind).toBe("code");
+    expect(graphs.discussQuestion.stages.discuss_question?.node.kind).toBe("code");
+    expect(graphs.summarizeSession.stages.summarize_session?.node.kind).toBe("code");
+    expect(graphs.updateLearningProfile.stages.update_learning_profile?.node.kind).toBe("code");
+    expect(graphs.buildProfileFragment.stages.build_profile_fragment?.node.kind).toBe("code");
+    expect(graphs.planProfileRevision.stages.plan_profile_revision?.node.kind).toBe("code");
+    expect(graphs.reviseProfileDraft.stages.revise_profile_draft?.node.kind).toBe("code");
+    expect(graphs.reviewProfileDraft.stages.review_profile_draft?.node.kind).toBe("code");
+    expect(Object.keys(graphs.generateQuestion.stages)).toEqual(["prepare_question_context", "generate_question"]);
   });
 
-  it("代码节点直接读取 active Profile，不调用 NodeContext.callTool", async () => {
+  it("每张图都声明 0.2 必需的 id/version/入口和显式终点输出", () => {
+    const graphs = createStudyWalkingSkeletonGraphs(profiles);
+    for (const graph of Object.values(graphs)) {
+      expect(graph.version).toBe("1");
+      expect(graph.entries.length).toBeGreaterThan(0);
+      for (const entryPoint of graph.entries) expect(graph.stages[entryPoint.to]).toBeDefined();
+      const finishConnections = Object.values(graph.stages as Record<string, Stage>)
+        .flatMap((stage) => stage.route.connections)
+        .filter((connection) => connection.to === "__graph_finish__");
+      expect(finishConnections.length).toBeGreaterThan(0);
+      for (const connection of finishConnections) expect(connection.transition.output).toBeTypeOf("function");
+    }
+  });
+
+  it("代码节点直接读取 active Profile，不需要任何工具", async () => {
     const graph = createStudyWalkingSkeletonGraphs(profiles).generateQuestion;
-    const node = graph.nodes.prepare_question_context;
+    const node = graph.stages.prepare_question_context?.node;
     if (!node || node.kind !== "code") throw new Error("prepare node missing");
-    const completion = await node.execute(
-      { id: "test", globalGoal: "test", background: {}, frames: [], mechanisms: [], scratch: {} },
-      {
-        data: { subjectId: "demo-review", scopeId: "chapter:1", difficulty: "S-U", questionType: "short_answer" },
-        source: { kind: "entry", entryId: "main" },
-      },
-      {
-        signal: new AbortController().signal,
-        runAgent: async () => { throw new Error("not used"); },
-        callTool: async () => { throw new Error("callTool must not be used"); },
-      },
+    expect(node.tools).toEqual([]);
+    const result = await runCodeNode(
+      node,
+      { subjectId: "demo-review", scopeId: "chapter:1", difficulty: "S-U", questionType: "short_answer" },
     );
-    expect(completion.status).toBe("ok");
-    expect(completion.result.material).toContain("主动回忆");
+    expect(result.material).toContain("主动回忆");
   });
 
   it("代码节点按卡片或小节收窄 Agent 可见资料", async () => {
     const graph = createStudyWalkingSkeletonGraphs(profiles).generateQuestion;
-    const node = graph.nodes.prepare_question_context;
+    const node = graph.stages.prepare_question_context?.node;
     if (!node || node.kind !== "code") throw new Error("prepare node missing");
-    const execute = (data: Record<string, unknown>) => node.execute(
-      { id: "test", globalGoal: "test", background: {}, frames: [], mechanisms: [], scratch: {} },
-      { data, source: { kind: "entry", entryId: "main" } },
-      {
-        signal: new AbortController().signal,
-        runAgent: async () => { throw new Error("not used"); },
-        callTool: async () => { throw new Error("callTool must not be used"); },
-      },
-    );
+    const execute = (data: Record<string, unknown>) => runCodeNode(node, data);
 
     const card = await execute({
       subjectId: "demo-review",
@@ -92,10 +121,10 @@ describe("学习 walking skeleton 图", () => {
       questionType: "short_answer",
       mode: "card_practice",
     });
-    expect(card.result.target).toMatchObject({ kind: "card", id: "active_recall" });
-    expect(card.result.knowledgePointIds).toEqual(["active_recall"]);
-    expect(card.result.material).toContain("# 主动回忆");
-    expect(card.result.material).not.toContain("# 学习方法 Demo");
+    expect(card.target).toMatchObject({ kind: "card", id: "active_recall" });
+    expect(card.knowledgePointIds).toEqual(["active_recall"]);
+    expect(card.material).toContain("# 主动回忆");
+    expect(card.material).not.toContain("# 学习方法 Demo");
 
     const section = await execute({
       subjectId: "demo-review",
@@ -106,10 +135,10 @@ describe("学习 walking skeleton 图", () => {
       questionType: "short_answer",
       mode: "chapter_study",
     });
-    expect(section.result.target).toMatchObject({ kind: "section", id: "ch01-sec01" });
-    expect(section.result.knowledgePointIds).toEqual(["active_recall", "spaced_review", "interleaving"]);
-    expect(section.result.material).toContain("# 记忆与练习");
-    expect(section.result.material).not.toContain("# 学习方法 Demo");
+    expect(section.target).toMatchObject({ kind: "section", id: "ch01-sec01" });
+    expect(section.knowledgePointIds).toEqual(["active_recall", "spaced_review", "interleaving"]);
+    expect(section.material).toContain("# 记忆与练习");
+    expect(section.material).not.toContain("# 学习方法 Demo");
   });
 
   it("Agent 输出门禁拒绝缺字段并接受完整结果", () => {
@@ -257,55 +286,77 @@ describe("学习 walking skeleton 图", () => {
   });
 
   it("判题 Agent 被明确限制为只判 submitted_answer，不能改写成放弃", async () => {
-    const node = createStudyWalkingSkeletonGraphs(profiles).gradeAnswer.nodes.grade_answer;
+    const node = createStudyWalkingSkeletonGraphs(profiles).gradeAnswer.stages.grade_answer?.node;
     if (!node || node.kind !== "code") throw new Error("grade node missing");
     let prompt = "";
-    await node.execute(
-      { id: "test", globalGoal: "test", background: {}, frames: [], mechanisms: [], scratch: {} },
-      {
-        data: { question: { question_text: "题目", correct_answer: "答案" }, userAnswer: "我不知道题目是什么" },
-        source: { kind: "entry", entryId: "main" },
-      },
-      {
-        signal: new AbortController().signal,
-        runAgent: async (request) => {
-          prompt = request.prompt;
-          return { nodeId: "grade_answer", status: "ok", result: {} };
-        },
-        callTool: async () => { throw new Error("not used"); },
+    const result = await runCodeNode(
+      node,
+      { question: { question_text: "题目", correct_answer: "答案" }, userAnswer: "我不知道题目是什么" },
+      async (request) => {
+        prompt = request.prompt;
+        return { result: gradeCompletion };
       },
     );
+    expect(result).toEqual(gradeCompletion);
     expect(prompt).toContain("一定是 submitted_answer");
     expect(prompt).toContain("不能描述为“用户放弃”");
   });
 
+  it("业务校验不通过时把拒绝原因回灌给 Agent 并重试", async () => {
+    const node = createStudyWalkingSkeletonGraphs(profiles).gradeAnswer.stages.grade_answer?.node;
+    if (!node || node.kind !== "code") throw new Error("grade node missing");
+    const prompts: string[] = [];
+    const result = await runCodeNode(
+      node,
+      { question: { question_text: "题目", correct_answer: "答案" }, userAnswer: "答案" },
+      async (request) => {
+        prompts.push(request.prompt);
+        return { result: prompts.length === 1 ? { is_correct: true } : gradeCompletion };
+      },
+    );
+    expect(prompts).toHaveLength(2);
+    expect(prompts[1]).toContain("上一次提交未通过业务校验");
+    expect(result).toEqual(gradeCompletion);
+  });
+
+  it("业务校验重试用尽后节点失败", async () => {
+    const node = createStudyWalkingSkeletonGraphs(profiles).gradeAnswer.stages.grade_answer?.node;
+    if (!node || node.kind !== "code") throw new Error("grade node missing");
+    await expect(runCodeNode(
+      node,
+      { question: {}, userAnswer: "答案" },
+      async () => ({ result: {} }),
+    )).rejects.toThrow("Agent 结果未通过业务校验");
+  });
+
   it("总结 Agent 只消费受控 SessionEvidence", async () => {
-    const node = createStudyWalkingSkeletonGraphs(profiles).summarizeSession.nodes.summarize_session;
+    const node = createStudyWalkingSkeletonGraphs(profiles).summarizeSession.stages.summarize_session?.node;
     if (!node || node.kind !== "code") throw new Error("summary node missing");
     let prompt = "";
-    await node.execute(
-      { id: "test", globalGoal: "test", background: {}, frames: [], mechanisms: [], scratch: {} },
+    await runCodeNode(
+      node,
       {
-        data: {
-          evidence: {
-            session: { total_questions: 1, correct: 0, gave_up: 1 },
-            observed_facts: ["完成 1 题"],
+        evidence: {
+          session: { total_questions: 1, correct: 0, gave_up: 1 },
+          observed_facts: ["完成 1 题"],
+          mastery_evidence: [],
+          unverified_topics: ["active_recall"],
+          recommendations: [],
+        },
+        difficultyCatalog: { "S-U": { label: "简单·理解" } },
+        summaryKind: "final",
+      },
+      async (request) => {
+        prompt = request.prompt;
+        return {
+          result: {
+            summary_markdown: "# 总结",
+            observed_facts: [],
             mastery_evidence: [],
-            unverified_topics: ["active_recall"],
+            unverified_topics: [],
             recommendations: [],
           },
-          difficultyCatalog: { "S-U": { label: "简单·理解" } },
-          summaryKind: "final",
-        },
-        source: { kind: "entry", entryId: "main" },
-      },
-      {
-        signal: new AbortController().signal,
-        runAgent: async (request) => {
-          prompt = request.prompt;
-          return { nodeId: "summarize_session", status: "ok", result: {} };
-        },
-        callTool: async () => { throw new Error("not used"); },
+        };
       },
     );
     expect(prompt).toContain('\"unverified_topics\":[\"active_recall\"]');

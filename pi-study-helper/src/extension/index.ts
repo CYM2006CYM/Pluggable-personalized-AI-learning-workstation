@@ -1,7 +1,7 @@
 import { mkdir } from "node:fs/promises";
 import { resolve } from "node:path";
 import type { ExtensionAPI, ExtensionCommandContext } from "@earendil-works/pi-coding-agent";
-import { createJsonlTraceSink } from "pi-loop-graph-sdk";
+import { FileRunStore } from "pi-loop-graph-sdk/replay";
 import { LearningProfileController } from "../application/learning-profile-controller.js";
 import { ProfileBuildController } from "../application/profile-build-controller.js";
 import { ProfileRevisionController } from "../application/profile-revision-controller.js";
@@ -18,19 +18,22 @@ import { ProfileFamilyRepository } from "../repositories/profile-family-reposito
 
 export default async function studyHelperExtension(pi: ExtensionAPI): Promise<void> {
   const dataRoot = resolveStudyDataRoot();
-  const traceDirectory = resolve(dataRoot, "traces");
-  await mkdir(traceDirectory, { recursive: true });
+  // 0.2 用 recording + RunStore 取代 0.1 的 JSONL traceSink：
+  // 每次 Root Run 落一份 journal.jsonl + replay.json，可用 /replay 子路径导出 HTML。
+  const runsDirectory = resolve(dataRoot, "traces", "runs");
+  await mkdir(runsDirectory, { recursive: true });
   const profiles = new ProfileFamilyRepository({ dataRoot });
   const memory = new PrivateMemoryRepository({ dataRoot });
   const buildJobs = new ProfileBuildJobRepository({ dataRoot });
   const graphs = createStudyWalkingSkeletonGraphs(profiles);
-  const traceSink = createJsonlTraceSink(resolve(traceDirectory, "loop-graph-lifecycle.jsonl"));
+  const runStore = new FileRunStore({ rootDir: runsDirectory });
 
   const executorFor = (ctx: ExtensionCommandContext) => {
     let executeGraph: ReturnType<typeof createIsolatedGraphExecutor> | undefined;
     return (graph: Parameters<ReturnType<typeof createIsolatedGraphExecutor>>[0], params: Record<string, unknown>) => {
       executeGraph ??= createIsolatedGraphExecutor(ctx, {
-        traceSink,
+        recording: "replay",
+        runStore,
         limits: { rootMaxSteps: 10, agentRunTimeoutMs: 300_000 },
       });
       return executeGraph(graph, params);

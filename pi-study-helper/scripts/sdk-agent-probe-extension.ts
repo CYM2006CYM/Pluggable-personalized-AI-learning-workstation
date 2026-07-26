@@ -1,7 +1,8 @@
 import { mkdir } from "node:fs/promises";
 import { resolve } from "node:path";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { createJsonlTraceSink, createLoopGraphExtension } from "pi-loop-graph-sdk";
+import { createLoopGraphExtension } from "pi-loop-graph-sdk";
+import { FileRunStore } from "pi-loop-graph-sdk/replay";
 import { resolveStudyDataRoot } from "../src/config/data-paths.js";
 import type { Attempt, StudySession } from "../src/domain/types.js";
 import {
@@ -25,8 +26,8 @@ import { inspectProfileStructure } from "../src/domain/profile-revision.js";
 
 export default async function sdkAgentProbeExtension(pi: ExtensionAPI): Promise<void> {
   const dataRoot = resolveStudyDataRoot();
-  const traceDirectory = resolve(dataRoot, "traces");
-  await mkdir(traceDirectory, { recursive: true });
+  const runsDirectory = resolve(dataRoot, "traces", "sdk-agent-probe");
+  await mkdir(runsDirectory, { recursive: true });
   const profiles = new ProfileFamilyRepository({
     dataRoot,
     fixturesRoot: resolve(process.cwd(), "fixtures", "profiles"),
@@ -35,7 +36,8 @@ export default async function sdkAgentProbeExtension(pi: ExtensionAPI): Promise<
   const memory = new PrivateMemoryRepository({ dataRoot });
   const graphs = createStudyWalkingSkeletonGraphs(profiles);
   const loop = createLoopGraphExtension(pi, {
-    traceSink: createJsonlTraceSink(resolve(traceDirectory, "sdk-agent-probe.jsonl")),
+    recording: "replay",
+    runStore: new FileRunStore({ rootDir: runsDirectory }),
     limits: { rootMaxSteps: 5, agentRunTimeoutMs: 300_000 },
   });
   loop.registerGraph(graphs.generateQuestion);
@@ -81,16 +83,16 @@ export default async function sdkAgentProbeExtension(pi: ExtensionAPI): Promise<
           mode: "practice",
         },
       });
-      if (generated.status !== "ok") throw new Error(`Question graph ended with ${generated.status}`);
-      const question = asReviewQuestion(generated.result);
+      if (generated.status !== "completed") throw new Error(`Question graph ended with ${generated.status}: ${generated.failure.message}`);
+      const question = asReviewQuestion(generated.output as Record<string, unknown>);
       const userAnswer = question.correct_answer
         ?? "主动回忆是先不看资料，尝试从记忆中提取答案，再根据反馈订正。";
       const graded = await loop.executeGraph(graphs.gradeAnswer, {
         source: "command",
         params: { question, userAnswer },
       });
-      if (graded.status !== "ok") throw new Error(`Grade graph ended with ${graded.status}`);
-      const grade = asGradeResult(graded.result);
+      if (graded.status !== "completed") throw new Error(`Grade graph ended with ${graded.status}: ${graded.failure.message}`);
+      const grade = asGradeResult(graded.output as Record<string, unknown>);
       if (!grade.is_correct) throw new Error("Probe answer was not accepted as correct");
       const discussed = await loop.executeGraph(graphs.discussQuestion, {
         source: "command",
@@ -102,8 +104,8 @@ export default async function sdkAgentProbeExtension(pi: ExtensionAPI): Promise<
           false,
         ),
       });
-      if (discussed.status !== "ok") {
-        throw new Error(`Discussion graph ended with ${discussed.status}: ${String(discussed.result.reason ?? "unknown")}`);
+      if (discussed.status !== "completed") {
+        throw new Error(`Discussion graph ended with ${discussed.status}: ${discussed.failure.message}`);
       }
       const attempt: Attempt = {
         question_id: question.question_id,
@@ -144,8 +146,8 @@ export default async function sdkAgentProbeExtension(pi: ExtensionAPI): Promise<
           summaryKind: "final",
         },
       });
-      if (summarized.status !== "ok") throw new Error(`Summary graph ended with ${summarized.status}`);
-      const summaryMarkdown = String(summarized.result.summary_markdown ?? "").trim();
+      if (summarized.status !== "completed") throw new Error(`Summary graph ended with ${summarized.status}: ${summarized.failure.message}`);
+      const summaryMarkdown = String((summarized.output as Record<string, unknown>).summary_markdown ?? "").trim();
       if (!summaryMarkdown) throw new Error("Summary graph returned empty markdown");
       const endedAt = new Date().toISOString();
       session = { ...session, status: "completed", updatedAt: endedAt, endedAt };
@@ -157,8 +159,8 @@ export default async function sdkAgentProbeExtension(pi: ExtensionAPI): Promise<
           evidence: buildLearningProfileEvidence("demo-review", null, [completedBatch]),
         },
       });
-      if (profiled.status !== "ok") throw new Error(`Learning Profile graph ended with ${profiled.status}`);
-      asLearningProfileCandidate(profiled.result);
+      if (profiled.status !== "completed") throw new Error(`Learning Profile graph ended with ${profiled.status}: ${profiled.failure.message}`);
+      asLearningProfileCandidate(profiled.output as Record<string, unknown>);
       const sourceId = "probe-source-1";
       const built = await loop.executeGraph(graphs.buildProfileFragment, {
         source: "command",
@@ -175,8 +177,8 @@ export default async function sdkAgentProbeExtension(pi: ExtensionAPI): Promise<
           }],
         },
       });
-      if (built.status !== "ok") throw new Error(`Profile Build graph ended with ${built.status}`);
-      asProfileBuildFragment(built.result, [sourceId]);
+      if (built.status !== "completed") throw new Error(`Profile Build graph ended with ${built.status}: ${built.failure.message}`);
+      asProfileBuildFragment(built.output as Record<string, unknown>, [sourceId]);
 
       const draft = await profiles.createRevisionDraft("demo-review");
       const draftFiles = await profiles.listDraftFiles("demo-review");
@@ -192,8 +194,8 @@ export default async function sdkAgentProbeExtension(pi: ExtensionAPI): Promise<
           coreFiles: draftFiles.filter((file) => ["subject.md", "knowledge_index.json", "source_map.json", "quality_report.md"].includes(file.path)),
         },
       });
-      if (planned.status !== "ok") throw new Error(`Profile Revision Plan graph ended with ${planned.status}`);
-      const plan = asProfileRevisionPlan(planned.result, existingPaths);
+      if (planned.status !== "completed") throw new Error(`Profile Revision Plan graph ended with ${planned.status}: ${planned.failure.message}`);
+      const plan = asProfileRevisionPlan(planned.output as Record<string, unknown>, existingPaths);
       if (plan.requires_clarification) throw new Error("Profile Revision Plan unexpectedly requested clarification");
       const fileMap = new Map(draftFiles.map((file) => [file.path, file.content]));
       const revised = await loop.executeGraph(graphs.reviseProfileDraft, {
@@ -208,8 +210,8 @@ export default async function sdkAgentProbeExtension(pi: ExtensionAPI): Promise<
           })),
         },
       });
-      if (revised.status !== "ok") throw new Error(`Profile Revision graph ended with ${revised.status}`);
-      const revisionPatch = asProfileRevisionPatch(revised.result, plan);
+      if (revised.status !== "completed") throw new Error(`Profile Revision graph ended with ${revised.status}: ${revised.failure.message}`);
+      const revisionPatch = asProfileRevisionPatch(revised.output as Record<string, unknown>, plan);
       await profiles.applyDraftChanges("demo-review", revisionPatch.changes);
       const revisedFiles = await profiles.listDraftFiles("demo-review");
       const inspection = inspectProfileStructure(revisedFiles);
@@ -224,8 +226,8 @@ export default async function sdkAgentProbeExtension(pi: ExtensionAPI): Promise<
           changedFiles: revisedFiles.filter((file) => plan.operations.some((operation) => operation.path === file.path)),
         },
       });
-      if (reviewed.status !== "ok") throw new Error(`Profile Revision Review graph ended with ${reviewed.status}`);
-      asProfileRevisionQuality(reviewed.result);
+      if (reviewed.status !== "completed") throw new Error(`Profile Revision Review graph ended with ${reviewed.status}: ${reviewed.failure.message}`);
+      asProfileRevisionQuality(reviewed.output as Record<string, unknown>);
     },
   });
 }

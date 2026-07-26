@@ -49,26 +49,52 @@ const exit = await new Promise((resolveExit, reject) => {
   });
 });
 
+/**
+ * SDK 0.2 用 recording/replay 取代 0.1 的 JSONL traceSink：
+ * 每个 Root Run 一个目录，事件写在 `<runId>/journal.jsonl`，
+ * 每行是 `{ schemaVersion, sequence, rootRunId, graphInvocationId?, nodeVisitId?, agentRunId?, event }`。
+ */
+async function readJournalEvents(runsRoot) {
+  const runIds = await readdir(runsRoot);
+  const events = [];
+  for (const runId of runIds) {
+    let raw;
+    try {
+      raw = await readFile(join(runsRoot, runId, "journal.jsonl"), "utf8");
+    } catch {
+      continue;
+    }
+    for (const line of raw.split(/\r?\n/)) {
+      if (!line.trim()) continue;
+      events.push(JSON.parse(line));
+    }
+  }
+  return events;
+}
+
 try {
-  let traceRaw;
+  const runsRoot = join(dataRoot, "traces", "sdk-agent-probe");
+  let events;
   try {
-    traceRaw = await readFile(join(dataRoot, "traces", "sdk-agent-probe.jsonl"), "utf8");
+    events = await readJournalEvents(runsRoot);
+    if (events.length === 0) throw new Error("journal 为空");
   } catch (error) {
     throw new Error(
-      `probe 没有生成 trace（exit=${exit.code}, signal=${exit.signal ?? "none"}）\nstdout:\n${stdout.trim()}\nstderr:\n${stderr.trim()}`,
+      `probe 没有生成 replay journal（exit=${exit.code}, signal=${exit.signal ?? "none"}）\nstdout:\n${stdout.trim()}\nstderr:\n${stderr.trim()}`,
       { cause: error },
     );
   }
-  const events = traceRaw.trim().split(/\r?\n/).filter(Boolean).map((line) => JSON.parse(line));
-  const graphEnds = events.filter((event) => event.type === "graph_end");
-  const graphEnd = graphEnds.at(-1);
-  const enteredNodes = events.filter((event) => event.type === "node_enter").map((event) => event.nodeId);
-  const eventCount = (type) => events.filter((event) => event.type === type).length;
-  const runKey = (event) => `${event.graphRunId}:${event.scopeId}:${event.agentRunId}`;
-  const contractRuns = new Set(events.filter((event) => event.type === "output_contract.prepared").map(runKey));
-  const acceptedRuns = new Set(events.filter((event) => event.type === "completion.accepted").map(runKey));
+
+  const ofType = (type) => events.filter((envelope) => envelope.event?.type === type);
+  const eventCount = (type) => ofType(type).length;
+  const graphExits = ofType("graph_exited").map((envelope) => envelope.event.data);
+  const rootFinishes = ofType("root_finished").map((envelope) => envelope.event.data);
+  const enteredStages = ofType("node_entered").map((envelope) => envelope.event.data.stageId);
+  const agentRunKey = (envelope) => `${envelope.rootRunId}:${envelope.graphInvocationId}:${envelope.nodeVisitId}:${envelope.agentRunId}`;
+  const contractRuns = new Set(ofType("output_contract.prepared").map(agentRunKey));
+  const acceptedRuns = new Set(ofType("completion.accepted").map(agentRunKey));
   const contractRunWithoutAccepted = [...contractRuns].filter((key) => !acceptedRuns.has(key));
-  const requiredNodes = ["prepare_question_context", "generate_question", "grade_answer", "discuss_question", "summarize_session", "update_learning_profile", "build_profile_fragment", "plan_profile_revision", "revise_profile_draft", "review_profile_draft"];
+  const requiredStages = ["prepare_question_context", "generate_question", "grade_answer", "discuss_question", "summarize_session", "update_learning_profile", "build_profile_fragment", "plan_profile_revision", "revise_profile_draft", "review_profile_draft"];
   const pendingRoot = join(dataRoot, "profile_families", "demo-review", "_user", "summaries", "pending");
   const batches = await readdir(pendingRoot);
   if (batches.length !== 1) throw new Error(`probe 应产生一个学习记录批次，实际为 ${batches.length}`);
@@ -78,10 +104,12 @@ try {
   const summary = await readFile(join(batchRoot, "summary.md"), "utf8").catch(() => "");
   if (
     exit.code !== 0 ||
-    graphEnds.length !== 9 ||
-    graphEnds.some((event) => event.status !== "ok") ||
-    requiredNodes.some((nodeId) => !enteredNodes.includes(nodeId)) ||
-    contractRuns.size !== 9 ||
+    rootFinishes.length !== 9 ||
+    rootFinishes.some((data) => data.status !== "completed") ||
+    graphExits.length !== 9 ||
+    graphExits.some((data) => data.status !== "completed") ||
+    requiredStages.some((stageId) => !enteredStages.includes(stageId)) ||
+    contractRuns.size < 9 ||
     eventCount("completion.submitted") < 9 ||
     eventCount("completion.validation_started") < 9 ||
     contractRunWithoutAccepted.length > 0 ||
@@ -90,10 +118,10 @@ try {
     summary.trim() === ""
   ) {
     throw new Error(
-      `probe 未闭环：exit=${exit.code}, signal=${exit.signal ?? "none"}, graphEnds=${JSON.stringify(graphEnds)}, nodes=${enteredNodes.join(",")}, contractRuns=${contractRuns.size}, submitted=${eventCount("completion.submitted")}, validation=${eventCount("completion.validation_started")}, accepted=${eventCount("completion.accepted")}, contractRunWithoutAccepted=${contractRunWithoutAccepted.join(",")}, session=${session.status}, attempts=${attempts.length}, summary=${summary.length}\nstdout:\n${stdout.trim()}\nstderr:\n${stderr.trim()}`,
+      `probe 未闭环：exit=${exit.code}, signal=${exit.signal ?? "none"}, rootFinishes=${JSON.stringify(rootFinishes)}, graphExits=${JSON.stringify(graphExits)}, stages=${enteredStages.join(",")}, contractRuns=${contractRuns.size}, submitted=${eventCount("completion.submitted")}, validation=${eventCount("completion.validation_started")}, accepted=${eventCount("completion.accepted")}, contractRunWithoutAccepted=${contractRunWithoutAccepted.join(",")}, session=${session.status}, attempts=${attempts.length}, summary=${summary.length}\nstdout:\n${stdout.trim()}\nstderr:\n${stderr.trim()}`,
     );
   }
-  console.log(`真实 pi Agent probe 通过：${enteredNodes.join(" → ")}；9 张图均到达 END；输出契约 Run=${contractRuns.size}；候选提交=${eventCount("completion.submitted")}；候选接受=${eventCount("completion.accepted")}；会话=${session.status}；题目记录=${attempts.length}；总结已保存；学习画像、Profile 构建与修订候选均已生成`);
+  console.log(`真实 pi Agent probe 通过：${enteredStages.join(" → ")}；9 张图均 completed；输出契约 Run=${contractRuns.size}；候选提交=${eventCount("completion.submitted")}；候选接受=${eventCount("completion.accepted")}；会话=${session.status}；题目记录=${attempts.length}；总结已保存；学习画像、Profile 构建与修订候选均已生成`);
   if (stdout.trim()) console.log(stdout.trim());
   if (stderr.trim()) console.error(stderr.trim());
 } finally {

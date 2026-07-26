@@ -33,11 +33,11 @@ export type ProfileBuildResult =
   | { status: "failed"; jobId?: string; error: string };
 
 function requireSuccessfulGraph(result: GraphRunResult): Record<string, unknown> {
-  if (result.status !== "ok") {
-    const reason = typeof result.result.reason === "string" ? `：${result.result.reason}` : "";
+  if (result.status !== "completed") {
+    const reason = result.failure.message.trim() !== "" ? `：${result.failure.message}` : "";
     throw new Error(`图 ${result.graphId} 未正常完成（${result.status}）${reason}`);
   }
-  return result.result;
+  return result.output as Record<string, unknown>;
 }
 
 function jobLabel(job: ProfileBuildJob): string {

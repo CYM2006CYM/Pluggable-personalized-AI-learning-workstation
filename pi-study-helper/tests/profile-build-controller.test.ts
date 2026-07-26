@@ -2,6 +2,7 @@ import { mkdtemp, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import type { GraphRunResult } from "pi-loop-graph-sdk";
+import { completedRun, failedRun } from "./graph-run-result.js";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { ProfileBuildController } from "../src/application/profile-build-controller.js";
 import type { StudyControllerUi } from "../src/application/study-session-controller.js";
@@ -52,13 +53,9 @@ describe("ProfileBuildController", () => {
   function controller(options: { ui: BuildUi; fail?: boolean }) {
     const graphs = createStudyWalkingSkeletonGraphs(profiles);
     const executeGraph: IsolatedGraphExecutor = async (graph, params): Promise<GraphRunResult> => {
-      if (options.fail) return { graphId: graph.id, status: "failed", result: { reason: "model unavailable" }, steps: 1 };
+      if (options.fail) return failedRun(graph, "model unavailable");
       const sourceId = (params.allowedSourceIds as string[])[0]!;
-      return {
-        graphId: graph.id,
-        status: "ok",
-        steps: 1,
-        result: {
+      return completedRun(graph, {
           subject_overview: "本资料介绍主动回忆。",
           warnings: [],
           chapters: [{
@@ -83,8 +80,7 @@ describe("ProfileBuildController", () => {
               }],
             }],
           }],
-        },
-      };
+      });
     };
     return new ProfileBuildController({ profiles, jobs, graphs, executeGraph, ui: options.ui });
   }

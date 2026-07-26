@@ -2,6 +2,7 @@ import { mkdtemp, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import type { GraphRunResult } from "pi-loop-graph-sdk";
+import { completedRun, failedRun } from "./graph-run-result.js";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { ProfileRevisionController } from "../src/application/profile-revision-controller.js";
 import type { StudyControllerUi } from "../src/application/study-session-controller.js";
@@ -45,60 +46,40 @@ describe("ProfileRevisionController", () => {
     let planCalls = 0;
     const executeGraph: IsolatedGraphExecutor = async (graph): Promise<GraphRunResult> => {
       if (options.failAt === graph.id) {
-        return { graphId: graph.id, status: "failed", result: { reason: "model unavailable" }, steps: 1 };
+        return failedRun(graph, "model unavailable");
       }
       if (graph.id === "study_plan_profile_revision") {
         planCalls += 1;
         if (options.clarifyOnce && planCalls === 1) {
-          return {
-            graphId: graph.id,
-            status: "ok",
-            steps: 1,
-            result: {
-              summary: "需要明确修改目标",
-              requires_clarification: true,
-              clarification_question: "请明确要修改哪一部分？",
-              operations: [],
-              warnings: [],
-            },
-          };
-        }
-        return {
-          graphId: graph.id,
-          status: "ok",
-          steps: 1,
-          result: {
-            summary: "更新科目说明",
-            requires_clarification: false,
-            clarification_question: "",
-            operations: [{ path: "subject.md", operation: "update", reason: "按用户反馈补充" }],
+          return completedRun(graph, {
+            summary: "需要明确修改目标",
+            requires_clarification: true,
+            clarification_question: "请明确要修改哪一部分？",
+            operations: [],
             warnings: [],
-          },
-        };
+          });
+        }
+        return completedRun(graph, {
+          summary: "更新科目说明",
+          requires_clarification: false,
+          clarification_question: "",
+          operations: [{ path: "subject.md", operation: "update", reason: "按用户反馈补充" }],
+          warnings: [],
+        });
       }
       if (graph.id === "study_revise_profile_draft") {
-        return {
-          graphId: graph.id,
-          status: "ok",
-          steps: 1,
-          result: {
-            summary: "科目说明已更新",
-            changes: [{ path: "subject.md", operation: "update", reason: "按用户反馈补充", content: options.patchContent ?? "# 已修订的学习方法\n" }],
-            unresolved: [],
-          },
-        };
+        return completedRun(graph, {
+          summary: "科目说明已更新",
+          changes: [{ path: "subject.md", operation: "update", reason: "按用户反馈补充", content: options.patchContent ?? "# 已修订的学习方法\n" }],
+          unresolved: [],
+        });
       }
-      return {
-        graphId: graph.id,
-        status: "ok",
-        steps: 1,
-        result: {
-          report_markdown: "# 修订质量报告\n\n已检查本轮变更。",
-          blocking_issues: options.blocking ? ["语义仍需确认"] : [],
-          warnings: [],
-          recommendation: options.blocking ? "revise" : "enable",
-        },
-      };
+      return completedRun(graph, {
+        report_markdown: "# 修订质量报告\n\n已检查本轮变更。",
+        blocking_issues: options.blocking ? ["语义仍需确认"] : [],
+        warnings: [],
+        recommendation: options.blocking ? "revise" : "enable",
+      });
     };
     return new ProfileRevisionController({ profiles, graphs, executeGraph, ui });
   }

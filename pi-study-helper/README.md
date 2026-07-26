@@ -1,6 +1,6 @@
 # Pi Study Helper
 
-Pi Study Helper 是一款基于 [pi](https://pi.dev) 和 [Loop Graph SDK](https://github.com/0liveiraaa/pi-loop-graph-sdk) 的任务驱动学习助手，通过回路图组织学习活动、复习反馈与资料演进。
+Pi Study Helper 是一款基于 [pi](https://pi.dev) 和 [Loop Graph SDK](https://github.com/0liveiraaa/pi-loop-graph-sdk) `0.2` 的任务驱动学习助手，通过回路图组织学习活动、复习反馈与资料演进。
 
 ## 功能
 
@@ -231,6 +231,25 @@ Agent 会先生成计划和实际文件变更供确认。初次体验可先保�
 /study-revise my-learning-demo
 ```
 
+## Loop Graph SDK 0.2 集成
+
+本项目已适配 Loop Graph SDK `0.2`（不保留 0.1 兼容层）。关键对应关系：
+
+| 关注点 | 0.1 | 本项目在 0.2 的做法 |
+|--------|-----|--------------------|
+| 图结构 | `nodes` + `routing` + `Edge`/`END` | `defineGraph({ id, version, input, output, context, entries, stages })`，终点用 `finish({ output })` |
+| 节点 | `{ kind: "code", execute }` + `createAgentExecute()` | `codeNode({ input, output, execute })`，在 `execute` 内调用 `runAgent({ prompt, output })` |
+| 输出校验 | `outputSchema` + `validateCompletion` | TypeBox `output` 契约由 Runtime 校验；业务语义校验保留在 `runValidatedAgent()` 中，失败时把拒绝原因回灌 Agent 重试 |
+| 执行入口 | `IsolatedSessionGraphHost.run()` | `createPiGraphHost()` + `host.execute(graph, input)`，见 `src/graphs/isolated-graph-executor.ts` |
+| 运行结果 | `{ status: "ok", result }` | 判别联合：成功读 `result.output`，失败读 `result.failure.{code,message}` |
+| 可观测性 | `createJsonlTraceSink()` | `recording: "replay"` + `FileRunStore`，每次 Root Run 落在 `<数据目录>/traces/runs/<runId>/` |
+
+Replay 记录可以用 SDK 的 `/replay` 子路径导出为离线 HTML：
+
+```typescript
+import { parseReplay, exportReplayHtml } from "pi-loop-graph-sdk/replay";
+```
+
 ## 项目结构
 
 ```
@@ -253,7 +272,7 @@ fixtures/
 
 ```bash
 npm ci
-npm test             # 117 项测试
+npm test             # 全部单元测试
 npm run typecheck
 npm run verify       # 完整 CI 验证（无需模型）
 ```

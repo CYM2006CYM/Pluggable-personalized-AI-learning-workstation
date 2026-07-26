@@ -2,6 +2,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import type { Graph, GraphRunResult } from "pi-loop-graph-sdk";
+import { completedRun, failedRun } from "./graph-run-result.js";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   StudySessionController,
@@ -80,8 +81,8 @@ function grade(isCorrect: boolean): GradeResult {
   };
 }
 
-function graphResult(graph: Graph, result: Record<string, unknown>, status: GraphRunResult["status"] = "ok"): GraphRunResult {
-  return { graphId: graph.id, status, result, steps: 1 };
+function graphResult(graph: Graph, result: Record<string, unknown>): GraphRunResult {
+  return completedRun(graph, result);
 }
 
 interface HarnessOptions {
@@ -132,7 +133,7 @@ describe("StudySessionController", () => {
       }
       if (options.summaryFailure || summaryFailures > 0) {
         summaryFailures = Math.max(0, summaryFailures - 1);
-        return graphResult(graph, { reason: "summary failed" }, "failed");
+        return failedRun(graph, "summary failed");
       }
       return graphResult(graph, {
         summary_markdown: "# 学习总结\n\n完成本次学习。",

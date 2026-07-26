@@ -1,23 +1,18 @@
-import type { Graph, GraphRunResult } from "pi-loop-graph-sdk";
+import type { Graph } from "pi-loop-graph-sdk";
 import { describe, expect, it, vi } from "vitest";
 import { executeOptionalDiscussion } from "../src/application/optional-discussion.js";
+import { completedRun, failedRun } from "./graph-run-result.js";
 
-const graph = { id: "study_discuss_question" } as Graph;
+const graph = { id: "study_discuss_question", version: "1" } as Graph;
 
-function result(status: GraphRunResult["status"], reason?: string): GraphRunResult {
-  return {
-    graphId: graph.id,
-    status,
-    result: reason ? { reason } : { reply: "提示", clarified_points: [], lingering_questions: [] },
-    steps: 1,
-  };
-}
+const okResult = () => completedRun(graph, { reply: "提示", clarified_points: [], lingering_questions: [] });
+const failure = (reason: string) => failedRun(graph, reason);
 
 describe("executeOptionalDiscussion", () => {
   it("首次图失败时重试一次并返回成功结果", async () => {
     const execute = vi.fn()
-      .mockResolvedValueOnce(result("failed", "未调用完成工具"))
-      .mockResolvedValueOnce(result("ok"));
+      .mockResolvedValueOnce(failure("未调用完成工具"))
+      .mockResolvedValueOnce(okResult());
 
     const output = await executeOptionalDiscussion(execute, graph, { revealAnswer: false });
 
@@ -32,7 +27,7 @@ describe("executeOptionalDiscussion", () => {
   it("两次失败后返回 unavailable，不向外抛出中断整场会话", async () => {
     const execute = vi.fn()
       .mockRejectedValueOnce(new Error("provider error"))
-      .mockResolvedValueOnce(result("failed", "未调用完成工具"));
+      .mockResolvedValueOnce(failure("未调用完成工具"));
 
     await expect(executeOptionalDiscussion(execute, graph, {})).resolves.toEqual({
       status: "unavailable",

@@ -6,8 +6,8 @@ export type OptionalDiscussionResult =
   | { status: "unavailable"; reasons: string[] };
 
 function failureReason(result: GraphRunResult): string {
-  const reason = result.result.reason;
-  return typeof reason === "string" && reason.trim() !== ""
+  const reason = result.status === "completed" ? "" : result.failure.message;
+  return reason.trim() !== ""
     ? reason
     : `图 ${result.graphId} 未正常完成（${result.status}）`;
 }
@@ -22,7 +22,9 @@ export async function executeOptionalDiscussion(
   for (let completionAttempt = 1; completionAttempt <= 2; completionAttempt += 1) {
     try {
       const result = await executeGraph(graph, { ...input, completionAttempt });
-      if (result.status === "ok") return { status: "ok", result: result.result };
+      if (result.status === "completed") {
+        return { status: "ok", result: result.output as Record<string, unknown> };
+      }
       reasons.push(failureReason(result));
     } catch (error) {
       reasons.push(error instanceof Error ? error.message : String(error));

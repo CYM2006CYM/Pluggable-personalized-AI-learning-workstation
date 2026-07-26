@@ -113,11 +113,11 @@ function selectedValue<T>(label: string | undefined, options: Array<{ label: str
 }
 
 function requireSuccessfulGraph(result: GraphRunResult): Record<string, unknown> {
-  if (result.status !== "ok") {
-    const reason = typeof result.result.reason === "string" ? `：${result.result.reason}` : "";
+  if (result.status !== "completed") {
+    const reason = result.failure.message.trim() !== "" ? `：${result.failure.message}` : "";
     throw new Error(`图 ${result.graphId} 未正常完成（${result.status}）${reason}`);
   }
-  return result.result;
+  return result.output as Record<string, unknown>;
 }
 
 async function executeSummaryWithRetry(
@@ -128,7 +128,7 @@ async function executeSummaryWithRetry(
   let lastResult: GraphRunResult | undefined;
   for (let completionAttempt = 1; completionAttempt <= 2; completionAttempt += 1) {
     lastResult = await executeGraph(graph, { ...params, completionAttempt });
-    if (lastResult.status === "ok") return lastResult.result;
+    if (lastResult.status === "completed") return lastResult.output as Record<string, unknown>;
     if (lastResult.status !== "failed") break;
   }
   if (!lastResult) throw new Error("总结图没有启动");

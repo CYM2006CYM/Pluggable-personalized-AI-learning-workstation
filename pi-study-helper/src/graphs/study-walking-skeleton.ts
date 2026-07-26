@@ -1,11 +1,6 @@
-import { END, createAgentExecute } from "pi-loop-graph-sdk";
-import type {
-  CompletionValidationResult,
-  Edge,
-  Entry,
-  Graph,
-  Node,
-} from "pi-loop-graph-sdk";
+import { Type, codeNode, connect, defineGraph, entry, finish, firstMatch } from "pi-loop-graph-sdk";
+import type { AgentRunRequest, Graph, JsonSchema, NodeCompletion } from "pi-loop-graph-sdk";
+import type { Static, TSchema } from "typebox";
 import type { DifficultyLevel, GradeResult, ReviewQuestion } from "../domain/types.js";
 import type { LearningProfileCandidate } from "../domain/learning-profile-evidence.js";
 import type { ProfileBuildFragment } from "../domain/profile-build.js";
@@ -22,207 +17,130 @@ import { loadActiveStudyTargetContext, type StudyTargetKind } from "../domain/st
 import { getDifficultyPolicy, getReviewModePolicy } from "../domain/study-policy.js";
 import type { ProfileFamilyRepository } from "../repositories/profile-family-repository.js";
 
-const questionOutputSchema = {
-  type: "object",
-  properties: {
-    question_id: { type: "string" },
-    knowledge_points: { type: "array", items: { type: "string" } },
-    difficulty: { type: "string" },
-    type: { enum: ["choice", "judgment", "short_answer"] },
-    question_text: { type: "string" },
-    options: { type: "array", items: { type: "string" } },
-    correct_answer: { type: "string" },
-    explanation_l1: { type: "string" },
-    source_basis: { type: "string" },
-    related_knowledge_chain: { type: "array", items: { type: "string" } },
-  },
-  required: [
-    "question_id",
-    "knowledge_points",
-    "difficulty",
-    "type",
-    "question_text",
-    "correct_answer",
-    "explanation_l1",
-    "source_basis",
-    "related_knowledge_chain",
-  ],
-  additionalProperties: false,
-};
+/**
+ * 0.1 由 SDK 导出的业务校验结果类型；0.2 不再提供 `CompletionValidationResult`，
+ * 由本包自己定义并在 Code Node 内驱动 Agent 重试。
+ */
+export interface CompletionValidationResult {
+  readonly isValid: boolean;
+  readonly reason?: string;
+}
 
-const gradeOutputSchema = {
-  type: "object",
-  properties: {
-    is_correct: { type: "boolean" },
-    correct_answer: { type: "string" },
-    explanation_l1: { type: "string" },
-    knowledge_chain_l3: { type: "array", items: { type: "string" } },
-    suggestion_next: { type: "string" },
-    grading: { type: "string" },
-  },
-  required: [
-    "is_correct",
-    "correct_answer",
-    "explanation_l1",
-    "knowledge_chain_l3",
-    "suggestion_next",
-    "grading",
-  ],
-  additionalProperties: false,
-};
+const DIFFICULTY_LEVELS = ["S-R", "S-U", "M-U", "M-A", "C-A"] as const;
+const QUESTION_TYPES = ["choice", "judgment", "short_answer"] as const;
 
-const summaryOutputSchema = {
-  type: "object",
-  properties: {
-    summary_markdown: { type: "string" },
-    observed_facts: { type: "array", items: { type: "string" } },
-    mastery_evidence: { type: "array", items: { type: "string" } },
-    unverified_topics: { type: "array", items: { type: "string" } },
-    recommendations: { type: "array", items: { type: "string" } },
-  },
-  required: ["summary_markdown", "observed_facts", "mastery_evidence", "unverified_topics", "recommendations"],
-  additionalProperties: false,
-};
+const DifficultyLiteral = Type.Union(DIFFICULTY_LEVELS.map((level) => Type.Literal(level)));
+const QuestionTypeLiteral = Type.Union(QUESTION_TYPES.map((value) => Type.Literal(value)));
+const StringArray = Type.Array(Type.String());
+const AnyJson = Type.Unknown();
 
-const discussionOutputSchema = {
-  type: "object",
-  properties: {
-    reply: { type: "string" },
-    clarified_points: { type: "array", items: { type: "string" } },
-    lingering_questions: { type: "array", items: { type: "string" } },
-  },
-  required: ["reply", "clarified_points", "lingering_questions"],
-  additionalProperties: false,
-};
+/** Graph/Node Schema 由 Runtime 实际校验，未知结构统一走 JSON 兼容检查。 */
+function toJson<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value ?? null)) as T;
+}
 
-const learningProfileOutputSchema = {
-  type: "object",
-  properties: {
-    profile_summary: { type: "string" },
-    weak_points: { type: "array", items: { type: "string" } },
-    strengths: { type: "array", items: { type: "string" } },
-    unverified_topics: { type: "array", items: { type: "string" } },
-    recommendations: { type: "array", items: { type: "string" } },
-  },
-  required: ["profile_summary", "weak_points", "strengths", "unverified_topics", "recommendations"],
-  additionalProperties: false,
-};
+const questionOutputSchema = Type.Object({
+  question_id: Type.String(),
+  knowledge_points: StringArray,
+  difficulty: Type.String(),
+  type: QuestionTypeLiteral,
+  question_text: Type.String(),
+  options: Type.Optional(StringArray),
+  correct_answer: Type.String(),
+  explanation_l1: Type.String(),
+  source_basis: Type.String(),
+  related_knowledge_chain: StringArray,
+}, { additionalProperties: false });
 
-const profileBuildPointSchema = {
-  type: "object",
-  properties: {
-    id: { type: "string" },
-    name: { type: "string" },
-    aliases: { type: "array", items: { type: "string" } },
-    tags: { type: "array", items: { type: "string" } },
-    definition: { type: "string" },
-    key_points: { type: "array", items: { type: "string" } },
-    common_misconceptions: { type: "array", items: { type: "string" } },
-    related: { type: "array", items: { type: "string" } },
-    question_types: { type: "array", items: { enum: ["choice", "judgment", "short_answer"] } },
-    difficulty_baseline: { enum: ["S-R", "S-U", "M-U", "M-A", "C-A"] },
-    source_ids: { type: "array", items: { type: "string" } },
-  },
-  required: ["id", "name", "aliases", "tags", "definition", "key_points", "common_misconceptions", "related", "question_types", "difficulty_baseline", "source_ids"],
-  additionalProperties: false,
-};
+const gradeOutputSchema = Type.Object({
+  is_correct: Type.Boolean(),
+  correct_answer: Type.String(),
+  explanation_l1: Type.String(),
+  knowledge_chain_l3: StringArray,
+  suggestion_next: Type.String(),
+  grading: Type.String(),
+}, { additionalProperties: false });
 
-const profileBuildFragmentSchema = {
-  type: "object",
-  properties: {
-    subject_overview: { type: "string" },
-    chapters: {
-      type: "array",
-      items: {
-        type: "object",
-        properties: {
-          title: { type: "string" },
-          source_ids: { type: "array", items: { type: "string" } },
-          sections: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                title: { type: "string" },
-                markdown: { type: "string" },
-                source_ids: { type: "array", items: { type: "string" } },
-                knowledge_points: { type: "array", items: profileBuildPointSchema },
-              },
-              required: ["title", "markdown", "source_ids", "knowledge_points"],
-              additionalProperties: false,
-            },
-          },
-        },
-        required: ["title", "source_ids", "sections"],
-        additionalProperties: false,
-      },
-    },
-    warnings: { type: "array", items: { type: "string" } },
-  },
-  required: ["subject_overview", "chapters", "warnings"],
-  additionalProperties: false,
-};
+const summaryOutputSchema = Type.Object({
+  summary_markdown: Type.String(),
+  observed_facts: StringArray,
+  mastery_evidence: StringArray,
+  unverified_topics: StringArray,
+  recommendations: StringArray,
+}, { additionalProperties: false });
 
-const profileRevisionPlanSchema = {
-  type: "object",
-  properties: {
-    summary: { type: "string" },
-    requires_clarification: { type: "boolean" },
-    clarification_question: { type: "string" },
-    operations: {
-      type: "array",
-      items: {
-        type: "object",
-        properties: {
-          path: { type: "string" },
-          operation: { enum: ["create", "update", "delete"] },
-          reason: { type: "string" },
-        },
-        required: ["path", "operation", "reason"],
-        additionalProperties: false,
-      },
-    },
-    warnings: { type: "array", items: { type: "string" } },
-  },
-  required: ["summary", "requires_clarification", "clarification_question", "operations", "warnings"],
-  additionalProperties: false,
-};
+const discussionOutputSchema = Type.Object({
+  reply: Type.String(),
+  clarified_points: StringArray,
+  lingering_questions: StringArray,
+}, { additionalProperties: false });
 
-const profileRevisionPatchSchema = {
-  type: "object",
-  properties: {
-    summary: { type: "string" },
-    changes: {
-      type: "array",
-      items: {
-        type: "object",
-        properties: {
-          path: { type: "string" },
-          operation: { enum: ["create", "update", "delete"] },
-          content: { type: "string" },
-          reason: { type: "string" },
-        },
-        required: ["path", "operation", "reason"],
-        additionalProperties: false,
-      },
-    },
-    unresolved: { type: "array", items: { type: "string" } },
-  },
-  required: ["summary", "changes", "unresolved"],
-  additionalProperties: false,
-};
+const learningProfileOutputSchema = Type.Object({
+  profile_summary: Type.String(),
+  weak_points: StringArray,
+  strengths: StringArray,
+  unverified_topics: StringArray,
+  recommendations: StringArray,
+}, { additionalProperties: false });
 
-const profileRevisionQualitySchema = {
-  type: "object",
-  properties: {
-    report_markdown: { type: "string" },
-    blocking_issues: { type: "array", items: { type: "string" } },
-    warnings: { type: "array", items: { type: "string" } },
-    recommendation: { enum: ["enable", "revise"] },
-  },
-  required: ["report_markdown", "blocking_issues", "warnings", "recommendation"],
-  additionalProperties: false,
-};
+const profileBuildPointSchema = Type.Object({
+  id: Type.String(),
+  name: Type.String(),
+  aliases: StringArray,
+  tags: StringArray,
+  definition: Type.String(),
+  key_points: StringArray,
+  common_misconceptions: StringArray,
+  related: StringArray,
+  question_types: Type.Array(QuestionTypeLiteral),
+  difficulty_baseline: DifficultyLiteral,
+  source_ids: StringArray,
+}, { additionalProperties: false });
+
+const profileBuildFragmentSchema = Type.Object({
+  subject_overview: Type.String(),
+  chapters: Type.Array(Type.Object({
+    title: Type.String(),
+    source_ids: StringArray,
+    sections: Type.Array(Type.Object({
+      title: Type.String(),
+      markdown: Type.String(),
+      source_ids: StringArray,
+      knowledge_points: Type.Array(profileBuildPointSchema),
+    }, { additionalProperties: false })),
+  }, { additionalProperties: false })),
+  warnings: StringArray,
+}, { additionalProperties: false });
+
+const profileRevisionPlanSchema = Type.Object({
+  summary: Type.String(),
+  requires_clarification: Type.Boolean(),
+  clarification_question: Type.String(),
+  operations: Type.Array(Type.Object({
+    path: Type.String(),
+    operation: Type.Union([Type.Literal("create"), Type.Literal("update"), Type.Literal("delete")]),
+    reason: Type.String(),
+  }, { additionalProperties: false })),
+  warnings: StringArray,
+}, { additionalProperties: false });
+
+const profileRevisionPatchSchema = Type.Object({
+  summary: Type.String(),
+  changes: Type.Array(Type.Object({
+    path: Type.String(),
+    operation: Type.Union([Type.Literal("create"), Type.Literal("update"), Type.Literal("delete")]),
+    content: Type.Optional(Type.String()),
+    reason: Type.String(),
+  }, { additionalProperties: false })),
+  unresolved: StringArray,
+}, { additionalProperties: false });
+
+const profileRevisionQualitySchema = Type.Object({
+  report_markdown: Type.String(),
+  blocking_issues: StringArray,
+  warnings: StringArray,
+  recommendation: Type.Union([Type.Literal("enable"), Type.Literal("revise")]),
+}, { additionalProperties: false });
 
 function validString(value: unknown): value is string {
   return typeof value === "string" && value.trim() !== "";
@@ -233,8 +151,8 @@ function validStringArray(value: unknown): value is string[] {
 }
 
 export function validateQuestionResult(result: Record<string, unknown>): CompletionValidationResult {
-  const types = new Set(["choice", "judgment", "short_answer"]);
-  const difficulties = new Set(["S-R", "S-U", "M-U", "M-A", "C-A"]);
+  const types = new Set(QUESTION_TYPES as readonly string[]);
+  const difficulties = new Set(DIFFICULTY_LEVELS as readonly string[]);
   const requiredStrings = ["question_id", "difficulty", "type", "question_text", "correct_answer", "explanation_l1", "source_basis"];
   for (const key of requiredStrings) {
     if (!validString(result[key])) return { isValid: false, reason: `${key} 必须是非空字符串` };
@@ -363,7 +281,7 @@ export function validateProfileBuildFragment(
           }
         }
         if (!validSources(point.source_ids)) return { isValid: false, reason: "knowledge point source_ids 超出当前批次" };
-        if (!(new Set(["S-R", "S-U", "M-U", "M-A", "C-A"])).has(String(point.difficulty_baseline))) {
+        if (!(new Set(DIFFICULTY_LEVELS as readonly string[])).has(String(point.difficulty_baseline))) {
           return { isValid: false, reason: "knowledge point difficulty_baseline 无效" };
         }
       }
@@ -412,25 +330,114 @@ export function validateProfileRevisionQuality(result: Record<string, unknown>):
   return { isValid: true };
 }
 
-function finishEdge(from: string): Edge {
-  return {
-    id: `${from}_to_end`,
-    from,
-    to: END,
-    priority: 10,
-    guard: () => true,
-    migrate(_instance, completion) {
-      return {
-        frame: { [`${from}Result`]: completion.result },
-        output: { status: completion.status, result: completion.result },
-      };
-    },
-  };
+/** Code Node 内的 Agent Run 网关：0.2 用 runAgent + 业务校验重试替代 0.1 的 validateCompletion。 */
+export const AGENT_VALIDATION_ATTEMPTS = 3;
+
+interface ValidatedAgentRun {
+  readonly runAgent: (request: AgentRunRequest) => Promise<NodeCompletion>;
+  readonly prompt: string;
+  readonly output: JsonSchema;
+  readonly validate: (result: Record<string, unknown>) => CompletionValidationResult;
+  readonly attempts?: number;
 }
 
-function singleNodeEntry(startNodeId: string): Entry {
-  return { id: "main", guard: () => true, startNodeId, mapInput: (background) => background };
+export async function runValidatedAgent(run: ValidatedAgentRun): Promise<Record<string, unknown>> {
+  const attempts = run.attempts ?? AGENT_VALIDATION_ATTEMPTS;
+  let lastReason = "结果未通过业务校验";
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    const prompt = attempt === 1
+      ? run.prompt
+      : `${run.prompt}\n\n上一次提交未通过业务校验：${lastReason}\n请按上述要求修正后重新调用 __graph_complete__ 提交。`;
+    const completion = await run.runAgent({ prompt, output: run.output });
+    const result = (completion.result ?? {}) as Record<string, unknown>;
+    const validation = run.validate(result);
+    if (validation.isValid) return result;
+    lastReason = validation.reason ?? lastReason;
+  }
+  throw new Error(`Agent 结果未通过业务校验：${lastReason}`);
 }
+
+const GenerateQuestionInput = Type.Object({
+  subjectId: Type.String(),
+  scopeId: Type.String(),
+  targetKind: Type.Optional(Type.String()),
+  targetId: Type.Optional(Type.String()),
+  difficulty: Type.Optional(Type.String()),
+  questionType: Type.Optional(Type.String()),
+  mode: Type.Optional(Type.String()),
+});
+
+const PreparedQuestionContext = Type.Object({
+  subjectId: Type.String(),
+  profileName: Type.String(),
+  scopeId: Type.String(),
+  scopeLabel: Type.String(),
+  target: AnyJson,
+  knowledgePointIds: StringArray,
+  difficulty: Type.String(),
+  difficultyPolicy: AnyJson,
+  questionType: Type.String(),
+  mode: Type.String(),
+  modePolicy: AnyJson,
+  material: Type.String(),
+});
+
+const GradeAnswerInput = Type.Object({
+  question: AnyJson,
+  userAnswer: Type.String(),
+});
+
+const DiscussQuestionInput = Type.Object({
+  question: AnyJson,
+  grade: Type.Optional(AnyJson),
+  userAnswer: Type.Optional(Type.String()),
+  userMessage: Type.String(),
+  revealAnswer: Type.Optional(Type.Boolean()),
+  completionAttempt: Type.Optional(Type.Number()),
+});
+
+const SummarizeSessionInput = Type.Object({
+  evidence: AnyJson,
+  difficultyCatalog: AnyJson,
+  summaryKind: Type.Optional(Type.String()),
+  completionAttempt: Type.Optional(Type.Number()),
+});
+
+const UpdateLearningProfileInput = Type.Object({
+  evidence: AnyJson,
+});
+
+const BuildProfileFragmentInput = Type.Object({
+  subjectName: Type.String(),
+  batchIndex: Type.Number(),
+  batchCount: Type.Number(),
+  allowedSourceIds: StringArray,
+  sources: Type.Array(AnyJson),
+});
+
+const PlanProfileRevisionInput = Type.Object({
+  feedback: Type.String(),
+  profile: AnyJson,
+  existingPaths: StringArray,
+  catalog: Type.Array(AnyJson),
+  coreFiles: AnyJson,
+});
+
+const ReviseProfileDraftInput = Type.Object({
+  feedback: Type.String(),
+  profile: AnyJson,
+  plan: AnyJson,
+  currentFiles: Type.Array(AnyJson),
+});
+
+const ReviewProfileDraftInput = Type.Object({
+  feedback: Type.String(),
+  plan: AnyJson,
+  patchSummary: Type.String(),
+  structureInspection: AnyJson,
+  coreFiles: AnyJson,
+  changedFiles: Type.Array(AnyJson),
+});
 
 export interface StudyWalkingSkeletonGraphs {
   generateQuestion: Graph;
@@ -444,181 +451,233 @@ export interface StudyWalkingSkeletonGraphs {
   reviewProfileDraft: Graph;
 }
 
+/** Entry 的 guard/mapInput 以 Graph Input 为准，这里显式带上契约类型。 */
+function mainEntry<S extends TSchema>(_input: S, to: string) {
+  return entry<Static<S>>("main", { to });
+}
+
+/** 0.2 的终点连接必须显式产出符合 Graph output 契约的值。 */
+function finishWithResult(stageId: string) {
+  return firstMatch({
+    [`${stageId}_to_end`]: finish({
+      frame: ({ completion }) => ({ [`${stageId}Result`]: completion.result }),
+      output: ({ completion }) => completion.result,
+    }),
+  });
+}
+
 export function createStudyWalkingSkeletonGraphs(
   profiles: ProfileFamilyRepository,
 ): StudyWalkingSkeletonGraphs {
-  const prepareNode: Node = {
-    kind: "code",
-    id: "prepare_question_context",
+  const prepareNode = codeNode({
+    identity: { name: "prepare_question_context" },
     subGoal: "从 active Profile 准备出题上下文",
     tools: [],
-    async execute(_instance, input) {
-      const subjectId = String(input.data.subjectId ?? "");
-      const scopeId = String(input.data.scopeId ?? "");
-      const targetKind = String(input.data.targetKind ?? "scope") as StudyTargetKind;
+    input: GenerateQuestionInput,
+    output: PreparedQuestionContext,
+    async execute({ input, complete }) {
+      const subjectId = String(input.subjectId ?? "");
+      const scopeId = String(input.scopeId ?? "");
+      const targetKind = String(input.targetKind ?? "scope") as StudyTargetKind;
       if (!(["scope", "card", "section"] as const).includes(targetKind)) {
         throw new Error(`Unsupported study target kind: ${targetKind}`);
       }
-      const targetId = String(input.data.targetId ?? scopeId);
-      const difficulty = String(input.data.difficulty ?? "S-U");
-      const mode = String(input.data.mode ?? "practice");
+      const targetId = String(input.targetId ?? scopeId);
+      const difficulty = String(input.difficulty ?? "S-U");
+      const mode = String(input.mode ?? "practice");
       const context = await loadActiveStudyTargetContext(profiles, subjectId, scopeId, targetKind, targetId);
       const difficultyPolicy = getDifficultyPolicy(difficulty);
       const modePolicy = getReviewModePolicy(mode);
-      return {
-        nodeId: "prepare_question_context",
-        status: "ok",
-        result: {
-          subjectId,
-          profileName: context.profile.name,
-          scopeId,
-          scopeLabel: context.scope.label,
-          target: context.target,
-          knowledgePointIds: context.target.knowledgePointIds,
-          difficulty,
-          difficultyPolicy,
-          questionType: String(input.data.questionType ?? "short_answer"),
-          mode,
-          modePolicy,
-          material: context.material,
-        },
-      };
+      return complete(toJson({
+        subjectId,
+        profileName: context.profile.name,
+        scopeId,
+        scopeLabel: context.scope.label,
+        target: context.target,
+        knowledgePointIds: context.target.knowledgePointIds,
+        difficulty,
+        difficultyPolicy,
+        questionType: String(input.questionType ?? "short_answer"),
+        mode,
+        modePolicy,
+        material: context.material,
+      }));
     },
-  };
+  });
 
-  const generateNode: Node = {
-    kind: "code",
-    id: "generate_question",
+  const generateNode = codeNode({
+    identity: { name: "generate_question" },
     subGoal: "严格依据 active Profile 生成一道可判定的学习题",
     tools: [],
-    execute(instance, input, ctx) {
-      const expectedDifficulty = String(input.data.difficulty);
-      const expectedType = String(input.data.questionType);
-      const allowedKnowledgePointIds = Array.isArray(input.data.knowledgePointIds)
-        ? input.data.knowledgePointIds.filter((item): item is string => typeof item === "string")
+    input: PreparedQuestionContext,
+    output: questionOutputSchema,
+    async execute({ input, complete, runAgent }) {
+      const expectedDifficulty = String(input.difficulty);
+      const expectedType = String(input.questionType);
+      const allowedKnowledgePointIds = Array.isArray(input.knowledgePointIds)
+        ? input.knowledgePointIds.filter((item): item is string => typeof item === "string")
         : [];
-      const target = input.data.target as { kind?: unknown; id?: unknown } | undefined;
+      const target = input.target as { kind?: unknown; id?: unknown } | undefined;
       const exactKnowledgePointId = target?.kind === "card" && typeof target.id === "string" ? target.id : undefined;
-      return createAgentExecute({
-        outputSchema: questionOutputSchema,
-        validateCompletion: (result) => validateQuestionResultForRequest(
-          result,
+      const result = await runValidatedAgent({
+        runAgent,
+        output: questionOutputSchema,
+        validate: (value) => validateQuestionResultForRequest(
+          value,
           expectedDifficulty,
           expectedType,
           allowedKnowledgePointIds,
           exactKnowledgePointId,
         ),
-        prompt: (nextInput) => `你是学习出题者。只依据下面资料和固定策略生成一道题，不得引入资料外事实。\n\n固定难度策略：${JSON.stringify(nextInput.data.difficultyPolicy)}\n固定学习方式策略：${JSON.stringify(nextInput.data.modePolicy)}\n当前学习目标：${JSON.stringify(nextInput.data.target)}\n\n要求：\n1. 难度必须为 ${String(nextInput.data.difficulty)}，题型必须为 ${String(nextInput.data.questionType)}。\n2. 题目必须遵守上述策略，有明确答案和简洁解析。\n3. knowledge_points 只能使用当前目标允许的 ID；卡片练习只能使用当前卡片 ID。\n4. source_basis 写实际使用的资料依据。\n5. 不得逐字复用资料中的现成题目或答案。\n6. 完成后调用 __graph_complete__，结果严格符合输出 schema。\n\n可用知识点：${JSON.stringify(nextInput.data.knowledgePointIds)}\n范围：${String(nextInput.data.scopeLabel)}\n\n资料：\n${String(nextInput.data.material)}`,
-      })(instance, input, ctx);
+        prompt: `你是学习出题者。只依据下面资料和固定策略生成一道题，不得引入资料外事实。\n\n固定难度策略：${JSON.stringify(input.difficultyPolicy)}\n固定学习方式策略：${JSON.stringify(input.modePolicy)}\n当前学习目标：${JSON.stringify(input.target)}\n\n要求：\n1. 难度必须为 ${expectedDifficulty}，题型必须为 ${expectedType}。\n2. 题目必须遵守上述策略，有明确答案和简洁解析。\n3. knowledge_points 只能使用当前目标允许的 ID；卡片练习只能使用当前卡片 ID。\n4. source_basis 写实际使用的资料依据。\n5. 不得逐字复用资料中的现成题目或答案。\n6. 完成后调用 __graph_complete__，结果严格符合输出 schema。\n\n可用知识点：${JSON.stringify(input.knowledgePointIds)}\n范围：${String(input.scopeLabel)}\n\n资料：\n${String(input.material)}`,
+      });
+      return complete(result as never);
     },
-  };
+  });
 
-  const prepareToGenerate: Edge = {
-    id: "prepare_to_generate",
-    from: "prepare_question_context",
-    to: "generate_question",
-    priority: 10,
-    guard: (completion) => completion.status === "ok",
-    migrate(_instance, completion) {
-      return {
-        frame: { preparedQuestionContext: { ...completion.result, material: "[已传给出题节点]" } },
-        input: completion.result,
-      };
-    },
-  };
-
-  const generateQuestion: Graph = {
+  const generateQuestion = defineGraph({
     id: "study_generate_question",
+    version: "1",
     goal: "从 active Profile 生成一道学习题",
-    entries: [singleNodeEntry("prepare_question_context")],
-    nodes: { prepare_question_context: prepareNode, generate_question: generateNode },
-    routing: {
-      prepare_question_context: { nodeId: "prepare_question_context", edges: [prepareToGenerate], router: { kind: "first-match" } },
-      generate_question: { nodeId: "generate_question", edges: [finishEdge("generate_question")], router: { kind: "first-match" } },
+    input: GenerateQuestionInput,
+    output: questionOutputSchema,
+    context: { background: { select: "none" } },
+    entries: [mainEntry(GenerateQuestionInput, "prepare_question_context")],
+    stages: {
+      prepare_question_context: {
+        node: prepareNode,
+        route: firstMatch({
+          prepare_to_generate: connect("generate_question", {
+            frame: ({ completion }) => ({
+              preparedQuestionContext: {
+                ...(completion.result as Record<string, unknown>),
+                material: "[已传给出题节点]",
+              },
+            }),
+            map: ({ completion }) => completion.result,
+          }),
+        }),
+      },
+      generate_question: {
+        node: generateNode,
+        route: finishWithResult("generate_question"),
+      },
     },
-  };
+  });
 
-  const gradeNode: Node = {
-    kind: "code",
-    id: "grade_answer",
+  const gradeNode = codeNode({
+    identity: { name: "grade_answer" },
     subGoal: "根据题目标准答案和资料语义判断用户回答",
     tools: [],
-    execute: createAgentExecute({
-      outputSchema: gradeOutputSchema,
-      validateCompletion: validateGradeResult,
-      prompt: (input) => `请判定用户提交的答案。不要只做字面匹配；根据题目、标准答案和解析判断核心意思是否正确。\n\n业务约束：\n1. 传入文本一定是 submitted_answer，不是放弃动作。\n2. 即使回答是“不知道”、空泛回答或答非所问，也只能判为错误，不能描述为“用户放弃”。\n3. 只评价这次回答的知识内容，不推断信心、焦虑、态度、习惯或长期能力。\n4. 完成后调用 __graph_complete__。\n\n题目：${JSON.stringify(input.data.question)}\n用户回答：${String(input.data.userAnswer)}`,
-    }),
-  };
-  const gradeAnswer: Graph = {
-    id: "study_grade_answer",
-    goal: "语义判断一次学习回答",
-    entries: [singleNodeEntry("grade_answer")],
-    nodes: { grade_answer: gradeNode },
-    routing: { grade_answer: { nodeId: "grade_answer", edges: [finishEdge("grade_answer")], router: { kind: "first-match" } } },
-  };
+    input: GradeAnswerInput,
+    output: gradeOutputSchema,
+    async execute({ input, complete, runAgent }) {
+      const result = await runValidatedAgent({
+        runAgent,
+        output: gradeOutputSchema,
+        validate: validateGradeResult,
+        prompt: `请判定用户提交的答案。不要只做字面匹配；根据题目、标准答案和解析判断核心意思是否正确。\n\n业务约束：\n1. 传入文本一定是 submitted_answer，不是放弃动作。\n2. 即使回答是“不知道”、空泛回答或答非所问，也只能判为错误，不能描述为“用户放弃”。\n3. 只评价这次回答的知识内容，不推断信心、焦虑、态度、习惯或长期能力。\n4. 完成后调用 __graph_complete__。\n\n题目：${JSON.stringify(input.question)}\n用户回答：${String(input.userAnswer)}`,
+      });
+      return complete(result as never);
+    },
+  });
 
-  const discussionNode: Node = {
-    kind: "code",
-    id: "discuss_question",
+  const gradeAnswer = defineGraph({
+    id: "study_grade_answer",
+    version: "1",
+    goal: "语义判断一次学习回答",
+    input: GradeAnswerInput,
+    output: gradeOutputSchema,
+    context: { background: { select: "none" } },
+    entries: [mainEntry(GradeAnswerInput, "grade_answer")],
+    stages: {
+      grade_answer: { node: gradeNode, route: finishWithResult("grade_answer") },
+    },
+  });
+
+  const discussionNode = codeNode({
+    identity: { name: "discuss_question" },
     subGoal: "围绕当前题目帮助用户澄清概念，不脱离 active Profile 证据",
     tools: [],
-    execute: createAgentExecute({
-      outputSchema: discussionOutputSchema,
-      validateCompletion: validateDiscussionResult,
-      prompt: (input) => {
-        const revealAnswer = input.data.revealAnswer === true;
-        const completionAttempt = Number(input.data.completionAttempt ?? 1);
-        const policy = revealAnswer
-          ? "本题已经结束，可以使用给定的参考答案和解析进行完整解释。"
-          : "本题仍在订正中。只能提供渐进提示、追问或指出思考方向；不得给出完整答案、参考答案、解析、判分点组合，也不得复述任何未提供的隐藏答案。即使用户直接询问答案，也要引导其继续作答。";
-        const retryReminder = completionAttempt > 1
-          ? "这是结构化提交重试。上一次没有形成节点结果，本次不得只输出普通正文。"
-          : "";
-        return `你正在执行一个必须结构化完成的学习讨论节点。${policy}\n\n${retryReminder}\n最高优先级输出要求：无论是否拒绝直接给答案，都必须调用 __graph_complete__；把面向用户的内容写入 reply，并同时提交 clarified_points 与 lingering_questions 两个字符串数组。不要在普通正文中结束本轮。\n\n不要另起无关话题，不要虚构资料依据，不推断用户心理或长期能力。\n\n题目上下文：${JSON.stringify(input.data.question)}\n最近判题上下文：${JSON.stringify(input.data.grade)}\n用户最近提交：${String(input.data.userAnswer ?? "")}\n用户追问：${String(input.data.userMessage)}`;
-      },
-    }),
-  };
-  const discussQuestion: Graph = {
-    id: "study_discuss_question",
-    goal: "围绕当前题目完成一次知识消化讨论",
-    entries: [singleNodeEntry("discuss_question")],
-    nodes: { discuss_question: discussionNode },
-    routing: { discuss_question: { nodeId: "discuss_question", edges: [finishEdge("discuss_question")], router: { kind: "first-match" } } },
-  };
+    input: DiscussQuestionInput,
+    output: discussionOutputSchema,
+    async execute({ input, complete, runAgent }) {
+      const revealAnswer = input.revealAnswer === true;
+      const completionAttempt = Number(input.completionAttempt ?? 1);
+      const policy = revealAnswer
+        ? "本题已经结束，可以使用给定的参考答案和解析进行完整解释。"
+        : "本题仍在订正中。只能提供渐进提示、追问或指出思考方向；不得给出完整答案、参考答案、解析、判分点组合，也不得复述任何未提供的隐藏答案。即使用户直接询问答案，也要引导其继续作答。";
+      const retryReminder = completionAttempt > 1
+        ? "这是结构化提交重试。上一次没有形成节点结果，本次不得只输出普通正文。"
+        : "";
+      const result = await runValidatedAgent({
+        runAgent,
+        output: discussionOutputSchema,
+        validate: validateDiscussionResult,
+        prompt: `你正在执行一个必须结构化完成的学习讨论节点。${policy}\n\n${retryReminder}\n最高优先级输出要求：无论是否拒绝直接给答案，都必须调用 __graph_complete__；把面向用户的内容写入 reply，并同时提交 clarified_points 与 lingering_questions 两个字符串数组。不要在普通正文中结束本轮。\n\n不要另起无关话题，不要虚构资料依据，不推断用户心理或长期能力。\n\n题目上下文：${JSON.stringify(input.question)}\n最近判题上下文：${JSON.stringify(input.grade)}\n用户最近提交：${String(input.userAnswer ?? "")}\n用户追问：${String(input.userMessage)}`,
+      });
+      return complete(result as never);
+    },
+  });
 
-  const summaryNode: Node = {
-    kind: "code",
-    id: "summarize_session",
+  const discussQuestion = defineGraph({
+    id: "study_discuss_question",
+    version: "1",
+    goal: "围绕当前题目完成一次知识消化讨论",
+    input: DiscussQuestionInput,
+    output: discussionOutputSchema,
+    context: { background: { select: "none" } },
+    entries: [mainEntry(DiscussQuestionInput, "discuss_question")],
+    stages: {
+      discuss_question: { node: discussionNode, route: finishWithResult("discuss_question") },
+    },
+  });
+
+  const summaryNode = codeNode({
+    identity: { name: "summarize_session" },
     subGoal: "生成必须持久化的本次学习情况总结",
     tools: [],
-    execute: createAgentExecute({
-      outputSchema: summaryOutputSchema,
-      validateCompletion: validateSummaryResult,
-      prompt: (input) => {
-        const retryReminder = Number(input.data.completionAttempt ?? 1) > 1
-          ? "这是一次全新隔离会话中的总结重试。上一次没有形成节点结果，本次必须调用 __graph_complete__ 提交结构化总结。\n\n"
-          : "";
-        return `${retryReminder}根据代码生成的 SessionEvidence 生成中文 Markdown 学习情况总结。必须包含：学习范围、可观察事实、掌握证据、未获得掌握证据的内容、下一步建议。\n\n证据规则：\n1. 只能使用 evidence 中的字段，不得补写原始答案、心理状态、习惯或长期能力。\n2. mastery_evidence 才能支持掌握结论；clarified_points 只表示讨论涉及的内容。\n3. unverified_topics 只表示没有获得掌握证据，不能改写为薄弱点或错误知识。\n4. 建议只能使用给定的有效难度目录，不得发明等级。\n5. 输出数组必须分别对应可观察事实、掌握证据、未验证主题和建议。\n6. 完成后调用 __graph_complete__。\n\n总结类型：${String(input.data.summaryKind ?? "final")}\n有效难度目录：${JSON.stringify(input.data.difficultyCatalog)}\nSessionEvidence：${JSON.stringify(input.data.evidence)}`;
-      },
-    }),
-  };
-  const summarizeSession: Graph = {
-    id: "study_summarize_session",
-    goal: "形成一次学习会话的学习情况总结",
-    entries: [singleNodeEntry("summarize_session")],
-    nodes: { summarize_session: summaryNode },
-    routing: { summarize_session: { nodeId: "summarize_session", edges: [finishEdge("summarize_session")], router: { kind: "first-match" } } },
-  };
+    input: SummarizeSessionInput,
+    output: summaryOutputSchema,
+    async execute({ input, complete, runAgent }) {
+      const retryReminder = Number(input.completionAttempt ?? 1) > 1
+        ? "这是一次全新隔离会话中的总结重试。上一次没有形成节点结果，本次必须调用 __graph_complete__ 提交结构化总结。\n\n"
+        : "";
+      const result = await runValidatedAgent({
+        runAgent,
+        output: summaryOutputSchema,
+        validate: validateSummaryResult,
+        prompt: `${retryReminder}根据代码生成的 SessionEvidence 生成中文 Markdown 学习情况总结。必须包含：学习范围、可观察事实、掌握证据、未获得掌握证据的内容、下一步建议。\n\n证据规则：\n1. 只能使用 evidence 中的字段，不得补写原始答案、心理状态、习惯或长期能力。\n2. mastery_evidence 才能支持掌握结论；clarified_points 只表示讨论涉及的内容。\n3. unverified_topics 只表示没有获得掌握证据，不能改写为薄弱点或错误知识。\n4. 建议只能使用给定的有效难度目录，不得发明等级。\n5. 输出数组必须分别对应可观察事实、掌握证据、未验证主题和建议。\n6. 完成后调用 __graph_complete__。\n\n总结类型：${String(input.summaryKind ?? "final")}\n有效难度目录：${JSON.stringify(input.difficultyCatalog)}\nSessionEvidence：${JSON.stringify(input.evidence)}`,
+      });
+      return complete(result as never);
+    },
+  });
 
-  const learningProfileNode: Node = {
-    kind: "code",
-    id: "update_learning_profile",
+  const summarizeSession = defineGraph({
+    id: "study_summarize_session",
+    version: "1",
+    goal: "形成一次学习会话的学习情况总结",
+    input: SummarizeSessionInput,
+    output: summaryOutputSchema,
+    context: { background: { select: "none" } },
+    entries: [mainEntry(SummarizeSessionInput, "summarize_session")],
+    stages: {
+      summarize_session: { node: summaryNode, route: finishWithResult("summarize_session") },
+    },
+  });
+
+  const learningProfileNode = codeNode({
+    identity: { name: "update_learning_profile" },
     subGoal: "根据用户选中的学习记录更新长期学习画像候选",
     tools: [],
-    execute: createAgentExecute({
-      outputSchema: learningProfileOutputSchema,
-      validateCompletion: validateLearningProfileResult,
-      prompt: (input) => `根据代码提供的 LearningProfileEvidence 生成中文长期学习画像候选。
+    input: UpdateLearningProfileInput,
+    output: learningProfileOutputSchema,
+    async execute({ input, complete, runAgent }) {
+      const result = await runValidatedAgent({
+        runAgent,
+        output: learningProfileOutputSchema,
+        validate: validateLearningProfileResult,
+        prompt: `根据代码提供的 LearningProfileEvidence 生成中文长期学习画像候选。
 
 规则：
 1. 只使用 existing_profile、selected_batches 及其中的 summary_excerpt/session_evidence，不读取或猜测原始回答。
@@ -629,36 +688,40 @@ export function createStudyWalkingSkeletonGraphs(
 6. 不要计算累计题数、正确数或正确率，这些字段由代码确定。
 7. 完成后调用 __graph_complete__，严格提交五个字段。
 
-LearningProfileEvidence：${JSON.stringify(input.data.evidence)}`,
-    }),
-  };
-  const updateLearningProfile: Graph = {
-    id: "study_update_learning_profile",
-    goal: "从用户选中的学习记录生成长期学习画像候选",
-    entries: [singleNodeEntry("update_learning_profile")],
-    nodes: { update_learning_profile: learningProfileNode },
-    routing: {
-      update_learning_profile: {
-        nodeId: "update_learning_profile",
-        edges: [finishEdge("update_learning_profile")],
-        router: { kind: "first-match" },
-      },
+LearningProfileEvidence：${JSON.stringify(input.evidence)}`,
+      });
+      return complete(result as never);
     },
-  };
+  });
 
-  const profileBuildNode: Node = {
-    kind: "code",
-    id: "build_profile_fragment",
+  const updateLearningProfile = defineGraph({
+    id: "study_update_learning_profile",
+    version: "1",
+    goal: "从用户选中的学习记录生成长期学习画像候选",
+    input: UpdateLearningProfileInput,
+    output: learningProfileOutputSchema,
+    context: { background: { select: "none" } },
+    entries: [mainEntry(UpdateLearningProfileInput, "update_learning_profile")],
+    stages: {
+      update_learning_profile: { node: learningProfileNode, route: finishWithResult("update_learning_profile") },
+    },
+  });
+
+  const profileBuildNode = codeNode({
+    identity: { name: "build_profile_fragment" },
     subGoal: "从代码提供的 Markdown/txt 批次提取 canonical Profile 语义单元",
     tools: [],
-    execute(instance, input, ctx) {
-      const allowedSourceIds = Array.isArray(input.data.allowedSourceIds)
-        ? input.data.allowedSourceIds.filter((item): item is string => typeof item === "string")
+    input: BuildProfileFragmentInput,
+    output: profileBuildFragmentSchema,
+    async execute({ input, complete, runAgent }) {
+      const allowedSourceIds = Array.isArray(input.allowedSourceIds)
+        ? input.allowedSourceIds.filter((item): item is string => typeof item === "string")
         : [];
-      return createAgentExecute({
-        outputSchema: profileBuildFragmentSchema,
-        validateCompletion: (result) => validateProfileBuildFragment(result, allowedSourceIds),
-        prompt: (nextInput) => `你正在从一批用户提供的 Markdown/txt 构建 canonical 学习资料包语义片段。
+      const result = await runValidatedAgent({
+        runAgent,
+        output: profileBuildFragmentSchema,
+        validate: (value) => validateProfileBuildFragment(value, allowedSourceIds),
+        prompt: `你正在从一批用户提供的 Markdown/txt 构建 canonical 学习资料包语义片段。
 
 要求：
 1. 只能使用 sources 中的内容，不得自行读取文件、调用工具或引入资料外事实。
@@ -670,40 +733,43 @@ LearningProfileEvidence：${JSON.stringify(input.data.evidence)}`,
 7. 不确定或资料缺失写入 warnings，不要补造。
 8. 完成后调用 __graph_complete__，严格提交 schema。
 
-科目：${String(nextInput.data.subjectName)}
-批次：${String(nextInput.data.batchIndex)} / ${String(nextInput.data.batchCount)}
+科目：${String(input.subjectName)}
+批次：${String(input.batchIndex)} / ${String(input.batchCount)}
 allowedSourceIds：${JSON.stringify(allowedSourceIds)}
-sources：${JSON.stringify(nextInput.data.sources)}`,
-      })(instance, input, ctx);
+sources：${JSON.stringify(input.sources)}`,
+      });
+      return complete(result as never);
     },
-  };
-  const buildProfileFragment: Graph = {
-    id: "study_build_profile_fragment",
-    goal: "从受控源文件批次提取 canonical Profile 语义片段",
-    entries: [singleNodeEntry("build_profile_fragment")],
-    nodes: { build_profile_fragment: profileBuildNode },
-    routing: {
-      build_profile_fragment: {
-        nodeId: "build_profile_fragment",
-        edges: [finishEdge("build_profile_fragment")],
-        router: { kind: "first-match" },
-      },
-    },
-  };
+  });
 
-  const planProfileRevisionNode: Node = {
-    kind: "code",
-    id: "plan_profile_revision",
+  const buildProfileFragment = defineGraph({
+    id: "study_build_profile_fragment",
+    version: "1",
+    goal: "从受控源文件批次提取 canonical Profile 语义片段",
+    input: BuildProfileFragmentInput,
+    output: profileBuildFragmentSchema,
+    context: { background: { select: "none" } },
+    entries: [mainEntry(BuildProfileFragmentInput, "build_profile_fragment")],
+    stages: {
+      build_profile_fragment: { node: profileBuildNode, route: finishWithResult("build_profile_fragment") },
+    },
+  });
+
+  const planProfileRevisionNode = codeNode({
+    identity: { name: "plan_profile_revision" },
     subGoal: "根据用户反馈确定 canonical draft 的最小受影响文件集合",
     tools: [],
-    execute(instance, input, ctx) {
-      const existingPaths = Array.isArray(input.data.existingPaths)
-        ? input.data.existingPaths.filter((item): item is string => typeof item === "string")
+    input: PlanProfileRevisionInput,
+    output: profileRevisionPlanSchema,
+    async execute({ input, complete, runAgent }) {
+      const existingPaths = Array.isArray(input.existingPaths)
+        ? input.existingPaths.filter((item): item is string => typeof item === "string")
         : [];
-      return createAgentExecute({
-        outputSchema: profileRevisionPlanSchema,
-        validateCompletion: (result) => validateProfileRevisionPlan(result, existingPaths),
-        prompt: (nextInput) => `为一个 canonical 学习资料包 draft 制定最小修订计划。
+      const result = await runValidatedAgent({
+        runAgent,
+        output: profileRevisionPlanSchema,
+        validate: (value) => validateProfileRevisionPlan(value, existingPaths),
+        prompt: `为一个 canonical 学习资料包 draft 制定最小修订计划。
 
 规则：
 1. 只根据用户反馈和代码提供的 catalog/coreFiles 规划，不读取文件或调用工具。
@@ -714,39 +780,42 @@ sources：${JSON.stringify(nextInput.data.sources)}`,
 6. 资料没有证据支持的内容写入 warnings，不要计划虚构内容。
 7. operations 最多 12 项；完成后调用 __graph_complete__。
 
-用户反馈：${String(nextInput.data.feedback)}
-Profile：${JSON.stringify(nextInput.data.profile)}
+用户反馈：${String(input.feedback)}
+Profile：${JSON.stringify(input.profile)}
 existingPaths：${JSON.stringify(existingPaths)}
-catalog：${JSON.stringify(nextInput.data.catalog)}
-coreFiles：${JSON.stringify(nextInput.data.coreFiles)}`,
-      })(instance, input, ctx);
+catalog：${JSON.stringify(input.catalog)}
+coreFiles：${JSON.stringify(input.coreFiles)}`,
+      });
+      return complete(result as never);
     },
-  };
-  const planProfileRevision: Graph = {
-    id: "study_plan_profile_revision",
-    goal: "确定资料包修订的最小影响范围",
-    entries: [singleNodeEntry("plan_profile_revision")],
-    nodes: { plan_profile_revision: planProfileRevisionNode },
-    routing: {
-      plan_profile_revision: {
-        nodeId: "plan_profile_revision",
-        edges: [finishEdge("plan_profile_revision")],
-        router: { kind: "first-match" },
-      },
-    },
-  };
+  });
 
-  const reviseProfileDraftNode: Node = {
-    kind: "code",
-    id: "revise_profile_draft",
+  const planProfileRevision = defineGraph({
+    id: "study_plan_profile_revision",
+    version: "1",
+    goal: "确定资料包修订的最小影响范围",
+    input: PlanProfileRevisionInput,
+    output: profileRevisionPlanSchema,
+    context: { background: { select: "none" } },
+    entries: [mainEntry(PlanProfileRevisionInput, "plan_profile_revision")],
+    stages: {
+      plan_profile_revision: { node: planProfileRevisionNode, route: finishWithResult("plan_profile_revision") },
+    },
+  });
+
+  const reviseProfileDraftNode = codeNode({
+    identity: { name: "revise_profile_draft" },
     subGoal: "在计划白名单内生成 canonical draft 文件补丁",
     tools: [],
-    execute(instance, input, ctx) {
-      const plan = input.data.plan as ProfileRevisionPlan;
-      return createAgentExecute({
-        outputSchema: profileRevisionPatchSchema,
-        validateCompletion: (result) => validateProfileRevisionPatch(result, plan),
-        prompt: (nextInput) => `根据已批准的修订计划生成完整文件替换内容。
+    input: ReviseProfileDraftInput,
+    output: profileRevisionPatchSchema,
+    async execute({ input, complete, runAgent }) {
+      const plan = input.plan as ProfileRevisionPlan;
+      const result = await runValidatedAgent({
+        runAgent,
+        output: profileRevisionPatchSchema,
+        validate: (value) => validateProfileRevisionPatch(value, plan),
+        prompt: `根据已批准的修订计划生成完整文件替换内容。
 
 规则：
 1. 只能提交 plan 中列出的 path 和 operation，不得扩大影响范围。
@@ -756,36 +825,40 @@ coreFiles：${JSON.stringify(nextInput.data.coreFiles)}`,
 5. JSON 必须是合法完整 JSON；Markdown 必须保持 canonical frontmatter 和正文结构。
 6. 资料不足时写入 unresolved；不要猜测。完成后调用 __graph_complete__。
 
-用户反馈：${String(nextInput.data.feedback)}
-Profile：${JSON.stringify(nextInput.data.profile)}
+用户反馈：${String(input.feedback)}
+Profile：${JSON.stringify(input.profile)}
 plan：${JSON.stringify(plan)}
-currentFiles（新文件的 content 为 null）：${JSON.stringify(nextInput.data.currentFiles)}`,
-      })(instance, input, ctx);
+currentFiles（新文件的 content 为 null）：${JSON.stringify(input.currentFiles)}`,
+      });
+      return complete(result as never);
     },
-  };
-  const reviseProfileDraft: Graph = {
-    id: "study_revise_profile_draft",
-    goal: "在受控影响范围内修订 canonical draft",
-    entries: [singleNodeEntry("revise_profile_draft")],
-    nodes: { revise_profile_draft: reviseProfileDraftNode },
-    routing: {
-      revise_profile_draft: {
-        nodeId: "revise_profile_draft",
-        edges: [finishEdge("revise_profile_draft")],
-        router: { kind: "first-match" },
-      },
-    },
-  };
+  });
 
-  const reviewProfileDraftNode: Node = {
-    kind: "code",
-    id: "review_profile_draft",
+  const reviseProfileDraft = defineGraph({
+    id: "study_revise_profile_draft",
+    version: "1",
+    goal: "在受控影响范围内修订 canonical draft",
+    input: ReviseProfileDraftInput,
+    output: profileRevisionPatchSchema,
+    context: { background: { select: "none" } },
+    entries: [mainEntry(ReviseProfileDraftInput, "revise_profile_draft")],
+    stages: {
+      revise_profile_draft: { node: reviseProfileDraftNode, route: finishWithResult("revise_profile_draft") },
+    },
+  });
+
+  const reviewProfileDraftNode = codeNode({
+    identity: { name: "review_profile_draft" },
     subGoal: "独立审查修订后的 draft 并生成质量报告",
     tools: [],
-    execute: createAgentExecute({
-      outputSchema: profileRevisionQualitySchema,
-      validateCompletion: validateProfileRevisionQuality,
-      prompt: (input) => `独立审查刚完成修订的 canonical Profile draft。
+    input: ReviewProfileDraftInput,
+    output: profileRevisionQualitySchema,
+    async execute({ input, complete, runAgent }) {
+      const result = await runValidatedAgent({
+        runAgent,
+        output: profileRevisionQualitySchema,
+        validate: validateProfileRevisionQuality,
+        prompt: `独立审查刚完成修订的 canonical Profile draft。
 
 规则：
 1. 代码给出的 structureInspection.blockingIssues 必须原样计入 blocking_issues，不得降低级别。
@@ -795,27 +868,29 @@ currentFiles（新文件的 content 为 null）：${JSON.stringify(nextInput.dat
 5. blocking_issues 非空时 recommendation 必须为 revise；无阻塞项时可以建议 enable。
 6. 完成后调用 __graph_complete__。
 
-用户反馈：${String(input.data.feedback)}
-修订计划：${JSON.stringify(input.data.plan)}
-补丁摘要：${JSON.stringify(input.data.patchSummary)}
-structureInspection：${JSON.stringify(input.data.structureInspection)}
-coreFiles：${JSON.stringify(input.data.coreFiles)}
-changedFiles：${JSON.stringify(input.data.changedFiles)}`,
-    }),
-  };
-  const reviewProfileDraft: Graph = {
-    id: "study_review_profile_draft",
-    goal: "形成修订 draft 的独立质量结论",
-    entries: [singleNodeEntry("review_profile_draft")],
-    nodes: { review_profile_draft: reviewProfileDraftNode },
-    routing: {
-      review_profile_draft: {
-        nodeId: "review_profile_draft",
-        edges: [finishEdge("review_profile_draft")],
-        router: { kind: "first-match" },
-      },
+用户反馈：${String(input.feedback)}
+修订计划：${JSON.stringify(input.plan)}
+补丁摘要：${JSON.stringify(input.patchSummary)}
+structureInspection：${JSON.stringify(input.structureInspection)}
+coreFiles：${JSON.stringify(input.coreFiles)}
+changedFiles：${JSON.stringify(input.changedFiles)}`,
+      });
+      return complete(result as never);
     },
-  };
+  });
+
+  const reviewProfileDraft = defineGraph({
+    id: "study_review_profile_draft",
+    version: "1",
+    goal: "形成修订 draft 的独立质量结论",
+    input: ReviewProfileDraftInput,
+    output: profileRevisionQualitySchema,
+    context: { background: { select: "none" } },
+    entries: [mainEntry(ReviewProfileDraftInput, "review_profile_draft")],
+    stages: {
+      review_profile_draft: { node: reviewProfileDraftNode, route: finishWithResult("review_profile_draft") },
+    },
+  });
 
   return {
     generateQuestion,
@@ -873,7 +948,7 @@ export function asProfileRevisionQuality(result: Record<string, unknown>): Profi
 }
 
 export function difficultyFrom(value: string): DifficultyLevel {
-  const allowed = new Set<DifficultyLevel>(["S-R", "S-U", "M-U", "M-A", "C-A"]);
+  const allowed = new Set<DifficultyLevel>(DIFFICULTY_LEVELS as readonly DifficultyLevel[]);
   if (!allowed.has(value as DifficultyLevel)) throw new Error(`Unsupported difficulty: ${value}`);
   return value as DifficultyLevel;
 }

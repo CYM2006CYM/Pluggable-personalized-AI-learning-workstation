@@ -1,7 +1,0 @@
-.claude/
-.codex/
-docs/归档/
-src/**/*.test.ts
-loop-graph-debug.log
-log/
-Agent.md

@@ -1,32 +1,40 @@
 import type { ExtensionCommandContext } from "@earendil-works/pi-coding-agent";
 import {
-  createIsolatedGraphSessionFactory,
-  IsolatedSessionGraphHost,
+  createPiGraphHost,
+  type CreatePiGraphHostOptions,
   type Graph,
-  type GraphExecutionHost,
+  type GraphHost,
   type GraphRunResult,
-  type IsolatedGraphSessionFactory,
-  type IsolatedGraphSessionFactoryOptions,
   type LoopGraphLimits,
-  type LoopGraphTraceSink,
+  type RecordingMode,
 } from "pi-loop-graph-sdk";
 
 export type IsolatedGraphExecutor = (
   graph: Graph,
-  params: Record<string, unknown>,
+  input: Record<string, unknown>,
 ) => Promise<GraphRunResult>;
 
 export interface IsolatedGraphExecutorOptions {
-  traceSink?: LoopGraphTraceSink;
+  /** Root/Child 步数与 Agent Run 超时；0.2 由 Host 统一持有。 */
   limits?: LoopGraphLimits;
+  /** 0.1 的 JSONL traceSink 在 0.2 由 recording + RunStore 取代。 */
+  recording?: RecordingMode;
+  runStore?: CreatePiGraphHostOptions["runStore"];
+  /** 允许被 GraphRef 解析的图；单图执行时可省略。 */
+  graphs?: readonly Graph[];
 }
 
-/** @internal 仅用于替换会话和 host 构造，以便测试生命周期契约。 */
+/** @internal 仅用于替换 Host 构造，以便测试生命周期契约。 */
 export interface IsolatedGraphExecutorDependencies {
-  createSessionFactory?: (
-    options: IsolatedGraphSessionFactoryOptions,
-  ) => IsolatedGraphSessionFactory;
-  createHost?: (createSession: IsolatedGraphSessionFactory) => GraphExecutionHost;
+  createHost?: (options: CreatePiGraphHostOptions) => Promise<GraphHost> | GraphHost;
+}
+
+/**
+ * Graph Input 会被 Runtime 按 Graph input 契约校验，且必须是 JSON 兼容值。
+ * 业务对象里可能带 `undefined` 字段，这里统一做一次 JSON 归一化。
+ */
+function toGraphInput(input: Record<string, unknown>): Record<string, unknown> {
+  return JSON.parse(JSON.stringify(input ?? {})) as Record<string, unknown>;
 }
 
 /**
@@ -43,29 +51,27 @@ export function createIsolatedGraphExecutor(
   const model = ctx.model;
   if (!model) throw new Error("请先选择可用模型再开始学习");
 
-  const createSessionFactory = dependencies.createSessionFactory ?? createIsolatedGraphSessionFactory;
-  const createSession = createSessionFactory({
+  const createHost = dependencies.createHost ?? createPiGraphHost;
+  const hostOptions: CreatePiGraphHostOptions = {
     cwd: ctx.cwd,
     authStorage: ctx.modelRegistry.authStorage,
     modelRegistry: ctx.modelRegistry,
     model,
     thinkingLevel: "off",
-    defaultTools: [],
-    traceSink: options.traceSink,
     limits: options.limits,
-  });
-  const createHost = dependencies.createHost
-    ?? ((factory: IsolatedGraphSessionFactory) => new IsolatedSessionGraphHost({ createSession: factory }));
+    recording: options.recording ?? "replay",
+    runStore: options.runStore,
+    graphs: options.graphs,
+  };
 
-  return async (graph, params) => {
-    const host = createHost(createSession);
+  return async (graph, input) => {
+    const host = await createHost(hostOptions);
     try {
-      return await host.run(graph, {
-        background: params,
-        invocationKind: "command",
-        boundary: "delegate",
-        signal: ctx.signal,
-      });
+      return await host.execute(
+        graph,
+        toGraphInput(input) as never,
+        { signal: ctx.signal },
+      ) as GraphRunResult;
     } finally {
       await host.dispose();
     }

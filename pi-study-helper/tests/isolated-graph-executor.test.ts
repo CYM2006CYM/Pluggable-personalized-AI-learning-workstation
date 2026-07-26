@@ -1,21 +1,21 @@
 import type { ExtensionCommandContext } from "@earendil-works/pi-coding-agent";
 import type {
+  CreatePiGraphHostOptions,
   Graph,
-  GraphExecutionHost,
-  GraphRunRequest,
+  GraphHost,
+  GraphHostRunOptions,
   GraphRunResult,
-  IsolatedGraphSessionFactory,
-  IsolatedGraphSessionFactoryOptions,
 } from "pi-loop-graph-sdk";
 import { describe, expect, it, vi } from "vitest";
 import { createIsolatedGraphExecutor } from "../src/graphs/isolated-graph-executor.js";
+import { completedRun } from "./graph-run-result.js";
 
-const graph = { id: "test_graph" } as Graph;
-const result: GraphRunResult = {
-  graphId: "test_graph",
-  status: "ok",
-  result: { value: 1 },
-  steps: 1,
+const graph = { id: "test_graph", version: "1" } as Graph;
+const result: GraphRunResult = completedRun(graph, { value: 1 });
+
+type FakeHost = GraphHost & {
+  execute: ReturnType<typeof vi.fn>;
+  dispose: ReturnType<typeof vi.fn>;
 };
 
 function commandContext(options: { model?: unknown } = {}): ExtensionCommandContext {
@@ -32,88 +32,93 @@ function commandContext(options: { model?: unknown } = {}): ExtensionCommandCont
   } as unknown as ExtensionCommandContext;
 }
 
-function unusedSessionFactory(): IsolatedGraphSessionFactory {
-  return async () => {
-    throw new Error("fake host 不应创建真实 session");
-  };
+function fakeHost(
+  run?: (graph: Graph, input: unknown, options?: GraphHostRunOptions) => Promise<GraphRunResult>,
+): FakeHost {
+  return {
+    execute: vi.fn(run ?? (async () => result)),
+    resume: vi.fn(async () => result),
+    dispose: vi.fn(async () => undefined),
+  } as unknown as FakeHost;
 }
 
 describe("createIsolatedGraphExecutor", () => {
   it("缺少当前模型时立即失败", () => {
-    const createSessionFactory = vi.fn();
+    const createHost = vi.fn();
 
     expect(() => createIsolatedGraphExecutor(
       commandContext({ model: undefined }),
       {},
-      { createSessionFactory },
+      { createHost },
     )).toThrow("请先选择可用模型再开始学习");
-    expect(createSessionFactory).not.toHaveBeenCalled();
+    expect(createHost).not.toHaveBeenCalled();
   });
 
-  it("复用命令上下文的认证和模型，并发送 delegate 请求", async () => {
+  it("复用命令上下文的认证和模型，并把 Graph Input 传给 Host", async () => {
     const ctx = commandContext();
     const signal = new AbortController().signal;
-    const traceSink = vi.fn();
     Object.defineProperty(ctx, "signal", { get: () => signal });
-    let factoryOptions: IsolatedGraphSessionFactoryOptions | undefined;
+    let hostOptions: CreatePiGraphHostOptions | undefined;
     let receivedGraph: Graph | undefined;
-    let receivedRequest: GraphRunRequest | undefined;
-    const dispose = vi.fn(async () => undefined);
-    const host: GraphExecutionHost = {
-      async run(nextGraph, request) {
-        receivedGraph = nextGraph;
-        receivedRequest = request;
-        return result;
-      },
-      dispose,
-    };
+    let receivedInput: unknown;
+    let receivedRunOptions: GraphHostRunOptions | undefined;
+    const host = fakeHost(async (nextGraph, input, runOptions) => {
+      receivedGraph = nextGraph;
+      receivedInput = input;
+      receivedRunOptions = runOptions;
+      return result;
+    });
 
     const execute = createIsolatedGraphExecutor(
       ctx,
-      { traceSink, limits: { rootMaxSteps: 7 } },
+      { limits: { rootMaxSteps: 7 } },
       {
-        createSessionFactory(options) {
-          factoryOptions = options;
-          return unusedSessionFactory();
+        createHost(options) {
+          hostOptions = options;
+          return host;
         },
-        createHost: () => host,
       },
     );
     const params = { subjectId: "demo-review" };
 
     await expect(execute(graph, params)).resolves.toEqual(result);
-    expect(factoryOptions).toMatchObject({
+    expect(hostOptions).toMatchObject({
       cwd: ctx.cwd,
       authStorage: ctx.modelRegistry.authStorage,
       modelRegistry: ctx.modelRegistry,
       model: ctx.model,
       thinkingLevel: "off",
-      defaultTools: [],
-      traceSink,
+      recording: "replay",
       limits: { rootMaxSteps: 7 },
     });
     expect(receivedGraph).toBe(graph);
-    expect(receivedRequest).toEqual({
-      background: params,
-      invocationKind: "command",
-      boundary: "delegate",
-      signal,
+    expect(receivedInput).toEqual(params);
+    expect(receivedRunOptions).toEqual({ signal });
+    expect(host.dispose).toHaveBeenCalledOnce();
+  });
+
+  it("Graph Input 先归一化为 JSON 兼容值，避免 undefined 触发 invalid-input", async () => {
+    let receivedInput: unknown;
+    const host = fakeHost(async (_graph, input) => {
+      receivedInput = input;
+      return result;
     });
-    expect(dispose).toHaveBeenCalledOnce();
+    const execute = createIsolatedGraphExecutor(commandContext(), {}, { createHost: () => host });
+
+    await execute(graph, { keep: "ok", drop: undefined });
+
+    expect(receivedInput).toEqual({ keep: "ok" });
+    expect(Object.hasOwn(receivedInput as object, "drop")).toBe(false);
   });
 
   it("每次执行创建独立 host 并分别释放", async () => {
-    const hosts: Array<{ run: ReturnType<typeof vi.fn>; dispose: ReturnType<typeof vi.fn> }> = [];
+    const hosts: FakeHost[] = [];
     const execute = createIsolatedGraphExecutor(
       commandContext(),
       {},
       {
-        createSessionFactory: unusedSessionFactory,
         createHost: () => {
-          const host = {
-            run: vi.fn(async () => result),
-            dispose: vi.fn(async () => undefined),
-          };
+          const host = fakeHost();
           hosts.push(host);
           return host;
         },
@@ -125,30 +130,24 @@ describe("createIsolatedGraphExecutor", () => {
 
     expect(hosts).toHaveLength(2);
     expect(hosts[0]).not.toBe(hosts[1]);
-    expect(hosts[0]?.run).toHaveBeenCalledOnce();
-    expect(hosts[1]?.run).toHaveBeenCalledOnce();
+    expect(hosts[0]?.execute).toHaveBeenCalledOnce();
+    expect(hosts[1]?.execute).toHaveBeenCalledOnce();
     expect(hosts[0]?.dispose).toHaveBeenCalledOnce();
     expect(hosts[1]?.dispose).toHaveBeenCalledOnce();
   });
 
   it("图执行抛错时仍释放 host", async () => {
     const failure = new Error("graph failed");
-    const dispose = vi.fn(async () => undefined);
+    const host = fakeHost(async () => {
+      throw failure;
+    });
     const execute = createIsolatedGraphExecutor(
       commandContext(),
       {},
-      {
-        createSessionFactory: unusedSessionFactory,
-        createHost: () => ({
-          async run() {
-            throw failure;
-          },
-          dispose,
-        }),
-      },
+      { createHost: () => host },
     );
 
     await expect(execute(graph, {})).rejects.toBe(failure);
-    expect(dispose).toHaveBeenCalledOnce();
+    expect(host.dispose).toHaveBeenCalledOnce();
   });
 });

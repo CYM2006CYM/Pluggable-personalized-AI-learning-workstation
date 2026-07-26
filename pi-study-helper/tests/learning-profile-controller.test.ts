@@ -2,6 +2,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import type { GraphRunResult } from "pi-loop-graph-sdk";
+import { completedRun, failedRun } from "./graph-run-result.js";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
   LearningProfileController,
@@ -102,20 +103,17 @@ describe("LearningProfileController", () => {
   function controller(options: { selections: Array<string | undefined>; graphStatus?: GraphRunResult["status"] }) {
     const ui = new ProfileUi(options.selections);
     const graphs = createStudyWalkingSkeletonGraphs(profiles);
-    const executeGraph: IsolatedGraphExecutor = async (graph) => ({
-      graphId: graph.id,
-      status: options.graphStatus ?? "ok",
-      steps: 1,
-      result: options.graphStatus === "failed"
-        ? { reason: "profile graph failed" }
-        : {
+    const executeGraph: IsolatedGraphExecutor = async (graph) => (
+      options.graphStatus === "failed"
+        ? failedRun(graph, "profile graph failed")
+        : completedRun(graph, {
             profile_summary: "已获得主动回忆的掌握证据。",
             weak_points: [],
             strengths: ["主动回忆"],
             unverified_topics: [],
             recommendations: ["继续练习主动回忆"],
-          },
-    });
+          })
+    );
     return {
       ui,
       controller: new LearningProfileController({
