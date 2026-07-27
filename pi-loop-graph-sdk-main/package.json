@@ -1,0 +1,69 @@
+{
+  "name": "pi-loop-graph-sdk",
+  "version": "0.2.0",
+  "description": "Turn skill-constrained workflows into monitored loop graphs — typed stages, mechanism constraints, full replay. Comprehensive AI-friendly docs",
+  "license": "MIT",
+  "author": "0liveriaaawa",
+  "keywords": ["pi-package", "pi-extension", "agent-workflow", "graph", "loop-graph", "pi"],
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./extension": {
+      "types": "./dist/adapter/extension.d.ts",
+      "import": "./dist/adapter/extension.js"
+    },
+    "./replay": {
+      "types": "./dist/replay/index.d.ts",
+      "import": "./dist/replay/index.js"
+    },
+    "./advanced": {
+      "types": "./dist/advanced.d.ts",
+      "import": "./dist/advanced.js"
+    }
+  },
+  "files": [
+    "dist/",
+    "README.md",
+    "README-zh.md",
+    "ROADMAP.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/0liveiraaa/pi-loop-graph-sdk.git"
+  },
+  "homepage": "https://github.com/0liveiraaa/pi-loop-graph-sdk#readme",
+  "bugs": {
+    "url": "https://github.com/0liveiraaa/pi-loop-graph-sdk/issues"
+  },
+  "pi": {
+    "extensions": ["./dist/adapter/extension.js"]
+  },
+  "scripts": {
+    "build": "node scripts/clean-dist.mjs && tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.test.json && npm run test:types:target && tsc -p tests/types/legacy-removals/phase1.tsconfig.json && tsc -p tests/types/legacy-removals/phase3.tsconfig.json",
+    "test:types:target": "tsc -p tests/types/target/tsconfig.json",
+    "test:types:legacy-removals": "tsc -p tests/types/legacy-removals/tsconfig.json",
+    "test:package-consumer": "node tests/package-consumer/run.mjs",
+    "test": "npm run build && vitest run",
+    "verify:phase0": "npm run typecheck && npm test && npm run test:package-consumer",
+    "prepare": "npm run build"
+  },
+  "devDependencies": {
+    "@earendil-works/pi-coding-agent": "0.80.3",
+    "@earendil-works/pi-tui": "^0.80.3",
+    "typescript": "^5.5.0",
+    "vitest": "^2.0.0"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*",
+    "@earendil-works/pi-tui": "*"
+  },
+  "dependencies": {
+    "typebox": "^1.3.5"
+  }
+}

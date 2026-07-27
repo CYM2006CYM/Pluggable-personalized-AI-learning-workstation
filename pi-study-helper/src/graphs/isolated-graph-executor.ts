@@ -17,7 +17,7 @@ export type IsolatedGraphExecutor = (
 export interface IsolatedGraphExecutorOptions {
   /** Root/Child 步数与 Agent Run 超时；0.2 由 Host 统一持有。 */
   limits?: LoopGraphLimits;
-  /** 0.1 的 JSONL traceSink 在 0.2 由 recording + RunStore 取代。 */
+  /** SDK 0.2的运行记录模式和持久化存储。 */
   recording?: RecordingMode;
   runStore?: CreatePiGraphHostOptions["runStore"];
   /** 允许被 GraphRef 解析的图；单图执行时可省略。 */

@@ -16,11 +16,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/CYM2006CYM/optimized-pi-review-agent-with-sdk.git"
+    "url": "git+https://github.com/CYM2006CYM/Pluggable-personalized-AI-learning-workstation.git",
+    "directory": "pi-study-helper"
   },
-  "homepage": "https://github.com/CYM2006CYM/optimized-pi-review-agent-with-sdk#readme",
+  "homepage": "https://github.com/CYM2006CYM/Pluggable-personalized-AI-learning-workstation/tree/main/pi-study-helper#readme",
   "bugs": {
-    "url": "https://github.com/CYM2006CYM/optimized-pi-review-agent-with-sdk/issues"
+    "url": "https://github.com/CYM2006CYM/Pluggable-personalized-AI-learning-workstation/issues"
   },
   "engines": {
     "node": ">=22"

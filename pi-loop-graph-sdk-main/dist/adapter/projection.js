@@ -1,0 +1,169 @@
+// ============================================================
+//  投影 — context 钩子的消息组装（纯函数）
+// ============================================================
+export function projectMessages(input) {
+    const { messages, frames, currentNode, activeScope } = input;
+    const currentIdx = activeScope ? findLastMatchingScope(messages, activeScope) : -1;
+    const result = [];
+    const summaryIdx = input.compactionActive ? findLastCompactionSummary(messages) : -1;
+    // pi 的 summary + recent messages 是压缩后上下文的权威表达。若活动 scope
+    // 仍在保留区，只保留 summary 与该 scope 后内容；若 scope 已被压缩，则在
+    // summary 后恢复 CURRENT，并保留所有 recent messages。
+    if (summaryIdx >= 0)
+        result.push(messages[summaryIdx]);
+    // frame 段
+    if (frames.length > 0) {
+        const fmt = input.frameFormatter ?? defaultFrameFormatter;
+        const content = fmt(frames);
+        if (content != null) {
+            result.push({
+                role: "user",
+                content,
+                timestamp: Date.now(),
+            });
+        }
+    }
+    if (currentIdx >= 0) {
+        const includeAnchor = messages[currentIdx]?.customType === "loop_graph_node_scope";
+        result.push(...messages.slice(currentIdx + (includeAnchor ? 0 : 1)));
+    }
+    else if (currentNode) {
+        const recovered = input.renderedContext?.length
+            ? input.renderedContext
+            : [buildNodeInfo(currentNode, input.availableEdges)];
+        result.push(...recovered);
+        if (summaryIdx >= 0) {
+            result.push(...messages.slice(summaryIdx + 1).filter((message) => message.customType !== "loop_graph_mechanism" ||
+                (activeScope != null && isScopedMechanismMessage(message, activeScope))));
+        }
+        else if (activeScope) {
+            // scope anchor 丢失时只恢复带 SDK 固定 scope 元数据的 mechanism 消息。
+            // prompt/live ReAct 没有可证明归属，继续 fail closed。
+            result.push(...messages.filter((message) => isScopedMechanismMessage(message, activeScope)));
+        }
+    }
+    return result;
+}
+function isScopedMechanismMessage(message, activeScope) {
+    if (message.customType !== "loop_graph_mechanism")
+        return false;
+    const details = message.details;
+    return details?.protocol === 1 && details.scopeId === activeScope.scopeId;
+}
+// ── GraphCallScope 清洗（Phase 9）─────────────────────────
+/**
+ * 从消息数组中删除已闭合的图调用区段。
+ *
+ * compose / call 子图运行时在当前 session 的 transcript 中产生内部消息（NodeScope、
+ * skill、mechanism、prompt 和 live ReAct）。这些消息由 loop_graph_call_start / end
+ * 区段包围。子图结束后调用方不应再看到这些内部消息——它们必须从上下文中删除。
+ *
+ * 算法：
+ *   1. 从 tail 向 head 扫描，为每个 call_end 寻找最近的前驱 call_start（按 callId 匹配）
+ *   2. 已闭合区段内的全部消息标记为删除
+ *   3. 未闭合的 call_start（图仍在运行中）对应的区段保留
+ *
+ * 此函数始终执行（无论当前是否有活动图），因为之前图调用的闭合区段需要在后续对话中持续清洗。
+ */
+export function stripClosedGraphCalls(messages) {
+    // 从尾部收集已闭合的区段
+    const closedRanges = [];
+    const endStack = [];
+    // tail → head 单次扫描：遇到 call_end 压栈，遇到匹配的 call_start 弹出并记录区段
+    for (let i = messages.length - 1; i >= 0; i--) {
+        const m = messages[i];
+        if (m.customType === "loop_graph_call_end") {
+            const d = m.details;
+            if (d?.callId && typeof d.callId === "string") {
+                endStack.push({ callId: d.callId, endIdx: i });
+            }
+        }
+        else if (m.customType === "loop_graph_call_start") {
+            const d = m.details;
+            if (d?.callId && typeof d.callId === "string") {
+                // 找最近匹配的 call_end
+                for (let j = endStack.length - 1; j >= 0; j--) {
+                    if (endStack[j].callId === d.callId) {
+                        closedRanges.push([i, endStack[j].endIdx]);
+                        endStack.splice(j, 1);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    if (closedRanges.length === 0)
+        return messages;
+    // 构建排除索引集合
+    const exclude = new Set();
+    for (const [start, end] of closedRanges) {
+        for (let i = start; i <= end; i++)
+            exclude.add(i);
+    }
+    return messages.filter((_, i) => !exclude.has(i));
+}
+function findLastMatchingScope(messages, activeScope) {
+    for (let index = messages.length - 1; index >= 0; index--) {
+        if (isMatchingScope(messages[index], activeScope))
+            return index;
+    }
+    return -1;
+}
+function isMatchingScope(message, activeScope) {
+    if (message.customType !== "loop_graph_node_scope")
+        return false;
+    const details = message.details;
+    return details?.protocol === 2 && details.scopeId === activeScope.scopeId;
+}
+/** 默认帧格式化器：保持向后兼容的 JSON 格式（=== COMPLETED === / === END === 包裹）。 */
+export const defaultFrameFormatter = (frames) => `=== COMPLETED ===\n${JSON.stringify(frames)}\n=== END ===`;
+function findLastCompactionSummary(messages) {
+    for (let index = messages.length - 1; index >= 0; index--) {
+        if (messages[index].role === "compactionSummary")
+            return index;
+    }
+    return -1;
+}
+export function buildNodeInfoContent(node, availableEdges) {
+    const lines = ["=== CURRENT ==="];
+    lines.push(`nodeId: ${node.id}`);
+    lines.push(`subGoal: ${node.subGoal}`);
+    if (node.kind === "code") {
+        if (node.tools?.length)
+            lines.push(`tools: ${node.tools.join(", ")}`);
+        if (node.skill)
+            lines.push(`skill: ${node.skill}`);
+    }
+    // agent-choice 路由：渲染可用边列表供 agent 决策
+    if (availableEdges && availableEdges.length > 0) {
+        lines.push("");
+        lines.push("availableEdges（请在 __graph_complete__ 的 result.chosen_edge_id 中选择一条）:");
+        for (const e of availableEdges) {
+            const targetLabel = e.target === "Symbol(graph.end)" ? "END" : (e.target || "?");
+            lines.push(`  • ${e.id} (priority: ${e.priority}) → ${targetLabel}`);
+            lines.push(`    ${e.description}`);
+        }
+    }
+    lines.push("completeWith: __graph_complete__({ status, result })");
+    lines.push("=== END ===");
+    return lines.join("\n");
+}
+/** 兼容 renderer：保持当前 CURRENT 与 skill 消息的正文格式。历史 frames 继续
+ * 由 frameFormatter 投影，使 compaction baseline 可以独立推进。 */
+export const defaultNodeContextRenderer = (input) => {
+    const additional = [];
+    if (input.skill?.message)
+        additional.push(input.skill.message);
+    return {
+        anchor: {
+            kind: "current",
+            content: buildNodeInfoContent(input.skill && !input.skill.showRefInCurrent
+                ? { ...input.node, skill: undefined }
+                : input.node, [...input.availableEdges]),
+        },
+        additional,
+    };
+};
+function buildNodeInfo(node, availableEdges) {
+    return { role: "user", content: buildNodeInfoContent(node, availableEdges), timestamp: Date.now() };
+}

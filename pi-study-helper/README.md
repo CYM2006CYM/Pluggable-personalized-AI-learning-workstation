@@ -14,10 +14,12 @@ Pi Study Helper 是一款基于 [pi](https://pi.dev) 和 [Loop Graph SDK](https:
 
 ## 安装
 
-一条命令即可：
+先克隆正式公共仓库，再从仓库根目录安装应用子目录：
 
-```bash
-pi install git:github.com/CYM2006CYM/optimized-pi-review-agent-with-sdk
+```powershell
+git clone https://github.com/CYM2006CYM/Pluggable-personalized-AI-learning-workstation.git
+Set-Location .\Pluggable-personalized-AI-learning-workstation
+pi install .\pi-study-helper
 ```
 
 重启 pi 或执行 `/reload` 后生效。
@@ -83,8 +85,8 @@ pi --provider deepseek --model <模型 ID>
 ## 快速开始
 
 ```bash
-# 1. 安装扩展
-pi install git:github.com/CYM2006CYM/optimized-pi-review-agent-with-sdk
+# 1. 在公共仓库根目录安装扩展
+pi install .\pi-study-helper
 # 重启 pi 或 /reload
 
 # 2. 开始学习
@@ -114,7 +116,7 @@ pi --provider deepseek
 如果正在仓库目录中进行本地开发，也可以安装本地版本：
 
 ```powershell
-cd "C:\Users\win11\Desktop\头脑风暴\pi-study-helper"
+Set-Location "<仓库根目录>\pi-study-helper"
 pi install .
 pi --provider deepseek
 ```
@@ -179,7 +181,7 @@ pi --provider deepseek
 仓库内置了两篇用于体验构建流程的 Markdown 笔记。在 Pi 中输入：
 
 ```text
-/study-build "C:\Users\win11\Desktop\头脑风暴\pi-study-helper\fixtures\source-materials\p4-smoke"
+/study-build "<仓库根目录>\pi-study-helper\fixtures\source-materials\p4-smoke"
 ```
 
 按提示填写：
@@ -226,23 +228,20 @@ Agent 会先生成计划和实际文件变更供确认。初次体验可先保�
 ```text
 /study demo-review
 /study-profile demo-review
-/study-build "C:\Users\win11\Desktop\头脑风暴\pi-study-helper\fixtures\source-materials\p4-smoke"
+/study-build "<仓库根目录>\pi-study-helper\fixtures\source-materials\p4-smoke"
 /study my-learning-demo
 /study-revise my-learning-demo
 ```
 
 ## Loop Graph SDK 0.2 集成
 
-本项目已适配 Loop Graph SDK `0.2`（不保留 0.1 兼容层）。关键对应关系：
+本项目统一使用 Loop Graph SDK `0.2.0`，固定提交为 `401d3e9bfa49e630196caefbabd732a3209b17a0`，不保留旧版兼容层。当前集成边界为：
 
-| 关注点 | 0.1 | 本项目在 0.2 的做法 |
-|--------|-----|--------------------|
-| 图结构 | `nodes` + `routing` + `Edge`/`END` | `defineGraph({ id, version, input, output, context, entries, stages })`，终点用 `finish({ output })` |
-| 节点 | `{ kind: "code", execute }` + `createAgentExecute()` | `codeNode({ input, output, execute })`，在 `execute` 内调用 `runAgent({ prompt, output })` |
-| 输出校验 | `outputSchema` + `validateCompletion` | TypeBox `output` 契约由 Runtime 校验；业务语义校验保留在 `runValidatedAgent()` 中，失败时把拒绝原因回灌 Agent 重试 |
-| 执行入口 | `IsolatedSessionGraphHost.run()` | `createPiGraphHost()` + `host.execute(graph, input)`，见 `src/graphs/isolated-graph-executor.ts` |
-| 运行结果 | `{ status: "ok", result }` | 判别联合：成功读 `result.output`，失败读 `result.failure.{code,message}` |
-| 可观测性 | `createJsonlTraceSink()` | `recording: "replay"` + `FileRunStore`，每次 Root Run 落在 `<数据目录>/traces/runs/<runId>/` |
+- 使用 `defineGraph({ id, version, input, output, context, entries, stages })` 定义图，使用 `finish({ output })` 返回最终结果；
+- 使用 `codeNode()`、`agentNode()`和`graphNode()`定义阶段，TypeBox负责输入输出结构校验；
+- 使用 `createPiGraphHost()`创建隔离Pi宿主，通过`host.execute(graph, input)`执行；
+- `GraphRunResult`为`completed | failed | cancelled`判别联合，成功读取`output`，失败或取消读取`failure`；
+- 使用`recording: "replay"`和`FileRunStore`记录Root Run，数据位于`<数据目录>/traces/runs/<rootRunId>/`。
 
 Replay 记录可以用 SDK 的 `/replay` 子路径导出为离线 HTML：
 

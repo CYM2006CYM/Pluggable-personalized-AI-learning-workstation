@@ -1,0 +1,172 @@
+import type { TSchema, Static } from "typebox";
+import type { JsonSchema, JsonValue } from "./json.js";
+import type { ResolvedSkillView, SkillRef } from "./skill.js";
+import type { Mechanism } from "./mechanism.js";
+export type Awaitable<T> = T | Promise<T>;
+export type SchemaValue<S extends TSchema> = Static<S>;
+export interface GraphRef {
+    readonly id: string;
+    readonly version: string;
+}
+export interface NodeIdentity {
+    readonly name: string;
+    readonly version?: string;
+}
+export interface ContextBlockText {
+    readonly type: "text";
+    readonly text: string;
+}
+export interface ContextBlockImage {
+    readonly type: "image";
+    readonly data: string;
+    readonly mimeType: string;
+}
+export type ContextBlock = ContextBlockText | ContextBlockImage;
+export type ContextContent = string | readonly ContextBlock[];
+export type ContextSelector<TSource, TSelected extends JsonValue> = "all" | "none" | ((source: Readonly<TSource>) => Awaitable<TSelected | null>);
+export interface ContextRenderInput<TSelected extends JsonValue, TMeta> {
+    readonly selected: Readonly<TSelected> | null;
+    readonly meta: Readonly<TMeta>;
+}
+export type ContextRenderer<TSelected extends JsonValue, TMeta> = (input: ContextRenderInput<TSelected, TMeta>) => Awaitable<ContextContent | readonly ContextContent[] | null>;
+export interface ContextProjection<TSource, TSelected extends JsonValue, TMeta> {
+    readonly select: ContextSelector<TSource, TSelected>;
+    readonly render?: ContextRenderer<TSelected, TMeta>;
+}
+export interface GraphContextMeta {
+    readonly graph: {
+        readonly id: string;
+        readonly version: string;
+        readonly goal: string;
+    };
+    readonly skills: readonly ResolvedSkillView[];
+}
+export interface GraphMemoryMeta {
+    readonly graph: {
+        readonly id: string;
+        readonly version: string;
+    };
+    readonly revision: number;
+}
+export interface NodeContextMeta {
+    readonly node: {
+        readonly kind: "agent" | "code" | "graph";
+        readonly subGoal: string;
+        readonly identity?: NodeIdentity;
+    };
+    readonly skills: readonly ResolvedSkillView[];
+    readonly connections: readonly ConnectionView[];
+}
+export interface ConnectionView {
+    readonly id: string;
+    readonly to: string | "__graph_finish__";
+}
+export interface GraphContextDefinition<TInput, TBackground extends JsonValue, TMemory extends JsonValue> {
+    readonly background: ContextProjection<TInput, TBackground, GraphContextMeta>;
+    readonly memory?: ContextProjection<readonly JsonValue[], TMemory, GraphMemoryMeta>;
+}
+export interface NodeContextDefinition<TInput, TFocus extends JsonValue = any> {
+    readonly focus: ContextProjection<TInput, TFocus, NodeContextMeta>;
+}
+export interface NodeCompletion<TResult = JsonValue> {
+    readonly result: TResult;
+}
+export interface CodeNodeExecution<TInput, TResult> {
+    readonly input: Readonly<TInput>;
+    readonly complete: (result: TResult) => TResult;
+    readonly runAgent: (request: AgentRunRequest) => Promise<NodeCompletion>;
+    /** Present during resume; use for idempotent-side-effect guards. */
+    readonly resumeAttempt?: number;
+    readonly nodeVisitId?: string;
+    readonly rootRunId?: string;
+}
+export interface AgentRunRequest {
+    readonly prompt: string;
+    readonly output?: JsonSchema;
+}
+export interface AgentNodeDefinition<TInputSchema extends TSchema = TSchema, TResultSchema extends TSchema = TSchema, TFocus extends JsonValue = any> {
+    readonly kind: "agent";
+    readonly subGoal: string;
+    readonly input: JsonSchema<TInputSchema>;
+    readonly output: JsonSchema<TResultSchema>;
+    readonly identity?: NodeIdentity;
+    readonly context?: NodeContextDefinition<SchemaValue<TInputSchema>, TFocus>;
+    readonly tools?: readonly string[] | "all";
+    readonly skills?: readonly SkillRef[];
+    readonly prompt?: string;
+    readonly mechanisms?: readonly Mechanism[];
+}
+export interface CodeNodeDefinition<TInputSchema extends TSchema = TSchema, TResultSchema extends TSchema = TSchema, TFocus extends JsonValue = any> {
+    readonly kind: "code";
+    readonly subGoal: string;
+    readonly input: JsonSchema<TInputSchema>;
+    readonly output: JsonSchema<TResultSchema>;
+    readonly identity?: NodeIdentity;
+    readonly context?: NodeContextDefinition<SchemaValue<TInputSchema>, TFocus>;
+    readonly tools?: readonly string[] | "all";
+    readonly skills?: readonly SkillRef[];
+    readonly execute: (execution: CodeNodeExecution<SchemaValue<TInputSchema>, SchemaValue<TResultSchema>>) => Awaitable<SchemaValue<TResultSchema>>;
+    readonly mechanisms?: readonly Mechanism[];
+}
+export interface GraphNodeDefinition<TInputSchema extends TSchema = TSchema, TResultSchema extends TSchema = TSchema> {
+    readonly kind: "graph";
+    readonly subGoal: string;
+    readonly input: JsonSchema<TInputSchema>;
+    readonly output: JsonSchema<TResultSchema>;
+    readonly identity?: NodeIdentity;
+    readonly graph: GraphRef;
+    readonly boundary: "call" | "compose" | "delegate";
+    readonly skills?: readonly SkillRef[];
+    readonly mechanisms?: readonly Mechanism[];
+}
+export type NodeDefinition = AgentNodeDefinition<any, any, any> | CodeNodeDefinition<any, any, any> | GraphNodeDefinition<any, any>;
+export interface Entry<TInput = JsonValue> {
+    readonly id: string;
+    readonly to: string;
+    readonly guard?: (input: Readonly<TInput>) => Awaitable<boolean>;
+    readonly mapInput?: (input: Readonly<TInput>) => JsonValue;
+}
+export interface Transition<TCompletion extends JsonValue = JsonValue, TFrame extends JsonValue = JsonValue, TInput extends JsonValue = JsonValue> {
+    readonly guard?: (input: Readonly<TCompletion>) => Awaitable<boolean>;
+    readonly frame?: (input: {
+        readonly completion: Readonly<NodeCompletion<TCompletion>>;
+    }) => TFrame;
+    readonly map?: (input: {
+        readonly completion: Readonly<NodeCompletion<TCompletion>>;
+    }) => TInput;
+    readonly output?: (input: {
+        readonly completion: Readonly<NodeCompletion<TCompletion>>;
+    }) => JsonValue;
+}
+export type ContextFrame = JsonValue;
+export interface Connection {
+    readonly id: string;
+    readonly to: string | "__graph_finish__";
+    readonly transition: Transition;
+}
+export interface Route {
+    readonly kind: "first-match" | "priority-first" | "agent-choice" | "custom";
+    readonly connections: readonly Connection[];
+}
+export interface Stage {
+    readonly node: NodeDefinition;
+    readonly route: Route;
+}
+export type GraphToolPolicy = readonly string[];
+export interface GraphDefinition<TInputSchema extends TSchema = TSchema, TOutputSchema extends TSchema = TSchema, TBackground extends JsonValue = any, TMemory extends JsonValue = any> {
+    readonly id: string;
+    readonly version: string;
+    readonly goal: string;
+    readonly input: JsonSchema<TInputSchema>;
+    readonly output: JsonSchema<TOutputSchema>;
+    readonly context: GraphContextDefinition<SchemaValue<TInputSchema>, TBackground, TMemory>;
+    readonly entries: readonly Entry<SchemaValue<TInputSchema>>[];
+    readonly stages: Readonly<Record<string, Stage>>;
+    readonly tools?: GraphToolPolicy;
+    readonly skills?: readonly SkillRef[];
+    readonly mechanisms?: readonly Mechanism[];
+}
+export type Graph<TInputSchema extends TSchema = TSchema, TOutputSchema extends TSchema = TSchema, TBackground extends JsonValue = any, TMemory extends JsonValue = any> = GraphDefinition<TInputSchema, TOutputSchema, TBackground, TMemory>;
+export declare function graphRef(id: string, version: string): GraphRef;
+export declare function defineGraph<TInputSchema extends TSchema, TOutputSchema extends TSchema, TBackground extends JsonValue, TMemory extends JsonValue = JsonValue>(graph: GraphDefinition<TInputSchema, TOutputSchema, TBackground, TMemory>): Graph<TInputSchema, TOutputSchema, TBackground, TMemory>;
+export declare function validateGraphDefinition<TInputSchema extends TSchema, TOutputSchema extends TSchema, TBackground extends JsonValue, TMemory extends JsonValue>(graph: GraphDefinition<TInputSchema, TOutputSchema, TBackground, TMemory>): void;

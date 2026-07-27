@@ -51,7 +51,7 @@
 - 不得向 Agent 发送隐藏测试、参考实现、完整Rubric、诊断答案、密钥或宿主路径。
 - 不得把 Agent 的解释写成正式掌握度证据，不得让 CIDPP 分数进入学习者画像。
 - 不得实现并行 Agent 网络、无限自我修订、实时自动路径决策或完整AI代码题主链。
-- 不得固定 SDK 提交哈希或把当前模型版本写成永恒依赖。
+- 不得擅自修改负责人批准的SDK版本、提交哈希或依赖来源，也不得把当前模型版本写成永恒依赖。
 
 ### 缺口处理
 
@@ -60,7 +60,7 @@
 ## 任务
 
 1. 清点当前九个 Graph 的输入、输出、调用方和已有能力。
-2. 按 21 号合同实现 `ModelExecutionPort` 适配边界。
+2. 按21号W1-C6合同实现`ModelExecutionPort`适配边界；SDK `GraphRunResult`只允许在端口内部转换为`ModelExecutionResult`，不得传入Orchestrator、Facade或Web。
 3. 为 Diagnosis、Generator、Hunter、Defender、Judge、CIDPP 和解释角色准备输入/输出 fixture。
 4. 实现 Generator→Hunter→条件Defender→Judge 的严格串行、有限重试、checkpoint 和 fallback 适配。
 5. 建立安全输入过滤：不得把诊断答案、隐藏测试、参考实现、完整 Rubric、密钥或宿主路径传入 Agent。

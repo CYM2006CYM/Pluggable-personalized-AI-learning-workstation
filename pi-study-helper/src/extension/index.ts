@@ -18,8 +18,7 @@ import { ProfileFamilyRepository } from "../repositories/profile-family-reposito
 
 export default async function studyHelperExtension(pi: ExtensionAPI): Promise<void> {
   const dataRoot = resolveStudyDataRoot();
-  // 0.2 用 recording + RunStore 取代 0.1 的 JSONL traceSink：
-  // 每次 Root Run 落一份 journal.jsonl + replay.json，可用 /replay 子路径导出 HTML。
+  // 每次 Root Run 通过 recording + RunStore 保存 replay，可用 /replay 子路径导出 HTML。
   const runsDirectory = resolve(dataRoot, "traces", "runs");
   await mkdir(runsDirectory, { recursive: true });
   const profiles = new ProfileFamilyRepository({ dataRoot });

@@ -34,30 +34,29 @@ pi-study-helper/
 
 后续 Profile v2、诊断、Evidence、KnowledgeState、PathEngine、统一应用入口、代码执行器、模型端口和网页适配均在该工程中逐步实现。
 
-常用检查命令以该目录内的 `README.md` 和 `package.json` 为准，例如：
+常用检查命令以该目录内的 `README.md` 和 `package.json` 为准。克隆公共仓库后可从仓库根目录安装和验证：
 
-```bash
-cd pi-study-helper
-npm install
-npm test
+```powershell
+pi install .\pi-study-helper
+Set-Location .\pi-study-helper
+npm.cmd ci
+npm.cmd test
 ```
 
 ### `pi-loop-graph-sdk-main/`
 
-项目使用的 Loop Graph SDK 源码。该SDK是本项目组成部分，必须与 `pi-study-helper/` 一起保存在仓库中。
+项目使用的 Loop Graph SDK 完整源码。当前统一基线为 `0.2.0`，负责人批准的提交为 `401d3e9bfa49e630196caefbabd732a3209b17a0`。该目录与 `pi-study-helper/package.json`、`package-lock.json` 中的 Git 固定依赖对应同一提交，必须与 `pi-study-helper/` 一起保存在仓库中。
 
 它提供项目使用的图编排语言和运行机制，包括：
 
-- `Graph`（图）；
-- `Entry`（入口）；
-- `Node`（节点）；
-- `Edge`（边）；
-- `END`（终点）；
+- `defineGraph`（定义图）和 `entry`（入口）；
+- `codeNode`、`agentNode`、`graphNode`（阶段节点）；
+- `firstMatch` 和 `finish`（路由与结束）；
 - `call`（调用子图）；
 - `compose`（组合子图）；
 - `delegate`（委托独立Agent会话）；
 - `Mechanism`（横切机制）；
-- Graph校验、运行、取消、观测和测试能力。
+- Graph校验、运行、取消、Recording/Replay、恢复和测试能力。
 
 主要目录包括：
 
@@ -67,11 +66,11 @@ pi-loop-graph-sdk-main/
 ├─ tests/            # SDK测试
 ├─ docs/             # SDK文档和使用指南
 ├─ package.json      # SDK命令和依赖
-├─ GETTING_STARTED.md
+├─ README-zh.md       # SDK中文说明
 └─ README.md
 ```
 
-SDK不固定提交哈希，可以根据项目需要修改。修改SDK时，必须同步检查SDK测试、`pi-study-helper`适配、公共合同和相关交接记录，不能只修改SDK而不通知应用使用方。
+SDK版本和提交哈希由负责人统一管理，普通成员不得自行升级、改成本地路径依赖或混入其他版本文件。需要升级时，必须同步替换SDK源码目录，更新`pi-study-helper`依赖声明和锁文件，修订公共合同，并完成SDK自身测试与应用回归测试。
 
 ### `新版设计文档-重写版/`
 
@@ -165,4 +164,4 @@ XH-202630上海云之脑智能科技有限公司-领域知识个性化生成与�
 
 `pi-study-helper`目前主要提供已有学习助手基础框架；Profile v2、Pandas正式资料包、个性化路径、代码执行器、网页和新增测试仍需按六周计划逐步实现。设计文档中的规划、候选和延期能力，不代表源码已经具备。
 
-本仓库将作为团队后续开发的唯一正式协作仓库。可交付代码、SDK修改和正式设计变更都应进入本仓库规定的四个项目条目中，不能再形成第二套项目目录。
+本仓库将作为团队后续开发的唯一正式协作仓库。可交付代码、负责人批准的SDK修改和正式设计变更都应进入本仓库规定的四个项目条目中，不能再形成第二套项目目录。
