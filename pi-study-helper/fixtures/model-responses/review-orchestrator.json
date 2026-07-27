@@ -1,0 +1,343 @@
+{
+  "recordings": [
+    {
+      "runId": "review-normal",
+      "graphId": "generator",
+      "status": "ok",
+      "payload": {
+        "artifactId": "artifact-normal",
+        "candidateFeedback": "Approved safe feedback.",
+        "rationale": "The deterministic result is already safe and complete.",
+        "citedSourceIds": ["source-public-1"],
+        "riskFlags": []
+      },
+      "sourceRefs": ["source-public-1"],
+      "traceSummary": "generator normal fixture",
+      "modelId": "fixture-model",
+      "promptVersion": "review-v1",
+      "durationMs": 5
+    },
+    {
+      "runId": "review-normal",
+      "graphId": "hunter",
+      "status": "ok",
+      "payload": {
+        "issues": [],
+        "requiresDefender": false,
+        "recommendedVerdict": "accepted"
+      },
+      "sourceRefs": ["source-public-1"],
+      "traceSummary": "hunter normal fixture",
+      "modelId": "fixture-model",
+      "promptVersion": "review-v1",
+      "durationMs": 4
+    },
+    {
+      "runId": "review-normal",
+      "graphId": "judge",
+      "status": "ok",
+      "payload": {
+        "verdict": "accepted",
+        "finalSafeFeedback": "Approved safe feedback.",
+        "summary": "Judge accepted the safe candidate.",
+        "blockedIssueIds": []
+      },
+      "sourceRefs": ["source-public-1"],
+      "traceSummary": "judge normal fixture",
+      "modelId": "fixture-model",
+      "promptVersion": "review-v1",
+      "durationMs": 6
+    },
+    {
+      "runId": "review-dispute",
+      "graphId": "generator",
+      "status": "ok",
+      "payload": {
+        "artifactId": "artifact-dispute",
+        "candidateFeedback": "Candidate with a disputed boundary note.",
+        "rationale": "Uses public task facts only.",
+        "citedSourceIds": ["source-public-1"],
+        "riskFlags": ["boundary-review"]
+      },
+      "sourceRefs": ["source-public-1"],
+      "traceSummary": "generator dispute fixture",
+      "modelId": "fixture-model",
+      "promptVersion": "review-v1"
+    },
+    {
+      "runId": "review-dispute",
+      "graphId": "hunter",
+      "status": "ok",
+      "payload": {
+        "issues": [
+          {
+            "issueId": "issue-boundary-1",
+            "severity": "medium",
+            "message": "Clarify that the feedback is derived from public result metadata.",
+            "disputed": true
+          }
+        ],
+        "requiresDefender": true,
+        "recommendedVerdict": "revise"
+      },
+      "sourceRefs": ["source-public-1"],
+      "traceSummary": "hunter dispute fixture",
+      "modelId": "fixture-model",
+      "promptVersion": "review-v1"
+    },
+    {
+      "runId": "review-dispute",
+      "graphId": "defender",
+      "status": "ok",
+      "payload": {
+        "defenseSummary": "The disputed issue is answered using safe result metadata.",
+        "acceptedIssueIds": ["issue-boundary-1"],
+        "rebuttedIssueIds": [],
+        "residualRisks": []
+      },
+      "sourceRefs": ["source-public-1"],
+      "traceSummary": "defender dispute fixture",
+      "modelId": "fixture-model",
+      "promptVersion": "review-v1"
+    },
+    {
+      "runId": "review-dispute",
+      "graphId": "judge",
+      "status": "ok",
+      "payload": {
+        "verdict": "accepted",
+        "finalSafeFeedback": "Approved after defender response.",
+        "summary": "Judge accepted the defended candidate.",
+        "blockedIssueIds": []
+      },
+      "sourceRefs": ["source-public-1"],
+      "traceSummary": "judge dispute fixture",
+      "modelId": "fixture-model",
+      "promptVersion": "review-v1"
+    },
+    {
+      "runId": "review-retry",
+      "graphId": "generator",
+      "status": "timeout",
+      "errorCode": "timeout",
+      "sourceRefs": [],
+      "traceSummary": "first generator call timed out",
+      "modelId": "fixture-model",
+      "promptVersion": "review-v1"
+    },
+    {
+      "runId": "review-retry",
+      "graphId": "generator",
+      "status": "ok",
+      "payload": {
+        "artifactId": "artifact-retry",
+        "candidateFeedback": "Approved after retry path.",
+        "rationale": "The second attempt returned valid safe output.",
+        "citedSourceIds": ["source-public-1"],
+        "riskFlags": []
+      },
+      "sourceRefs": ["source-public-1"],
+      "traceSummary": "generator retry success fixture",
+      "modelId": "fixture-model",
+      "promptVersion": "review-v1"
+    },
+    {
+      "runId": "review-retry",
+      "graphId": "hunter",
+      "status": "ok",
+      "payload": {
+        "issues": [],
+        "requiresDefender": false,
+        "recommendedVerdict": "accepted"
+      },
+      "sourceRefs": ["source-public-1"],
+      "traceSummary": "hunter retry fixture",
+      "modelId": "fixture-model",
+      "promptVersion": "review-v1"
+    },
+    {
+      "runId": "review-retry",
+      "graphId": "judge",
+      "status": "ok",
+      "payload": {
+        "verdict": "accepted",
+        "finalSafeFeedback": "Approved after retry path.",
+        "summary": "Judge accepted retry output.",
+        "blockedIssueIds": []
+      },
+      "sourceRefs": ["source-public-1"],
+      "traceSummary": "judge retry fixture",
+      "modelId": "fixture-model",
+      "promptVersion": "review-v1"
+    },
+    {
+      "runId": "review-fallback",
+      "graphId": "generator",
+      "status": "ok",
+      "payload": {
+        "artifactId": "artifact-fallback",
+        "candidateFeedback": "Candidate before model failure.",
+        "rationale": "Safe source facts only.",
+        "citedSourceIds": ["source-public-1"],
+        "riskFlags": []
+      },
+      "sourceRefs": ["source-public-1"],
+      "traceSummary": "generator fallback fixture",
+      "modelId": "fixture-model",
+      "promptVersion": "review-v1"
+    },
+    {
+      "runId": "review-fallback",
+      "graphId": "hunter",
+      "status": "provider_error",
+      "errorCode": "provider_error",
+      "sourceRefs": [],
+      "traceSummary": "hunter provider error",
+      "modelId": "fixture-model",
+      "promptVersion": "review-v1"
+    },
+    {
+      "runId": "review-fallback",
+      "graphId": "hunter",
+      "status": "provider_error",
+      "errorCode": "provider_error",
+      "sourceRefs": [],
+      "traceSummary": "hunter provider error retry",
+      "modelId": "fixture-model",
+      "promptVersion": "review-v1"
+    },
+    {
+      "runId": "review-checkpoint",
+      "graphId": "hunter",
+      "status": "ok",
+      "payload": {
+        "issues": [],
+        "requiresDefender": false,
+        "recommendedVerdict": "accepted"
+      },
+      "sourceRefs": ["source-public-1"],
+      "traceSummary": "hunter checkpoint fixture",
+      "modelId": "fixture-model",
+      "promptVersion": "review-v1"
+    },
+    {
+      "runId": "review-checkpoint",
+      "graphId": "judge",
+      "status": "ok",
+      "payload": {
+        "verdict": "accepted",
+        "finalSafeFeedback": "Approved from resumed checkpoint.",
+        "summary": "Judge accepted resumed output.",
+        "blockedIssueIds": []
+      },
+      "sourceRefs": ["source-public-1"],
+      "traceSummary": "judge checkpoint fixture",
+      "modelId": "fixture-model",
+      "promptVersion": "review-v1"
+    },
+    {
+      "runId": "review-invalid-output",
+      "graphId": "generator",
+      "status": "invalid_output",
+      "payload": {
+        "unexpected": true
+      },
+      "sourceRefs": [],
+      "traceSummary": "invalid output fixture",
+      "modelId": "fixture-model",
+      "promptVersion": "review-v1"
+    },
+    {
+      "runId": "review-judge-rejected",
+      "graphId": "generator",
+      "status": "ok",
+      "payload": {
+        "artifactId": "artifact-rejected",
+        "candidateFeedback": "Candidate must not be published.",
+        "rationale": "Public source summary only.",
+        "citedSourceIds": ["source-public-1"],
+        "riskFlags": []
+      },
+      "sourceRefs": ["source-public-1"],
+      "traceSummary": "generator rejection fixture",
+      "modelId": "fixture-model",
+      "promptVersion": "review-v1"
+    },
+    {
+      "runId": "review-judge-rejected",
+      "graphId": "hunter",
+      "status": "ok",
+      "payload": {
+        "issues": [{
+          "issueId": "issue-reject-1",
+          "severity": "high",
+          "message": "Candidate is not safe to publish.",
+          "disputed": false
+        }],
+        "requiresDefender": false,
+        "recommendedVerdict": "revise"
+      },
+      "sourceRefs": ["source-public-1"],
+      "traceSummary": "hunter rejection fixture",
+      "modelId": "fixture-model",
+      "promptVersion": "review-v1"
+    },
+    {
+      "runId": "review-judge-rejected",
+      "graphId": "judge",
+      "status": "ok",
+      "payload": {
+        "verdict": "rejected",
+        "finalSafeFeedback": "Candidate text that must not be published.",
+        "summary": "Judge rejected the candidate.",
+        "blockedIssueIds": ["issue-reject-1"]
+      },
+      "sourceRefs": ["source-public-1"],
+      "traceSummary": "judge rejection fixture",
+      "modelId": "fixture-model",
+      "promptVersion": "review-v1"
+    },
+    {
+      "runId": "review-refusal",
+      "graphId": "generator",
+      "status": "provider_error",
+      "errorCode": "refusal",
+      "sourceRefs": [],
+      "traceSummary": "provider refused the request",
+      "modelId": "fixture-model",
+      "promptVersion": "review-v1"
+    },
+    {
+      "runId": "review-source-conflict-live",
+      "graphId": "generator",
+      "status": "ok",
+      "payload": {
+        "artifactId": "artifact-source-conflict",
+        "candidateFeedback": "Unregistered source response.",
+        "rationale": "Fixture for source rejection.",
+        "citedSourceIds": ["source-public-1"],
+        "riskFlags": []
+      },
+      "sourceRefs": ["source-private"],
+      "traceSummary": "source conflict fixture",
+      "modelId": "fixture-model",
+      "promptVersion": "review-v1"
+    },
+    {
+      "runId": "review-version-conflict-live",
+      "graphId": "generator",
+      "status": "ok",
+      "payload": {
+        "artifactId": "artifact-version-conflict",
+        "candidateFeedback": "Stale model response.",
+        "rationale": "Fixture for version rejection.",
+        "citedSourceIds": ["source-public-1"],
+        "riskFlags": []
+      },
+      "sourceRefs": ["source-public-1"],
+      "traceSummary": "version conflict fixture",
+      "modelId": "stale-fixture-model",
+      "promptVersion": "review-v1"
+    }
+  ]
+}

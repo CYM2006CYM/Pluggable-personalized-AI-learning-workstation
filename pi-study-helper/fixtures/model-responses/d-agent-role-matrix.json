@@ -1,0 +1,86 @@
+{
+  "version": "w1-d5-v1",
+  "policy": "Unfrozen roles are recorded examples only and do not define a public runtime schema.",
+  "roles": [
+    {
+      "role": "diagnosis",
+      "schemaStatus": "recorded-only",
+      "normal": {
+        "input": { "resultSummary": "Two public diagnostic dimensions need explanation.", "sourceIds": ["source-public-1"] },
+        "output": { "explanation": "Review the two identified dimensions first.", "candidateWeakPointIds": ["dimension-1"] }
+      },
+      "failure": { "status": "provider_error", "errorCode": "provider_error" },
+      "timeout": { "status": "timeout", "errorCode": "timeout" }
+    },
+    {
+      "role": "generator",
+      "schemaStatus": "implemented",
+      "normal": {
+        "input": { "safeContextId": "context-generator-1", "sourceIds": ["source-public-1"] },
+        "output": { "artifactId": "artifact-1", "candidateFeedback": "Use the public task contract.", "rationale": "Based on the safe result summary.", "citedSourceIds": ["source-public-1"], "riskFlags": [] }
+      },
+      "failure": { "status": "provider_error", "errorCode": "refusal" },
+      "timeout": { "status": "timeout", "errorCode": "timeout" }
+    },
+    {
+      "role": "hunter",
+      "schemaStatus": "implemented",
+      "normal": {
+        "input": { "artifactId": "artifact-1", "sourceIds": ["source-public-1"] },
+        "output": { "issues": [], "requiresDefender": false, "recommendedVerdict": "accepted" }
+      },
+      "failure": { "status": "invalid_output", "errorCode": "invalid_json" },
+      "timeout": { "status": "timeout", "errorCode": "timeout" }
+    },
+    {
+      "role": "defender",
+      "schemaStatus": "implemented",
+      "normal": {
+        "input": { "artifactId": "artifact-1", "disputedIssueIds": ["issue-1"] },
+        "output": { "defenseSummary": "The registered source supports the candidate.", "acceptedIssueIds": ["issue-1"], "rebuttedIssueIds": [], "residualRisks": [] }
+      },
+      "failure": { "status": "invalid_output", "errorCode": "invalid_json" },
+      "timeout": { "status": "timeout", "errorCode": "timeout" }
+    },
+    {
+      "role": "judge",
+      "schemaStatus": "implemented",
+      "normal": {
+        "input": { "artifactId": "artifact-1", "issueIds": [] },
+        "output": { "verdict": "accepted", "finalSafeFeedback": "The checked feedback is available.", "summary": "All deterministic checks passed.", "blockedIssueIds": [] }
+      },
+      "failure": { "status": "provider_error", "errorCode": "provider_error" },
+      "timeout": { "status": "timeout", "errorCode": "timeout" }
+    },
+    {
+      "role": "cidpp",
+      "schemaStatus": "recorded-only",
+      "normal": {
+        "input": { "contentId": "content-1", "sourceIds": ["source-public-1"] },
+        "output": { "clarity": 80, "completeness": 78, "depth": 76, "practicality": 82, "specificity": 79, "suggestions": ["Keep the public example concise."] }
+      },
+      "failure": { "status": "provider_error", "errorCode": "provider_error" },
+      "timeout": { "status": "timeout", "errorCode": "timeout" }
+    },
+    {
+      "role": "capabilityScorer",
+      "schemaStatus": "recorded-only",
+      "normal": {
+        "input": { "dimensionIds": ["dimension-1"], "evidenceSummaryIds": ["evidence-summary-1"] },
+        "output": { "dimensions": [{ "dimensionId": "dimension-1", "score": 75, "confidence": 0.8, "reason": "The safe evidence summary supports this observation.", "evidenceRefs": ["evidence-summary-1"] }] }
+      },
+      "failure": { "status": "provider_error", "errorCode": "provider_error", "updateStatus": "not_updated" },
+      "timeout": { "status": "timeout", "errorCode": "timeout", "updateStatus": "not_updated" }
+    },
+    {
+      "role": "explanation",
+      "schemaStatus": "recorded-only",
+      "normal": {
+        "input": { "decisionId": "decision-1", "publicReasonIds": ["reason-1"] },
+        "output": { "explanation": "This suggestion follows the checked prerequisite order.", "sourceIds": ["source-public-1"] }
+      },
+      "failure": { "status": "provider_error", "errorCode": "provider_error" },
+      "timeout": { "status": "timeout", "errorCode": "timeout" }
+    }
+  ]
+}
