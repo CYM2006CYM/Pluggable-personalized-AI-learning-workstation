@@ -41,7 +41,7 @@
     "check:history": "node scripts/check-history.mjs",
     "audit:prod": "npm audit --omit=dev --audit-level=high",
     "audit:all": "npm audit --audit-level=high",
-    "verify": "npm run typecheck && npm test && npm run check:docs && npm run smoke:extension && npm run check:release",
+    "verify": "npm run typecheck && npm test -- --maxWorkers=1 && npm run check:docs && npm run smoke:extension && npm run check:release",
     "verify:open-source": "npm run verify && npm run check:history && npm run audit:prod && npm run audit:all && npm pack --dry-run",
     "smoke:extension": "node scripts/smoke-extension.mjs",
     "probe:sdk-agent": "node scripts/run-sdk-agent-probe.mjs"

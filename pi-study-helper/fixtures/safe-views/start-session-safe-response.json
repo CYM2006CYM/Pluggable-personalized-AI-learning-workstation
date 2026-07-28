@@ -1,0 +1,28 @@
+{
+  "fixtureVersion": "w1-safe-view-v1",
+  "useCase": "startSession",
+  "response": {
+    "requestId": "fixture-request-001",
+    "sessionId": "fixture-session-001",
+    "sessionVersion": 1,
+    "profileRevision": 1,
+    "subjectId": "pandas-cleaning",
+    "mode": "chapter",
+    "goalId": "goal-foundations",
+    "chapterId": "chapter-foundations",
+    "availableMinutes": 30,
+    "status": "active",
+    "stage": "diagnostic",
+    "diagnosticRequired": true
+  },
+  "forbiddenCategories": [
+    "diagnostic_answers",
+    "hidden_tests",
+    "private_datasets",
+    "reference_solutions",
+    "full_rubric",
+    "secrets",
+    "host_absolute_paths",
+    "raw_learner_answers"
+  ]
+}
