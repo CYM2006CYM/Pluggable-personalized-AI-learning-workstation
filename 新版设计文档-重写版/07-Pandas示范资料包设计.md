@@ -4,7 +4,7 @@
 
 > `pandas-cleaning` 是唯一完整 Profile v2。它证明资料包、诊断、路径、普通题、代码活动、实操和证据可以闭环；不代表覆盖全部 Pandas。
 
-> **D22/D26同步**：W1提交`f6c8396`中的draft为revision 1。W2在同一draft目录迁移为revision 2，知识点ID采用本文件第2节的`pandas.clean.*`并新增`basic-python`；诊断题严格字段和提交语义以21号W2-C1及28号合同为准。
+> **D22/D26/D30同步**：W1提交`f6c8396`中的draft为revision 1。W2在同一draft目录迁移为revision 2，知识点ID采用本文件第2节的`pandas.clean.*`并新增`basic-python`；诊断题严格字段和提交语义以21号`W2-C2`及28号`W2-R4`为准。
 
 ## 1. 定位和完成目标
 
