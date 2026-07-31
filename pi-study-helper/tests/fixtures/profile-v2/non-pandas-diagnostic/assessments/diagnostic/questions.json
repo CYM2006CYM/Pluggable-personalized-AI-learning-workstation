@@ -1,0 +1,22 @@
+{
+  "blueprintId": "javascript-diagnostic-v1",
+  "profileRevision": 2,
+  "goalIds": ["learn-variables"],
+  "estimatedMinutes": 1,
+  "minimumCoverage": 1,
+  "questions": [
+    {
+      "questionId": "js-diag-1",
+      "knowledgePointId": "javascript.variables",
+      "kind": "single_choice",
+      "difficulty": "S-U",
+      "prompt": "哪个关键字声明后不能重新赋值？",
+      "options": ["const", "let", "var"],
+      "maxScore": 1,
+      "required": true,
+      "evaluatorRef": "private/answer-key.json#js-diag-1",
+      "sourceAnchorIds": ["js-source-1"]
+    }
+  ],
+  "scoringVersion": "javascript-diagnostic-v1"
+}

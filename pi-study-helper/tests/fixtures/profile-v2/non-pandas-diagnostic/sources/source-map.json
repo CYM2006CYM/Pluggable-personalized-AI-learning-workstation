@@ -1,0 +1,5 @@
+{
+  "sources": [
+    {"sourceId": "js-source-1", "title": "变量说明", "kind": "note", "path": "subject.md", "license": "MIT"}
+  ]
+}

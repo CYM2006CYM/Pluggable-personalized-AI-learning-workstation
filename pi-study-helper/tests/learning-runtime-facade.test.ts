@@ -99,4 +99,27 @@ describe("W1-C2 LearningRuntimeFacade contract", () => {
   it("defines every input and output DTO with at least one field", () => {
     expectTypeOf<EmptyDtoNames<FacadeDtos>>().toEqualTypeOf<never>();
   });
+
+  it("requires the strict diagnostic answer action discriminant", () => {
+    const meta = {
+      requestId: "request-1",
+      sessionId: "session-1",
+      sessionVersion: 1,
+      profileRevision: 2,
+      diagnosticId: "diagnostic-1",
+      diagnosticVersion: 1,
+      questionId: "question-1",
+    } as const;
+    const answer = { ...meta, action: "answer", answer: true } satisfies Facade.SubmitDiagnosticAnswerInput;
+    const skip = { ...meta, action: "skip" } satisfies Facade.SubmitDiagnosticAnswerInput;
+
+    expect(answer.action).toBe("answer");
+    expect(skip.action).toBe("skip");
+    // @ts-expect-error action is mandatory; the pre-correction input is not retained.
+    const missingAction: Facade.SubmitDiagnosticAnswerInput = { ...meta, answer: true };
+    // @ts-expect-error skip must not carry an answer, including a truthy answer.
+    const skipWithAnswer: Facade.SubmitDiagnosticAnswerInput = { ...meta, action: "skip", answer: true };
+    expect(missingAction).toBeDefined();
+    expect(skipWithAnswer).toBeDefined();
+  });
 });

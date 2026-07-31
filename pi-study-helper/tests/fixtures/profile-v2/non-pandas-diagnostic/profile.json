@@ -1,0 +1,24 @@
+{
+  "subjectId": "javascript-basics",
+  "name": "JavaScript 基础",
+  "schemaVersion": 2,
+  "status": "draft",
+  "version": "0.2.0-draft",
+  "revision": 2,
+  "revisionOf": 1,
+  "capabilities": {
+    "modalities": ["reading"],
+    "runtimes": [],
+    "diagnostic": true
+  },
+  "paths": {
+    "subject": "subject.md",
+    "chapters": "chapters",
+    "knowledge": "knowledge/knowledge-points.json",
+    "goals": "goals/learning-goals.json",
+    "sources": "sources/source-map.json",
+    "quality": "quality/quality-report.json",
+    "diagnostic": "assessments/diagnostic/questions.json",
+    "assessments": "assessments"
+  }
+}

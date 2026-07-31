@@ -1,0 +1,10 @@
+{
+  "goals": [
+    {
+      "goalId": "learn-variables",
+      "title": "理解变量声明",
+      "targetKnowledgePointIds": ["javascript.variables"],
+      "requiredActivityIds": []
+    }
+  ]
+}

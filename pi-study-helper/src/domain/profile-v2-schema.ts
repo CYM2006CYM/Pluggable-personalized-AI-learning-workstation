@@ -66,6 +66,7 @@ const KNOWLEDGE_POINT_KEYS = new Set([
   "sourceAnchorIds",
   "activityIds",
   "importance",
+  "requiresCodeEvidence",
 ]);
 const ACTIVITY_BASE_KEYS = [
   "activityId",
@@ -383,6 +384,9 @@ function parseKnowledgePointsAsset(raw: string): KnowledgePointsAsset {
     requireStringArray(point, "activityIds", location, issues, true);
     if (typeof point.importance !== "number" || !Number.isFinite(point.importance)) {
       issues.push(`${location}.importance must be a finite number`);
+    }
+    if (point.requiresCodeEvidence !== undefined && typeof point.requiresCodeEvidence !== "boolean") {
+      issues.push(`${location}.requiresCodeEvidence must be boolean when present`);
     }
   });
 

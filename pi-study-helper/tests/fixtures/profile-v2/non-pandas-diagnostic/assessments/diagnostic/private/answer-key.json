@@ -1,0 +1,7 @@
+{
+  "blueprintId": "javascript-diagnostic-v1",
+  "evaluatorVersion": "javascript-answer-v1",
+  "answers": [
+    {"questionId":"js-diag-1","kind":"single_choice","correctAnswer":"const"}
+  ]
+}

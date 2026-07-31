@@ -1,0 +1,15 @@
+{
+  "knowledgePoints": [
+    {
+      "id": "javascript.variables",
+      "title": "变量声明",
+      "chapterId": "intro",
+      "sectionId": "variables",
+      "prerequisiteIds": [],
+      "relatedKnowledgePointIds": [],
+      "sourceAnchorIds": ["js-source-1"],
+      "activityIds": [],
+      "importance": 1
+    }
+  ]
+}

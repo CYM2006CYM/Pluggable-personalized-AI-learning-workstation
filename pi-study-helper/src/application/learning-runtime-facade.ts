@@ -115,12 +115,21 @@ export interface DiagnosticDraftOutput extends FacadeResponseMeta {
   savedAt: IsoDateTime;
 }
 
-export interface SubmitDiagnosticAnswerInput extends WriteRequestMeta {
+interface SubmitDiagnosticAnswerBase extends WriteRequestMeta {
   diagnosticId: string;
   diagnosticVersion: number;
   questionId: string;
-  answer: string | boolean;
 }
+
+export type SubmitDiagnosticAnswerInput =
+  | (SubmitDiagnosticAnswerBase & {
+      action: "answer";
+      answer: string | boolean;
+    })
+  | (SubmitDiagnosticAnswerBase & {
+      action: "skip";
+      answer?: never;
+    });
 
 export interface DiagnosticAnswerOutput extends FacadeResponseMeta {
   requestId: string;

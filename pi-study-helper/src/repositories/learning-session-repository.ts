@@ -1,4 +1,4 @@
-import type { Evidence, KnowledgeState } from "../domain/v2-types.js";
+import type { Evidence, KnowledgeState, LearnerDiagnostic, LearningRuntimeErrorCode } from "../domain/v2-types.js";
 import type {
   FacadeResponseMeta,
   LearningEntryMode,
@@ -15,6 +15,13 @@ export interface LearningSessionRepository {
   getSnapshot(input: GetSessionSnapshotInput): Promise<SessionSnapshot>;
   commit(input: CommitLearningSessionInput): Promise<CommittedSessionSnapshot>;
   recover(input: RecoverLearningSessionInput): Promise<RecoverySnapshot>;
+}
+
+export class LearningSessionRepositoryError extends Error {
+  constructor(readonly errorCode: LearningRuntimeErrorCode, message: string) {
+    super(message);
+    this.name = "LearningSessionRepositoryError";
+  }
 }
 
 export interface CreateLearningSessionRecord {
@@ -34,6 +41,7 @@ export interface SessionSnapshot extends FacadeResponseMeta {
   view: SessionSafeView;
   evidence: Evidence[];
   knowledgeStates: KnowledgeState[];
+  latestDiagnostic?: LearnerDiagnostic;
   path?: PathSafeSnapshot;
   latestCommit: LatestCommitMarker;
 }
@@ -45,7 +53,9 @@ export interface CommitLearningSessionInput extends WriteRequestMeta {
 export interface SessionCommitCandidate {
   requestId: string;
   evidenceCandidate?: Evidence;
+  evidenceCandidates?: Evidence[];
   knowledgeStates: KnowledgeState[];
+  diagnosticCandidate?: LearnerDiagnostic;
   pathCandidate?: PathSafeSnapshot;
   activityAttemptId?: string;
   nextStage?: SessionStage;
@@ -54,6 +64,8 @@ export interface SessionCommitCandidate {
 export interface CommittedSessionSnapshot extends SessionSnapshot {
   committed: true;
   committedEvidenceId?: string;
+  committedEvidenceIds?: string[];
+  committedDiagnosticId?: string;
 }
 
 export type RecoverLearningSessionInput = WriteRequestMeta;
