@@ -1,0 +1,181 @@
+{
+  "recordings": [
+    {
+      "runId": "w2-d4-dynamic-question-normal",
+      "graphId": "dynamic-objective-question",
+      "status": "ok",
+      "payload": {
+        "artifactId": "w2-question-normal",
+        "kind": "single_choice",
+        "prompt": "Which public summary best matches the registered learning point?",
+        "options": ["Summary A", "Summary B", "Summary C"],
+        "sourceAnchorIds": ["source-public-1"],
+        "rationale": "The candidate is limited to the registered public source summary."
+      },
+      "sourceRefs": ["source-public-1"],
+      "traceSummary": "redacted dynamic question normal recording",
+      "modelId": "deepseek-chat",
+      "promptVersion": "w2-d4-v1",
+      "durationMs": 11
+    },
+    {
+      "runId": "w2-d4-generator-normal",
+      "graphId": "generator",
+      "status": "ok",
+      "payload": {
+        "artifactId": "w2-artifact-normal",
+        "candidateFeedback": "Review the registered public summary before continuing.",
+        "rationale": "Uses only the registered public source summary.",
+        "citedSourceIds": ["source-public-1"],
+        "riskFlags": []
+      },
+      "sourceRefs": ["source-public-1"],
+      "traceSummary": "redacted generator normal recording",
+      "modelId": "deepseek-chat",
+      "promptVersion": "w2-d4-v1",
+      "durationMs": 12
+    },
+    {
+      "runId": "w2-d4-hunter-no-dispute",
+      "graphId": "hunter",
+      "status": "ok",
+      "payload": {
+        "issues": [],
+        "requiresDefender": false,
+        "recommendedVerdict": "accepted"
+      },
+      "sourceRefs": ["source-public-1"],
+      "traceSummary": "redacted hunter no-dispute recording; defender is skipped",
+      "modelId": "deepseek-chat",
+      "promptVersion": "w2-d4-v1",
+      "durationMs": 8
+    },
+    {
+      "runId": "w2-d4-hunter-high-risk",
+      "graphId": "hunter",
+      "status": "ok",
+      "payload": {
+        "issues": [
+          {
+            "issueId": "issue-source-scope",
+            "severity": "high",
+            "message": "The candidate contains a disputed statement outside the supplied public summary.",
+            "disputed": true
+          }
+        ],
+        "requiresDefender": true,
+        "recommendedVerdict": "revise"
+      },
+      "sourceRefs": ["source-public-1"],
+      "traceSummary": "redacted hunter high-risk recording; defender is required",
+      "modelId": "deepseek-chat",
+      "promptVersion": "w2-d4-v1",
+      "durationMs": 9
+    },
+    {
+      "runId": "w2-d4-defender-dispute",
+      "graphId": "defender",
+      "status": "ok",
+      "payload": {
+        "defenseSummary": "The registered public summary supports only the scoped statement.",
+        "acceptedIssueIds": ["issue-source-scope"],
+        "rebuttedIssueIds": [],
+        "residualRisks": ["scope_requires_revision"]
+      },
+      "sourceRefs": ["source-public-1"],
+      "traceSummary": "redacted defender dispute recording",
+      "modelId": "deepseek-chat",
+      "promptVersion": "w2-d4-v1",
+      "durationMs": 9
+    },
+    {
+      "runId": "w2-d4-judge-accepted",
+      "graphId": "judge",
+      "status": "ok",
+      "payload": {
+        "verdict": "accepted",
+        "finalSafeFeedback": "Use the public source summary for the next step.",
+        "summary": "All supplied deterministic checks passed.",
+        "blockedIssueIds": []
+      },
+      "sourceRefs": ["source-public-1"],
+      "traceSummary": "redacted judge accepted recording",
+      "modelId": "deepseek-chat",
+      "promptVersion": "w2-d4-v1",
+      "durationMs": 10
+    },
+    {
+      "runId": "w2-d4-judge-rejected",
+      "graphId": "judge",
+      "status": "ok",
+      "payload": {
+        "verdict": "rejected",
+        "finalSafeFeedback": "A pre-reviewed public activity remains available.",
+        "summary": "An unresolved public-source scope issue blocked publication.",
+        "blockedIssueIds": ["issue-source-scope"]
+      },
+      "sourceRefs": ["source-public-1"],
+      "traceSummary": "redacted judge rejection recording; candidate is not published",
+      "modelId": "deepseek-chat",
+      "promptVersion": "w2-d4-v1",
+      "durationMs": 10
+    },
+    {
+      "runId": "w2-d4-generator-invalid",
+      "graphId": "generator",
+      "status": "invalid_output",
+      "errorCode": "invalid_json",
+      "sourceRefs": [],
+      "traceSummary": "redacted malformed output recording; failed stage may retry at most twice",
+      "modelId": "deepseek-chat",
+      "promptVersion": "w2-d4-v1"
+    },
+    {
+      "runId": "w2-d4-hunter-timeout",
+      "graphId": "hunter",
+      "status": "timeout",
+      "errorCode": "timeout",
+      "sourceRefs": [],
+      "traceSummary": "redacted timeout recording; fixed fallback rejects publication",
+      "modelId": "deepseek-chat",
+      "promptVersion": "w2-d4-v1",
+      "durationMs": 60000
+    },
+    {
+      "runId": "w2-d4-generator-refusal",
+      "graphId": "generator",
+      "status": "provider_error",
+      "errorCode": "refusal",
+      "sourceRefs": [],
+      "traceSummary": "redacted refusal recording; fixed fallback uses pre-reviewed public material",
+      "modelId": "deepseek-chat",
+      "promptVersion": "w2-d4-v1"
+    },
+    {
+      "runId": "w2-d4-judge-provider-fallback",
+      "graphId": "judge",
+      "status": "provider_error",
+      "errorCode": "provider_error",
+      "sourceRefs": [],
+      "traceSummary": "redacted provider failure recording; fixed fallback rejects publication",
+      "modelId": "deepseek-chat",
+      "promptVersion": "w2-d4-v1"
+    },
+    {
+      "runId": "w2-d4-judge-version-conflict",
+      "graphId": "judge",
+      "status": "ok",
+      "payload": {
+        "verdict": "accepted",
+        "finalSafeFeedback": "Use the registered public source summary for the next step.",
+        "summary": "The port response is structurally valid; the orchestrator must reject its stale model binding.",
+        "blockedIssueIds": []
+      },
+      "sourceRefs": ["source-public-1"],
+      "traceSummary": "redacted successful port response; modelId intentionally differs from the checkpoint binding",
+      "modelId": "stale-deepseek-chat",
+      "promptVersion": "w2-d4-v1",
+      "durationMs": 10
+    }
+  ]
+}
