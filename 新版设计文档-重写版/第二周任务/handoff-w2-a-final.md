@@ -1,29 +1,30 @@
 # handoff-w2-a：岗位A第二周D1-D3最终交接清单
 
-状态：`V2-4_PASS / V2-5_PASS / UPLOAD_LOCK_GRANTED / NOT_COMMITTED / NOT_PUSHED`
+状态：`V2-4_PASS / V2-5_PASS / COMMITTED / PUSHED / LOCK_RELEASE_TIME_NOT_RECORDED`
 
-本记录是岗位A第二周唯一最终交接清单，覆盖D1基线、D2-D3实现、作者验证和E复验结论。E已对修复包重新出具V2-4/V2-5 PASS；负责人于2026-08-01授予岗位A条件补传上传锁。本记录更新时尚未提交、尚未推送。
+本记录是岗位A第二周唯一最终交接清单，覆盖D1基线、D2-D3实现、作者验证、E复验结论和正式上传回执。E已对修复包重新出具V2-4/V2-5 PASS；负责人于2026-08-01授予岗位A条件补传上传锁，A随后以`1008f765e12687a0a1f7d65666a64cf13995e0a3`提交并推送到`main`。现有记录没有登记上传锁的具体释放时间，本清单不补造该时间。
 
 ## 1. 基线与合同版本
 
 ```text
 岗位：A（领域与架构）
 分支：main
-当前HEAD：f16399089938f79d07ff6a4dafacb8442cdb91d5
-当前工作基线：f16399089938f79d07ff6a4dafacb8442cdb91d5
+A上传前工作基线：f16399089938f79d07ff6a4dafacb8442cdb91d5
+A正式提交：1008f765e12687a0a1f7d65666a64cf13995e0a3
+后续负责人清理提交：ff3e40bbe868dea309fd730727774135be5331b0
 现行合同版本：W2-C2 / W2-R5
 W2_START_COMMIT：f343a6c1c630f362f4686e6f6b0f50c6577d5562（负责人已登记）
 工作树：D1检查时干净
-提交状态：NOT_COMMITTED
-推送状态：NOT_PUSHED
-上传锁：UPLOAD_LOCK_GRANTED（负责人于2026-08-01授予条件补传上传锁）
+提交状态：COMMITTED
+推送状态：PUSHED（正式提交已进入main并可由当前origin/main追溯）
+上传锁：负责人已授权并完成上传；具体释放时间未在现有记录登记
 ```
 
 基线验证结果：
 
 - `npm.cmd run typecheck`：通过。
 - `npm.cmd test`：D1基线为32个测试文件、356项；D3修复后由A重新运行并记录最新项数。
-- 固定周起点仍为`W2_START_COMMIT=f343a6c1c630f362f4686e6f6b0f50c6577d5562`；当前拉取后的实际HEAD为`f16399089938f79d07ff6a4dafacb8442cdb91d5`，二者语义不同。
+- 固定周起点仍为`W2_START_COMMIT=f343a6c1c630f362f4686e6f6b0f50c6577d5562`；A上传前拉取后的实际HEAD为`f16399089938f79d07ff6a4dafacb8442cdb91d5`，A正式提交为`1008f765e12687a0a1f7d65666a64cf13995e0a3`，三者语义不同。
 - 第一周门禁已经由`E岗位第六天Go-No-Go清单.md`中的负责人最终`GO`关闭。
 - D1时点未执行commit、push或上传锁流程；该条仅描述D1历史状态。
 
@@ -206,7 +207,7 @@ type SubmitDiagnosticAnswerInput =
 - 未修改B/C/D/E负责文件。
 - D2-D3已修改A负责的业务代码、公共DTO和作者测试；未修改B/C/D/E负责文件。
 - 未修改依赖、SDK、`package.json`或锁文件。
-- D1阶段未执行commit、push或上传锁流程；D3收口时已获得负责人授予的条件补传上传锁。
+- D1阶段未执行commit、push或上传锁流程；D3收口后获得负责人授予的条件补传上传锁，并已形成正式提交`1008f765e12687a0a1f7d65666a64cf13995e0a3`。
 - 本记录同时承载D1基线、D2-D3实现、测试、限制和E复验结论。
 
 ## 9. D2-D3实现交付
@@ -324,8 +325,8 @@ git diff --check
 - 未修改D的模型配置、提示词或响应材料。
 - E已按修复包`A-W2-D1-D3-E-audit-package-f163990-r2.zip`的新SHA-256 `c27073b5c71929cc1f799d2ed60e220e049e669964298ed55745fc60a2b4922b`完成独立复验；25/25清单哈希一致，V2-4、V2-5均为PASS。
 - E复验结果：六个重点测试文件45/45、E独立反例2/2、E端到端矩阵4/4、全量36个测试文件387/387；`typecheck`、`verify`和`git diff --cached --check`均通过，无需A继续修复。
-- 正式上传资料包括E审核报告`E岗位第二周D2-A最新逐项预检报告.md`、E已绑定哈希的r2审计包及其sidecar；不重新生成或改写已审核审计包。
+- Git正式交付以`1008f765e12687a0a1f7d65666a64cf13995e0a3`中的A源码、测试和已跟踪交接/审核文档为准。r2审计ZIP及其sidecar只属于仓库外审计载体；二者曾随A提交误入仓库根目录，已由负责人提交`ff3e40bbe868dea309fd730727774135be5331b0`删除，不再作为Git正式交付文件。
 - 因常规D3窗口已过，负责人已于2026-08-01明确授予岗位A条件补传上传锁。
 - 正式`W2_START_COMMIT`为`f343a6c1c630f362f4686e6f6b0f50c6577d5562`；本次拉取后的实际HEAD为`f16399089938f79d07ff6a4dafacb8442cdb91d5`。
-- 当前状态：`V2-4_PASS / V2-5_PASS / UPLOAD_LOCK_GRANTED / NOT_COMMITTED / NOT_PUSHED`。
-- 上传锁已获得；本记录更新时尚未执行commit或push，正式提交号由上传结果回执登记。
+- 当前状态：`V2-4_PASS / V2-5_PASS / COMMITTED / PUSHED / LOCK_RELEASE_TIME_NOT_RECORDED`。
+- 正式上传回执：A提交`1008f765e12687a0a1f7d65666a64cf13995e0a3`已经进入`main`；后续`ff3e40bbe868dea309fd730727774135be5331b0`只清理误上传的两个根目录压缩包文件，不撤销A源码、测试或审核文档。上传锁具体释放时间仍待负责人按原始记录补登。
