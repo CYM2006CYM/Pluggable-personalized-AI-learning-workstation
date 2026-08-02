@@ -1,7 +1,14 @@
 {
-  "diagnosticId": "diagnostic-pandas-cleaning-v1-draft",
-  "visibility": "private",
+  "blueprintId": "diagnostic-pandas-cleaning-v2-draft",
+  "evaluatorVersion": "diagnostic-v2-draft",
   "answers": [
-    {"questionId":"diag-01","correctOptionIndex":0},{"questionId":"diag-02","correctOptionIndex":1},{"questionId":"diag-03","correctOptionIndex":0},{"questionId":"diag-04","correctOptionIndex":0},{"questionId":"diag-05","correctOptionIndex":1},{"questionId":"diag-06","correctOptionIndex":0},{"questionId":"diag-07","correctOptionIndex":0},{"questionId":"diag-08","correctOptionIndex":0},{"questionId":"diag-09","correctOptionIndex":0},{"questionId":"diag-10","correctOptionIndex":0}
+    {"questionId":"diag-01","kind":"single_choice","correctAnswer":"df.shape"},
+    {"questionId":"diag-02","kind":"single_choice","correctAnswer":"DataFrame"},
+    {"questionId":"diag-03","kind":"judgment","correctAnswer":true},
+    {"questionId":"diag-04","kind":"single_choice","correctAnswer":"删除该行"},
+    {"questionId":"diag-05","kind":"single_choice","correctAnswer":"日期可解析的记录"},
+    {"questionId":"diag-06","kind":"single_choice","correctAnswer":"转换为缺失时间值"},
+    {"questionId":"diag-07","kind":"judgment","correctAnswer":true},
+    {"questionId":"diag-08","kind":"single_choice","correctAnswer":"被选记录的相对行序"}
   ]
 }

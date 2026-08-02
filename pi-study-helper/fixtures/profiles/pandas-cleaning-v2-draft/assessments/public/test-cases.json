@@ -9,7 +9,7 @@
       ],
       "dimensionId": "structure",
       "blocking": true,
-      "assetHash": "sha256:d3e1121ba3ee2661e7b3859cc68514f7ee807c22c39ad3d1d9a33f9d0a1f501d"
+      "assetHash": "sha256:eca54fb129f63799fd2290d2ab13f6d1f0258894357fb656ff68c1e1e02c3ef1"
     },
     {
       "testId": "test-missing-public",
@@ -42,7 +42,7 @@
       ],
       "dimensionId": "types",
       "blocking": true,
-      "assetHash": "sha256:2fef6131b9cf9b518aeb9d90f079b7de689fe5d3961cc06baeb1a78d338bd905"
+      "assetHash": "sha256:b995f2e36844821afb1d30ba4d3efae72732072a0a0d3f7985056955e40748e6"
     },
     {
       "testId": "test-practical-public",

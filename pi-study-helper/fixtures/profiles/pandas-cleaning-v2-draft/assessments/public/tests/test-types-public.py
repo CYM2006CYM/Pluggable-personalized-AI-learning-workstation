@@ -7,7 +7,7 @@ def run_case(normalize_types, df):
     assert getattr(result["order_date"].dtype, "tz", None) is None
     assert set(result["status"].dropna().astype(str)).issubset({"completed", "pending", "cancelled"})
     by_id = result.assign(_id=result["order_id"].astype("string").str.strip()).set_index("_id")
-    for order_id in ["O004", "O009", "O015"]:
+    for order_id in ["O004", "O008", "O009", "O019"]:
         assert bool(__import__("pandas").isna(by_id.loc[order_id, "amount"]))
     for order_id in ["O004", "O010", "O017"]:
         assert __import__("pandas").isna(by_id.loc[order_id, "order_date"])

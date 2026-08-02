@@ -3,8 +3,8 @@
     {
       "goalId": "goal-clean-orders",
       "title": "按冻结业务契约清洗订单数据",
-      "targetKnowledgePointIds": ["kp-structure", "kp-missing", "kp-duplicates", "kp-types", "kp-invariants", "kp-engineering"],
-      "requiredActivityIds": ["act-structure", "act-missing", "act-duplicates", "act-types", "act-practical"],
+      "targetKnowledgePointIds": ["pandas.clean.read-csv", "pandas.clean.inspect-dataframe", "pandas.clean.missing-values", "pandas.clean.duplicate-orders", "pandas.clean.type-format", "pandas.clean.validate-result"],
+      "requiredActivityIds": ["act-read-csv", "act-inspect-dataframe", "act-missing", "act-duplicates", "act-types", "act-practical"],
       "finalActivityId": "act-practical"
     }
   ]

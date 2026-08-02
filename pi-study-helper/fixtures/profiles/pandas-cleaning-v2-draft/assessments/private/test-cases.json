@@ -9,7 +9,7 @@
       ],
       "dimensionId": "structure",
       "blocking": true,
-      "assetHash": "sha256:4729487ecd0a3e8570ae30f91ff7bae29a61bb444659350455a7ee52f580afb1"
+      "assetHash": "sha256:935f988b1d21ebd927fec8015328599376ca0ce05be593130130c9ede7c4dc4e"
     },
     {
       "testId": "test-missing-hidden",
@@ -64,7 +64,7 @@
       ],
       "dimensionId": "engineering",
       "blocking": false,
-      "assetHash": "sha256:fd901d2cb955083a880cfa5c72248350252a8a5b3ba7d548a81b537fab1d2127"
+      "assetHash": "sha256:e501c858969bd6ccefaf21585ad125fc7a26dc9a178b6c09cc52e16137ba5cd1"
     }
   ],
   "note": "Private assertions remain server-side and are not included in public projections."

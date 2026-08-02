@@ -1,11 +1,51 @@
-import { lstat, readFile, readdir, realpath, stat } from "node:fs/promises";
+import { readFile, readdir, stat } from "node:fs/promises";
 import { createHash } from "node:crypto";
-import { dirname, isAbsolute, relative, resolve } from "node:path";
+import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { validateProfileV2Directory } from "../src/domain/profile-v2-schema.js";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../fixtures/profiles/pandas-cleaning-v2-draft");
+const coreKnowledgePointIds = [
+  "pandas.clean.read-csv",
+  "pandas.clean.inspect-dataframe",
+  "pandas.clean.missing-values",
+  "pandas.clean.duplicate-orders",
+  "pandas.clean.type-format",
+  "pandas.clean.validate-result",
+];
+const expectedWeights = new Map([
+  ["pandas.clean.read-csv", 0.05],
+  ["pandas.clean.inspect-dataframe", 0.05],
+  ["pandas.clean.missing-values", 0.20],
+  ["pandas.clean.duplicate-orders", 0.15],
+  ["pandas.clean.type-format", 0.25],
+  ["pandas.clean.validate-result", 0.30],
+]);
+const sourceKeys = [
+  "excerptRange",
+  "knowledgePointIds",
+  "license",
+  "locator",
+  "sourceId",
+  "summaryHash",
+  "title",
+  "type",
+  "versionOrAccessDate",
+];
+const questionKeys = [
+  "difficulty",
+  "evaluatorRef",
+  "kind",
+  "knowledgePointId",
+  "maxScore",
+  "options",
+  "prompt",
+  "questionId",
+  "required",
+  "sourceAnchorIds",
+];
+const testCaseKeys = ["assetHash", "blocking", "dimensionId", "fileRef", "fixtureRefs", "testId", "visibility"];
 
 async function json(relativePath: string): Promise<any> {
   return JSON.parse(await readFile(resolve(root, relativePath), "utf8"));
@@ -22,377 +62,355 @@ async function exists(relativePath: string): Promise<boolean> {
 
 function canonicalJson(value: any): string {
   if (Array.isArray(value)) return `[${value.map(canonicalJson).join(",")}]`;
-  if (value && typeof value === "object") {
-    return `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${canonicalJson(value[key])}`).join(",")}}`;
-  }
+  if (value && typeof value === "object") return `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${canonicalJson(value[key])}`).join(",")}}`;
   return JSON.stringify(value);
 }
 
-const fixtureKeys = ["assetHash", "fileRef", "fixtureId", "format", "visibility"];
-const testCaseKeys = ["assetHash", "blocking", "dimensionId", "fileRef", "fixtureRefs", "testId", "visibility"];
-const sha256Pattern = /^sha256:[a-f0-9]{64}$/u;
-
-async function findSymlinkOrEscape(fileRefs: string[]): Promise<Set<string>> {
-  const unsafe = new Set<string>();
-  const canonicalRoot = await realpath(root);
-  for (const fileRef of fileRefs) {
-    if (typeof fileRef !== "string" || fileRef.includes("\\")) {
-      unsafe.add(fileRef);
-      continue;
-    }
-    let current = root;
-    try {
-      for (const part of fileRef.split("/")) {
-        current = resolve(current, part);
-        if ((await lstat(current)).isSymbolicLink()) unsafe.add(fileRef);
-      }
-      const canonicalTarget = await realpath(current);
-      const fromRoot = relative(canonicalRoot, canonicalTarget);
-      if (fromRoot === ".." || fromRoot.startsWith(`..\\`) || fromRoot.startsWith("../") || isAbsolute(fromRoot)) unsafe.add(fileRef);
-    } catch {
-      // Missing files are reported deterministically by bindingErrors().
-    }
-  }
-  return unsafe;
+function sha256(content: Buffer | string): string {
+  return `sha256:${createHash("sha256").update(content).digest("hex")}`;
 }
 
-function bindingErrors(fixturesAsset: any, test: any, activity: any, argumentFixtureIds: string[], knownFiles: Set<string>, actualHashes: Map<string, string>, symlinkPaths = new Set<string>()): string[] {
-  const errors: string[] = [];
-  if (Object.keys(fixturesAsset).sort().join(",") !== "fixtures") errors.push("fixture_top_level_fields");
-  const fixtures = Array.isArray(fixturesAsset.fixtures) ? fixturesAsset.fixtures : [];
-  const fixtureIds = fixtures.map((item: any) => item.fixtureId);
-  if (new Set(fixtureIds).size !== fixtureIds.length) errors.push("duplicate_fixture_id");
-  const byId = new Map(fixtures.map((item: any) => [item.fixtureId, item]));
-  if (new Set(activity.datasetRefs).size !== activity.datasetRefs.length) errors.push("duplicate_activity_dataset_ref");
-  for (const fixture of fixtures) {
-    const fixtureFileRef = typeof fixture.fileRef === "string" ? fixture.fileRef : "";
-    if (Object.keys(fixture).sort().join(",") !== fixtureKeys.join(",")) errors.push("fixture_fields");
-    if (fixture.visibility !== "public" && fixture.visibility !== "private") errors.push("fixture_visibility");
-    if (fixture.format !== "csv") errors.push("fixture_format");
-    if (!sha256Pattern.test(fixture.assetHash)) errors.push("fixture_hash_format");
-    if (!fixtureFileRef || fixtureFileRef.includes("\\") || /^(?:[A-Za-z]:[\\/]|\/)/u.test(fixtureFileRef) || fixtureFileRef.split("/").some((part: string) => part === "" || part === "." || part === "..")) errors.push("fixture_path");
-    if (fixture.visibility === "public" && !fixtureFileRef.startsWith("datasets/public/")) errors.push("fixture_visibility_path");
-    if (fixture.visibility === "private" && !fixtureFileRef.startsWith("datasets/private/")) errors.push("fixture_visibility_path");
-    if (!knownFiles.has(fixtureFileRef)) errors.push("fixture_missing_file");
-    if (actualHashes.get(fixtureFileRef) !== fixture.assetHash) errors.push("fixture_hash_mismatch");
-    if (symlinkPaths.has(fixtureFileRef)) errors.push("fixture_symlink_traversal");
-  }
-  if (Object.keys(test).sort().join(",") !== testCaseKeys.join(",")) errors.push("test_fields");
-  if (!Array.isArray(test.fixtureRefs)) errors.push("fixture_refs_required");
-  const refs = Array.isArray(test.fixtureRefs) ? test.fixtureRefs : [];
-  if (new Set(refs).size !== refs.length) errors.push("duplicate_fixture_ref");
-  if (!sha256Pattern.test(test.assetHash)) errors.push("test_hash_format");
-  const testFileRef = typeof test.fileRef === "string" ? test.fileRef : "";
-  const testParts = testFileRef.split("/");
-  if (test.visibility !== "public" && test.visibility !== "hidden") errors.push("test_visibility");
-  if (!testFileRef || testFileRef.includes("\\") || /^(?:[A-Za-z]:[\\/]|\/)/u.test(testFileRef) || testParts.some((part: string) => part === "" || part === "." || part === "..")) errors.push("test_path");
-  if (test.visibility === "public" && !testFileRef.startsWith("assessments/public/tests/")) errors.push("test_visibility_path");
-  if (test.visibility === "hidden" && !testFileRef.startsWith("assessments/private/tests/")) errors.push("test_visibility_path");
-  if (!knownFiles.has(testFileRef)) errors.push("test_missing_file");
-  if (actualHashes.get(testFileRef) !== test.assetHash) errors.push("test_hash_mismatch");
-  if (symlinkPaths.has(testFileRef)) errors.push("test_symlink_traversal");
-  for (const id of refs) {
-    const fixture: any = byId.get(id);
-    if (!fixture) errors.push("dangling_fixture_ref");
-    if (!activity.datasetRefs.includes(id)) errors.push("activity_undeclared_fixture");
-    if (!argumentFixtureIds.includes(id)) errors.push("argument_fixture_not_allowed");
-    if (test.visibility === "public" && fixture?.visibility !== "public") errors.push("public_test_private_fixture");
-  }
-  return errors;
-}
-
-async function collectPublicCandidateFiles(directory = root): Promise<string[]> {
+async function publicCandidateFiles(directory = root): Promise<string[]> {
   const files: string[] = [];
   for (const entry of await readdir(directory, { withFileTypes: true })) {
     const absolute = resolve(directory, entry.name);
-    const relative = absolute.slice(root.length + 1).replaceAll("\\", "/");
+    const relativePath = absolute.slice(root.length + 1).replaceAll("\\", "/");
     if (entry.isDirectory()) {
       if (
-        relative === "reference-solutions"
-        || relative === "rubrics"
-        || relative === "datasets/private"
-        || relative.includes("/private")
+        relativePath === "reference-solutions"
+        || relativePath === "rubrics"
+        || relativePath === "datasets/private"
+        || relativePath.includes("/private")
       ) continue;
-      files.push(...await collectPublicCandidateFiles(absolute));
+      files.push(...await publicCandidateFiles(absolute));
     } else if (!entry.name.endsWith(".pyc")) {
-      files.push(relative);
+      files.push(relativePath);
     }
   }
   return files.sort();
 }
 
-describe("B W1 day-3 pandas-cleaning draft assets", () => {
-  it("is accepted by A's frozen Profile v2 schema and remains draft", async () => {
+describe("B W2 revision-2 pandas-cleaning draft assets", () => {
+  it("is accepted by A's frozen Profile v2 schema and remains a local draft", async () => {
     const manifest = await validateProfileV2Directory(root, "draft");
-    const quality = await json("quality/quality-report.json");
-    const environment = await json("environments/environment-lock.json");
-    expect(manifest.subjectId).toBe("pandas-cleaning");
-    expect(manifest.status).toBe("draft");
-    expect(manifest["x-candidateApproval"]).toBe("pending_owner_decision");
-    expect(manifest.capabilities.modalities).toEqual(["reading", "quiz", "code", "practice"]);
-    expect(quality.activeEligible).toBe(false);
-    expect(Object.values(quality.gates).every((value) => String(value).startsWith("pending"))).toBe(true);
-    expect(environment.schemaVersion).toBe(1);
-    expect(environment.status).toBe("draft_pending_C_prototype");
-    expect(environment.pythonVersion).toBeNull();
-    expect(environment.nodeVersion).toBeNull();
-    expect(environment.pandasVersion).toBeNull();
-    expect(environment.allowedLibraries).toEqual([{ name: "pandas", version: null }]);
-    expect(environment.capabilityFlags).toEqual({
-      reliableMemoryLimit: false, networkIsolation: false, processTreeTermination: false,
+    expect(manifest).toMatchObject({
+      subjectId: "pandas-cleaning",
+      status: "draft",
+      version: "0.2.0-draft",
+      revision: 2,
+      revisionOf: 1,
+      "x-candidateApproval": "pending_owner_decision",
     });
-    expect(environment.environmentHash).toBe("pending_C_prototype");
+    expect(manifest.paths.sources).toBe("sources/source-map.json");
+    expect(manifest.capabilities.modalities).toEqual(["reading", "quiz", "code", "practice"]);
   });
 
-  it("contains three chapters, six sections, six knowledge points, and five fixed code activities", async () => {
-    const knowledge = await json("knowledge/knowledge-points.json");
-    const activities = await json("activities/learning-activities.json");
+  it("has the W2 three-chapter, six-section curriculum and migration record", async () => {
     const chapterFiles = [
-      "chapters/01-foundations/01-structure.md",
-      "chapters/01-foundations/02-missing.md",
-      "chapters/02-normalization/01-duplicates.md",
-      "chapters/02-normalization/02-types.md",
-      "chapters/03-validation/01-invariants.md",
-      "chapters/03-validation/02-engineering.md",
+      "chapters/chapter-01-data-entry-and-inspection/section-01-read-csv.md",
+      "chapters/chapter-01-data-entry-and-inspection/section-02-inspect-dataframe.md",
+      "chapters/chapter-02-cleaning-issues/section-01-missing-values.md",
+      "chapters/chapter-02-cleaning-issues/section-02-duplicate-orders.md",
+      "chapters/chapter-03-format-and-validation/section-01-type-format-cleanup.md",
+      "chapters/chapter-03-format-and-validation/section-02-validate-result.md",
     ];
     expect(await Promise.all(chapterFiles.map(exists))).toEqual(Array(6).fill(true));
-    expect(knowledge.knowledgePoints).toHaveLength(6);
-    expect(activities.activities).toHaveLength(5);
-    expect(activities.activities.map((item: any) => item.kind)).toEqual([
-      "code_completion", "code_completion", "code_completion", "code_completion", "coding_practical",
-    ]);
-    expect(activities.activities.every((item: any) => item.allowedSources.length === 1 && item.allowedSources[0] === "profile_fixed")).toBe(true);
+    expect(await exists("cards/basic-python-remediation.md")).toBe(true);
+    expect(await exists("quality/revision-1-to-2.md")).toBe(true);
+    expect(await exists("sources/source-registry.json")).toBe(false);
   });
 
-  it("keeps diagnostic and fallback answers physically private", async () => {
+  it("declares seven knowledge points with an acyclic core weighting contract", async () => {
+    const { knowledgePoints } = await json("knowledge/knowledge-points.json");
+    expect(knowledgePoints).toHaveLength(7);
+    const byId = new Map<string, any>(knowledgePoints.map((item: any): [string, any] => [item.id, item]));
+    expect([...byId.keys()]).toEqual(["basic-python", ...coreKnowledgePointIds]);
+    expect(byId.get("basic-python")).toMatchObject({
+      prerequisiteIds: [],
+      importance: 0,
+      activityIds: ["act-basic-python-remediation"],
+    });
+    for (const id of coreKnowledgePointIds) expect(byId.get(id).importance).toBe(expectedWeights.get(id));
+    expect(coreKnowledgePointIds.reduce((total, id) => total + byId.get(id).importance, 0)).toBeCloseTo(1, 10);
+
+    const visited = new Set<string>();
+    const active = new Set<string>();
+    const visit = (id: string): void => {
+      if (active.has(id)) throw new Error(`cyclic prerequisite: ${id}`);
+      if (visited.has(id)) return;
+      active.add(id);
+      for (const prerequisiteId of byId.get(id).prerequisiteIds) {
+        expect(byId.has(prerequisiteId)).toBe(true);
+        visit(prerequisiteId);
+      }
+      active.delete(id);
+      visited.add(id);
+    };
+    for (const id of byId.keys()) visit(id);
+  });
+
+  it("separates the non-required Python remediation from the six fixed core activities", async () => {
+    const { goals } = await json("goals/learning-goals.json");
+    const { activities } = await json("activities/learning-activities.json");
+    const goal = goals.find((item: any) => item.goalId === "goal-clean-orders");
+    expect(activities).toHaveLength(7);
+    expect(activities.map((item: any) => item.activityId)).toEqual([
+      "act-basic-python-remediation",
+      "act-read-csv",
+      "act-inspect-dataframe",
+      "act-missing",
+      "act-duplicates",
+      "act-types",
+      "act-practical",
+    ]);
+    expect(activities.every((item: any) => item.profileRevision === 2 && item.allowedSources?.[0] === "profile_fixed")).toBe(true);
+    const remediation = activities[0];
+    expect(remediation).toMatchObject({
+      kind: "mcq",
+      primaryKnowledgePointId: "basic-python",
+      subtype: "single_choice",
+    });
+    expect(remediation).not.toHaveProperty("datasetRefs");
+    expect(remediation).not.toHaveProperty("publicTestRefs");
+    expect(remediation).not.toHaveProperty("hiddenTestRefs");
+    expect(remediation).not.toHaveProperty("runtimePolicyId");
+    expect(goal.targetKnowledgePointIds).toEqual(coreKnowledgePointIds);
+    expect(goal.requiredActivityIds).toEqual(activities.slice(1).map((item: any) => item.activityId));
+    expect(goal.requiredActivityIds).not.toContain("act-basic-python-remediation");
+    expect(goal.finalActivityId).toBe("act-practical");
+  });
+
+  it("uses the revision-2 official source map and closes every B-owned source reference", async () => {
+    const sourceMap = await json("sources/source-map.json");
+    const knowledge = await json("knowledge/knowledge-points.json");
+    const activities = await json("activities/learning-activities.json");
+    const diagnostic = await json("assessments/diagnostic/questions.json");
+    expect(sourceMap).toMatchObject({ status: "draft", approval: "pending_owner_decision" });
+    expect(sourceMap.sources.length).toBeGreaterThanOrEqual(9);
+    const sourceIds = new Set<string>();
+    for (const source of sourceMap.sources) {
+      expect(Object.keys(source).sort()).toEqual(sourceKeys);
+      expect(source.type).toBe("official");
+      expect(source.knowledgePointIds.length).toBeGreaterThan(0);
+      expect(source.summaryHash).toMatch(/^sha256:[a-f0-9]{64}$/u);
+      expect(source.locator).toMatch(/^https:\/\//u);
+      sourceIds.add(source.sourceId);
+    }
+    for (const item of [...knowledge.knowledgePoints, ...activities.activities, ...diagnostic.questions]) {
+      for (const sourceId of item.sourceAnchorIds) expect(sourceIds.has(sourceId)).toBe(true);
+    }
+  });
+
+  it("keeps the strict eight-question diagnostic and its private answers closed one-to-one", async () => {
     const diagnostic = await json("assessments/diagnostic/questions.json");
     const answerKey = await json("assessments/diagnostic/private/answer-key.json");
     const fallback = await json("assessments/quiz-fallback/questions.json");
-    expect(diagnostic.questions).toHaveLength(10);
-    expect(answerKey.visibility).toBe("private");
-    expect(JSON.stringify(diagnostic)).not.toContain("correctOptionIndex");
+    const fallbackAnswerKey = await json("assessments/quiz-fallback/private/answer-key.json");
+    expect(Object.keys(diagnostic).sort()).toEqual([
+      "blueprintId", "estimatedMinutes", "goalIds", "minimumCoverage", "profileRevision", "questions", "scoringVersion",
+    ]);
+    expect(diagnostic).toMatchObject({
+      blueprintId: "diagnostic-pandas-cleaning-v2-draft",
+      profileRevision: 2,
+      goalIds: ["goal-clean-orders"],
+      minimumCoverage: 1,
+      scoringVersion: "diagnostic-v2-draft",
+    });
+    expect(diagnostic.questions).toHaveLength(8);
+    expect(new Set(diagnostic.questions.map((item: any) => item.questionId)).size).toBe(8);
+    const assessedIds = diagnostic.questions.map((item: any) => item.knowledgePointId);
+    expect(new Set(assessedIds)).toEqual(new Set(["basic-python", ...coreKnowledgePointIds]));
+    expect(assessedIds.filter((id: string) => id === "pandas.clean.validate-result")).toHaveLength(2);
+    expect(JSON.stringify(diagnostic)).not.toContain("correctAnswer");
+    for (const question of diagnostic.questions) {
+      expect(Object.keys(question).sort()).toEqual(question.kind === "judgment"
+        ? questionKeys.filter((key) => key !== "options")
+        : questionKeys);
+      expect(["single_choice", "judgment"]).toContain(question.kind);
+      if (question.kind === "single_choice") expect(question.options.length).toBeGreaterThanOrEqual(2);
+      if (question.kind === "judgment") expect(question).not.toHaveProperty("options");
+    }
+
+    expect(Object.keys(answerKey).sort()).toEqual(["answers", "blueprintId", "evaluatorVersion"]);
+    expect(answerKey.blueprintId).toBe(diagnostic.blueprintId);
+    expect(answerKey.evaluatorVersion).toBe("diagnostic-v2-draft");
+    expect(answerKey.answers).toHaveLength(8);
+    const byQuestionId = new Map<string, any>(diagnostic.questions.map((item: any): [string, any] => [item.questionId, item]));
+    expect(new Set(answerKey.answers.map((item: any) => item.questionId))).toEqual(new Set(byQuestionId.keys()));
+    for (const answer of answerKey.answers) {
+      const question = byQuestionId.get(answer.questionId);
+      expect(answer.kind).toBe(question.kind);
+      if (question.kind === "single_choice") expect(question.options).toContain(answer.correctAnswer);
+      if (question.kind === "judgment") expect(typeof answer.correctAnswer).toBe("boolean");
+    }
+
+    expect(fallback).toMatchObject({ status: "draft", profileRevision: 2 });
     expect(JSON.stringify(fallback)).not.toContain("correctOptionIndex");
-    expect(await exists("assessments/diagnostic/questions.json")).toBe(true);
-    expect(await exists("assessments/diagnostic/private/answer-key.json")).toBe(true);
-    expect(await exists("assessments/quiz-fallback/questions.json")).toBe(true);
-    expect(await exists("assessments/quiz-fallback/private/answer-key.json")).toBe(true);
-    expect(resolve(root, "assessments/diagnostic/questions.json")).not.toBe(
-      resolve(root, "assessments/diagnostic/private/answer-key.json"),
+    expect(fallbackAnswerKey).toMatchObject({ visibility: "private", profileRevision: 2 });
+    expect(new Set(fallbackAnswerKey.answers.map((item: any) => item.questionId))).toEqual(
+      new Set(fallback.questions.map((item: any) => item.questionId)),
     );
   });
 
-  it("provides the frozen public and private CSV sizes and seven-column order", async () => {
-    const expectedHeader = "order_id,customer_id,amount,city,order_date,status,note";
-    const publicCsv = (await readFile(resolve(root, "datasets/public/orders-learning.csv"), "utf8")).trim().split(/\r?\n/u);
-    const privateOne = (await readFile(resolve(root, "datasets/private/orders-variant-01.csv"), "utf8")).trim().split(/\r?\n/u);
-    const privateTwo = (await readFile(resolve(root, "datasets/private/orders-variant-02.csv"), "utf8")).trim().split(/\r?\n/u);
-    expect(publicCsv[0]).toBe(expectedHeader);
-    expect(privateOne[0]).toBe(expectedHeader);
-    expect(privateTwo[0]).toBe(expectedHeader);
-    expect(publicCsv).toHaveLength(31);
-    expect(privateOne).toHaveLength(21);
-    expect(privateTwo).toHaveLength(21);
-  });
-
-  it("enforces the exact W1-C5 fixture registry and seven-field TestCaseRef contract", async () => {
+  it("binds D3 data, tests, five code bundles, and revision-2 hashes exactly", async () => {
+    const { activities } = await json("activities/learning-activities.json");
+    const { bundles } = await json("assessments/private/task-bundles.json");
     const fixturesAsset = await json("datasets/fixtures.json");
-    const activities = (await json("activities/learning-activities.json")).activities;
-    const publicTests = (await json("assessments/public/test-cases.json")).tests;
-    const hiddenTests = (await json("assessments/private/test-cases.json")).tests;
-    const bundles = (await json("assessments/private/task-bundles.json")).bundles;
-    const knownFiles = new Set<string>();
-    const actualHashes = new Map<string, string>();
-    expect(Object.keys(fixturesAsset)).toEqual(["fixtures"]);
-    expect(fixturesAsset.fixtures).toHaveLength(3);
-    for (const fixture of fixturesAsset.fixtures) {
-      expect(Object.keys(fixture).sort()).toEqual(fixtureKeys);
-      const content = await readFile(resolve(root, fixture.fileRef));
-      knownFiles.add(fixture.fileRef);
-      actualHashes.set(fixture.fileRef, `sha256:${createHash("sha256").update(content).digest("hex")}`);
-    }
-    for (const test of [...publicTests, ...hiddenTests]) {
-      const content = await readFile(resolve(root, test.fileRef));
-      knownFiles.add(test.fileRef);
-      actualHashes.set(test.fileRef, `sha256:${createHash("sha256").update(content).digest("hex")}`);
-    }
-    const actualSymlinkOrEscapePaths = await findSymlinkOrEscape([...knownFiles]);
-    expect(actualSymlinkOrEscapePaths).toEqual(new Set());
-    for (const test of [...publicTests, ...hiddenTests]) {
-      expect(Object.keys(test).sort()).toEqual(testCaseKeys);
-      const activity = activities.find((item: any) => item.publicTestRefs.includes(test.testId) || item.hiddenTestRefs.includes(test.testId));
-      const bundle = bundles.find((item: any) => item.activity.activityId === activity.activityId);
-      expect(bindingErrors(fixturesAsset, test, activity, bundle.contract.entryPoint.argumentFixtureIds, knownFiles, actualHashes, actualSymlinkOrEscapePaths)).toEqual([]);
-    }
-
-    const baseFixture = fixturesAsset.fixtures[0];
-    const baseTest = publicTests[0];
-    const baseActivity = activities[0];
-    const args = bundles[0].contract.entryPoint.argumentFixtureIds;
-    const errorsFor = (fixturePatch: any, testPatch: any, activityPatch: any = {}) => bindingErrors(
-      { fixtures: [{ ...baseFixture, ...fixturePatch }] },
-      { ...baseTest, ...testPatch },
-      { ...baseActivity, ...activityPatch }, args, knownFiles, actualHashes,
-    );
-    expect(errorsFor({}, { fixtureRefs: [] })).toEqual([]);
-    expect(bindingErrors({ fixtures: [{ ...baseFixture }, { ...baseFixture }] }, baseTest, baseActivity, args, knownFiles, actualHashes)).toContain("duplicate_fixture_id");
-    expect(errorsFor({ extra: true }, {})).toContain("fixture_fields");
-    for (const field of fixtureKeys) {
-      const missingFixtureField = { ...baseFixture }; delete missingFixtureField[field];
-      expect(bindingErrors({ fixtures: [missingFixtureField] }, baseTest, baseActivity, args, knownFiles, actualHashes)).toContain("fixture_fields");
-    }
-    expect(errorsFor({ visibility: "hidden" }, {})).toContain("fixture_visibility");
-    expect(errorsFor({}, { extra: true })).toContain("test_fields");
-    for (const field of testCaseKeys) {
-      const missingTestField = { ...baseTest }; delete missingTestField[field];
-      expect(bindingErrors({ fixtures: [baseFixture] }, missingTestField, baseActivity, args, knownFiles, actualHashes)).toContain("test_fields");
-    }
-    expect(errorsFor({}, { fixtureRefs: [baseFixture.fixtureId, baseFixture.fixtureId] })).toContain("duplicate_fixture_ref");
-    expect(errorsFor({}, { fixtureRefs: ["missing-fixture"] })).toContain("dangling_fixture_ref");
-    expect(errorsFor({}, {}, { datasetRefs: [] })).toContain("activity_undeclared_fixture");
-    expect(errorsFor({}, {}, { datasetRefs: [baseFixture.fixtureId, baseFixture.fixtureId] })).toContain("duplicate_activity_dataset_ref");
-    expect(bindingErrors({ fixtures: [baseFixture] }, baseTest, baseActivity, [], knownFiles, actualHashes)).toContain("argument_fixture_not_allowed");
-    expect(errorsFor({ visibility: "private", fileRef: "datasets/private/orders-learning.csv" }, {})).toContain("public_test_private_fixture");
-    expect(errorsFor({ fileRef: "../orders.csv" }, {})).toContain("fixture_path");
-    expect(errorsFor({ fileRef: "..\\orders.csv" }, {})).toContain("fixture_path");
-    expect(errorsFor({ fileRef: "datasets\\..\\private\\orders.csv" }, {})).toContain("fixture_path");
-    expect(errorsFor({ visibility: "private" }, {})).toContain("fixture_visibility_path");
-    expect(errorsFor({ format: "json" }, {})).toContain("fixture_format");
-    expect(errorsFor({ fileRef: "datasets/public/missing.csv" }, {})).toContain("fixture_missing_file");
-    expect(errorsFor({ assetHash: "sha256:" + "0".repeat(64) }, {})).toContain("fixture_hash_mismatch");
-    expect(errorsFor({}, { assetHash: "0".repeat(64) })).toContain("test_hash_format");
-    expect(errorsFor({}, { fileRef: "C:/tests/test.py" })).toContain("test_path");
-    expect(errorsFor({}, { fileRef: "../test.py" })).toContain("test_path");
-    expect(errorsFor({}, { fileRef: "..\\test.py" })).toContain("test_path");
-    expect(errorsFor({}, { fileRef: "assessments\\..\\private\\test.py" })).toContain("test_path");
-    expect(errorsFor({}, { fileRef: "assessments/public/./tests/test.py" })).toContain("test_path");
-    expect(errorsFor({}, { fileRef: "assessments/private/tests/test.py" })).toContain("test_visibility_path");
-    expect(errorsFor({}, { visibility: "private" })).toContain("test_visibility");
-    expect(errorsFor({}, { fileRef: "assessments/public/tests/missing.py" })).toContain("test_missing_file");
-    expect(errorsFor({}, { assetHash: "sha256:" + "0".repeat(64) })).toContain("test_hash_mismatch");
-    const symlinkRef = "assessments/public/tests/symlink.py";
-    const symlinkFiles = new Set([...knownFiles, symlinkRef]);
-    const symlinkHashes = new Map(actualHashes).set(symlinkRef, baseTest.assetHash);
-    expect(bindingErrors({ fixtures: [baseFixture] }, { ...baseTest, fileRef: symlinkRef }, baseActivity, args, symlinkFiles, symlinkHashes, new Set([symlinkRef]))).toContain("test_symlink_traversal");
-    const fixtureSymlinkRef = "datasets/public/symlink.csv";
-    const fixtureSymlink = { ...baseFixture, fileRef: fixtureSymlinkRef };
-    const fixtureSymlinkFiles = new Set([...knownFiles, fixtureSymlinkRef]);
-    const fixtureSymlinkHashes = new Map(actualHashes).set(fixtureSymlinkRef, baseFixture.assetHash);
-    expect(bindingErrors({ fixtures: [fixtureSymlink] }, { ...baseTest, fixtureRefs: [fixtureSymlink.fixtureId] }, { ...baseActivity, datasetRefs: [fixtureSymlink.fixtureId] }, [fixtureSymlink.fixtureId], fixtureSymlinkFiles, fixtureSymlinkHashes, new Set([fixtureSymlinkRef]))).toContain("fixture_symlink_traversal");
-  });
-
-  it("keeps source records candidate-only and complete enough for owner review", async () => {
-    const registry = await json("sources/source-registry.json");
-    expect(registry.status).toBe("draft");
-    expect(registry.approval).toBe("pending_owner_decision");
-    expect(registry.sources.length).toBeGreaterThanOrEqual(9);
-    for (const source of registry.sources) {
-      expect(source).toMatchObject({
-        sourceId: expect.any(String), kind: "official", title: expect.any(String),
-        versionOrAccessDate: expect.any(String), locator: expect.any(String), license: expect.any(String),
-        excerptScope: expect.any(String), summaryHash: expect.any(String), knowledgePointIds: expect.any(Array),
-      });
-      expect(source.summaryHash).toBe("pending-build-hash");
-    }
-  });
-
-  it("provides five rubrics and preserves the practical 10/20/15/25/20/10 contract", async () => {
-    const rubricIds = ["structure", "missing", "duplicates", "types", "practical"];
-    expect(await Promise.all(rubricIds.map((id) => exists(`rubrics/rubric-${id}.json`)))).toEqual(Array(5).fill(true));
-    const practical = await json("rubrics/rubric-practical.json");
-    expect(practical.passThreshold).toBe(0.8);
-    expect(practical.dimensions.map((item: any) => item.weight)).toEqual([0.10, 0.20, 0.15, 0.25, 0.20, 0.10]);
-    expect(practical.dimensions.reduce((sum: number, item: any) => sum + item.weight, 0)).toBeCloseTo(1, 10);
-  });
-
-  it("resolves each activity's public/private tests, rubric, reference, wrong solution, and environment", async () => {
-    const activities = (await json("activities/learning-activities.json")).activities;
     const publicTests = (await json("assessments/public/test-cases.json")).tests;
     const privateTests = (await json("assessments/private/test-cases.json")).tests;
-    const publicIds = new Set(publicTests.map((item: any) => item.testId));
-    const privateIds = new Set(privateTests.map((item: any) => item.testId));
-    for (const item of [...publicTests, ...privateTests]) {
-      expect(Object.keys(item).sort()).toEqual(testCaseKeys);
-      expect(item.assetHash).toMatch(sha256Pattern);
-      expect(item.fileRef.includes("..")).toBe(false);
-      const content = await readFile(resolve(root, item.fileRef));
-      expect(`sha256:${createHash("sha256").update(content).digest("hex")}`).toBe(item.assetHash);
-    }
-    const bundles = (await json("assessments/private/task-bundles.json")).bundles;
-    const bundleManifest = await json("assessments/private/task-bundles.json");
+    const allTests = [...publicTests, ...privateTests];
+    const codeActivities = activities.filter((item: any) => ["code_completion", "coding_practical"].includes(item.kind));
+    expect(codeActivities.map((item: any) => item.activityId)).toEqual([
+      "act-inspect-dataframe", "act-missing", "act-duplicates", "act-types", "act-practical",
+    ]);
+    expect(new Set(codeActivities.flatMap((item: any) => item.knownWrongSolutionRefs)).size).toBeGreaterThanOrEqual(4);
+    const bundledActivityIds = new Set(bundles.map((item: any) => item.activity.activityId));
     expect(bundles).toHaveLength(5);
-    expect(new Set(bundles.map((item: any) => item.activity.activityId))).toEqual(new Set(activities.map((item: any) => item.activityId)));
-    expect(bundleManifest).not.toHaveProperty("datasetRegistry");
-    const fixtures = (await json("datasets/fixtures.json")).fixtures;
+    expect(bundledActivityIds).toEqual(new Set(codeActivities.map((item: any) => item.activityId)));
+    expect(Object.keys(fixturesAsset)).toEqual(["fixtures"]);
+    expect(fixturesAsset.fixtures).toHaveLength(3);
+    const fixtureById = new Map<string, any>(fixturesAsset.fixtures.map((item: any): [string, any] => [item.fixtureId, item]));
+    const knownFiles = new Set<string>();
+    for (const fixture of fixturesAsset.fixtures) {
+      expect(Object.keys(fixture).sort()).toEqual(["assetHash", "fileRef", "fixtureId", "format", "visibility"]);
+      expect(fixture.assetHash).toMatch(/^sha256:[a-f0-9]{64}$/u);
+      expect(fixture.format).toBe("csv");
+      expect(fixture.fileRef).not.toMatch(/(?:^|\/|\\)\.\.(?:\/|\\|$)/u);
+      expect(fixture.fileRef).not.toMatch(/^[A-Za-z]:|^\//u);
+      expect(fixture.fileRef.startsWith(fixture.visibility === "public" ? "datasets/public/" : "datasets/private/")).toBe(true);
+      const content = await readFile(resolve(root, fixture.fileRef));
+      expect(sha256(content)).toBe(fixture.assetHash);
+      knownFiles.add(fixture.fileRef);
+    }
+    const publicRows = (await readFile(resolve(root, "datasets/public/orders-learning.csv"), "utf8")).trim().split(/\r?\n/u);
+    const privateRows = await Promise.all(["orders-variant-01.csv", "orders-variant-02.csv"].map(async (file) =>
+      (await readFile(resolve(root, `datasets/private/${file}`), "utf8")).trim().split(/\r?\n/u),
+    ));
+    expect(publicRows).toHaveLength(31);
+    expect(privateRows.map((rows) => rows.length)).toEqual([25, 25]);
+    expect(publicRows[0]).toBe("order_id,customer_id,amount,city,order_date,status,note");
+    for (const test of allTests) {
+      expect(Object.keys(test).sort()).toEqual(testCaseKeys);
+      expect(test.assetHash).toMatch(/^sha256:[a-f0-9]{64}$/u);
+      expect(test.fileRef).not.toMatch(/(?:^|\/|\\)\.\.(?:\/|\\|$)/u);
+      expect(test.visibility === "public"
+        ? test.fileRef.startsWith("assessments/public/tests/")
+        : test.fileRef.startsWith("assessments/private/tests/")).toBe(true);
+      expect(new Set(test.fixtureRefs).size).toBe(test.fixtureRefs.length);
+      for (const fixtureId of test.fixtureRefs) expect(fixtureById.has(fixtureId)).toBe(true);
+      if (test.visibility === "public") for (const fixtureId of test.fixtureRefs) expect(fixtureById.get(fixtureId).visibility).toBe("public");
+      const content = await readFile(resolve(root, test.fileRef));
+      expect(sha256(content)).toBe(test.assetHash);
+      knownFiles.add(test.fileRef);
+    }
     for (const bundle of bundles) {
-      expect(bundle.source).toBe("profile_fixed");
-      expect(bundle.activity).toMatchObject({ activityId: expect.any(String) });
-      expect(bundle.contract).toMatchObject({
-        entryPoint: { kind: "function", name: expect.any(String), argumentFixtureIds: expect.any(Array) },
-        inputDescription: expect.any(String), output: { kind: "dataframe", comparisonRef: expect.any(String), includeIndex: false },
-        outputDescription: expect.any(String), invariants: expect.any(Array), prohibitedBehaviors: expect.any(Array),
-      });
-      expect(bundle.publicTests).toEqual(expect.any(Array));
-      expect(bundle.hiddenTests).toEqual(expect.any(Array));
-      expect(bundle.rubric).toMatchObject({ rubricId: expect.any(String), dimensions: expect.any(Array) });
-      expect(bundle.environmentRef).toBe("env-python-pandas-candidate");
-      const resolvedFixtures = fixtures.filter((item: any) => bundle.activity.datasetRefs.includes(item.fixtureId));
-      const { assetBundleHash, ...withoutHash } = bundle;
-      const actual = createHash("sha256").update(canonicalJson({ ...withoutHash, resolvedFixtures }), "utf8").digest("hex");
-      expect(actual).toBe(assetBundleHash);
-    }
-    for (const activity of activities) {
-      expect(activity.publicTestRefs.every((id: string) => publicIds.has(id))).toBe(true);
-      expect(activity.hiddenTestRefs.every((id: string) => privateIds.has(id))).toBe(true);
-      expect(await exists(`rubrics/${activity.rubricRef}.json`)).toBe(true);
+      expect(bundle.bundleId).toMatch(/^bundle-act-[a-z-]+-v2$/u);
+      expect(bundle.activity.profileRevision).toBe(2);
+      expect(bundle.activity.primaryKnowledgePointId).not.toMatch(/^kp-/u);
+      const activity = activities.find((item: any) => item.activityId === bundle.activity.activityId);
+      expect(bundle.activity).toEqual(activity);
+      expect(bundle.contract.entryPoint.name).toBe(activity.entryPoint);
+      expect(bundle.contract.entryPoint.argumentFixtureIds).toEqual(expect.arrayContaining(activity.datasetRefs));
       expect(await exists(`reference-solutions/${activity.referenceSolutionRef}.py`)).toBe(true);
-      for (const wrongRef of activity.knownWrongSolutionRefs) {
-        expect(await exists(`assessments/private/known-wrong/${wrongRef}.py`)).toBe(true);
+      for (const wrongRef of activity.knownWrongSolutionRefs) expect(await exists(`assessments/private/known-wrong/${wrongRef}.py`)).toBe(true);
+      for (const test of [...bundle.publicTests, ...bundle.hiddenTests]) {
+        const activityRef = test.visibility === "public" ? activity.publicTestRefs : activity.hiddenTestRefs;
+        expect(activityRef).toContain(test.testId);
+        expect(allTests.map((item: any) => item.testId)).toContain(test.testId);
+        expect(test.fixtureRefs.every((id: string) => activity.datasetRefs.includes(id))).toBe(true);
       }
-      expect(activity.environmentRef).toBe("env-python-pandas-candidate");
+      const { assetBundleHash, ...withoutHash } = bundle;
+      const resolvedFixtures = fixturesAsset.fixtures.filter((item: any) => activity.datasetRefs.includes(item.fixtureId));
+      expect(createHash("sha256").update(canonicalJson({ ...withoutHash, resolvedFixtures }), "utf8").digest("hex")).toBe(assetBundleHash);
     }
-    const evidence = await json("quality/c-execution-evidence.json");
-    expect(evidence.harnessVersion).toBe("b-candidate-evidence-v2");
-    expect(evidence.command).toContain("run-candidate-evidence.py");
-    expect(evidence.overallExitCode).toBe(0);
-    expect(evidence.summary).toEqual({
-      referencePassed: true,
-      allStartersRejected: true,
-      allKnownWrongRejectedByAtLeastOneTest: true,
-    });
-    expect(evidence.results.length).toBeGreaterThan(5);
-    expect(evidence.results.every((item: any) =>
-      typeof item.bundleId === "string" &&
-      typeof item.implementation === "string" &&
-      typeof item.testId === "string" &&
-      typeof item.fixtureId === "string" &&
-      Number.isInteger(item.exitCode)
-    )).toBe(true);
+    expect(knownFiles.size).toBe(14);
   });
 
-  it("scans the complete non-private candidate surface for leakage", async () => {
-    const publicPaths = await collectPublicCandidateFiles();
-    expect(publicPaths).toContain("profile.json");
-    expect(publicPaths).toContain("activities/learning-activities.json");
-    expect(publicPaths).toContain("datasets/public/orders-learning.csv");
-    expect(publicPaths).toContain("sources/source-registry.json");
-    expect(publicPaths).toContain("quality/quality-report.json");
-    expect(publicPaths).toContain("environments/environment-lock.json");
-    const publicText = (await Promise.all(publicPaths.map((path) => readFile(resolve(root, path), "utf8")))).join("\n");
+  it("records candidate evidence and keeps the data contract independently reproducible", async () => {
+    const evidence = await json("quality/c-execution-evidence.json");
+    expect(evidence).toMatchObject({
+      status: "candidate_evidence_only",
+      harnessVersion: "b-candidate-evidence-v5",
+      overallExitCode: 0,
+      summary: {
+        repeatCount: 3,
+        baselinePassed: true,
+        allBaselineRepeatsStable: true,
+        allStartersRejected: true,
+        allKnownWrongRejectedPerFixture: true,
+      },
+    });
+    expect(evidence.summary.baselineOutputCount).toBeGreaterThanOrEqual(9);
+    expect(Object.keys(evidence.baselineOutputFingerprints).length).toBe(evidence.summary.baselineOutputCount);
+    expect(Object.values(evidence.baselineRepeatFingerprints).every((fingerprints: any) =>
+      fingerprints.length === 3 && fingerprints.every((fingerprint: string) => fingerprint === fingerprints[0]))).toBe(true);
+    expect(evidence.results.length).toBeGreaterThan(60);
+    expect(evidence.results.every((item: any) => typeof item.bundleId === "string" && Number.isInteger(item.exitCode))).toBe(true);
+    const baselineResults = evidence.results.filter((item: any) => item.implementation === "baseline");
+    expect(baselineResults.length).toBeGreaterThan(0);
+    expect(baselineResults.every((item: any) => typeof item.outputFingerprint === "string")).toBe(true);
+    const wrongResults = evidence.results.filter((item: any) => item.implementation === "known_wrong:wrong-practical");
+    expect(wrongResults.length).toBeGreaterThanOrEqual(3);
+    expect(wrongResults.every((item: any) => item.exitCode !== 0)).toBe(true);
+    expect(JSON.stringify(evidence)).not.toMatch(/assessments\/private\/|datasets\/private\/|reference-solutions\/|hidden/u);
+    expect(evidence.limitations.join(" ")).toContain("C executes V2-3");
+  });
+
+  it("validates the 20 development and 60 final input-only persona cases", async () => {
+    const readJsonl = async (path: string) => (await readFile(resolve("..", path), "utf8"))
+      .trim().split(/\r?\n/u).map((line) => JSON.parse(line));
+    const development = await readJsonl("evaluation/personas/development-20.jsonl");
+    const final = await readJsonl("evaluation/personas/final-60.jsonl");
+    const questions = await json("assessments/diagnostic/questions.json");
+    const questionById = new Map<string, any>(questions.questions.map((item: any): [string, any] => [item.questionId, item]));
+    const validKinds = new Set(["cs_student", "self_learner", "practice_oriented"]);
+    const validate = (cases: any[], prefix: string) => {
+      expect(cases.length).toBe(prefix === "dev" ? 20 : 60);
+      expect(new Set(cases.map((item) => item.caseId)).size).toBe(cases.length);
+      for (const item of cases) {
+        expect(Object.keys(item).sort()).toEqual(["availableMinutes", "background", "caseId", "diagnosticAnswers", "goalId", "notes", "personaType"]);
+        expect(item.caseId).toMatch(new RegExp(`^${prefix}-\\d{3}$`, "u"));
+        expect(validKinds.has(item.personaType)).toBe(true);
+        expect(item.goalId).toBe("goal-clean-orders");
+        expect(Number.isInteger(item.availableMinutes)).toBe(true);
+        expect(item.availableMinutes).toBeGreaterThan(0);
+        expect(item.background.every((field: any) => Object.keys(field).sort().join(",") === "fieldId,value")).toBe(true);
+        expect(item.diagnosticAnswers).toHaveLength(8);
+        expect(new Set(item.diagnosticAnswers.map((answer: any) => answer.questionId)).size).toBe(8);
+        for (const answer of item.diagnosticAnswers) {
+          const question = questionById.get(answer.questionId);
+          expect(question).toBeDefined();
+          if (answer.action === "skip") expect(Object.keys(answer).sort()).toEqual(["action", "questionId"]);
+          else {
+            expect(Object.keys(answer).sort()).toEqual(["action", "answer", "questionId"]);
+            if (question.kind === "single_choice") expect(question.options).toContain(answer.answer);
+            else expect(typeof answer.answer).toBe("boolean");
+          }
+        }
+        expect(JSON.stringify(item)).not.toMatch(/(?:systemPath|recommend|gold|buildPath|absolute|C:\\\\|\/home\/)/iu);
+      }
+    };
+    validate(development, "dev");
+    validate(final, "final");
+    expect(new Set(final.slice(0, 20).map((item) => item.personaType))).toEqual(new Set(["cs_student"]));
+    expect(new Set(final.slice(20, 40).map((item) => item.personaType))).toEqual(new Set(["self_learner"]));
+    expect(new Set(final.slice(40, 60).map((item) => item.personaType))).toEqual(new Set(["practice_oriented"]));
+  });
+
+  it("keeps all answer keys and private execution material out of the public candidate surface", async () => {
+    const paths = await publicCandidateFiles();
+    expect(paths).toContain("profile.json");
+    expect(paths).toContain("sources/source-map.json");
+    expect(paths).toContain("assessments/diagnostic/questions.json");
+    expect(paths).not.toContain("sources/source-registry.json");
+    expect(paths.some((path) => path.includes("/private/"))).toBe(false);
+    expect(paths.some((path) => path.startsWith("reference-solutions/"))).toBe(false);
+    expect(paths.some((path) => path.startsWith("rubrics/"))).toBe(false);
+    expect(paths.some((path) => path.startsWith("datasets/private/"))).toBe(false);
+    const publicText = (await Promise.all(paths.map((path) => readFile(resolve(root, path), "utf8")))).join("\n");
     for (const forbidden of [
-      "correctOptionIndex", "private-case-", "passThreshold", "safeFeedbackCodes",
-      "CITY_MAP =", "VALID_STATUS =", "BEGIN PRIVATE KEY", "BEGIN OPENSSH PRIVATE KEY",
+      "correctAnswer", "correctOptionIndex", "private-case-", "BEGIN PRIVATE KEY", "BEGIN OPENSSH PRIVATE KEY",
       "C:\\Users\\", "/home/",
-    ]) {
-      expect(publicText).not.toContain(forbidden);
-    }
-    expect(publicText).not.toMatch(/\b(?:api[_-]?key|access[_-]?token|client[_-]?secret)\s*[:=]\s*["'][^"']+/iu);
-    expect(publicPaths.some((path) => path.includes("/private/"))).toBe(false);
-    expect(publicPaths.some((path) => path.startsWith("reference-solutions/"))).toBe(false);
-    expect(publicPaths.some((path) => path.startsWith("rubrics/"))).toBe(false);
-    expect(publicPaths.some((path) => path.startsWith("datasets/private/"))).toBe(false);
-    expect(await exists("assessments/public/test-cases.json")).toBe(true);
-    expect(await exists("assessments/private/test-cases.json")).toBe(true);
-    expect(await exists("reference-solutions/solution-practical.py")).toBe(true);
-    expect(await exists("rubrics/rubric-practical.json")).toBe(true);
+    ]) expect(publicText).not.toContain(forbidden);
   });
 });

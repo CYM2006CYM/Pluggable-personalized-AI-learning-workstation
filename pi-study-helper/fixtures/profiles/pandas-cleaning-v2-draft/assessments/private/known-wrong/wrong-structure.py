@@ -1,2 +1,2 @@
-def clean_orders(df):
+def inspect_orders(df):
     return df.sort_values("order_id")

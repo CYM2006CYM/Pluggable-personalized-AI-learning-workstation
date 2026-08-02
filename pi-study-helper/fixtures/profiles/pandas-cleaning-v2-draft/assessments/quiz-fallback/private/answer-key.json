@@ -1,1 +1,10 @@
-{"visibility":"private","answers":[{"questionId":"fallback-missing-01","correctOptionIndex":0},{"questionId":"fallback-duplicates-01","correctOptionIndex":0}]}
+{
+  "visibility": "private",
+  "profileRevision": 2,
+  "answers": [
+    {"questionId":"fallback-basic-python-01","correctOptionIndex":0},
+    {"questionId":"fallback-read-csv-01","correctOptionIndex":0},
+    {"questionId":"fallback-missing-01","correctOptionIndex":0},
+    {"questionId":"fallback-duplicates-01","correctOptionIndex":0}
+  ]
+}

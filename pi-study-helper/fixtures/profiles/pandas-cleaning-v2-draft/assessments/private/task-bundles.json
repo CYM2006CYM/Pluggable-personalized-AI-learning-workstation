@@ -13,36 +13,37 @@
   },
   "bundles": [
     {
-      "bundleId": "bundle-act-structure-v1",
+      "bundleId": "bundle-act-inspect-dataframe-v2",
       "source": "profile_fixed",
       "activity": {
-        "activityId": "act-structure",
-        "profileRevision": 1,
+        "activityId": "act-inspect-dataframe",
+        "profileRevision": 2,
         "kind": "code_completion",
         "allowedSources": [
           "profile_fixed"
         ],
-        "primaryKnowledgePointId": "kp-structure",
-        "supportingKnowledgePointIds": [],
+        "primaryKnowledgePointId": "pandas.clean.inspect-dataframe",
+        "supportingKnowledgePointIds": [
+          "pandas.clean.read-csv"
+        ],
         "goalIds": [
           "goal-clean-orders"
         ],
-        "title": "补全读取与列结构检查",
-        "prompt": "补全 clean_orders 的读取和固定列选择步骤。",
+        "title": "补全列结构检查",
+        "prompt": "补全固定七列选择与列序检查步骤。",
         "difficulty": "S-U",
         "estimatedMinutes": 15,
         "sourceAnchorIds": [
-          "src-pandas-read-csv",
           "src-pandas-dtypes"
         ],
-        "templateVersion": "1.0.0-draft",
+        "templateVersion": "2.0.0-draft",
         "leakagePolicyId": "policy-no-private-assets",
         "runtimePolicyId": "python-pandas-candidate",
         "allowedScaffolds": [
           "hint",
           "worked_example"
         ],
-        "starterCode": "def clean_orders(df):\n    # TODO_BEGIN\n    clean_df = df.copy()\n    # TODO_END\n    return clean_df\n",
+        "starterCode": "def inspect_orders(df):\n    # TODO_BEGIN\n    clean_df = df.copy()\n    # TODO_END\n    return clean_df\n",
         "editableRegions": [
           {
             "regionId": "region-main",
@@ -52,8 +53,8 @@
             "maxCharacters": 2000
           }
         ],
-        "entryPoint": "clean_orders",
-        "outputContract": "返回恰好七列且列序固定的DataFrame。",
+        "entryPoint": "inspect_orders",
+        "outputContract": "返回恰好七列且列序固定的 DataFrame。",
         "datasetRefs": [
           "dataset-public-orders"
         ],
@@ -76,7 +77,7 @@
       "contract": {
         "entryPoint": {
           "kind": "function",
-          "name": "clean_orders",
+          "name": "inspect_orders",
           "argumentFixtureIds": [
             "dataset-public-orders"
           ]
@@ -109,7 +110,7 @@
           ],
           "dimensionId": "structure",
           "blocking": true,
-          "assetHash": "sha256:d3e1121ba3ee2661e7b3859cc68514f7ee807c22c39ad3d1d9a33f9d0a1f501d"
+          "assetHash": "sha256:eca54fb129f63799fd2290d2ab13f6d1f0258894357fb656ff68c1e1e02c3ef1"
         }
       ],
       "hiddenTests": [
@@ -122,7 +123,7 @@
           ],
           "dimensionId": "structure",
           "blocking": true,
-          "assetHash": "sha256:4729487ecd0a3e8570ae30f91ff7bae29a61bb444659350455a7ee52f580afb1"
+          "assetHash": "sha256:935f988b1d21ebd927fec8015328599376ca0ce05be593130130c9ede7c4dc4e"
         }
       ],
       "rubric": {
@@ -145,33 +146,33 @@
         ]
       },
       "environmentRef": "env-python-pandas-candidate",
-      "assetBundleHash": "229fdd197eaa3e8e3a02f25a04093985dd01ff7f0b9cc053d33f80241ca2eb7a"
+      "assetBundleHash": "a70b6bd8e1672210807b47f5607b59d72afd9abaf7589ef61a2abb796c02699b"
     },
     {
-      "bundleId": "bundle-act-missing-v1",
+      "bundleId": "bundle-act-missing-v2",
       "source": "profile_fixed",
       "activity": {
         "activityId": "act-missing",
-        "profileRevision": 1,
+        "profileRevision": 2,
         "kind": "code_completion",
         "allowedSources": [
           "profile_fixed"
         ],
-        "primaryKnowledgePointId": "kp-missing",
+        "primaryKnowledgePointId": "pandas.clean.missing-values",
         "supportingKnowledgePointIds": [
-          "kp-structure"
+          "pandas.clean.inspect-dataframe"
         ],
         "goalIds": [
           "goal-clean-orders"
         ],
         "title": "补全按列缺失处理",
-        "prompt": "按冻结规则处理order_id、customer_id、amount、order_date和note缺失。",
+        "prompt": "按冻结规则处理 order_id、customer_id、amount、order_date 和 note 缺失。",
         "difficulty": "M-U",
         "estimatedMinutes": 20,
         "sourceAnchorIds": [
           "src-pandas-missing-data"
         ],
-        "templateVersion": "1.0.0-draft",
+        "templateVersion": "2.0.0-draft",
         "leakagePolicyId": "policy-no-private-assets",
         "runtimePolicyId": "python-pandas-candidate",
         "allowedScaffolds": [
@@ -189,7 +190,7 @@
           }
         ],
         "entryPoint": "clean_missing",
-        "outputContract": "仅缺失order_id删除行，其余列按合同保留或转换。",
+        "outputContract": "仅缺失 order_id 删除行，其余列按合同保留或转换。",
         "datasetRefs": [
           "dataset-public-orders"
         ],
@@ -281,21 +282,21 @@
         ]
       },
       "environmentRef": "env-python-pandas-candidate",
-      "assetBundleHash": "f1cb5fe62336b8efa1416d44b58d2ff4b925486d05ebca6bc792d4c947634c14"
+      "assetBundleHash": "ae22167b89402d4efb9541cf21745d5db71f6b5ce0d336df19b5aec1eaf51356"
     },
     {
-      "bundleId": "bundle-act-duplicates-v1",
+      "bundleId": "bundle-act-duplicates-v2",
       "source": "profile_fixed",
       "activity": {
         "activityId": "act-duplicates",
-        "profileRevision": 1,
+        "profileRevision": 2,
         "kind": "code_completion",
         "allowedSources": [
           "profile_fixed"
         ],
-        "primaryKnowledgePointId": "kp-duplicates",
+        "primaryKnowledgePointId": "pandas.clean.duplicate-orders",
         "supportingKnowledgePointIds": [
-          "kp-structure"
+          "pandas.clean.inspect-dataframe"
         ],
         "goalIds": [
           "goal-clean-orders"
@@ -308,7 +309,7 @@
           "src-pandas-duplicates",
           "src-pandas-sort-values"
         ],
-        "templateVersion": "1.0.0-draft",
+        "templateVersion": "2.0.0-draft",
         "leakagePolicyId": "policy-no-private-assets",
         "runtimePolicyId": "python-pandas-candidate",
         "allowedScaffolds": [
@@ -326,7 +327,7 @@
           }
         ],
         "entryPoint": "deduplicate_orders",
-        "outputContract": "order_id唯一且保留被选记录的原始相对顺序。",
+        "outputContract": "order_id 唯一且保留被选记录的原始相对顺序。",
         "datasetRefs": [
           "dataset-public-orders"
         ],
@@ -420,21 +421,21 @@
         ]
       },
       "environmentRef": "env-python-pandas-candidate",
-      "assetBundleHash": "ba8f36281b83aa007753d96de3f19c08a9b223a0b059aed67ff5c5790ab9473e"
+      "assetBundleHash": "51d185bff1a5c7c0180f1df98f8e65cabe8661e5ceb6f18100a859931ae8d990"
     },
     {
-      "bundleId": "bundle-act-types-v1",
+      "bundleId": "bundle-act-types-v2",
       "source": "profile_fixed",
       "activity": {
         "activityId": "act-types",
-        "profileRevision": 1,
+        "profileRevision": 2,
         "kind": "code_completion",
         "allowedSources": [
           "profile_fixed"
         ],
-        "primaryKnowledgePointId": "kp-types",
+        "primaryKnowledgePointId": "pandas.clean.type-format",
         "supportingKnowledgePointIds": [
-          "kp-missing"
+          "pandas.clean.missing-values"
         ],
         "goalIds": [
           "goal-clean-orders"
@@ -448,7 +449,7 @@
           "src-pandas-to-datetime",
           "src-pandas-string"
         ],
-        "templateVersion": "1.0.0-draft",
+        "templateVersion": "2.0.0-draft",
         "leakagePolicyId": "policy-no-private-assets",
         "runtimePolicyId": "python-pandas-candidate",
         "allowedScaffolds": [
@@ -466,7 +467,7 @@
           }
         ],
         "entryPoint": "normalize_types",
-        "outputContract": "金额为数值、日期无时区、字符串为StringDtype且业务取值合法。",
+        "outputContract": "金额为数值、日期无时区、字符串为 StringDtype 且业务取值合法。",
         "datasetRefs": [
           "dataset-public-orders"
         ],
@@ -527,7 +528,7 @@
           ],
           "dimensionId": "types",
           "blocking": true,
-          "assetHash": "sha256:2fef6131b9cf9b518aeb9d90f079b7de689fe5d3961cc06baeb1a78d338bd905"
+          "assetHash": "sha256:b995f2e36844821afb1d30ba4d3efae72732072a0a0d3f7985056955e40748e6"
         }
       ],
       "hiddenTests": [
@@ -565,31 +566,31 @@
         ]
       },
       "environmentRef": "env-python-pandas-candidate",
-      "assetBundleHash": "ebe24e73ee621b40d0e29186cd2b13c56ff28d79b2fdc510d7e36558022bbc83"
+      "assetBundleHash": "ea8565b66ad4afb4927714a8937379343d3382e9cd84c3635d1b5553f48ae968"
     },
     {
-      "bundleId": "bundle-act-practical-v1",
+      "bundleId": "bundle-act-practical-v2",
       "source": "profile_fixed",
       "activity": {
         "activityId": "act-practical",
-        "profileRevision": 1,
+        "profileRevision": 2,
         "kind": "coding_practical",
         "allowedSources": [
           "profile_fixed"
         ],
-        "primaryKnowledgePointId": "kp-invariants",
+        "primaryKnowledgePointId": "pandas.clean.validate-result",
         "supportingKnowledgePointIds": [
-          "kp-structure",
-          "kp-missing",
-          "kp-duplicates",
-          "kp-types",
-          "kp-engineering"
+          "pandas.clean.read-csv",
+          "pandas.clean.inspect-dataframe",
+          "pandas.clean.missing-values",
+          "pandas.clean.duplicate-orders",
+          "pandas.clean.type-format"
         ],
         "goalIds": [
           "goal-clean-orders"
         ],
         "title": "独立完成订单清洗",
-        "prompt": "实现clean_orders并满足完整七列业务契约和结果不变量。",
+        "prompt": "实现 clean_orders 并满足完整七列业务合同和结果不变量。",
         "difficulty": "C-A",
         "estimatedMinutes": 60,
         "sourceAnchorIds": [
@@ -600,7 +601,7 @@
           "src-pandas-to-datetime",
           "src-pandas-testing"
         ],
-        "templateVersion": "1.0.0-draft",
+        "templateVersion": "2.0.0-draft",
         "leakagePolicyId": "policy-no-private-assets",
         "runtimePolicyId": "python-pandas-candidate",
         "allowedScaffolds": [
@@ -618,7 +619,7 @@
           }
         ],
         "entryPoint": "clean_orders",
-        "outputContract": "返回满足七列、缺失、去重、dtype与行序不变量的clean_df。",
+        "outputContract": "返回满足七列、缺失、去重、dtype 与行序不变量的 clean_df。",
         "datasetRefs": [
           "dataset-public-orders",
           "dataset-private-variant-01",
@@ -642,9 +643,9 @@
         ],
         "businessAcceptanceCriteria": [
           "固定七列和顺序",
-          "order_id非空且唯一",
-          "金额和日期dtype符合环境锁",
-          "字符串列使用StringDtype",
+          "order_id 非空且唯一",
+          "金额和日期 dtype 符合环境锁",
+          "字符串列使用 StringDtype",
           "保持被选记录原始相对顺序"
         ]
       },
@@ -715,7 +716,7 @@
           ],
           "dimensionId": "engineering",
           "blocking": false,
-          "assetHash": "sha256:fd901d2cb955083a880cfa5c72248350252a8a5b3ba7d548a81b537fab1d2127"
+          "assetHash": "sha256:e501c858969bd6ccefaf21585ad125fc7a26dc9a178b6c09cc52e16137ba5cd1"
         }
       ],
       "rubric": {
@@ -790,7 +791,7 @@
         ]
       },
       "environmentRef": "env-python-pandas-candidate",
-      "assetBundleHash": "509bf70cdfcf49f10c2a5ec53a8c8ceaa08753d57f0bf4b5b98155c92efcb0aa"
+      "assetBundleHash": "4f171e1c8788f110b8722aae9507f1c54c306ae7a7607fd6f3f8cc7fbcf731fb"
     }
   ]
 }
