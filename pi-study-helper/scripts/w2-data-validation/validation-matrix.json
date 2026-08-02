@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 2,
+  "contract": {"primary": "W2-C2", "hash": "W2-R5"},
+  "status": "formal_binding_pass",
+  "formalBinding": {
+    "commit": "fa26097e46a72a2826d960a7e1934a8885098112",
+    "manifestEntries": 67,
+    "assetTreeSha256": "07fb50caf5cfd646654cedf5c038f836bbbede912c6034f4e3523deaf77183ab",
+    "final60Sha256": "b77ba4902003ba20bc5b233c4797838eb26325d1b38fd02bc68ba02206cb1d1c",
+    "manifestJcsSha256": "39a16ca7e2d7af92b327f7417d0732e79a30ea16826b08c44bf3b26c3b4ddc3b",
+    "diagnosticSummaryJcsSha256": "a6000080559dbc9a12f269f8d0bd8b10d9dfd1835cdf57fda0c33939ece11e88",
+    "d4ReportNormalizedSha256": "d945c2456d001f4e62252d3e425b96df1c5f34dc4e161a9d56fd3932760ad014"
+  },
+  "datasets": {"public": {"required": true, "repeatCount": 3}, "private": {"required": 2, "optional": 1, "repeatCount": 3}},
+  "cleanDfChecks": ["columns", "columnOrder", "businessRowOrder", "dtype", "missingPositions", "numericTolerance"],
+  "knownWrongImplementations": {"minimum": 4, "observed": 5, "allMustBeRejected": true},
+  "classifications": ["b_asset_defect", "c_validator_defect", "windows_noise", "future_prototype"],
+  "scope": {"v2_7": "excluded", "v2_8": "excluded", "goldFreeze": "excluded", "profileActive": "excluded"},
+  "upload": {"performed": false, "lockRequested": false, "bAssetsModified": false}
+}

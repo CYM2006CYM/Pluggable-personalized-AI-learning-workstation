@@ -1,0 +1,15 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+const file = path.join(path.dirname(fileURLToPath(import.meta.url)), 'validation-matrix.json');
+const matrix = JSON.parse(fs.readFileSync(file, 'utf8'));
+const fail = message => { console.error(`BLOCKED: ${message}`); process.exitCode = 1; };
+if (matrix.contract?.primary !== 'W2-C2' || matrix.contract?.hash !== 'W2-R5') fail('contract version');
+if (matrix.status !== 'formal_binding_pass') fail('final status');
+if (matrix.formalBinding?.manifestEntries !== 67 || !matrix.formalBinding?.commit) fail('formal binding');
+if (matrix.datasets?.public?.repeatCount !== 3 || matrix.datasets?.private?.repeatCount !== 3) fail('three-run rule');
+if (matrix.datasets?.private?.required < 2) fail('private slots');
+if (!Array.isArray(matrix.cleanDfChecks) || matrix.cleanDfChecks.length < 6) fail('clean_df checks');
+if ((matrix.knownWrongImplementations?.minimum ?? 0) < 4 || !matrix.knownWrongImplementations.allMustBeRejected) fail('known-wrong rule');
+if (matrix.upload?.performed || matrix.upload?.lockRequested || matrix.upload?.bAssetsModified) fail('upload discipline');
+if (!process.exitCode) console.log('validation-matrix: PASS (W2-C2/W2-R5, formal_binding_pass, no upload)');
