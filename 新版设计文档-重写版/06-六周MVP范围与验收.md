@@ -448,7 +448,7 @@ A完成路径第一阶段；B冻结TaskBundle
 - 学习者错误与评测器错误分类、Node执行器实测开发期限制；
 - HTTP安全DTO、核心公共类型和接口，此后只允许向后兼容修正；
 - 60个正式案例gold全部双标完成并登记哈希；
-- Node正式提交环境状态可使用`measured_node_submit`；Node、Python、Pandas和限制值必须来自C原型证据并由负责人在D2批准。Pyodide仍待W5验证。
+- Node正式提交环境状态可使用`measured_node_submit`；Node、Python、Pandas和限制值必须来自C原型证据并由负责人在D2批准。2026-08-08负责人已以[W3-D40-ENV-1](./第三周任务/W3-D2-负责人Node环境裁决.md)批准C的D1实测Node正式提交值；Pyodide、可靠内存限制、网络隔离和`measured_dual_backend`均未获批准。
 - Pandas revision 2只能由负责人批准后通过仓储事务从`draft`激活，禁止手工移动或改写active目录；新会话只消费实际active revision。
 
 ### 8.4 本周交付物
