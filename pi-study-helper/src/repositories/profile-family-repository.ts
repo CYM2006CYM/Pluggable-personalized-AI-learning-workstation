@@ -7,6 +7,8 @@ import {
   parseProfileManifest,
   validateCanonicalProfileDirectory,
 } from "../domain/profile-schema.js";
+import { validateProfileV2Directory } from "../domain/profile-v2-schema.js";
+import type { ProfileManifestV2 } from "../domain/v2-types.js";
 import type { Profile } from "../domain/types.js";
 import type { ProfileRevisionChange, ProfileFileSnapshot } from "../domain/profile-revision.js";
 import { isMutableProfileContentPath } from "../domain/profile-revision.js";
@@ -129,6 +131,53 @@ export class ProfileFamilyRepository {
 
   async loadActiveProfile(subjectId: string): Promise<Profile> {
     return validateCanonicalProfileDirectory(this.slotDirectory(subjectId, "active"), subjectId, "active");
+  }
+
+  /** D1 read-only v2 projection. It does not alter the v1 Profile API. */
+  async loadActiveProfileV2(subjectId: string): Promise<ProfileManifestV2> {
+    return validateProfileV2Directory(this.slotDirectory(subjectId, "active"), "active");
+  }
+
+  /** Read a v2 asset without exposing the profile directory to callers. */
+  async readActiveProfileV2File(subjectId: string, relativePath: string): Promise<string> {
+    assertSafeRelativePath(relativePath);
+    const active = this.slotDirectory(subjectId, "active");
+    await validateProfileV2Directory(active, "active");
+    return readFile(resolveInside(active, relativePath), "utf8");
+  }
+
+  /** Resolves the immutable revision bound to a formal session from active or archived assets only. */
+  async profileV2RevisionDirectory(subjectId: string, revision: number): Promise<string> {
+    assertSafeSubjectId(subjectId);
+    if (!Number.isInteger(revision) || revision < 1) throw new Error("profileRevision must be positive");
+    const candidates: Array<{ directory: string; status: "active" | "archived" }> = [
+      { directory: this.slotDirectory(subjectId, "active"), status: "active" },
+    ];
+    const archived = resolveInside(this.familyDirectory(subjectId), "archived");
+    if (await pathExists(archived)) {
+      const entries = await readdir(archived, { withFileTypes: true });
+      for (const entry of entries) if (entry.isDirectory()) candidates.push({ directory: resolveInside(archived, entry.name), status: "archived" });
+    }
+    for (const candidate of candidates) {
+      if (!(await pathExists(candidate.directory))) continue;
+      try {
+        const manifest = await validateProfileV2Directory(candidate.directory, candidate.status);
+        if (manifest.subjectId === subjectId && manifest.revision === revision) return candidate.directory;
+      } catch {
+        // A v1 family member or invalid historical copy cannot satisfy a v2 session binding.
+      }
+    }
+    throw new Error(`Profile v2 revision ${revision} is not available for ${subjectId}`);
+  }
+
+  async loadProfileV2Revision(subjectId: string, revision: number): Promise<ProfileManifestV2> {
+    return validateProfileV2Directory(await this.profileV2RevisionDirectory(subjectId, revision));
+  }
+
+  async readProfileV2RevisionFile(subjectId: string, revision: number, relativePath: string): Promise<string> {
+    assertSafeRelativePath(relativePath);
+    const directory = await this.profileV2RevisionDirectory(subjectId, revision);
+    return readFile(resolveInside(directory, relativePath), "utf8");
   }
 
   async loadDraftProfile(subjectId: string): Promise<Profile> {

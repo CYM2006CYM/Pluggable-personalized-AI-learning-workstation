@@ -17,14 +17,25 @@ import type {
   GetSessionSnapshotInput,
   LatestCommitMarker,
   LearningSessionRepository,
+  PathSafeSnapshot,
   RecoverySnapshot,
   RecoverLearningSessionInput,
   SessionSnapshot,
 } from "./learning-session-repository.js";
+import {
+  toPathSafeSnapshot,
+  type InternalPathSessionPort,
+  type InternalPersistedPathSnapshot,
+} from "./internal-path-session-port.js";
 
-interface StoredSnapshot extends SessionSnapshot {
+interface StoredSnapshot extends Omit<SessionSnapshot, "path"> {
+  path?: PathSafeSnapshot;
+  /** Full deterministic path state is never reconstructed from the public safe DTO. */
+  internalPath?: InternalPersistedPathSnapshot;
   createRequestId: string;
   createInputHash: string;
+  /** Private immutable history; it is deliberately not exposed by the Facade DTO. */
+  pathHistory?: InternalPersistedPathSnapshot[];
 }
 
 interface StoredCommitResult {
@@ -40,6 +51,8 @@ interface PreparedTransaction {
   snapshot: StoredSnapshot;
   response: CommittedSessionSnapshot;
   evidenceToPublish: Evidence[];
+  archivedPathsToPublish: InternalPersistedPathSnapshot[];
+  internalPathCandidate?: InternalPersistedPathSnapshot;
 }
 
 export interface FileLearningSessionRepositoryOptions {
@@ -78,6 +91,64 @@ function sameValue(left: unknown, right: unknown): boolean {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isPathSafeCandidate(value: unknown): value is PathSafeSnapshot {
+  if (!isRecord(value) || typeof value.pathId !== "string" || typeof value.pathVersion !== "number"
+      || !Number.isInteger(value.pathVersion) || value.pathVersion < 1
+      || !["candidate", "confirmed", "active", "superseded", "completed"].includes(String(value.status))
+      || typeof value.goalId !== "string" || !["recommended", "chapter"].includes(String(value.mode))
+      || !Array.isArray(value.nodes)) return false;
+  return true;
+}
+
+function validatePublicPathCandidate(value: unknown): PathSafeSnapshot {
+  if (!isPathSafeCandidate(value)) {
+    throw new LearningSessionRepositoryError("evidence_invalid", "PathSafeSnapshot is structurally invalid");
+  }
+  const safe = value;
+  const nodeIds = new Set<string>();
+  const knowledgePointIds = new Set<string>();
+  const nodes = safe.nodes.map((node) => {
+    if (!isRecord(node) || typeof node.nodeId !== "string" || typeof node.knowledgePointId !== "string"
+        || !Array.isArray(node.activityIds) || node.activityIds.length === 0
+        || node.activityIds.some((id) => typeof id !== "string" || id.length === 0)
+        || !["locked", "available", "in_progress", "completed", "skipped"].includes(String(node.status))
+        || !Number.isInteger(node.estimatedMinutes) || node.estimatedMinutes < 0
+        || !Array.isArray(node.reasonCodes) || node.reasonCodes.some((reason) => typeof reason !== "string")) {
+      throw new LearningSessionRepositoryError("evidence_invalid", "PathSafeSnapshot node is structurally invalid");
+    }
+    if (nodeIds.has(node.nodeId) || knowledgePointIds.has(node.knowledgePointId)) {
+      throw new LearningSessionRepositoryError("evidence_invalid", "PathSafeSnapshot node identifiers must be unique");
+    }
+    nodeIds.add(node.nodeId);
+    knowledgePointIds.add(node.knowledgePointId);
+    return {
+      nodeId: node.nodeId,
+      knowledgePointId: node.knowledgePointId,
+      activityIds: [...node.activityIds],
+      status: node.status,
+      estimatedMinutes: node.estimatedMinutes,
+      reasonCodes: [...node.reasonCodes],
+    };
+  });
+  return {
+    pathId: safe.pathId,
+    pathVersion: safe.pathVersion,
+    status: safe.status,
+    goalId: safe.goalId,
+    mode: safe.mode,
+    nodes,
+  };
+}
+
+function commitIdentity(
+  input: CommitLearningSessionInput,
+  internalPathCandidate?: InternalPersistedPathSnapshot,
+): unknown {
+  return internalPathCandidate === undefined
+    ? { input }
+    : { input, internalPathCandidate };
 }
 
 const EVIDENCE_KINDS = new Set(["diagnostic", "mcq", "code_completion", "coding_practical", "explain", "debug", "legacy", "interaction"]);
@@ -158,6 +229,86 @@ function validateKnowledgeStates(states: readonly KnowledgeState[], input: Commi
   }
 }
 
+function validatePathCandidate(
+  path: InternalPersistedPathSnapshot | undefined,
+  current: StoredSnapshot,
+  input: CommitLearningSessionInput,
+  evidenceVersion: number,
+): void {
+  if (path === undefined) return;
+  if (path.sessionId !== input.sessionId || path.profileRevision !== input.profileRevision || path.evidenceVersion !== evidenceVersion) {
+    throw new LearningSessionRepositoryError("path_version_conflict", "Path candidate does not match the current session snapshot");
+  }
+  if (path.engineVersion !== "path-engine-v1" || path.pathId.length === 0
+      || !Number.isInteger(path.pathVersion) || path.pathVersion < 1
+      || !Number.isInteger(path.availableMinutes) || path.availableMinutes < 1
+      || !Number.isInteger(path.estimatedMinutes) || path.estimatedMinutes < 0
+      || !Array.isArray(path.nodes) || !Array.isArray(path.positionLockedNodeIds)
+      || !Array.isArray(path.changeReasons) || !Number.isFinite(Date.parse(path.createdAt))) {
+    throw new LearningSessionRepositoryError("evidence_invalid", "Path candidate is structurally invalid");
+  }
+  const nodeIds = new Set<string>();
+  for (const node of path.nodes) {
+    if (!node.nodeId || !node.knowledgePointId || nodeIds.has(node.nodeId)
+        || !Array.isArray(node.activityIds) || node.activityIds.length === 0
+        || node.activityIds.some((id) => typeof id !== "string" || id.length === 0)
+        || !Number.isInteger(node.estimatedMinutes) || node.estimatedMinutes < 1
+        || !Array.isArray(node.reasonCodes)) {
+      throw new LearningSessionRepositoryError("evidence_invalid", "Path node is structurally invalid");
+    }
+    nodeIds.add(node.nodeId);
+  }
+  if (!["candidate", "active"].includes(path.status)) {
+    throw new LearningSessionRepositoryError("path_version_conflict", "Only candidate and active paths may be published");
+  }
+  const existing = current.internalPath;
+  if (existing === undefined) {
+    if (path.pathVersion !== 1 || path.status !== "candidate") {
+      throw new LearningSessionRepositoryError("path_version_conflict", "First path must be version 1 candidate");
+    }
+    return;
+  }
+  if (path.pathVersion === existing.pathVersion && path.pathId === existing.pathId) {
+    if (existing.status !== "candidate" || path.status !== "active") {
+      throw new LearningSessionRepositoryError("path_version_conflict", "Only the current candidate path may be confirmed");
+    }
+    const normalize = (value: InternalPersistedPathSnapshot) => ({ ...value, status: "candidate" });
+    if (!sameValue(normalize(path), normalize(existing))) {
+      throw new LearningSessionRepositoryError("path_version_conflict", "Confirmed path differs from the persisted candidate");
+    }
+    return;
+  }
+  if (existing.status !== "active" || path.pathVersion !== existing.pathVersion + 1 || path.status !== "active") {
+    throw new LearningSessionRepositoryError("path_version_conflict", "Replacement path version is invalid");
+  }
+}
+
+function validatePublicPathLifecycle(path: PathSafeSnapshot, current: StoredSnapshot): void {
+  if (!["candidate", "active"].includes(path.status)) {
+    throw new LearningSessionRepositoryError("path_version_conflict", "Only candidate and active paths may be published");
+  }
+  const existing = current.path;
+  if (existing === undefined) {
+    if (path.pathVersion !== 1 || path.status !== "candidate") {
+      throw new LearningSessionRepositoryError("path_version_conflict", "First path must be version 1 candidate");
+    }
+    return;
+  }
+  if (path.pathVersion === existing.pathVersion && path.pathId === existing.pathId) {
+    if (existing.status !== "candidate" || path.status !== "active") {
+      throw new LearningSessionRepositoryError("path_version_conflict", "Only the current candidate path may be confirmed");
+    }
+    const normalize = (value: PathSafeSnapshot) => ({ ...value, status: "candidate" });
+    if (!sameValue(normalize(path), normalize(existing))) {
+      throw new LearningSessionRepositoryError("path_version_conflict", "Confirmed path differs from the persisted candidate");
+    }
+    return;
+  }
+  if (existing.status !== "active" || path.pathVersion !== existing.pathVersion + 1 || path.status !== "active") {
+    throw new LearningSessionRepositoryError("path_version_conflict", "Replacement path version is invalid");
+  }
+}
+
 function validateDiagnostic(
   diagnostic: LearnerDiagnostic | undefined,
   states: readonly KnowledgeState[],
@@ -187,7 +338,7 @@ function validateDiagnostic(
   }
 }
 
-export class FileLearningSessionRepository implements LearningSessionRepository {
+export class FileLearningSessionRepository implements LearningSessionRepository, InternalPathSessionPort {
   readonly dataRoot: string;
   readonly familiesRoot: string;
   private readonly now: () => Date;
@@ -252,11 +403,21 @@ export class FileLearningSessionRepository implements LearningSessionRepository 
   }
 
   private publicSnapshot(snapshot: StoredSnapshot): SessionSnapshot {
-    const { createRequestId: _createRequestId, createInputHash: _createInputHash, ...safe } = snapshot;
-    return safe;
+    const {
+      createRequestId: _createRequestId,
+      createInputHash: _createInputHash,
+      pathHistory: _pathHistory,
+      internalPath: _internalPath,
+      ...safe
+    } = snapshot;
+    return structuredClone(safe);
   }
 
-  private prepareTransaction(current: StoredSnapshot, input: CommitLearningSessionInput): PreparedTransaction {
+  private prepareTransaction(
+    current: StoredSnapshot,
+    input: CommitLearningSessionInput,
+    internalPathCandidate?: InternalPersistedPathSnapshot,
+  ): PreparedTransaction {
     assertSafeFileComponent(input.requestId, "requestId");
     assertSafeFileComponent(input.sessionId, "sessionId");
     assertSafeSubjectId(current.view.subjectId);
@@ -304,22 +465,49 @@ export class FileLearningSessionRepository implements LearningSessionRepository 
     }
     validateKnowledgeStates(input.candidate.knowledgeStates, input, nextEvidenceVersion);
     validateDiagnostic(input.candidate.diagnosticCandidate, input.candidate.knowledgeStates, input, nextEvidenceVersion);
+    const safePathCandidate = input.candidate.pathCandidate === undefined
+      ? undefined
+      : validatePublicPathCandidate(input.candidate.pathCandidate);
+    if (safePathCandidate !== undefined) validatePublicPathLifecycle(safePathCandidate, current);
+    if (internalPathCandidate !== undefined && safePathCandidate === undefined) {
+      throw new LearningSessionRepositoryError("evidence_invalid", "Internal path snapshot requires a public PathSafeSnapshot");
+    }
+    if (internalPathCandidate !== undefined && !sameValue(toPathSafeSnapshot(internalPathCandidate), safePathCandidate)) {
+      throw new LearningSessionRepositoryError("evidence_invalid", "Internal path snapshot does not match the public PathSafeSnapshot");
+    }
+    validatePathCandidate(internalPathCandidate, current, input, nextEvidenceVersion);
+    if (safePathCandidate !== undefined && internalPathCandidate === undefined && current.internalPath !== undefined
+        && !sameValue(safePathCandidate, toPathSafeSnapshot(current.internalPath))) {
+      throw new LearningSessionRepositoryError("evidence_invalid", "A public-only path cannot replace deterministic internal path state");
+    }
+    const nextPath = safePathCandidate ?? current.path;
+    const nextInternalPath = internalPathCandidate !== undefined
+      ? structuredClone(internalPathCandidate)
+      : safePathCandidate === undefined
+        ? current.internalPath
+        : current.internalPath !== undefined && sameValue(safePathCandidate, toPathSafeSnapshot(current.internalPath))
+          ? current.internalPath
+          : undefined;
 
     const evidenceToPublish = candidates.map((item) => ({ ...item, evidenceVersion: nextEvidenceVersion }));
     const nextSessionVersion = current.sessionVersion + 1;
     const nextView = {
       ...current.view,
       sessionVersion: nextSessionVersion,
+      ...(safePathCandidate === undefined ? {} : { pathVersion: safePathCandidate.pathVersion }),
       ...(input.candidate.nextStage === undefined ? {} : { stage: input.candidate.nextStage }),
     };
     const marker: LatestCommitMarker = {
       evidenceVersion: nextEvidenceVersion,
       sessionVersion: nextSessionVersion,
-      ...(input.candidate.pathCandidate !== undefined
-        ? { pathVersion: input.candidate.pathCandidate.pathVersion }
+      ...(safePathCandidate !== undefined
+        ? { pathVersion: safePathCandidate.pathVersion }
         : current.latestCommit.pathVersion === undefined ? {} : { pathVersion: current.latestCommit.pathVersion }),
       requestId: input.requestId,
     };
+    const archivedPathsToPublish: InternalPersistedPathSnapshot[] = current.internalPath?.status === "active" && internalPathCandidate?.status === "active"
+      ? [{ ...structuredClone(current.internalPath), status: "superseded" }]
+      : [];
     const stored: StoredSnapshot = {
       ...nextView,
       view: nextView,
@@ -328,9 +516,11 @@ export class FileLearningSessionRepository implements LearningSessionRepository 
       ...(input.candidate.diagnosticCandidate !== undefined
         ? { latestDiagnostic: input.candidate.diagnosticCandidate }
         : current.latestDiagnostic === undefined ? {} : { latestDiagnostic: current.latestDiagnostic }),
-      ...(input.candidate.pathCandidate !== undefined
-        ? { path: input.candidate.pathCandidate }
-        : current.path === undefined ? {} : { path: current.path }),
+      ...(nextPath === undefined ? {} : { path: structuredClone(nextPath) }),
+      ...(nextInternalPath === undefined ? {} : { internalPath: structuredClone(nextInternalPath) }),
+      ...(archivedPathsToPublish.length > 0 || current.pathHistory !== undefined
+        ? { pathHistory: [...(current.pathHistory ?? []), ...archivedPathsToPublish] }
+        : {}),
       latestCommit: marker,
       createRequestId: current.createRequestId,
       createInputHash: current.createInputHash,
@@ -346,14 +536,19 @@ export class FileLearningSessionRepository implements LearningSessionRepository 
         : { committedDiagnosticId: input.candidate.diagnosticCandidate.diagnosticId }),
     };
     const storedInput = JSON.parse(JSON.stringify(input)) as CommitLearningSessionInput;
+    const storedInternalPath = internalPathCandidate === undefined
+      ? undefined
+      : structuredClone(internalPathCandidate);
     return {
       formatVersion: 1,
       input: storedInput,
-      inputHash: hashValue(storedInput),
+      inputHash: hashValue(commitIdentity(storedInput, storedInternalPath)),
       previousSessionVersion: current.sessionVersion,
       snapshot: stored,
       response,
       evidenceToPublish,
+      archivedPathsToPublish,
+      ...(storedInternalPath === undefined ? {} : { internalPathCandidate: storedInternalPath }),
     };
   }
 
@@ -376,10 +571,10 @@ export class FileLearningSessionRepository implements LearningSessionRepository 
         || prepared.input.profileRevision !== current.profileRevision) {
       throw new LearningSessionRepositoryError("storage_error", "Prepared transaction does not follow latest commit");
     }
-    if (hashValue(prepared.input) !== prepared.inputHash) {
+    if (hashValue(commitIdentity(prepared.input, prepared.internalPathCandidate)) !== prepared.inputHash) {
       throw new LearningSessionRepositoryError("storage_error", "Prepared transaction input hash does not close");
     }
-    const expected = this.prepareTransaction(current, prepared.input);
+    const expected = this.prepareTransaction(current, prepared.input, prepared.internalPathCandidate);
     if (!sameValue(prepared, expected)) {
       throw new LearningSessionRepositoryError("storage_error", "Prepared transaction semantic closure failed");
     }
@@ -438,6 +633,7 @@ export class FileLearningSessionRepository implements LearningSessionRepository 
       await mkdir(resolve(directory, "snapshots"), { recursive: true });
       await mkdir(resolve(directory, ".candidates"), { recursive: true });
       await mkdir(resolve(directory, "commits"), { recursive: true });
+      await mkdir(resolve(directory, "paths", "superseded"), { recursive: true });
       await writeJsonAtomic(resolve(directory, "session.json"), view);
       await writeJsonAtomic(resolve(directory, "knowledge_state.json"), []);
       await writeJsonAtomic(resolve(directory, "snapshots", "1.json"), snapshot);
@@ -456,12 +652,39 @@ export class FileLearningSessionRepository implements LearningSessionRepository 
     return this.publicSnapshot(stored);
   }
 
+  /** Internal A port; full path metadata never crosses the public 21号 snapshot DTO. */
+  async getInternalPathSnapshot(input: GetSessionSnapshotInput): Promise<InternalPersistedPathSnapshot | undefined> {
+    const directory = await this.findSessionDirectory(input.sessionId);
+    const stored = await this.loadStoredSnapshot(directory);
+    if (stored.profileRevision !== input.profileRevision) {
+      throw new LearningSessionRepositoryError("profile_revision_conflict", "Profile revision does not match session");
+    }
+    if (stored.sessionVersion !== input.sessionVersion) {
+      throw new LearningSessionRepositoryError("session_version_conflict", "Session version is stale");
+    }
+    return stored.internalPath === undefined ? undefined : structuredClone(stored.internalPath);
+  }
+
   async commit(input: CommitLearningSessionInput): Promise<CommittedSessionSnapshot> {
+    return this.commitWithPath(input);
+  }
+
+  async commitInternalPath(
+    input: CommitLearningSessionInput,
+    path: InternalPersistedPathSnapshot,
+  ): Promise<CommittedSessionSnapshot> {
+    return this.commitWithPath(input, path);
+  }
+
+  private async commitWithPath(
+    input: CommitLearningSessionInput,
+    internalPathCandidate?: InternalPersistedPathSnapshot,
+  ): Promise<CommittedSessionSnapshot> {
     assertSafeFileComponent(input.requestId, "requestId");
     return this.withLock(input.sessionId, async () => {
       const directory = await this.findSessionDirectory(input.sessionId);
       const commitPath = resolve(directory, "commits", `${input.requestId}.json`);
-      const inputHash = hashValue(input);
+      const inputHash = hashValue(commitIdentity(input, internalPathCandidate));
       if (await exists(commitPath)) {
         const committed = await readJson<StoredCommitResult>(commitPath, "commit result");
         if (committed.inputHash !== inputHash) {
@@ -492,7 +715,7 @@ export class FileLearningSessionRepository implements LearningSessionRepository 
         throw new LearningSessionRepositoryError("profile_revision_conflict", "Profile revision does not match session");
       }
 
-      const prepared = this.prepareTransaction(current, input);
+      const prepared = this.prepareTransaction(current, input, internalPathCandidate);
       const candidateDirectory = resolve(directory, ".candidates", input.requestId);
       await mkdir(candidateDirectory, { recursive: true });
       await writeJsonAtomic(resolve(candidateDirectory, "transaction.json"), prepared);
@@ -509,6 +732,9 @@ export class FileLearningSessionRepository implements LearningSessionRepository 
     for (const evidence of prepared.evidenceToPublish) {
       assertSafeFileComponent(evidence.evidenceId, "evidenceId");
       await writeJsonAtomic(resolve(directory, "evidence", `${evidence.evidenceId}.json`), evidence);
+    }
+    for (const archived of prepared.archivedPathsToPublish) {
+      await writeJsonAtomic(resolve(directory, "paths", "superseded", `${archived.pathVersion}.json`), archived);
     }
     await writeJsonAtomic(resolve(directory, "knowledge_state.json"), prepared.snapshot.knowledgeStates);
     if (prepared.snapshot.latestDiagnostic !== undefined) {

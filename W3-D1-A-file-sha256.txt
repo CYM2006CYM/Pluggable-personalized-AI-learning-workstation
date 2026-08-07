@@ -1,0 +1,17 @@
+811c184245f6f43e6219d8e274a218422e5cbf1b6e89a58f2dcf46230eabb86f  pi-study-helper/src/application/path-learning-facade.ts
+455992ee4010dc891c5965ed96ed0111dd87a8e710ecf8600d2ea4bb83eef003  pi-study-helper/src/domain/path-engine.ts
+a884a2a7c7ecd8e9f2fc9c75dc6ae59dfc3c9cd1226895910ae2c7da1c6caa97  pi-study-helper/src/repositories/file-learning-session-repository.ts
+8a5f49b510d02a635b8c524139030f34af4783e1b2f922984aaa7a6a594656c7  pi-study-helper/src/repositories/internal-path-session-port.ts
+11a1a3e1edcc9342cbee1996771693e295e64e8c1182d7328c7921241eca0c7d  pi-study-helper/src/repositories/profile-family-repository.ts
+c750a25094ffc6b8f2037d751ff8cd894732bcc5a6b26a30a73b259a6b04776b  pi-study-helper/tests/path-engine-development-20.test.ts
+597b571035a1b578fd2b9d19e0818327d0d72a31004ce7b578d50922c3abaedd  pi-study-helper/tests/path-engine.test.ts
+c5356521d3ebb49c6a971414fcef71e6ee5f154ab59181e6b873233ab7d491cd  pi-study-helper/tests/path-runtime.test.ts
+d4ac6a474b94a9bb84082d4ec2ea8c5860a14fe89328906decfd5f65531b7a49  pi-study-helper/tests/file-learning-session-repository.test.ts
+5735463c6970dd36e615989c585da7f8491e85075d70780fb947a91eff3ab8c8  pi-study-helper/tests/path-session-boundary.test.ts
+0ad6fc56cffa31b9af15109298ec861af0b2ab90110838477e51b4f72ac6810d  pi-study-helper/tests/profile-v2-revision-resolution.test.ts
+f29d9fb982d2647b2b440496d02585a06fa5ae8e5b27f384f00493d2a27a820b  W3-D1-A-V3-1-evidence.json
+02f9f7754ad5e9197555803d90c668d63f5b8a05cc59b0db902a30f76543754a  W3-D1-A-V3-2-evidence.json
+a384684f37e0b286910007d80b1ae017a4572016573491c27028dc1a8a77c4de  新版设计文档-重写版/第三周任务/W3-D1-A-R6-verification.md
+487bc23e9990553b4b60b9f89210a8a3d012f28b9ccf0d1b567bbe8f5dd94d86  新版设计文档-重写版/第三周任务/W3-D1-A-R7-verification.md
+53893e57b16aa86147b918abc188e9f795667187cb172357a72a0abc0ecbd8a3  新版设计文档-重写版/第三周任务/W3-D1-A-PATH-INFEASIBLE-ISSUE.md
+232f4ffcb49aec001340e5f60ca29c0bc6d9725a64482732d0a8c0fc0448bec9  新版设计文档-重写版/第三周任务/handoff-w3-a-d1.md

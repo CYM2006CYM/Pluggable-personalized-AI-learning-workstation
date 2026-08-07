@@ -181,6 +181,64 @@ describe("FileLearningSessionRepository", () => {
     expect(committed.evidence).toEqual([]);
   });
 
+  it("preserves a valid public PathSafeSnapshot without requiring internal fields", async () => {
+    const { repo, view, root } = await repository();
+    const pathCandidate = {
+      pathId: "public-path-1",
+      pathVersion: 1,
+      status: "candidate" as const,
+      goalId: "goal-1",
+      mode: "recommended" as const,
+      nodes: [{ nodeId: "node-kp-1", knowledgePointId: "kp-1", activityIds: ["activity-1"], status: "available" as const, estimatedMinutes: 5, reasonCodes: ["goal_required"] }],
+    };
+    const committed = await repo.commit({
+      requestId: "public-path-commit",
+      sessionId: view.sessionId,
+      sessionVersion: 1,
+      profileRevision: 2,
+      candidate: { requestId: "public-path-commit", knowledgeStates: [state(0)], pathCandidate },
+    });
+    expect(committed.sessionVersion).toBe(2);
+    expect(committed.path).toEqual(pathCandidate);
+    expect(committed.path?.nodes).toHaveLength(1);
+    const reread = await repo.getSnapshot({ sessionId: view.sessionId, sessionVersion: 2, profileRevision: 2 });
+    expect(reread.path).toEqual(pathCandidate);
+    const restarted = new FileLearningSessionRepository({ dataRoot: root, now: () => new Date("2026-07-30T12:00:00.000Z") });
+    expect(await restarted.getInternalPathSnapshot({ sessionId: view.sessionId, sessionVersion: 2, profileRevision: 2 })).toBeUndefined();
+  });
+
+  it("rejects an invalid public path candidate without changing the committed session", async () => {
+    const { repo, view } = await repository();
+    const invalid = {
+      pathId: "invalid-path",
+      pathVersion: 1,
+      status: "candidate" as const,
+      goalId: "goal-1",
+      mode: "recommended" as const,
+      nodes: [{ nodeId: "node-kp-1", knowledgePointId: "kp-1", activityIds: [], status: "available" as const, estimatedMinutes: 5, reasonCodes: [] }],
+    };
+    await expect(repo.commit({ requestId: "invalid-public-path", sessionId: view.sessionId, sessionVersion: 1, profileRevision: 2, candidate: { requestId: "invalid-public-path", knowledgeStates: [state(0)], pathCandidate: invalid } })).rejects.toMatchObject({ errorCode: "evidence_invalid" });
+    const snapshot = await repo.getSnapshot({ sessionId: view.sessionId, sessionVersion: 1, profileRevision: 2 });
+    expect(snapshot.sessionVersion).toBe(1);
+    expect(snapshot.path).toBeUndefined();
+  });
+
+  it("uses one public safe path projection for getSnapshot, commit and recover", async () => {
+    const { repo, view } = await repository();
+    const pathCandidate = { pathId: "public-path-2", pathVersion: 1, status: "candidate" as const, goalId: "goal-1", mode: "recommended" as const, nodes: [{ nodeId: "node-kp-2", knowledgePointId: "kp-1", activityIds: ["activity-2"], status: "available" as const, estimatedMinutes: 6, reasonCodes: [] }] };
+    const committed = await repo.commit({ requestId: "public-path-2", sessionId: view.sessionId, sessionVersion: 1, profileRevision: 2, candidate: { requestId: "public-path-2", knowledgeStates: [state(0)], pathCandidate } });
+    const recovered = await repo.recover({ requestId: "recover-public-path", sessionId: view.sessionId, sessionVersion: 2, profileRevision: 2 });
+    for (const output of [committed, await repo.getSnapshot({ sessionId: view.sessionId, sessionVersion: 2, profileRevision: 2 }), recovered]) {
+      expect(output.path).toEqual(pathCandidate);
+      const node = output.path?.nodes[0]!;
+      expect(Object.keys(node).sort()).toEqual(["activityIds", "estimatedMinutes", "knowledgePointId", "nodeId", "reasonCodes", "status"]);
+      expect(node).not.toHaveProperty("difficulty");
+      expect(node).not.toHaveProperty("scaffold");
+      expect(node).not.toHaveProperty("positionLocked");
+      expect(node).not.toHaveProperty("required");
+    }
+  });
+
   it("makes same request retries idempotent and rejects stale versions", async () => {
     const { repo, view } = await repository();
     const input = {
