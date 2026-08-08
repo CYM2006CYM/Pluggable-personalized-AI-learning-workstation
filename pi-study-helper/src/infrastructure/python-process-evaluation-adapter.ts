@@ -108,6 +108,7 @@ interface PrivatePreparedState {
 }
 
 interface RunRecord {
+  requestId: string;
   attemptId: string;
   fingerprint: string;
   result: ActivityResult;
@@ -405,10 +406,14 @@ export class PythonProcessCodeEvaluationAdapter implements CodeEvaluationPort {
 
   async prepare(input: PrepareEvaluationInput): Promise<PreparedEvaluation> {
     const environment = await this.#loadApprovedEnvironment();
+    if (input.mode !== "submit") {
+      throw new EvaluationPreparationError("submission_contract_error", "The measured Node adapter only accepts formal submissions.");
+    }
     if (input.environment.status !== "measured_node_submit"
       || input.environment.environmentHash !== environment.environmentHash
+      || input.environment.environmentId !== environment.environmentId
       || input.environment.environmentId !== input.activity.environmentRef
-      || input.environment.prototypeEvidenceRef === "pending_C_prototype") {
+      || input.environment.prototypeEvidenceRef !== environment.prototypeEvidenceRef) {
       throw new EvaluationPreparationError("environment_mismatch", "The measured Node submit environment is unavailable or does not match the approved lock.");
     }
     if (!FORMAL_ACTIVITY_IDS.has(input.activity.activityId)
@@ -446,6 +451,7 @@ export class PythonProcessCodeEvaluationAdapter implements CodeEvaluationPort {
         || normalizeHash(bundle.assetBundleHash) !== normalizeHash(input.assetBundleHash)) throw new Error("asset bundle hash differs");
       if (bundle.activity.profileRevision !== input.profileRevision
         || bundle.activity.templateVersion !== input.taskVersion
+        || bundle.activity.kind !== input.activity.kind
         || bundle.environmentRef !== input.activity.environmentRef) throw new Error("bundle binding differs");
       const approvedLibraries = environment.allowedLibraries.map((library) => `${library.name}`);
       if (bundle.activity.allowedLibraries.length !== approvedLibraries.length
@@ -513,8 +519,8 @@ export class PythonProcessCodeEvaluationAdapter implements CodeEvaluationPort {
         assetBundleHash: state.prepared.assetBundleHash,
       };
     }
-    if (typeof input.requestId !== "string" || input.requestId.length === 0
-      || typeof input.attemptId !== "string" || input.attemptId.length === 0
+    if (typeof input.requestId !== "string" || input.requestId.trim().length === 0
+      || typeof input.attemptId !== "string" || input.attemptId.trim().length === 0
       || typeof input.code !== "string") {
       return learnerFailure({
         errorCode: "submission_contract_error",
@@ -525,16 +531,6 @@ export class PythonProcessCodeEvaluationAdapter implements CodeEvaluationPort {
       });
     }
 
-    const sourceBytes = Buffer.byteLength(input.code, "utf8");
-    if (sourceBytes > state.environment.limits.sourceBytes) {
-      return learnerFailure({
-        errorCode: "submission_contract_error",
-        safeFeedback: "The submitted source exceeds the activity limit.",
-        evaluatorVersion: state.environment.evaluatorVersion,
-        environmentHash: state.prepared.environmentHash,
-        assetBundleHash: state.prepared.assetBundleHash,
-      });
-    }
     const fingerprint = createHash("sha256").update([state.prepared.preparedId, input.code].join("\n"), "utf8").digest("hex");
     const requestRecord = this.#requestRuns.get(input.requestId);
     const attemptRecord = this.#attemptRuns.get(input.attemptId);
@@ -543,7 +539,21 @@ export class PythonProcessCodeEvaluationAdapter implements CodeEvaluationPort {
       throw new EvaluationRunError("idempotency_conflict", "The requestId or attemptId was already used for different evaluation content.");
     }
     const existing = requestRecord ?? attemptRecord;
-    if (existing) return cloneResult(existing.result);
+    if (existing) {
+      this.#requestRuns.set(input.requestId, existing);
+      return cloneResult(existing.result);
+    }
+
+    const sourceBytes = Buffer.byteLength(input.code, "utf8");
+    if (sourceBytes > state.environment.limits.sourceBytes) {
+      return this.#recordRun(input, fingerprint, learnerFailure({
+        errorCode: "submission_contract_error",
+        safeFeedback: "The submitted source exceeds the activity limit.",
+        evaluatorVersion: state.environment.evaluatorVersion,
+        environmentHash: state.prepared.environmentHash,
+        assetBundleHash: state.prepared.assetBundleHash,
+      }));
+    }
 
     const runRoot = await mkdtemp(join(tmpdir(), "pi-w3-evaluation-"));
     try {
@@ -567,22 +577,22 @@ export class PythonProcessCodeEvaluationAdapter implements CodeEvaluationPort {
           };
         }
         if (outcome.kind === "learner") {
-          return learnerFailure({
+          return this.#recordRun(input, fingerprint, learnerFailure({
             errorCode: outcome.errorCode as Parameters<typeof learnerFailure>[0]["errorCode"],
             safeFeedback: outcome.feedback,
             evaluatorVersion: state.environment.evaluatorVersion,
             environmentHash: state.prepared.environmentHash,
             assetBundleHash: state.prepared.assetBundleHash,
-          });
+          }));
         }
         if (outcome.kind === "evaluator") {
-          return evaluatorFailure({
+          return this.#recordRun(input, fingerprint, evaluatorFailure({
             errorCode: outcome.errorCode as Parameters<typeof evaluatorFailure>[0]["errorCode"],
             safeFeedback: outcome.feedback,
             evaluatorVersion: state.environment.evaluatorVersion,
             environmentHash: state.prepared.environmentHash,
             assetBundleHash: state.prepared.assetBundleHash,
-          });
+          }));
         }
         allTests.push(...outcome.tests);
       }
@@ -593,13 +603,22 @@ export class PythonProcessCodeEvaluationAdapter implements CodeEvaluationPort {
         environmentHash: state.prepared.environmentHash,
         assetBundleHash: state.prepared.assetBundleHash,
       });
-      const record = { attemptId: input.attemptId, fingerprint, result: cloneResult(result) };
-      this.#requestRuns.set(input.requestId, record);
-      this.#attemptRuns.set(input.attemptId, record);
-      return cloneResult(result);
+      return this.#recordRun(input, fingerprint, result);
     } finally {
       await rm(runRoot, { recursive: true, force: true });
     }
+  }
+
+  #recordRun(input: RunEvaluationInput, fingerprint: string, result: ActivityResult): ActivityResult {
+    const record = {
+      requestId: input.requestId,
+      attemptId: input.attemptId,
+      fingerprint,
+      result: cloneResult(result),
+    };
+    this.#requestRuns.set(input.requestId, record);
+    this.#attemptRuns.set(input.attemptId, record);
+    return cloneResult(record.result);
   }
 
   async #runStage(

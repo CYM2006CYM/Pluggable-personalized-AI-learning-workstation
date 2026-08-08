@@ -112,8 +112,33 @@ describe("W3 C Node/Python formal evaluation adapter", () => {
   });
 
   it("classifies an oversized source as a submission contract error", async () => {
-    const result = await evaluate("act-practical", `#${"x".repeat(8_001)}`, "source-limit");
+    const evaluation = adapter();
+    const prepared = await evaluation.prepare(await input("act-practical"));
+    const request = {
+      requestId: "request-source-limit",
+      attemptId: "attempt-source-limit",
+      prepared,
+      code: `#${"x".repeat(8_001)}`,
+    };
+    const result = await evaluation.run(request, new AbortController().signal);
     expect(result).toMatchObject({ verdict: "fail", errorKind: "learner", errorCode: "submission_contract_error", score: 0 });
+    expect(await evaluation.run(request, new AbortController().signal)).toEqual(result);
+    await expect(evaluation.run({ ...request, code: `${request.code}x` }, new AbortController().signal))
+      .rejects.toMatchObject({ errorCode: "idempotency_conflict" });
+  });
+
+  it("rejects preview mode and mismatched formal activity or evidence bindings", async () => {
+    const preview = await input("act-practical");
+    preview.mode = "preview";
+    await expect(adapter().prepare(preview)).rejects.toMatchObject({ errorCode: "submission_contract_error" });
+
+    const wrongKind = await input("act-practical");
+    wrongKind.activity.kind = "code_completion";
+    await expect(adapter().prepare(wrongKind)).rejects.toMatchObject({ errorCode: "test_asset_invalid" });
+
+    const wrongEvidence = await input("act-practical");
+    wrongEvidence.environment.prototypeEvidenceRef = "scripts/w3-code-evaluation/other-evidence.json";
+    await expect(adapter().prepare(wrongEvidence)).rejects.toMatchObject({ errorCode: "environment_mismatch" });
   });
 
   it("rejects unmeasured environments and damaged assets as evaluator-owned failures", async () => {
@@ -216,6 +241,53 @@ describe("W3 C Node/Python formal evaluation adapter", () => {
     }
   });
 
+  it("caches learner and evaluator terminal failures without starting Python again", async () => {
+    for (const [name, payload, expected] of [
+      [
+        "learner",
+        { status: "failed", category: "learner", errorCode: "syntax_error" },
+        { verdict: "fail", errorKind: "learner", errorCode: "syntax_error" },
+      ],
+      [
+        "evaluator",
+        { status: "failed", category: "evaluator", errorCode: "result_protocol_invalid" },
+        { verdict: "not_graded", errorKind: "evaluator", errorCode: "result_protocol_invalid" },
+      ],
+    ] as const) {
+      const directory = await mkdtemp(resolve(tmpdir(), `pi-w3-${name}-idempotency-`));
+      try {
+        const countPath = resolve(directory, "count.txt").replaceAll("\\", "/");
+        const faultRunner = resolve(directory, "fault.py");
+        await writeFile(faultRunner, [
+          "import json, pathlib, sys",
+          `count_path = pathlib.Path(${JSON.stringify(countPath)})`,
+          "count = int(count_path.read_text(encoding='utf-8')) if count_path.exists() else 0",
+          "count_path.write_text(str(count + 1), encoding='utf-8')",
+          "result = sys.argv[sys.argv.index('--result') + 1]",
+          `payload = json.loads(${JSON.stringify(JSON.stringify(payload))})`,
+          "pathlib.Path(result).write_text(json.dumps(payload), encoding='utf-8')",
+        ].join("\n"), "utf8");
+        const evaluation = adapter({ runnerScript: faultRunner });
+        const prepared = await evaluation.prepare(await input("act-practical"));
+        const request = {
+          requestId: `request-${name}-terminal`,
+          attemptId: `attempt-${name}-terminal`,
+          prepared,
+          code: "def clean_orders(df):\n    return df\n",
+        };
+        const first = await evaluation.run(request, new AbortController().signal);
+        expect(first).toMatchObject(expected);
+        expect(await evaluation.run(request, new AbortController().signal)).toEqual(first);
+        expect(await readFile(countPath, "utf8")).toBe("1");
+        await expect(evaluation.run({ ...request, code: `${request.code}# changed\n` }, new AbortController().signal))
+          .rejects.toMatchObject({ errorCode: "idempotency_conflict" });
+        expect(await readFile(countPath, "utf8")).toBe("1");
+      } finally {
+        await rm(directory, { recursive: true, force: true });
+      }
+    }
+  });
+
   it("enforces request and attempt idempotency", async () => {
     const evaluation = adapter();
     const prepared = await evaluation.prepare(await input("act-inspect-dataframe"));
@@ -224,6 +296,14 @@ describe("W3 C Node/Python formal evaluation adapter", () => {
     const first = await evaluation.run(request, new AbortController().signal);
     expect(await evaluation.run(request, new AbortController().signal)).toEqual(first);
     await expect(evaluation.run({ ...request, code: `${code}\n# changed` }, new AbortController().signal))
+      .rejects.toMatchObject({ errorCode: "idempotency_conflict" });
+    expect(await evaluation.run({ ...request, requestId: "request-idempotent-new" }, new AbortController().signal))
+      .toEqual(first);
+    await expect(evaluation.run({ ...request, attemptId: "attempt-idempotent-new" }, new AbortController().signal))
+      .rejects.toMatchObject({ errorCode: "idempotency_conflict" });
+
+    const otherPrepared = await evaluation.prepare(await input("act-practical"));
+    await expect(evaluation.run({ ...request, prepared: otherPrepared }, new AbortController().signal))
       .rejects.toMatchObject({ errorCode: "idempotency_conflict" });
   });
 
