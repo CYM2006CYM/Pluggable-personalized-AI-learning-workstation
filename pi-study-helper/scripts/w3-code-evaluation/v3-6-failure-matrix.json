@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "status": "PASS",
+  "contract": "W3-C3/W3-R2",
+  "learnerErrors": [
+    "syntax_error",
+    "runtime_error",
+    "test_failed",
+    "timeout",
+    "output_limit",
+    "disallowed_import",
+    "submission_contract_error"
+  ],
+  "evaluatorErrors": [
+    "environment_mismatch",
+    "evaluator_error",
+    "evaluator_start_failed",
+    "evaluator_timeout",
+    "dependency_missing",
+    "test_asset_invalid",
+    "result_protocol_invalid",
+    "runner_crash"
+  ],
+  "evaluatorErrorCreatesNegativeEvidence": false,
+  "idempotencyConflictCreatesEvidence": false,
+  "formalFactsCreatedByC": false,
+  "coveredByAuthorTests": [
+    "syntax_error",
+    "runtime_error",
+    "disallowed_import",
+    "timeout",
+    "output_limit",
+    "test_failed",
+    "environment_mismatch",
+    "test_asset_invalid",
+    "result_protocol_invalid",
+    "dependency_missing",
+    "evaluator_timeout",
+    "evaluator_error",
+    "runner_crash"
+  ],
+  "r2AdditionalCoverage": {
+    "testRuntimeError": "evaluator/test_asset_invalid",
+    "healthyAssertionFailure": "learner/test_failed",
+    "realLearnerTimeout": "learner/timeout",
+    "realHarnessTimeout": "evaluator/evaluator_timeout",
+    "unknownProtocol": "evaluator/result_protocol_invalid",
+    "negativeEvidence": false
+  },
+  "ownerDecision": "W3-D40-ENV-1",
+  "candidateHead": "c8b4aacffccdad92338abedfd7acb3b59b716e60",
+  "publicResultOnEvaluatorFailure": "ActivityResult:not_graded",
+  "profileStatus": "draft"
+}

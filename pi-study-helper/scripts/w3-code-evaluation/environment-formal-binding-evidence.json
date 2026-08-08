@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "status": "PASS",
+  "contract": "W3-C3/W3-R2",
+  "decision": {
+    "id": "W3-D40-ENV-1",
+    "signedAt": "2026-08-08T01:30:21+08:00",
+    "file": "新版设计文档-重写版/第三周任务/W3-D2-负责人Node环境裁决.md",
+    "sha256": "c06d1d77ab81a766de029e8121c695efdc39757b543276d13efc7681c7485fb4"
+  },
+  "gitBinding": {
+    "w3StartCommit": "f190326a4a906b46e4001484ffa30a7839b82ed2",
+    "candidateHead": "c8b4aacffccdad92338abedfd7acb3b59b716e60",
+    "bFormalCommit": "277805b4dc612548f4dcdf4f91189abb4ef5c8e3",
+    "w3StartIsAncestor": true,
+    "bFormalCommitIsAncestor": true
+  },
+  "bAssetBundleHashes": {
+    "act-inspect-dataframe": "bcc38620bdacede9d690ee62efbedaf8f0aee8dabaa55e9b7ca5b2452d29905c",
+    "act-practical": "3273308c4c9829b263a550c2d69eb40e5098b4e0802399c2334053afb3d6815c"
+  },
+  "d1SealedEvidence": {
+    "zipSha256": "1cc5bb26ebf21c9e565403dc71c466eda5a753e2b5fda2df3bb54102d3dc04ac",
+    "probeSha256": "a3dee9f1986dda26824c26138ebf1c8e26d6c84603faaa90d4b6259f391501f6",
+    "prototypeEvidenceSha256": "af0b859ef893b1fca6690e39c0551c5c7ec07423adf6127d96cd00442b4697d7",
+    "prototypeReportSha256": "b03bd70946affd066be0c555389342b6ef09e10541c80ac4458edbd1d0d26657",
+    "prototypeSummaryHash": "sha256:904167c1ecbc1448a12119ebc460d033e2f47cbd4e6b030cfd7de6e6ca5046f6"
+  },
+  "d2RerunEvidence": {
+    "file": "scripts/w3-code-evaluation/environment-prototype-rerun-d2.json",
+    "sha256": "39d7e995e3d78257eccb35270149d303557593b0cb9d9636c0e26ec29277e6fd",
+    "probeSummaryHash": "sha256:56a22cbacdca8f2be1b65b83d8c40e64edd927c4b383c526286c7d43bc13c9c3",
+    "status": "measured_node_submit",
+    "ownerDecision": "W3-D40-ENV-1"
+  },
+  "formalEnvironmentLock": {
+    "file": "fixtures/profiles/pandas-cleaning-v2-draft/environments/environment-lock.json",
+    "fileSha256": "59917d1528d031f46a1e76359d99628e810f2dfa78a92d66e03386c860fbaf43",
+    "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+    "status": "measured_node_submit"
+  },
+  "hashRelationship": "D1 and D2 probe summary hashes identify measured evidence projections. The formal environmentHash is independently recomputed from the approved complete EnvironmentLock with environmentHash excluded.",
+  "profileStatus": "draft",
+  "formalUpload": "not_authorized"
+}

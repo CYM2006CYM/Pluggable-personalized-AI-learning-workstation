@@ -13,7 +13,7 @@ export interface EvaluationActivityProjection {
 
 export interface EvaluationEnvironmentProjection {
   environmentId: string;
-  status: "measured" | "draft_pending_C_prototype";
+  status: "measured" | "measured_node_submit" | "draft_pending_C_prototype";
   environmentHash: string | null;
   prototypeEvidenceRef: string;
 }

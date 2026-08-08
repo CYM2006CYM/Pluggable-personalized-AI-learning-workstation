@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 2,
+  "status": "PASS",
+  "contract": "W3-C3/W3-R2",
+  "decision": "W3-D40-ENV-1",
+  "checks": {
+    "head": "c8b4aacffccdad92338abedfd7acb3b59b716e60",
+    "formalHead": true,
+    "w3StartAncestor": true,
+    "bCommitAncestor": true,
+    "decisionSha256": "c06d1d77ab81a766de029e8121c695efdc39757b543276d13efc7681c7485fb4",
+    "decisionBound": true,
+    "d1SealedFiles": {
+      "probe-environment.mjs": "a3dee9f1986dda26824c26138ebf1c8e26d6c84603faaa90d4b6259f391501f6",
+      "environment-prototype-evidence.json": "af0b859ef893b1fca6690e39c0551c5c7ec07423adf6127d96cd00442b4697d7",
+      "environment-prototype-report.md": "b03bd70946affd066be0c555389342b6ef09e10541c80ac4458edbd1d0d26657"
+    },
+    "d1ZipSha256": "1cc5bb26ebf21c9e565403dc71c466eda5a753e2b5fda2df3bb54102d3dc04ac",
+    "formalTaskBundleCount": 2,
+    "assetBundleHashes": {
+      "act-inspect-dataframe": "bcc38620bdacede9d690ee62efbedaf8f0aee8dabaa55e9b7ca5b2452d29905c",
+      "act-practical": "3273308c4c9829b263a550c2d69eb40e5098b4e0802399c2334053afb3d6815c"
+    },
+    "environment": {
+      "status": "measured_node_submit",
+      "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+      "recomputedEnvironmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+      "approvedValues": true
+    },
+    "d2Evidence": {
+      "status": "measured_node_submit",
+      "decision": "W3-D40-ENV-1",
+      "ownerDecision": "W3-D40-ENV-1",
+      "ownerDecisionCommit": "c8b4aacffccdad92338abedfd7acb3b59b716e60",
+      "formalEnvironmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+      "bFormalCommit": "277805b4dc612548f4dcdf4f91189abb4ef5c8e3",
+      "assetBundleHashes": {
+        "act-inspect-dataframe": "bcc38620bdacede9d690ee62efbedaf8f0aee8dabaa55e9b7ca5b2452d29905c",
+        "act-practical": "3273308c4c9829b263a550c2d69eb40e5098b4e0802399c2334053afb3d6815c"
+      }
+    },
+    "d2EvidenceBound": true,
+    "formalBindingEvidence": true,
+    "cBoundaryScan": true,
+    "publicResultBoundary": true,
+    "authorEvidence": true,
+    "r2Evidence": true,
+    "boundaryEvidence": true,
+    "failureMatrix": true
+  },
+  "reasons": [],
+  "profileStatus": "draft",
+  "formalUpload": "not_authorized"
+}

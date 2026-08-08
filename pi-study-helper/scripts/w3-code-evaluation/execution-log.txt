@@ -1,0 +1,148 @@
+C岗位 W3-D2 候选执行日志
+基线HEAD: c8b4aacffccdad92338abedfd7acb3b59b716e60
+origin/main: c8b4aacffccdad92338abedfd7acb3b59b716e60
+合同: W3-C3/W3-R2
+裁决: W3-D40-ENV-1
+
+01 git fetch origin main
+exit=0; origin/main更新到c8b4aacffccdad92338abedfd7acb3b59b716e60
+
+02 git pull --ff-only origin main
+exit=0; fast-forward 277805b..c8b4aac
+
+03 git merge-base --is-ancestor f190326a4a906b46e4001484ffa30a7839b82ed2 HEAD
+exit=0
+
+04 node .\scripts\w3-code-evaluation\probe-environment.mjs --output .\scripts\w3-code-evaluation\environment-prototype-rerun-d2.json
+exit=0; Node=v22.23.1; Python=3.13.7; Pandas=3.0.5; platform=win32-10.0.26100-x64
+说明: D1封存脚本的控制台output摘要固定显示历史文件名，实际D2输出文件已按命令参数生成并单独复核哈希。
+
+05 首次 npm.cmd test -- --maxWorkers=1 --run tests/activity-rubric.test.ts tests/python-process-evaluation.test.ts
+exit=1; 1文件通过、1文件加载失败；5项通过；规范化函数模板字符串语法错误。
+
+06 修正语法后的同一作者测试命令
+exit=1; 2文件；20项通过、1项失败；环境预检4秒启动窗口不足，且测试总数临时为21。
+
+07 最终作者测试命令
+exit=0; 2文件；20/20通过；测试级blocking覆盖并入既有用例，环境预检不占用4000ms学习者执行限额。
+
+08 npm.cmd test -- --maxWorkers=1 --run tests/code-evaluation-port.test.ts tests/activity-rubric.test.ts tests/python-process-evaluation.test.ts
+exit=0; 3文件；36/36通过。
+
+09 npm.cmd test -- --maxWorkers=1 --run tests/evaluation-protocol.test.ts tests/pandas-cleaning-v2-assets.test.ts tests/w3-b-d1-delivery.test.ts
+exit=0; 3文件；26/26通过。
+
+10 npm.cmd test -- --maxWorkers=1
+exit=0; 47文件；480通过、1跳过。
+Windows噪音: 测试触碰两份A证据文件换行，已从HEAD恢复，未进入候选。
+
+11 npm.cmd run typecheck
+exit=0。
+
+12 初步 npm.cmd run check:docs
+exit=0; 当时47份Markdown本地链接有效。
+
+13 npm.cmd run verify
+exit=0; typecheck、47文件480通过/1跳过、docs、extension smoke、release全部通过。
+Windows噪音: verify再次触碰相同两份A证据文件换行，已从HEAD恢复，未进入候选。
+
+14 node .\scripts\w3-code-evaluation\self-check.mjs --output scripts/w3-code-evaluation/self-check.json
+exit=0; status=PASS。
+
+15 git diff --check
+exit=0。
+
+16 新增正式报告后的最终 npm.cmd run check:docs
+exit=0; 48份Markdown本地链接有效。
+
+禁止操作确认: 未运行npm audit fix；未暂存、未commit、未push、未激活Profile。
+
+R2整改复验（2026-08-08）：
+
+17 npm.cmd test -- --maxWorkers=1 --run tests/python-process-evaluation-r2.test.ts
+exit=1；首次R2运行6/7通过，资产门禁测试触发Vitest默认5000ms超时；失败记录保留。
+
+18 最小测试调整：仅将资产门禁测试的测试级超时设为30000ms，未改变适配器逻辑或断言。
+
+19 npm.cmd test -- --maxWorkers=1 --run tests/python-process-evaluation-r2.test.ts
+exit=0；1文件，7/7通过。
+
+20 npm.cmd test -- --maxWorkers=1 --run tests/activity-rubric.test.ts tests/python-process-evaluation.test.ts
+exit=0；2文件，20/20通过。
+
+21 npm.cmd test -- --maxWorkers=1 --run tests/python-process-evaluation-r2.test.ts tests/code-evaluation-port.test.ts tests/activity-rubric.test.ts tests/python-process-evaluation.test.ts
+exit=0；4文件，43/43通过。
+
+22 npm.cmd test -- --maxWorkers=1 --run tests/evaluation-protocol.test.ts tests/pandas-cleaning-v2-assets.test.ts tests/w3-b-d1-delivery.test.ts
+exit=0；3文件，26/26通过。
+
+23 npm.cmd test -- --maxWorkers=1
+exit=0；48文件，487通过，1跳过（488项）。
+
+24 npm.cmd run typecheck
+exit=0。
+
+25 npm.cmd run check:docs
+exit=0；48个Markdown文件本地链接有效。
+
+26 npm.cmd run verify
+exit=0；typecheck、全量487/487（1跳过）、docs、extension smoke、release均通过。
+
+27 node .\\pi-study-helper\\scripts\\w3-code-evaluation\\self-check.mjs --output .\\pi-study-helper\\scripts\\w3-code-evaluation\\self-check.json
+exit=1；从pi-study-helper工作目录错误重复拼接路径；失败记录保留。
+
+28 node .\\scripts\\w3-code-evaluation\\self-check.mjs --output .\\scripts\\w3-code-evaluation\\self-check.json
+exit=0；status=PASS，D2状态、裁决、HEAD、B哈希和环境锁全部绑定。
+
+29 git diff --check
+exit=0。
+
+R2状态：仅形成候选；未暂存、未commit、未push、未申请上传锁，Profile仍为draft。
+
+30 最小反例增强：测试自身TypeError也必须归为evaluator/test_asset_invalid；初步将Python harness收窄为仅显式AssertionError作为学习者断言失败。
+
+31 npm.cmd test -- --maxWorkers=1 --run tests/python-process-evaluation-r2.test.ts
+exit=0；1文件，8/8通过。
+
+32 npm.cmd run verify（仅保留AssertionError后的首次验证）
+exit=1；48文件中47通过、1失败；487通过、1失败、1跳过。正式wrong-practical触发健康冻结测试中的确定性KeyError，被过度归为test_asset_invalid。
+
+33 根因修正：冻结健康测试使用AssertionError以及KeyError/IndexError/ValueError/AttributeError表达候选结果契约不满足；RuntimeError、TypeError和加载故障保持评测器故障。
+
+34 npm.cmd run verify（R2-01最终归因修正后）
+exit=0；48文件，488通过，1跳过（489项）；typecheck、docs、extension smoke、release均通过。
+
+35 npm.cmd test -- --maxWorkers=1 --run tests/python-process-evaluation-r2.test.ts
+exit=0；1文件，8/8通过。
+
+36 npm.cmd test -- --maxWorkers=1 --run tests/activity-rubric.test.ts tests/python-process-evaluation.test.ts
+exit=0；2文件，20/20通过。
+
+37 npm.cmd test -- --maxWorkers=1 --run tests/python-process-evaluation-r2.test.ts tests/code-evaluation-port.test.ts tests/activity-rubric.test.ts tests/python-process-evaluation.test.ts
+exit=0；4文件，44/44通过。
+
+C-R2F-01 轻量证据整改（2026-08-08）：
+
+38 只读重复键扫描（全包JSON）
+exit=0；整改前发现environment-prototype-rerun-d2.json.binding.bFormalCommit重复1处；其余JSON无重复键。
+
+39 删除environment-prototype-rerun-d2.json.binding中的一个重复bFormalCommit
+exit=0；保留值277805b4dc612548f4dcdf4f91189abb4ef5c8e3，其他字段未改。
+
+40 更新environment-formal-binding-evidence.json的d2RerunEvidence.sha256
+exit=0；新D2证据SHA-256=39d7e995e3d78257eccb35270149d303557593b0cb9d9636c0e26ec29277e6fd。
+
+41 node .\\scripts\\w3-code-evaluation\\self-check.mjs --output .\\scripts\\w3-code-evaluation\\self-check.json
+exit=0；status=PASS。
+
+42 npm.cmd run check:docs
+exit=0；49个Markdown文件本地链接有效。
+
+43 git diff --check
+exit=0。
+
+44 全包JSON语法及重复键检查（拟交付Manifest登记的8个JSON）
+exit=0；8个JSON全部可解析，duplicateKeyErrors=0。
+
+45 仓库全量只读扫描（含node_modules及未交付B test-cases.json）
+exit=1；发现范围外历史/工具JSON重复键或JSONC语法，不进入候选ZIP；未修改这些文件。

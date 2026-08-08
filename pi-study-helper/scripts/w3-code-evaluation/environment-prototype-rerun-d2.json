@@ -1,0 +1,115 @@
+{
+  "status": "measured_node_submit",
+  "decision": "W3-D40-ENV-1",
+  "nodeVersion": "v22.23.1",
+  "pythonVersion": "3.13.7",
+  "pandasVersion": "3.0.5",
+  "platform": "win32-10.0.26100-x64",
+  "evaluatorVersion": "node-python-evaluator-w3-c1",
+  "allowedLibraries": [
+    {
+      "name": "pandas",
+      "version": "3.0.5"
+    }
+  ],
+  "limits": {
+    "wallClockMs": 4000,
+    "stdoutBytes": 8192,
+    "stderrBytes": 8192,
+    "sourceBytes": 8000,
+    "datasetBytes": 65536
+  },
+  "observed": {
+    "formalDatasetBytes": 4181,
+    "pandasRuns": [
+      {
+        "exitCode": 0,
+        "durationMs": 785.077,
+        "dtype": "string",
+        "cleanup": true
+      },
+      {
+        "exitCode": 0,
+        "durationMs": 698.699,
+        "dtype": "string",
+        "cleanup": true
+      },
+      {
+        "exitCode": 0,
+        "durationMs": 627.87,
+        "dtype": "string",
+        "cleanup": true
+      }
+    ],
+    "maximumPandasStartupMs": 785.077,
+    "outputFlood": {
+      "thresholdTriggered": true,
+      "stdoutObserved": 20000,
+      "stderrObserved": 20000,
+      "stdoutCaptured": 8192,
+      "stderrCaptured": 8192
+    }
+  },
+  "executionConstraints": {
+    "shell": false,
+    "explicitPythonExecutable": true,
+    "fixedPerRunWorkingDirectory": true,
+    "minimalEnvironmentKeys": [
+      "HOMEDRIVE",
+      "HOMEPATH",
+      "LOGONSERVER",
+      "PATH",
+      "PYTHONDONTWRITEBYTECODE",
+      "PYTHONHASHSEED",
+      "PYTHONIOENCODING",
+      "PYTHONUTF8",
+      "SYSTEMDRIVE",
+      "SYSTEMROOT",
+      "TZ",
+      "USERDOMAIN",
+      "USERNAME",
+      "USERPROFILE",
+      "WINDIR"
+    ],
+    "sensitiveEnvironmentKeysAbsent": true,
+    "windowsRequiredEnvironmentKeysExplicit": true,
+    "uniquePublicHiddenProcesses": true,
+    "hiddenAssetsOwner": "node_parent_only",
+    "hiddenAssetsInUserDirectory": false,
+    "cleanupOnSuccess": true,
+    "cleanupOnFailure": true,
+    "cleanupOnTimeout": true,
+    "outputTruncation": true
+  },
+  "capabilityFlags": {
+    "reliableMemoryLimit": false,
+    "networkIsolation": false,
+    "processTreeTermination": true
+  },
+  "processTree": {
+    "timeoutTriggered": true,
+    "descendantPidObserved": true,
+    "descendantTerminated": true
+  },
+  "restrictions": [
+    "trusted_local_testers_only",
+    "not_a_production_sandbox",
+    "network_isolation_not_proven",
+    "reliable_memory_limit_not_proven",
+    "pyodide_not_measured_in_w3"
+  ],
+  "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+  "probeSummaryHash": "sha256:56a22cbacdca8f2be1b65b83d8c40e64edd927c4b383c526286c7d43bc13c9c3",
+  "binding": {
+    "w3StartCommit": "f190326a4a906b46e4001484ffa30a7839b82ed2",
+    "bFormalCommit": "277805b4dc612548f4dcdf4f91189abb4ef5c8e3",
+    "contract": "W3-C3/W3-R2",
+    "ownerDecision": "W3-D40-ENV-1",
+    "ownerDecisionCommit": "c8b4aacffccdad92338abedfd7acb3b59b716e60",
+    "formalEnvironmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+    "assetBundleHashes": {
+      "act-inspect-dataframe": "bcc38620bdacede9d690ee62efbedaf8f0aee8dabaa55e9b7ca5b2452d29905c",
+      "act-practical": "3273308c4c9829b263a550c2d69eb40e5098b4e0802399c2334053afb3d6815c"
+    }
+  }
+}

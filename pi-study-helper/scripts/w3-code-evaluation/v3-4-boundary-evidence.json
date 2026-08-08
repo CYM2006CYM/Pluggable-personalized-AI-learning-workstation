@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "status": "PASS",
+  "contract": "W3-C3/W3-R2",
+  "publicReturnType": "ActivityResult",
+  "internalStages": ["prepare", "user_code", "public_tests", "hidden_tests", "summarize"],
+  "separatePublicHiddenProcesses": true,
+  "hiddenAssetsOwner": "node_parent_only",
+  "hiddenAssetsInUserDirectory": false,
+  "publicResultExcludes": [
+    "hidden test source",
+    "reference implementation",
+    "full Rubric",
+    "private CSV contents",
+    "host absolute paths",
+    "raw stdout/stderr",
+    "unknown protocol fields and error codes"
+  ],
+  "sourceScan": {
+    "importsAttemptEvidenceKnowledgeStatePathRepository": false,
+    "writesFormalFacts": false,
+    "publicResultContainsInternalStageDetails": false,
+    "status": "PASS"
+  },
+  "environmentEvidenceRef": "scripts/w3-code-evaluation/environment-formal-binding-evidence.json",
+  "ownerDecision": "W3-D40-ENV-1",
+  "candidateHead": "c8b4aacffccdad92338abedfd7acb3b59b716e60",
+  "profileStatus": "draft"
+}

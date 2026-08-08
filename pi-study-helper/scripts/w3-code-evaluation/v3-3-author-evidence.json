@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "status": "PASS",
+  "contract": "W3-C3/W3-R2",
+  "w3StartCommit": "f190326a4a906b46e4001484ffa30a7839b82ed2",
+  "bFormalCommit": "277805b4dc612548f4dcdf4f91189abb4ef5c8e3",
+  "candidateHead": "c8b4aacffccdad92338abedfd7acb3b59b716e60",
+  "ownerDecision": "W3-D40-ENV-1",
+  "bTaskBundleAssetBundleHashes": {
+    "act-inspect-dataframe": "bcc38620bdacede9d690ee62efbedaf8f0aee8dabaa55e9b7ca5b2452d29905c",
+    "act-practical": "3273308c4c9829b263a550c2d69eb40e5098b4e0802399c2334053afb3d6815c"
+  },
+  "environmentEvidenceRef": "scripts/w3-code-evaluation/environment-formal-binding-evidence.json",
+  "environmentStatus": "measured_node_submit",
+  "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+  "authorTest": {
+    "command": "npm.cmd test -- --maxWorkers=1 --run tests/activity-rubric.test.ts tests/python-process-evaluation.test.ts",
+    "exitCode": 0,
+    "testFiles": 2,
+    "testsPassed": 20,
+    "testsFailed": 0
+  },
+  "r2AdditionalTests": {
+    "command": "npm.cmd test -- --maxWorkers=1 --run tests/python-process-evaluation-r2.test.ts",
+    "exitCode": 0,
+    "testFiles": 1,
+    "testsPassed": 8,
+    "testsFailed": 0,
+    "matrix": [
+      "healthy assertion failure",
+      "test RuntimeError evaluator fault",
+      "TaskBundle hash and allowed-library gates",
+      "Rubric threshold/weight/mapping gates",
+      "unknown and mismatched protocol",
+      "real evaluator timeout distinct from learner timeout",
+      "pending D2 evidence self-check BLOCKED"
+    ]
+  },
+  "formalTaskRuns": [
+    {
+      "activityId": "act-inspect-dataframe",
+      "repeatCount": 3,
+      "passCount": 3,
+      "fieldIdentical": true,
+      "candidateCount": 1,
+      "status": "PASS"
+    },
+    {
+      "activityId": "act-practical",
+      "repeatCount": 3,
+      "passCount": 3,
+      "fieldIdentical": true,
+      "candidateCount": 1,
+      "status": "PASS"
+    }
+  ],
+  "classificationMatrix": {
+    "correct": "pass",
+    "partially_correct": "partial",
+    "syntax_error": "learner_error",
+    "runtime_error": "learner_error",
+    "test_failed": "learner_error",
+    "timeout": "learner_error",
+    "output_limit": "learner_error",
+    "disallowed_import": "learner_error",
+    "submission_contract_error": "learner_error",
+    "environment_mismatch": "evaluator_error",
+    "evaluator_error": "evaluator_error",
+    "evaluator_start_failed": "evaluator_error",
+    "evaluator_timeout": "evaluator_error",
+    "dependency_missing": "evaluator_error",
+    "test_asset_invalid": "evaluator_error",
+    "result_protocol_invalid": "evaluator_error",
+    "runner_crash": "evaluator_error"
+  },
+  "notes": [
+    "The owner decision W3-D40-ENV-1 approves this trusted-local measured_node_submit environment.",
+    "The Profile remains draft; this author evidence does not activate it or create formal learning facts."
+  ]
+}
