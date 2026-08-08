@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -57,8 +57,8 @@ interface CaseEvidence {
 const workspace = resolve(import.meta.dirname, "..", "..");
 const profileDirectory = resolve(workspace, "pi-study-helper", "fixtures", "profiles", "pandas-cleaning-v2-draft");
 const developmentCasesPath = resolve(workspace, "evaluation", "personas", "development-20.jsonl");
-const v31EvidencePath = resolve(workspace, "W3-D1-A-V3-1-evidence.json");
-const v32EvidencePath = resolve(workspace, "W3-D1-A-V3-2-evidence.json");
+const v31EvidencePath = resolve(workspace, "pi-study-helper", "scripts", "w3-path-validation", "W3-D1-A-V3-1-evidence.json");
+const v32EvidencePath = resolve(workspace, "pi-study-helper", "scripts", "w3-path-validation", "W3-D1-A-V3-2-evidence.json");
 const frozenNow = () => new Date("2026-08-07T00:00:00.000Z");
 const expectedSourceSha256 = "54c0f5f30bc0b9a104ac2e9e38e6ca3d6f33c5cbe3ade17c62be1c69be1b8473";
 
@@ -265,8 +265,12 @@ describe("D45 V3 development-20 dual-budget evidence", () => {
       expect(boundaryRuns[1]!.runs[0]!.keyNodes.find((node) => node.knowledgePointId === "fixture-a")?.status).toBe("available");
       expect(boundaryRuns[1]!.runs[0]!.keyNodes.find((node) => node.knowledgePointId === "fixture-b")?.status).toBe("locked");
       expect(boundaryRuns[1]!.runs[0]!.keyNodes.find((node) => node.knowledgePointId === "fixture-target")?.status).toBe("locked");
-      await writeFile(v31EvidencePath, `${JSON.stringify({ schemaVersion: 2, gate: "V3-1", projectionRuleVersion: "w3-v3-feasible-180-v1", runsPerCase: 10, candidateCount: 20, actualPathLegalRate: 1, cases: v31 }, null, 2)}\n`, "utf8");
-      await writeFile(v32EvidencePath, `${JSON.stringify({ schemaVersion: 2, gate: "V3-2", projectionRuleVersion: "w3-v3-original-budget-v1", runsPerCase: 10, pathInfeasibleCount: 20, illegalPathCount: 0, cases: v32, boundaryFixtures: boundaryRuns }, null, 2)}\n`, "utf8");
+      const expectedV31 = JSON.parse(await readFile(v31EvidencePath, "utf8"));
+      const expectedV32 = JSON.parse(await readFile(v32EvidencePath, "utf8"));
+      expect({ schemaVersion: 2, gate: "V3-1", projectionRuleVersion: "w3-v3-feasible-180-v1", runsPerCase: 10, candidateCount: 20, actualPathLegalRate: 1, cases: v31 })
+        .toEqual(expectedV31);
+      expect({ schemaVersion: 2, gate: "V3-2", projectionRuleVersion: "w3-v3-original-budget-v1", runsPerCase: 10, pathInfeasibleCount: 20, illegalPathCount: 0, cases: v32, boundaryFixtures: boundaryRuns })
+        .toEqual(expectedV32);
     } finally {
       await rm(root, { recursive: true, force: true });
     }

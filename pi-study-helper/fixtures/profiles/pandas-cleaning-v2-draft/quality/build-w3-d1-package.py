@@ -1,12 +1,14 @@
-"""Build the B W3-D1 candidate ZIP and a central-directory-verified manifest."""
+"""Rebuild the historical B W3-D1 candidate ZIP from its exact D1 commit."""
 from __future__ import annotations
 
 import hashlib
 import json
+import subprocess
 import zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[5]
+B_D1_COMMIT = "277805b4dc612548f4dcdf4f91189abb4ef5c8e3"
 PROFILE = ROOT / "pi-study-helper/fixtures/profiles/pandas-cleaning-v2-draft"
 ANNOTATIONS = ROOT / "evaluation/golden/annotations"
 ZIP_PATH = ROOT / "w3-d1-b-rectified-candidate.zip"
@@ -54,6 +56,9 @@ def file_entry(rel: str, category: str) -> dict:
 
 
 def main() -> None:
+    head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
+    if head != B_D1_COMMIT:
+        raise SystemExit(f"historical D1 rebuild requires HEAD={B_D1_COMMIT}, got {head}")
     seal = json.loads((ANNOTATIONS / "b-final-021-060.seal.candidate.json").read_text(encoding="utf-8"))
     asset_paths = [item["path"] for item in seal["taskBundleAssetTree"]["entries"]]
     package = list(dict.fromkeys(asset_paths + FROZEN + AUDIT_ONLY + [

@@ -12,6 +12,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 W3_START_COMMIT = "f190326a4a906b46e4001484ffa30a7839b82ed2"
+B_D1_COMMIT = "277805b4dc612548f4dcdf4f91189abb4ef5c8e3"
+HISTORICAL_PACKAGE_NAME = "w3-d1-b-rectified-candidate.zip"
+ARCHIVED_ZIP_PATH = "evaluation/golden/annotations/audit/w3-d1-b/w3-d1-b-candidate-277805b.zip"
+ARCHIVED_ZIP_SHA256 = "4472528da92359df20d0d494e4f42a74d06b04e37fec4fe2bd809ecac23034a2"
 ALL_ACTIVITY_IDS = (
     "act-inspect-dataframe", "act-missing", "act-duplicates", "act-types", "act-practical",
 )
@@ -206,13 +210,14 @@ def collect_w3_assets(profile_root: Path, targets: list[dict]) -> list[Path]:
 
 def verify_zip_manifest(repo_root: Path, manifest: dict, errors: list[str]) -> None:
     package_name = manifest.get("packageZipFileName")
-    if not isinstance(package_name, str):
-        errors.append("manifest packageZipFileName missing")
-        return
-    package_path = repo_root / package_name
+    if package_name != HISTORICAL_PACKAGE_NAME:
+        errors.append("historical manifest packageZipFileName drift")
+    package_path = repo_root / ARCHIVED_ZIP_PATH
     if not package_path.is_file():
-        errors.append(f"candidate ZIP missing: {package_name}")
+        errors.append(f"archived D1 ZIP missing: {ARCHIVED_ZIP_PATH}")
         return
+    if hashlib.sha256(package_path.read_bytes()).hexdigest() != ARCHIVED_ZIP_SHA256:
+        errors.append("archived D1 ZIP SHA-256 drift")
     expected_paths = manifest.get("packageEntries", [])
     file_entries = {item["path"]: item for item in manifest.get("fileEntries", [])}
     if manifest.get("actualPackageFileCount") != len(expected_paths):
@@ -231,7 +236,7 @@ def verify_zip_manifest(repo_root: Path, manifest: dict, errors: list[str]) -> N
     elif file_entries[annotation_path].get("category") != "proposedCommit" or file_entries[annotation_path].get("sha256") != ANNOTATION_SHA256:
         errors.append("B annotation package entry hash/category drift")
     proposed = set(manifest.get("proposedCommitPaths", []))
-    if proposed & (FROZEN_PATHS | {AUDIT_ONLY_PATH, package_name}):
+    if proposed & (FROZEN_PATHS | {AUDIT_ONLY_PATH, HISTORICAL_PACKAGE_NAME, ARCHIVED_ZIP_PATH}):
         errors.append("proposedCommitPaths includes non-committable material")
     try:
         with zipfile.ZipFile(package_path) as archive:
@@ -277,13 +282,16 @@ def run_verify(repo_root: Path, profile_root: Path) -> int:
         if seal.get("supersedes", {}).get("originalSealPath") != AUDIT_ONLY_PATH:
             errors.append("original seal is not audit-only")
         if targets:
-            entries = sorted([entry(repo_root, path) for path in collect_w3_assets(profile_root, targets)], key=lambda item: item["path"].encode("utf-8"))
+            entries = seal.get("taskBundleAssetTree", {}).get("entries", [])
+            manifest_entries = {item["path"]: item for item in manifest.get("fileEntries", [])}
             if len(entries) != 29:
-                errors.append(f"W3 asset tree count must be 29, got {len(entries)}")
-            if seal.get("taskBundleAssetTree", {}).get("entries") != entries:
-                errors.append("candidate seal asset entries drift")
+                errors.append(f"historical W3 asset tree count must be 29, got {len(entries)}")
+            for item in entries:
+                archived = manifest_entries.get(item.get("path"))
+                if archived is None or {key: archived.get(key) for key in ("path", "hashMode", "byteLength", "sha256")} != item:
+                    errors.append(f"historical W3 asset entry differs from archived manifest: {item.get('path')}")
             if seal.get("taskBundleAssetTree", {}).get("sha256") != tree_hash(entries):
-                errors.append("candidate seal asset tree hash drift")
+                errors.append("historical candidate seal asset tree hash drift")
         verify_zip_manifest(repo_root, manifest, errors)
     if errors:
         print("VERIFICATION FAILED:", file=sys.stderr)
@@ -301,6 +309,10 @@ def run_verify(repo_root: Path, profile_root: Path) -> int:
 
 
 def build_seal(repo_root: Path, profile_root: Path, temp_dir: Path) -> int:
+    head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=repo_root, text=True).strip()
+    if head != B_D1_COMMIT:
+        print(f"ERROR: historical seal rebuild requires HEAD={B_D1_COMMIT}, got {head}", file=sys.stderr)
+        return 1
     if temp_dir.exists() and any(temp_dir.iterdir()):
         print("ERROR: --temp-dir must be empty", file=sys.stderr)
         return 1

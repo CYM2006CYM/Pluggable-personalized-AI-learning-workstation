@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "recordType": "owner_dual_seal_qualification",
+  "contractVersion": "W3-C4/W3-R2",
+  "decisionBasis": "D44",
+  "auditBaseCommit": "8648620213463701319d089a5ab088e62e243af0",
+  "qualifiedAt": "2026-08-09T01:46:50+08:00",
+  "scope": {
+    "firstCaseId": "final-021",
+    "lastCaseId": "final-060",
+    "caseCount": 40
+  },
+  "frozenInput": {
+    "path": "evaluation/personas/final-60.jsonl",
+    "sha256": "b77ba4902003ba20bc5b233c4797838eb26325d1b38fd02bc68ba02206cb1d1c",
+    "hashMode": "utf8-lf-normalized"
+  },
+  "bSeal": {
+    "annotationPath": "evaluation/golden/annotations/b-final-021-060.jsonl",
+    "annotationSha256": "eaefe9cfbbf8f6144e8299abfc0d82b66cb9ffe8dd1d783e841c5bdfac2690bf",
+    "sealPath": "evaluation/golden/annotations/b-final-021-060.seal.candidate.json",
+    "sealSha256": "84c415f36f6b7c7d4ac6efd7675c9ebcae6818f7249b47d5ffc85a00ac58df53",
+    "sealHashMode": "raw-binary",
+    "handoffSha256": "ee3605fae3814f73b8f57a81e6c73cee6417252f5b9de899c04947cc3d1acddd"
+  },
+  "eSeal": {
+    "externalPackageName": "标注.zip",
+    "externalPackageSha256": "cb17323bf0b8bcfb68d6061165a4389ffbef7bbdd0f10dc7f70368eef90b614f",
+    "externalPackageHashMode": "raw-binary",
+    "annotationEntry": "W3-D1/e-final-021-060.jsonl",
+    "annotationSha256": "af450ede185be215e12e5d13688ebc7b34cb3af9816f50803e5612c2219da266",
+    "sealRecordEntry": "W3-D1/seal-record.json",
+    "sealRecordSha256": "e96569d1a47395649300e016e5f582d66dfb9dac1b7294840340b5222f21a636",
+    "independenceDeclarationEntry": "W3-D1/independence-declaration.md",
+    "independenceDeclarationSha256": "89b8e0ff064942b9e3421ec2a56848f772e5412da7645e73388b7fd961a3b3f9"
+  },
+  "checks": {
+    "schemaValid": true,
+    "coverage40Of40": true,
+    "sameFrozenInput": true,
+    "sealHashesVerified": true,
+    "independenceQualified": true
+  },
+  "qualificationStatus": "PASS",
+  "goldWorkflowStatus": "PENDING_OWNER_ADJUDICATION",
+  "negotiationStatus": "SKIPPED_BY_D44",
+  "formalGoldGenerated": false,
+  "mechanicalDifferenceListIncluded": false,
+  "sealedOriginalsModified": false
+}

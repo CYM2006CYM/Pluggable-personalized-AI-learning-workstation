@@ -4,12 +4,13 @@
 
 ## 仓库内容
 
-除本说明文件 `README.md` 外，仓库只保存以下四个项目条目：
+除本说明文件 `README.md` 外，仓库只保存以下五个项目条目：
 
 ```text
 .
 ├─ README.md
 ├─ pi-study-helper/
+├─ evaluation/
 ├─ pi-loop-graph-sdk-main/
 ├─ 新版设计文档-重写版/
 └─ XH-202630上海云之脑智能科技有限公司-领域知识个性化生成与多智能体协同决策系统研究比赛方案(16).pdf
@@ -27,12 +28,14 @@ pi-study-helper/
 ├─ src/              # TypeScript应用源码
 ├─ tests/            # 单元、集成和回归测试
 ├─ fixtures/         # Profile、来源、模型响应和评测结果夹具
-├─ scripts/          # 检查和验证脚本
+├─ scripts/          # 检查、验证脚本和按周可复算证据
 ├─ package.json      # 项目命令和依赖
 └─ README.md         # 应用自身的安装与运行说明
 ```
 
 后续 Profile v2、诊断、Evidence、KnowledgeState、PathEngine、统一应用入口、代码执行器、模型端口和网页适配均在该工程中逐步实现。
+
+第三周PathEngine的V3-1/V3-2可复算证据及逐文件哈希位于`pi-study-helper/scripts/w3-path-validation/`。测试只读取和核对已提交证据，不在仓库内重写证据文件。
 
 常用检查命令以该目录内的 `README.md` 和 `package.json` 为准。克隆公共仓库后可从仓库根目录安装和验证：
 
@@ -42,6 +45,10 @@ Set-Location .\pi-study-helper
 npm.cmd ci
 npm.cmd test
 ```
+
+### `evaluation/`
+
+确定性评测输入、独立标注、负责人资格记录和正式gold所在目录。`evaluation/golden/annotations/audit/`只保存历史审计记录和原始交付归档；其中ZIP用于审计追溯，不是应用运行依赖，也不得进入浏览器DTO、HTTP安全响应、日志、Agent上下文、学习者反馈或安全导出。
 
 ### `pi-loop-graph-sdk-main/`
 
@@ -164,4 +171,4 @@ XH-202630上海云之脑智能科技有限公司-领域知识个性化生成与�
 
 `pi-study-helper`目前主要提供已有学习助手基础框架；Profile v2、Pandas正式资料包、个性化路径、代码执行器、网页和新增测试仍需按六周计划逐步实现。设计文档中的规划、候选和延期能力，不代表源码已经具备。
 
-本仓库将作为团队后续开发的唯一正式协作仓库。可交付代码、负责人批准的SDK修改和正式设计变更都应进入本仓库规定的四个项目条目中，不能再形成第二套项目目录。
+本仓库将作为团队后续开发的唯一正式协作仓库。可交付代码、负责人批准的SDK修改和正式设计变更都应进入本仓库规定的五个项目条目中，不能再形成第二套项目目录。

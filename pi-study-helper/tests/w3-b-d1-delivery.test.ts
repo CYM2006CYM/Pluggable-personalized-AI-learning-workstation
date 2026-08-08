@@ -104,7 +104,28 @@ describe("B W3-D1 delivery regression", () => {
     expect(seal.qualificationStatus).toBe("PENDING_OWNER_DUAL_SEAL_CHECK");
   });
 
-  it("delivers the B annotation as a proposed, hashed ZIP entry", async () => {
+  it("binds the owner dual-seal qualification without exposing adjudication material", async () => {
+    const qualification = await json(resolve(
+      annotationsRoot,
+      "audit/w3-d1-dual-seal-qualification.json",
+    ));
+    expect(qualification).toMatchObject({
+      decisionBasis: "D44",
+      qualificationStatus: "PASS",
+      goldWorkflowStatus: "PENDING_OWNER_ADJUDICATION",
+      negotiationStatus: "SKIPPED_BY_D44",
+      formalGoldGenerated: false,
+      mechanicalDifferenceListIncluded: false,
+      sealedOriginalsModified: false,
+    });
+    expect(qualification.bSeal.sealSha256)
+      .toBe(createHash("sha256")
+        .update(await readFile(resolve(annotationsRoot, "b-final-021-060.seal.candidate.json")))
+        .digest("hex"));
+    expect(qualification).not.toHaveProperty("mechanicalDifferences");
+  });
+
+  it("keeps the B annotation in the immutable archived D1 ZIP", async () => {
     const manifest = await json(resolve(annotationsRoot, "w3-d1-b-candidate-manifest.json"));
     const annotation = "evaluation/golden/annotations/b-final-021-060.jsonl";
     expect(manifest.packageEntries).toContain(annotation);
@@ -115,7 +136,10 @@ describe("B W3-D1 delivery regression", () => {
       category: "proposedCommit",
       sha256: "eaefe9cfbbf8f6144e8299abfc0d82b66cb9ffe8dd1d783e841c5bdfac2690bf",
     });
-    const candidateZip = resolve(repoRoot, "w3-d1-b-rectified-candidate.zip").replace(/\\/g, "\\\\");
+    const archivedZipPath = resolve(repoRoot, "evaluation/golden/annotations/audit/w3-d1-b/w3-d1-b-candidate-277805b.zip");
+    expect((await hash(archivedZipPath)).sha256)
+      .toBe("4472528da92359df20d0d494e4f42a74d06b04e37fec4fe2bd809ecac23034a2");
+    const candidateZip = archivedZipPath.replace(/\\/g, "\\\\");
     const output = await runPython(["-c", `import zipfile; z=zipfile.ZipFile(r'${candidateZip}'); assert 'evaluation/golden/annotations/b-final-021-060.jsonl' in z.namelist()`]);
     expect(output).toBe("");
   });
