@@ -3,7 +3,7 @@ import { mkdir, mkdtemp, readFile, readdir, rm, stat, writeFile } from "node:fs/
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { FileLearningSessionRepository } from "../src/repositories/file-learning-session-repository.js";
+import { FileLearningSessionRepository, type FileLearningSessionPublishStage } from "../src/repositories/file-learning-session-repository.js";
 import type { Evidence, KnowledgeState, LearnerDiagnostic } from "../src/domain/v2-types.js";
 
 const roots: string[] = [];
@@ -254,6 +254,53 @@ describe("FileLearningSessionRepository", () => {
     await expect(repo.commit({ ...input, requestId: "stale-commit" })).rejects.toMatchObject({ errorCode: "session_version_conflict" });
   });
 
+  it("rejects an Evidence ID already committed by a different request without changing the checkpoint", async () => {
+    const { repo, root, view } = await repository();
+    const firstEvidence = { ...evidence(), sessionId: view.sessionId };
+    const firstInput = {
+      requestId: "first-evidence",
+      sessionId: view.sessionId,
+      sessionVersion: 1,
+      profileRevision: 2,
+      candidate: {
+        requestId: "first-evidence",
+        evidenceCandidates: [firstEvidence],
+        knowledgeStates: [state(1)],
+        diagnosticCandidate: { ...diagnostic(1), sessionId: view.sessionId, states: [state(1)] },
+        nextStage: "path" as const,
+      },
+    };
+    const first = await repo.commit(firstInput);
+    const directory = resolve(root, "profile_families", "smoke-subject", "_user", "learning_sessions", view.sessionId);
+    const markerBefore = await readFile(resolve(directory, "checkpoints", "latest.json"), "utf8");
+    const evidenceBefore = await readFile(resolve(directory, "evidence", "evidence-1.json"), "utf8");
+
+    await expect(repo.commit({
+      requestId: "duplicate-evidence",
+      sessionId: view.sessionId,
+      sessionVersion: 2,
+      profileRevision: 2,
+      candidate: { requestId: "duplicate-evidence", evidenceCandidate: { ...firstEvidence }, knowledgeStates: [state(2)] },
+    })).rejects.toMatchObject({ errorCode: "evidence_invalid" });
+
+    expect(await readFile(resolve(directory, "checkpoints", "latest.json"), "utf8")).toBe(markerBefore);
+    expect(await readFile(resolve(directory, "evidence", "evidence-1.json"), "utf8")).toBe(evidenceBefore);
+    expect(await repo.getSnapshot({ sessionId: view.sessionId, sessionVersion: 2, profileRevision: 2 })).toMatchObject({
+      sessionVersion: 2,
+      latestCommit: { evidenceVersion: 1, sessionVersion: 2 },
+      evidence: [{ evidenceId: "evidence-1" }],
+    });
+    expect(await repo.commit(firstInput)).toEqual(first);
+    await expect(repo.commit({
+      ...firstInput,
+      candidate: {
+        ...firstInput.candidate,
+        knowledgeStates: [{ ...state(1), confidence: 0.25 }],
+        diagnosticCandidate: { ...diagnostic(1), sessionId: view.sessionId, states: [{ ...state(1), confidence: 0.25 }] },
+      },
+    })).rejects.toMatchObject({ errorCode: "idempotency_conflict" });
+  });
+
   it("recovers a complete candidate left before latest.json publication", async () => {
     let fail = true;
     const { repo, view } = await repository({ beforePublish: async () => { if (fail) throw new Error("simulated interruption"); } });
@@ -271,6 +318,41 @@ describe("FileLearningSessionRepository", () => {
     const recovered = await repo.recover({ requestId: "recover-1", sessionId: view.sessionId, sessionVersion: 1, profileRevision: 2 });
     expect(recovered.recoveryAction).toBe("completed_candidate_commit");
     expect(recovered.sessionVersion).toBe(2);
+  });
+
+  it.each(["candidate_written", "evidence_written", "knowledge_state_written", "path_written", "checkpoint_written"] as const)("keeps the committed session invisible and recovers uniquely when %s faults", async (stage: FileLearningSessionPublishStage) => {
+    let injected: FileLearningSessionPublishStage | undefined = stage;
+    const { repo, view } = await repository({
+      beforePublish: async (_sessionId, _requestId, currentStage) => {
+        if (currentStage === injected) {
+          injected = undefined;
+          throw new Error(`fault:${currentStage}`);
+        }
+      },
+    });
+    const item = { ...evidence(), sessionId: view.sessionId };
+    const pathCandidate = {
+      pathId: "fault-path",
+      pathVersion: 1,
+      status: "candidate" as const,
+      goalId: "goal-1",
+      mode: "recommended" as const,
+      nodes: [{ nodeId: "fault-node", knowledgePointId: "kp-1", activityIds: ["activity-1"], status: "available" as const, estimatedMinutes: 5, reasonCodes: ["goal_required"] }],
+    };
+    const input = {
+      requestId: `fault-${stage}`,
+      sessionId: view.sessionId,
+      sessionVersion: 1,
+      profileRevision: 2,
+      candidate: { requestId: `fault-${stage}`, evidenceCandidate: item, knowledgeStates: [state(1)], pathCandidate },
+    };
+    await expect(repo.commit(input)).rejects.toThrow(`fault:${stage}`);
+    expect((await repo.getSnapshot({ sessionId: view.sessionId, sessionVersion: 1, profileRevision: 2 })).evidence).toEqual([]);
+    const recovered = await repo.recover({ requestId: `recover-${stage}`, sessionId: view.sessionId, sessionVersion: 1, profileRevision: 2 });
+    expect(recovered).toMatchObject({ recoveryAction: "completed_candidate_commit", sessionVersion: 2 });
+    expect(recovered.evidence).toHaveLength(1);
+    expect(recovered.path).toMatchObject({ pathId: "fault-path", pathVersion: 1 });
+    expect((await repo.getSnapshot({ sessionId: view.sessionId, sessionVersion: 2, profileRevision: 2 })).evidence).toHaveLength(1);
   });
 
   it.each(semanticCorruptions)("isolates a JSON-valid candidate with corrupted %s", async (_label, corrupt) => {

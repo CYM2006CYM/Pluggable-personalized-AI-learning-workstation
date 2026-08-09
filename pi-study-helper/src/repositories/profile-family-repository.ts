@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { cp, mkdir, readFile, readdir, rename, rm, stat } from "node:fs/promises";
 import { dirname, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -25,6 +26,8 @@ export interface ProfileFamilyRepositoryOptions {
   dataRoot?: string;
   fixturesRoot?: string;
   now?: () => Date;
+  /** D3 fault-injection hook; production callers leave this undefined. */
+  beforeV2ActivationStage?: (stage: "candidate_validated" | "active_manifest_written" | "archive_manifest_written" | "archive_prepared" | "old_archived" | "active_published") => Promise<void> | void;
 }
 
 export interface CreateDraftProfileInput {
@@ -52,11 +55,56 @@ async function pathExists(path: string): Promise<boolean> {
   }
 }
 
+const D3_FORMAL_BUNDLE_HASHES: Readonly<Record<string, string>> = {
+  "act-inspect-dataframe": "bcc38620bdacede9d690ee62efbedaf8f0aee8dabaa55e9b7ca5b2452d29905c",
+  "act-practical": "3273308c4c9829b263a550c2d69eb40e5098b4e0802399c2334053afb3d6815c",
+};
+const D3_ENVIRONMENT_LOCK_SHA256 = "59917d1528d031f46a1e76359d99628e810f2dfa78a92d66e03386c860fbaf43";
+const D3_ENVIRONMENT_HASH = "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76";
+
+function canonicalizeForD3(value: unknown): string {
+  if (value === null || typeof value === "boolean" || typeof value === "number" || typeof value === "string") return JSON.stringify(value);
+  if (Array.isArray(value)) return `[${value.map(canonicalizeForD3).join(",")}]`;
+  if (typeof value === "object" && value !== null) {
+    const record = value as Record<string, unknown>;
+    return `{${Object.keys(record).sort().map((key) => `${JSON.stringify(key)}:${canonicalizeForD3(record[key])}`).join(",")}}`;
+  }
+  throw new Error("unsupported formal binding value");
+}
+
+async function validateD3FormalBindings(profileRoot: string): Promise<void> {
+  const lockPath = resolve(profileRoot, "environments", "environment-lock.json");
+  const lockBytes = await readFile(lockPath);
+  const lockHash = createHash("sha256").update(lockBytes).digest("hex");
+  if (lockHash !== D3_ENVIRONMENT_LOCK_SHA256) throw new Error("D3 environment-lock.json SHA-256 binding mismatch");
+  const lock = JSON.parse(lockBytes.toString("utf8")) as Record<string, unknown>;
+  if (lock.environmentHash !== D3_ENVIRONMENT_HASH) throw new Error("D3 environmentHash binding mismatch");
+
+  const bundlePath = resolve(profileRoot, "assessments", "private", "task-bundles.json");
+  const fixturePath = resolve(profileRoot, "datasets", "fixtures.json");
+  const bundleDocument = JSON.parse(await readFile(bundlePath, "utf8")) as Record<string, unknown>;
+  const fixtureDocument = JSON.parse(await readFile(fixturePath, "utf8")) as Record<string, unknown>;
+  if (!Array.isArray(bundleDocument.bundles) || !Array.isArray(fixtureDocument.fixtures)) throw new Error("D3 formal binding document shape mismatch");
+  for (const [activityId, expectedHash] of Object.entries(D3_FORMAL_BUNDLE_HASHES)) {
+    const bundle = bundleDocument.bundles.find((item) => {
+      const record = item as Record<string, unknown>;
+      return (record.activity as Record<string, unknown> | undefined)?.activityId === activityId;
+    }) as Record<string, unknown> | undefined;
+    if (!bundle || typeof bundle.assetBundleHash !== "string") throw new Error(`D3 formal bundle missing: ${activityId}`);
+    const { assetBundleHash, ...withoutHash } = bundle;
+    const fixtureIds = ((bundle.activity as Record<string, unknown>).datasetRefs as string[] | undefined) ?? [];
+    const resolvedFixtures = fixtureDocument.fixtures.filter((item) => fixtureIds.includes((item as Record<string, unknown>).fixtureId as string));
+    const recomputedHash = createHash("sha256").update(canonicalizeForD3({ ...withoutHash, resolvedFixtures }), "utf8").digest("hex");
+    if (assetBundleHash !== recomputedHash || recomputedHash !== expectedHash) throw new Error(`D3 formal bundle hash mismatch: ${activityId}`);
+  }
+}
+
 export class ProfileFamilyRepository {
   readonly dataRoot: string;
   readonly familiesRoot: string;
   readonly fixturesRoot: string;
   private readonly now: () => Date;
+  private readonly beforeV2ActivationStage?: ProfileFamilyRepositoryOptions["beforeV2ActivationStage"];
 
   constructor(options: ProfileFamilyRepositoryOptions = {}) {
     this.dataRoot = resolveStudyDataRoot(options.dataRoot);
@@ -65,6 +113,7 @@ export class ProfileFamilyRepository {
       options.fixturesRoot ?? fileURLToPath(new URL("../../fixtures/profiles", import.meta.url)),
     );
     this.now = options.now ?? (() => new Date());
+    this.beforeV2ActivationStage = options.beforeV2ActivationStage;
   }
 
   familyDirectory(subjectId: string): string {
@@ -182,6 +231,81 @@ export class ProfileFamilyRepository {
 
   async loadDraftProfile(subjectId: string): Promise<Profile> {
     return validateCanonicalProfileDirectory(this.slotDirectory(subjectId, "draft"), subjectId, "draft");
+  }
+
+  /**
+   * D3-only v2 activation. The candidate is read from the immutable fixture
+   * slot, while runtime state is published under the user's Profile family.
+   * No caller may mutate status or move active directories by hand.
+   */
+  async activateV2Draft(subjectId: string): Promise<ProfileManifestV2> {
+    assertSafeSubjectId(subjectId);
+    const candidate = resolveInside(this.fixturesRoot, "pandas-cleaning-v2-draft");
+    const family = this.familyDirectory(subjectId);
+    const active = resolveInside(family, "active");
+    const archivedRoot = resolveInside(family, "archived");
+    await mkdir(archivedRoot, { recursive: true });
+
+    const candidateManifest = await validateProfileV2Directory(candidate, "draft");
+    if (candidateManifest.subjectId !== subjectId || candidateManifest.revision !== 2 || candidateManifest.revisionOf !== 1) {
+      throw new Error("D3 Profile candidate must be pandas-cleaning revision 2 revisionOf=1");
+    }
+    await validateD3FormalBindings(candidate);
+    await this.beforeV2ActivationStage?.("candidate_validated");
+
+    const activeExists = await pathExists(active);
+    let oldManifest: ProfileManifestV2 | undefined;
+    if (activeExists) {
+      oldManifest = await validateProfileV2Directory(active, "active");
+      if (oldManifest.subjectId !== subjectId || oldManifest.revision >= candidateManifest.revision) {
+        throw new Error("Existing active Profile is not an older revision of the candidate");
+      }
+    }
+
+    const token = crypto.randomUUID();
+    const prepared = resolveInside(family, `.v2-activation-${token}`);
+    const archivePrepared = resolveInside(family, `.v2-archive-${token}`);
+    const oldBackup = resolveInside(family, `.v2-old-${token}`);
+    const archiveName = `${timestampForPath(this.now())}-${token.slice(0, 8)}`;
+    const archiveTarget = resolveInside(archivedRoot, archiveName);
+    let oldMoved = false;
+    let newPublished = false;
+    try {
+      await cp(candidate, prepared, { recursive: true, errorOnExist: true });
+      const activated = { ...candidateManifest, status: "active" as const };
+      await writeJsonAtomic(resolve(prepared, "profile.json"), activated);
+      await this.beforeV2ActivationStage?.("active_manifest_written");
+      await validateProfileV2Directory(prepared, "active");
+
+      if (oldManifest !== undefined) {
+        await cp(active, archivePrepared, { recursive: true, errorOnExist: true });
+        await writeJsonAtomic(resolve(archivePrepared, "profile.json"), { ...oldManifest, status: "archived" as const });
+        await this.beforeV2ActivationStage?.("archive_manifest_written");
+        await validateProfileV2Directory(archivePrepared, "archived");
+      }
+      await this.beforeV2ActivationStage?.("archive_prepared");
+
+      if (oldManifest !== undefined) {
+        await rename(active, oldBackup);
+        await rename(archivePrepared, archiveTarget);
+        oldMoved = true;
+        await this.beforeV2ActivationStage?.("old_archived");
+      }
+      await rename(prepared, active);
+      newPublished = true;
+      await this.beforeV2ActivationStage?.("active_published");
+      await rm(archivePrepared, { recursive: true, force: true });
+      await rm(oldBackup, { recursive: true, force: true });
+      return validateProfileV2Directory(active, "active");
+    } catch (error) {
+      if (newPublished && await pathExists(active)) await rm(active, { recursive: true, force: true });
+      if (oldMoved && await pathExists(oldBackup) && !(await pathExists(active))) await rename(oldBackup, active);
+      await rm(prepared, { recursive: true, force: true });
+      await rm(archivePrepared, { recursive: true, force: true });
+      await rm(oldBackup, { recursive: true, force: true });
+      await rm(archiveTarget, { recursive: true, force: true });
+      throw error;
+    }
   }
 
   async listRevisionCandidates(): Promise<ProfileRevisionCandidate[]> {

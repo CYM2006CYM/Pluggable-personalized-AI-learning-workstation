@@ -17,6 +17,16 @@ export interface LearningSessionRepository {
   recover(input: RecoverLearningSessionInput): Promise<RecoverySnapshot>;
 }
 
+/** Internal binding reader used by the runtime; it never accepts a client revision. */
+export interface SessionBindingReader {
+  getBoundSnapshot(sessionId: string): Promise<SessionSnapshot>;
+}
+
+/** Internal recovery probe that keeps a durable Activity Attempt paired with its session candidate. */
+export interface RecoverableActivityCommitReader {
+  hasRecoverableActivityCommit(input: { sessionId: string; requestId: string }): Promise<boolean>;
+}
+
 export class LearningSessionRepositoryError extends Error {
   constructor(readonly errorCode: LearningRuntimeErrorCode, message: string) {
     super(message);

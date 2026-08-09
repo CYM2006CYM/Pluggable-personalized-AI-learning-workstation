@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "status": "formal_audit_candidate",
+  "executionRecord": "W3-D36-PROFILE-ACTIVATION-1",
+  "contract": "W3-C5/W3-R2",
+  "head": "bd1b599524ef2e3362d14a422d97debbf240f70f",
+  "originMain": "bd1b599524ef2e3362d14a422d97debbf240f70f",
+  "proposedFiles": {
+    "pi-study-helper/src/repositories/profile-family-repository.ts": "879df999aebfa884476906a4121392ed24710365a0661e301544700d05d4d102",
+    "pi-study-helper/src/repositories/learning-session-repository.ts": "894e7eebc31f171741e703d2c5a837803c86e7987b1e8d5bf829d67d50f2b07d",
+    "pi-study-helper/src/repositories/file-learning-session-repository.ts": "f9b9fdc125fed8dab473491a540cbb7249dd9241ff505fd2d78d8f6495a0618b",
+    "pi-study-helper/src/repositories/activity-repository.ts": "b841cbd3a1072e0db88083d496d6b3c217394fbea1e6e1703e901d946fc0b700",
+    "pi-study-helper/src/repositories/file-activity-repository.ts": "58386e883321b599c964ce316a9be6f5aa5690271b7c5a1e547ed53f1a3549cc",
+    "pi-study-helper/src/application/profile-bound-session-runtime.ts": "99ed1ac7b59b26b4f9d5cbc1b73e0c6229400adb862fabd2e3ab0f72f4f2dbc6",
+    "pi-study-helper/src/application/activity-runtime-service.ts": "612067baa640d3aeb1365d6fc852c1b30df9e3a037f56464deeef834bf953b03",
+    "pi-study-helper/tests/profile-v2-activation.test.ts": "0f2dbd7253609ed3b66c5b283715b6536ecc05be9848679ea409f54b646497b4",
+    "pi-study-helper/tests/profile-bound-session-runtime.test.ts": "404c2ace7e166a18406d86d651b77492b1e761ba26d2683d793e6c4194d4f974",
+    "pi-study-helper/tests/activity-runtime-service.test.ts": "71553d55a856e40cd2fbc0f777b81ae7ec471158601327a800f0259f7929393d",
+    "pi-study-helper/tests/file-activity-repository.test.ts": "2418b0fcce6e4a8e9b65640b3a5209e8dc840dd92b2ad8b1b52c15d1d812ad4a",
+    "pi-study-helper/tests/file-learning-session-repository.test.ts": "e230a956931cd7653aa0677d0b327d72cecbb16c6658951b697312de9aab009b",
+    "pi-study-helper/scripts/w3-path-validation/failure-matrix.json": "3e56f03a0ffe178455f92b4da9da02ebd68844099d7bd073f8ec4926ef8d4ebc",
+    "pi-study-helper/scripts/w3-path-validation/v3-4-author-evidence.json": "e746382cf607dfe2eecbd7bad4e86fce187892a8c78d524347434b4636267b90",
+    "pi-study-helper/scripts/w3-path-validation/v3-5-author-evidence.json": "100d2474b2d8248963023d9e1858a2518b0555f19a233e109f339f91a50f6f8c",
+    "pi-study-helper/scripts/w3-path-validation/v3-6-author-evidence.json": "011c519af465afb994128b4ae015ff87f7d8329d32905200b1f60da58b4e01bc",
+    "pi-study-helper/scripts/w3-path-validation/W3-D3-A-input-profile-state-evidence.json": "481fc7b204968e08db4a8bdfa3ee10bb93fb3081d2405dcb2b357ee52aa758e2",
+    "新版设计文档-重写版/第三周任务/handoff-w3-a-d3.md": "2bba514fcf4e5e04d621b6a6b42fdeafb039178cd3bb525b2c20ce5c14fd9696"
+  },
+  "testResults": [
+    {"command": "D47 deterministic/mock explicit selection excluding C's two Python evaluator integration files", "testFiles": 50, "testCases": 502, "passed": 501, "failed": 0, "skipped": 1, "exitCode": 0},
+    {"command": "cross-repository recovery and Evidence de-duplication selection", "testFiles": 2, "testCases": 37, "passed": 37, "failed": 0, "skipped": 0, "exitCode": 0},
+    {"command": "npm.cmd test -- --run --maxWorkers=1 raw full gate", "testFiles": 52, "testCases": 528, "passed": 505, "failed": 22, "skipped": 1, "exitCode": 1, "detail": "all 22 failures are in tests/python-process-evaluation.test.ts and tests/python-process-evaluation-r2.test.ts under C evaluator integration ownership; this machine does not match the approved runtime and two harness cases timed out"},
+    {"command": "npm.cmd run typecheck", "exitCode": 0},
+    {"command": "npm.cmd run check:docs", "exitCode": 0, "detail": "49 Markdown files checked"},
+    {"command": "git diff --check", "exitCode": 0, "detail": "no diff errors; CRLF conversion warning only"}
+  ],
+  "uncovered": [
+    "The raw full gate started C-owned Python evaluator tests and reported 22 integration-layer failures on the non-approved local runtime; the D47 deterministic/mock selection passed independently.",
+    "No real API key, online model, or fixed-trace demo was run.",
+    "Root-level pre-existing W3-D1 ZIP and evidence files are excluded from the proposed-file list and audit ZIP."
+  ],
+  "deliveryState": ["NOT_COMMITTED", "NOT_PUSHED", "upload_lock_not_requested"]
+}

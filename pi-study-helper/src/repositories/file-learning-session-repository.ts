@@ -21,6 +21,8 @@ import type {
   RecoverySnapshot,
   RecoverLearningSessionInput,
   SessionSnapshot,
+  SessionBindingReader,
+  RecoverableActivityCommitReader,
 } from "./learning-session-repository.js";
 import {
   toPathSafeSnapshot,
@@ -58,9 +60,16 @@ interface PreparedTransaction {
 export interface FileLearningSessionRepositoryOptions {
   dataRoot?: string;
   now?: () => Date;
-  /** Test hook invoked after durable candidate creation and before publication. */
-  beforePublish?: (sessionId: string, requestId: string) => Promise<void> | void;
+  /** Deterministic fault-injection hook; published readers remain behind latest.json. */
+  beforePublish?: (sessionId: string, requestId: string, stage: FileLearningSessionPublishStage) => Promise<void> | void;
 }
+
+export type FileLearningSessionPublishStage =
+  | "candidate_written"
+  | "evidence_written"
+  | "knowledge_state_written"
+  | "path_written"
+  | "checkpoint_written";
 
 async function exists(path: string): Promise<boolean> {
   try {
@@ -338,7 +347,7 @@ function validateDiagnostic(
   }
 }
 
-export class FileLearningSessionRepository implements LearningSessionRepository, InternalPathSessionPort {
+export class FileLearningSessionRepository implements LearningSessionRepository, InternalPathSessionPort, SessionBindingReader, RecoverableActivityCommitReader {
   readonly dataRoot: string;
   readonly familiesRoot: string;
   private readonly now: () => Date;
@@ -455,6 +464,10 @@ export class FileLearningSessionRepository implements LearningSessionRepository,
     for (const candidate of candidates) validateEvidenceCandidate(candidate, input);
     if (new Set(candidates.map((item) => item.evidenceId)).size !== candidates.length) {
       throw new LearningSessionRepositoryError("evidence_invalid", "Evidence identifiers must be unique");
+    }
+    const committedEvidenceIds = new Set(current.evidence.map((item) => item.evidenceId));
+    if (candidates.some((item) => committedEvidenceIds.has(item.evidenceId))) {
+      throw new LearningSessionRepositoryError("evidence_invalid", "Evidence identifier is already committed");
     }
 
     const nextEvidenceVersion = candidates.length > 0
@@ -652,6 +665,17 @@ export class FileLearningSessionRepository implements LearningSessionRepository,
     return this.publicSnapshot(stored);
   }
 
+  async getBoundSnapshot(sessionId: string): Promise<SessionSnapshot> {
+    const directory = await this.findSessionDirectory(sessionId);
+    const stored = await this.loadStoredSnapshot(directory);
+    return this.publicSnapshot(stored);
+  }
+
+  async hasRecoverableActivityCommit(input: { sessionId: string; requestId: string }): Promise<boolean> {
+    const directory = await this.findSessionDirectory(input.sessionId);
+    return exists(resolve(directory, ".candidates", input.requestId, "transaction.json"));
+  }
+
   /** Internal A port; full path metadata never crosses the public 21号 snapshot DTO. */
   async getInternalPathSnapshot(input: GetSessionSnapshotInput): Promise<InternalPersistedPathSnapshot | undefined> {
     const directory = await this.findSessionDirectory(input.sessionId);
@@ -719,7 +743,7 @@ export class FileLearningSessionRepository implements LearningSessionRepository,
       const candidateDirectory = resolve(directory, ".candidates", input.requestId);
       await mkdir(candidateDirectory, { recursive: true });
       await writeJsonAtomic(resolve(candidateDirectory, "transaction.json"), prepared);
-      await this.beforePublish?.(input.sessionId, input.requestId);
+      await this.beforePublish?.(input.sessionId, input.requestId, "candidate_written");
       const durable = await readJson<unknown>(resolve(candidateDirectory, "transaction.json"), "prepared transaction");
       const validated = this.validatePreparedTransaction(current, input.requestId, durable);
       await this.publishPrepared(directory, input.requestId, validated);
@@ -729,10 +753,12 @@ export class FileLearningSessionRepository implements LearningSessionRepository,
 
   private async publishPrepared(directory: string, requestId: string, prepared: PreparedTransaction): Promise<void> {
     assertSafeFileComponent(requestId, "requestId");
+    await this.beforePublish?.(prepared.input.sessionId, requestId, "evidence_written");
     for (const evidence of prepared.evidenceToPublish) {
       assertSafeFileComponent(evidence.evidenceId, "evidenceId");
       await writeJsonAtomic(resolve(directory, "evidence", `${evidence.evidenceId}.json`), evidence);
     }
+    await this.beforePublish?.(prepared.input.sessionId, requestId, "knowledge_state_written");
     for (const archived of prepared.archivedPathsToPublish) {
       await writeJsonAtomic(resolve(directory, "paths", "superseded", `${archived.pathVersion}.json`), archived);
     }
@@ -740,6 +766,7 @@ export class FileLearningSessionRepository implements LearningSessionRepository,
     if (prepared.snapshot.latestDiagnostic !== undefined) {
       await writeJsonAtomic(resolve(directory, "diagnostic", "result.json"), prepared.snapshot.latestDiagnostic);
     }
+    await this.beforePublish?.(prepared.input.sessionId, requestId, "path_written");
     await writeJsonAtomic(
       resolve(directory, "snapshots", `${prepared.snapshot.sessionVersion}.json`),
       prepared.snapshot,
@@ -750,6 +777,7 @@ export class FileLearningSessionRepository implements LearningSessionRepository,
       response: prepared.response,
     } satisfies StoredCommitResult);
     // The marker is deliberately last: readers only observe the new snapshot after this rename.
+    await this.beforePublish?.(prepared.input.sessionId, requestId, "checkpoint_written");
     await writeJsonAtomic(resolve(directory, "checkpoints", "latest.json"), prepared.snapshot.latestCommit);
     await rm(resolve(directory, ".candidates", requestId), { recursive: true, force: true });
   }

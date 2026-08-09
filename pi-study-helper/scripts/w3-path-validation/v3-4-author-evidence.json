@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "status": "PASS",
+  "gate": "V3-4",
+  "executionRecord": "W3-D36-PROFILE-ACTIVATION-1",
+  "contract": "W3-C5/W3-R2",
+  "candidateHead": "bd1b599524ef2e3362d14a422d97debbf240f70f",
+  "verificationTarget": "C public ActivityResult stops at A's application boundary; only A UnitOfWork publishes formal facts.",
+  "contractClauses": ["35#5", "35#7", "21#W3-C1.2", "36#3"],
+  "preState": "No ActivityResult-derived Attempt, Evidence, KnowledgeState, path or checkpoint is public before LearningSessionUnitOfWork.commit.",
+  "command": "npm.cmd test -- --run tests/activity-runtime-service.test.ts tests/code-evaluation-port.test.ts tests/activity-rubric.test.ts --maxWorkers=1",
+  "testFiles": ["tests/activity-runtime-service.test.ts", "tests/code-evaluation-port.test.ts", "tests/activity-rubric.test.ts"],
+  "testFileCount": 3,
+  "testCaseCount": 25,
+  "exitCode": 0,
+  "actualResult": "25 passed, 0 failed, 0 skipped",
+  "postState": "Only the public ActivityResult projection is consumed; A's formal submit orchestrator routes pass, partial and learner-error results through LearningSessionUnitOfWork, publishes one formal fact set through LearningSessionRepository.commit, and returns ActivitySubmissionOutput without prepared or private evaluator state.",
+  "failureInjection": [{"point": "evaluator result boundary", "recovery": "not_graded evaluator result is delegated as a failure record and does not enter UnitOfWork"}],
+  "keyFileSha256": {
+    "src/repositories/activity-repository.ts": "b841cbd3a1072e0db88083d496d6b3c217394fbea1e6e1703e901d946fc0b700",
+    "src/application/activity-runtime-service.ts": "612067baa640d3aeb1365d6fc852c1b30df9e3a037f56464deeef834bf953b03",
+    "tests/activity-runtime-service.test.ts": "71553d55a856e40cd2fbc0f777b81ae7ec471158601327a800f0259f7929393d"
+  },
+  "notCovered": ["Python evaluator integration is owned by C and intentionally not started under D47 deterministic-layer validation."],
+  "authorConclusion": "PASS for A's deterministic ActivityResult-to-formal-fact boundary; this does not replace E D4 independent validation."
+}

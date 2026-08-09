@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "status": "PASS",
+  "gate": "V3-5",
+  "executionRecord": "W3-D36-PROFILE-ACTIVATION-1",
+  "contract": "W3-C5/W3-R2",
+  "candidateHead": "bd1b599524ef2e3362d14a422d97debbf240f70f",
+  "verificationTarget": "Idempotency, CAS, transaction visibility and recovery publish one unique formal result.",
+  "contractClauses": ["35#7", "35#8", "21#A commit/recover", "36#3"],
+  "preState": "Session checkpoint points to the last committed snapshot; uncommitted activity and session candidates are not public.",
+  "command": "npm.cmd test -- --run tests/file-activity-repository.test.ts tests/file-learning-session-repository.test.ts --maxWorkers=1",
+  "testFiles": ["tests/file-activity-repository.test.ts", "tests/file-learning-session-repository.test.ts"],
+  "testFileCount": 2,
+  "testCaseCount": 37,
+  "exitCode": 0,
+  "actualResult": "37 passed, 0 failed, 0 skipped",
+  "postState": "Identical request/attempt replays the original fact; a recoverable session candidate retains its Attempt until recovery marks it committed; conflict, stale CAS and every injected failure leave the checkpoint on the prior complete snapshot until deterministic recovery.",
+  "failureInjection": [
+    {"point": "draft CAS", "recovery": "previous draft remains"},
+    {"point": "Attempt/result staging", "recovery": "candidate is recovered or quarantined without duplicate Attempt"},
+    {"point": "Evidence write", "recovery": "latest checkpoint remains old; recovery republishes one fact"},
+    {"point": "KnowledgeState write", "recovery": "latest checkpoint remains old; recovery republishes one snapshot"},
+    {"point": "path write", "recovery": "latest checkpoint remains old; recovery republishes one path"},
+    {"point": "checkpoint write", "recovery": "latest marker remains old; recovery publishes the validated candidate"},
+    {"point": "Attempt committedAt callback", "recovery": "published session facts retain the uncommitted Attempt; the next recovery retries markCommitted without duplicating facts"}
+  ],
+  "remediation": [
+    {"rootCause": "UnitOfWork discarded Attempt after every session commit error although FileLearningSessionRepository still held a durable recoverable candidate.", "fix": "probe the session candidate before discard; LearningSessionUnitOfWork.recover publishes the candidate then marks its activity Attempt committed exactly once."},
+    {"rootCause": "The repository checked only duplicate Evidence IDs inside the incoming batch.", "fix": "reject an incoming Evidence ID that already exists in the committed snapshot before any version or checkpoint write."},
+    {"rootCause": "LearningSessionUnitOfWork.recover treated a post-publication markCommitted failure like a failed session recovery and deleted the Attempt after the session candidate was gone.", "fix": "remember whether the recovered snapshot already contains the target Attempt evidence; preserve the Attempt as the durable retry handle and retry markCommitted on the next recovery."}
+  ],
+  "keyFileSha256": {
+    "src/repositories/file-activity-repository.ts": "58386e883321b599c964ce316a9be6f5aa5690271b7c5a1e547ed53f1a3549cc",
+    "src/repositories/file-learning-session-repository.ts": "f9b9fdc125fed8dab473491a540cbb7249dd9241ff505fd2d78d8f6495a0618b",
+    "tests/file-activity-repository.test.ts": "2418b0fcce6e4a8e9b65640b3a5209e8dc840dd92b2ad8b1b52c15d1d812ad4a",
+    "tests/file-learning-session-repository.test.ts": "e230a956931cd7653aa0677d0b327d72cecbb16c6658951b697312de9aab009b"
+  },
+  "notCovered": ["Python evaluator process execution is outside A deterministic-layer scope."],
+  "authorConclusion": "PASS for A idempotency, CAS, staged publication and recovery; this does not replace E D4 independent validation."
+}

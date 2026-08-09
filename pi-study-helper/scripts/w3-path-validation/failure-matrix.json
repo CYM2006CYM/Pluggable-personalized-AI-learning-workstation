@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "status": "formal_a_d3_candidate",
+  "contract": "W3-C5/W3-R2",
+  "executionRecord": "W3-D36-PROFILE-ACTIVATION-1",
+  "uploadLock": "not_requested",
+  "formalEvidenceOwner": "LearningSessionRepository.commit",
+  "cases": [
+    { "id": "draft-cas", "stage": "save_draft", "failure": "draft_version_conflict", "recovery": "retain_previous_draft", "createsEvidence": false },
+    { "id": "candidate-crash", "stage": "result_staging", "failure": "process_exit_after_durable_candidate", "recovery": "validate_hash_then_publish_or_quarantine", "createsEvidence": false },
+    { "id": "evaluator-fault", "stage": "evaluation", "failure": "evaluator_error", "recovery": "retry_same_attempt_identity", "createsEvidence": false },
+    { "id": "learner-result", "stage": "result_publish", "failure": null, "recovery": "idempotent_replay", "createsEvidence": "after_session_commit" },
+    { "id": "session-cas", "stage": "formal_commit", "failure": "session_version_conflict", "recovery": "discard_uncommitted_attempt_candidate", "createsEvidence": false },
+    { "id": "evidence-stage", "stage": "evidence_written", "failure": "injected_write_fault", "recovery": "latest_checkpoint_remains_old_then_recover_once", "createsEvidence": false },
+    { "id": "knowledge-stage", "stage": "knowledge_state_written", "failure": "injected_write_fault", "recovery": "latest_checkpoint_remains_old_then_recover_once", "createsEvidence": false },
+    { "id": "path-stage", "stage": "path_written", "failure": "injected_write_fault", "recovery": "latest_checkpoint_remains_old_then_recover_once", "createsEvidence": false },
+    { "id": "checkpoint-stage", "stage": "checkpoint_written", "failure": "injected_write_fault", "recovery": "latest_checkpoint_remains_old_then_recover_once", "createsEvidence": false },
+    { "id": "attempt-commit-marker", "stage": "mark_attempt_committed", "failure": "injected_callback_fault_after_session_publication", "recovery": "retain_attempt_then_retry_marker_without_duplicate_facts", "createsEvidence": "already_committed_once" },
+    { "id": "idempotency", "stage": "formal_commit", "failure": "idempotency_conflict", "recovery": "reject_different_content", "createsEvidence": false }
+  ]
+}

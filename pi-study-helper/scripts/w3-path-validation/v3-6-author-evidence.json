@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "status": "PASS",
+  "gate": "V3-6",
+  "executionRecord": "W3-D36-PROFILE-ACTIVATION-1",
+  "contract": "W3-C5/W3-R2",
+  "candidateHead": "bd1b599524ef2e3362d14a422d97debbf240f70f",
+  "verificationTarget": "Evaluator, environment, dependency, asset and protocol failures remain non-graded and never create negative Evidence or path recalculation.",
+  "contractClauses": ["35#7", "35#8", "21#W3-C1.2", "36#3"],
+  "preState": "A formal session has no newly committed Evidence, KnowledgeState, path or checkpoint for a non-graded result.",
+  "command": "npm.cmd test -- --run tests/activity-runtime-service.test.ts tests/file-activity-repository.test.ts tests/file-learning-session-repository.test.ts tests/evaluation-protocol.test.ts tests/code-evaluation-port.test.ts --maxWorkers=1",
+  "testFiles": ["tests/activity-runtime-service.test.ts", "tests/file-activity-repository.test.ts", "tests/file-learning-session-repository.test.ts", "tests/evaluation-protocol.test.ts", "tests/code-evaluation-port.test.ts"],
+  "testFileCount": 5,
+  "testCaseCount": 66,
+  "exitCode": 0,
+  "actualResult": "66 passed, 0 failed, 0 skipped",
+  "postState": "Evaluator failures are stored only as EvaluationFailureRecord; no Attempt/Evidence candidate is committed and no KnowledgeState/path/checkpoint version advances.",
+  "failureInjection": [
+    {"point": "evaluator_timeout", "recovery": "failure record only"},
+    {"point": "environment/asset binding mismatch", "recovery": "reject graded result before formal fact publication"},
+    {"point": "protocol error mapping", "recovery": "not_graded public ActivityResult remains outside Evidence mapping"}
+  ],
+  "keyFileSha256": {
+    "src/repositories/activity-repository.ts": "b841cbd3a1072e0db88083d496d6b3c217394fbea1e6e1703e901d946fc0b700",
+    "src/repositories/file-activity-repository.ts": "58386e883321b599c964ce316a9be6f5aa5690271b7c5a1e547ed53f1a3549cc",
+    "src/application/activity-runtime-service.ts": "612067baa640d3aeb1365d6fc852c1b30df9e3a037f56464deeef834bf953b03",
+    "tests/activity-runtime-service.test.ts": "71553d55a856e40cd2fbc0f777b81ae7ec471158601327a800f0259f7929393d"
+  },
+  "notCovered": ["No Python evaluator was started. C owns evaluator-integration execution under D47; this evidence proves A's deterministic failure handling only."],
+  "authorConclusion": "PASS for A deterministic V3-6 handling; this does not replace C evaluator evidence or E D4 independent validation."
+}

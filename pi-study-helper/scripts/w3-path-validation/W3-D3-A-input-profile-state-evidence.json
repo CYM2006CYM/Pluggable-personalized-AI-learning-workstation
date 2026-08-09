@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "executionRecord": "W3-D36-PROFILE-ACTIVATION-1",
+  "contract": "W3-C5/W3-R2",
+  "head": "bd1b599524ef2e3362d14a422d97debbf240f70f",
+  "originMain": "bd1b599524ef2e3362d14a422d97debbf240f70f",
+  "ancestorChecks": {
+    "W3_START_COMMIT": "f190326a4a906b46e4001484ffa30a7839b82ed2",
+    "B_formal": "277805b4dc612548f4dcdf4f91189abb4ef5c8e3",
+    "C_formal": "8f8e2c71dfd6128307fb7bcdcaf04c7c99a5c9cd",
+    "C_binding_fix": "8648620213463701319d089a5ab088e62e243af0"
+  },
+  "inputBindings": {
+    "act-inspect-dataframe": "bcc38620bdacede9d690ee62efbedaf8f0aee8dabaa55e9b7ca5b2452d29905c",
+    "act-practical": "3273308c4c9829b263a550c2d69eb40e5098b4e0802399c2334053afb3d6815c",
+    "environmentLockFileSha256": "59917d1528d031f46a1e76359d99628e810f2dfa78a92d66e03386c860fbaf43",
+    "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76"
+  },
+  "candidateBeforeTransaction": {"subjectId": "pandas-cleaning", "status": "draft", "revision": 2, "revisionOf": 1, "candidateApproval": "pending_owner_decision"},
+  "transactionAssertions": {
+    "oldActive": "revision 1 active is validated, copied into archived with archived manifest status, and restored on failure",
+    "newActive": "revision 2 is copied from fixed draft into a temporary directory, validated as active and atomically renamed into active",
+    "resolver": "new sessions bind revision 2; existing sessions resolve their active-or-archived bound revision; draft is excluded",
+    "retry": "a one-shot publication fault retries to one archived revision 1 and one active revision 2"
+  },
+  "formalInputFileSha256": {
+    "assessments/private/task-bundles.json": "3ca1df592f78366a73bf07c1ea82a9dc8a5eb24ae92da20fbab1d8f7a9894426",
+    "environments/environment-lock.json": "59917d1528d031f46a1e76359d99628e810f2dfa78a92d66e03386c860fbaf43"
+  },
+  "command": "npm.cmd test -- --run tests/profile-v2-activation.test.ts tests/profile-bound-session-runtime.test.ts tests/profile-v2-revision-resolution.test.ts tests/profile-v2-schema.test.ts --maxWorkers=1",
+  "testFileCount": 4,
+  "testCaseCount": 33,
+  "exitCode": 0,
+  "actualResult": "33 passed, 0 failed, 0 skipped",
+  "notCovered": ["This is test-isolated repository activation evidence; no shared user profile directory is mutated during validation."],
+  "authorConclusion": "Formal A activation candidate is transactionally verified and ready for responsible audit; it is not a manual activation or a commit/push authorization."
+}
