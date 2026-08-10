@@ -1,0 +1,96 @@
+{
+  "recordings": [
+    {
+      "runId": "w3-d1-single-choice-normal",
+      "graphId": "dynamic-objective-question",
+      "status": "ok",
+      "payload": {
+        "artifactId": "w3-question-columns",
+        "kind": "single_choice",
+        "prompt": "Which public DataFrame attribute lists its column labels?",
+        "options": ["df.columns", "df.names", "df.fields"],
+        "sourceAnchorIds": ["src-pandas-columns"],
+        "rationale": "The registered public Pandas summary documents df.columns."
+      },
+      "sourceRefs": ["src-pandas-columns"],
+      "traceSummary": "redacted W3 single-choice recorded response",
+      "modelId": "deepseek-chat",
+      "promptVersion": "w3-d1-v1",
+      "durationMs": 12
+    },
+    {
+      "runId": "w3-d1-judgment-normal",
+      "graphId": "dynamic-objective-question",
+      "status": "ok",
+      "payload": {
+        "artifactId": "w3-question-dtypes",
+        "kind": "judgment",
+        "prompt": "Inspecting dtypes before cleaning helps verify the public table structure.",
+        "sourceAnchorIds": ["src-pandas-dtypes"],
+        "rationale": "The registered public Pandas summary recommends inspecting dtypes."
+      },
+      "sourceRefs": ["src-pandas-dtypes"],
+      "traceSummary": "redacted W3 judgment recorded response",
+      "modelId": "deepseek-chat",
+      "promptVersion": "w3-d1-v1",
+      "durationMs": 10
+    },
+    {
+      "runId": "w3-d1-invalid-output",
+      "graphId": "dynamic-objective-question",
+      "status": "ok",
+      "payload": {
+        "artifactId": "w3-question-invalid",
+        "kind": "single_choice",
+        "prompt": "Malformed recorded question",
+        "options": ["duplicate", "duplicate"],
+        "sourceAnchorIds": ["src-pandas-columns"],
+        "rationale": "Intentionally invalid author-test sample."
+      },
+      "sourceRefs": ["src-pandas-columns"],
+      "traceSummary": "redacted invalid-output sample",
+      "modelId": "deepseek-chat",
+      "promptVersion": "w3-d1-v1",
+      "durationMs": 8
+    },
+    {
+      "runId": "w3-d1-authority-violation",
+      "graphId": "dynamic-objective-question",
+      "status": "ok",
+      "payload": {
+        "artifactId": "w3-question-authority-violation",
+        "kind": "judgment",
+        "prompt": "Unauthorized recorded output",
+        "sourceAnchorIds": ["src-pandas-dtypes"],
+        "rationale": "Intentionally forbidden author-test sample.",
+        "mastery": 1
+      },
+      "sourceRefs": ["src-pandas-dtypes"],
+      "traceSummary": "redacted authority-violation sample",
+      "modelId": "deepseek-chat",
+      "promptVersion": "w3-d1-v1",
+      "durationMs": 8
+    },
+    {
+      "runId": "w3-d1-timeout",
+      "graphId": "dynamic-objective-question",
+      "status": "timeout",
+      "errorCode": "timeout",
+      "sourceRefs": [],
+      "traceSummary": "redacted timeout sample; fixed fallback required",
+      "modelId": "deepseek-chat",
+      "promptVersion": "w3-d1-v1",
+      "durationMs": 60000
+    },
+    {
+      "runId": "w3-d1-provider-error",
+      "graphId": "dynamic-objective-question",
+      "status": "provider_error",
+      "errorCode": "provider_error",
+      "sourceRefs": [],
+      "traceSummary": "redacted provider-error sample; fixed fallback required",
+      "modelId": "deepseek-chat",
+      "promptVersion": "w3-d1-v1"
+    }
+  ]
+}

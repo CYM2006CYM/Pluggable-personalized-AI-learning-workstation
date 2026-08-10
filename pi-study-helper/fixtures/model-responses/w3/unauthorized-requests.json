@@ -1,0 +1,10 @@
+{
+  "cases": [
+    { "caseId": "deny-mastery", "safeContext": { "mastery": 0.9 } },
+    { "caseId": "deny-knowledge-state", "safeContext": { "KnowledgeState": { "status": "mastered" } } },
+    { "caseId": "deny-path", "safeContext": { "path": ["activity-1"] } },
+    { "caseId": "deny-rubric", "safeContext": { "Rubric": { "pass": true } } },
+    { "caseId": "deny-activity-result", "safeContext": { "ActivityResult": { "score": 1 } } },
+    { "caseId": "deny-gold", "safeContext": { "gold": ["final-001"] } }
+  ]
+}

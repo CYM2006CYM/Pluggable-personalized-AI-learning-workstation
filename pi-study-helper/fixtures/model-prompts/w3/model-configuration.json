@@ -1,0 +1,18 @@
+{
+  "configurationVersion": "w3-d1-config-v1",
+  "mode": "recorded_responses_only",
+  "provider": "openai-compatible",
+  "model": "deepseek-chat",
+  "endpointEnvironmentVariable": "OPENAI_BASE_URL",
+  "authenticationReference": "env:OPENAI_API_KEY",
+  "modelEnvironmentVariable": "OPENAI_MODEL",
+  "promptVersion": "w3-d1-v1",
+  "timeoutMs": 60000,
+  "maximumStructuralRetriesAfterInitialCall": 2,
+  "sessionTokenBudget": 100000,
+  "generationTemperature": 0.7,
+  "evaluationTemperature": 0.2,
+  "fallbackPolicy": "w3-fixed-fallback-v1",
+  "networkEnabled": false,
+  "liveModelCapabilityClaimed": false
+}
