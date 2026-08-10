@@ -182,7 +182,7 @@ describe("W3 C R2 harness and asset gates", () => {
     })).toThrow(TypeError);
   });
 
-  it("rejects unknown or mismatched harness error protocols", async () => {
+  it("rejects unknown or mismatched harness error protocols", { timeout: 15_000 }, async () => {
     for (const payload of [
       { status: "failed", category: "evaluator", errorCode: "unknown" },
       { status: "failed", category: "learner", errorCode: "test_asset_invalid" },

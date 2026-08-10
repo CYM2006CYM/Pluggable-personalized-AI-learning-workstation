@@ -225,8 +225,9 @@ test("V2-7 blocks a non-contract input surface", async () => {
 
 // The V2-6 executable intentionally invokes an isolated Vitest check.  It can
 // exceed Vitest's default five-second unit-test timeout on a cold dependency
-// cache, so keep the assertion while giving the subprocess a bounded budget.
-test("V2-6 succeeds through the comprehensive runner with repository-relative inputs", { timeout: 20_000 }, async () => {
+// cache and the approved Node 22 runtime, so keep the assertion while giving
+// the subprocess a bounded budget.
+test("V2-6 succeeds through the comprehensive runner with repository-relative inputs", { timeout: 30_000 }, async () => {
   const result = await runVerification("V2-6", context(), { execute: true });
   assert.equal(result.status, "PASS");
   assert.equal(result.commandResults[0].exitCode, 0);

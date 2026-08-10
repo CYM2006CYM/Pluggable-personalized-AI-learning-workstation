@@ -10,7 +10,7 @@ import {
   stat,
   writeFile,
 } from "node:fs/promises";
-import { release, tmpdir } from "node:os";
+import { tmpdir } from "node:os";
 import { basename, dirname, isAbsolute, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { ActivityResult, LearningRuntimeErrorCode } from "../domain/v2-types.js";
@@ -235,6 +235,16 @@ function measuredEnvironmentValid(value: MeasuredNodeEnvironment): boolean {
     && value.capabilityFlags.processTreeTermination === true;
 }
 
+export function isRuntimePlatformCompatible(
+  environment: Pick<MeasuredNodeEnvironment, "capabilityFlags">,
+  platform: string,
+  arch: string,
+): boolean {
+  return platform === "win32"
+    && arch === "x64"
+    && environment.capabilityFlags.processTreeTermination === true;
+}
+
 function parseTaskBundle(value: unknown): TaskBundle | null {
   if (!isRecord(value)
     || !isRecord(value.activity)
@@ -390,7 +400,7 @@ export class PythonProcessCodeEvaluationAdapter implements CodeEvaluationPort {
         const environment = raw as unknown as MeasuredNodeEnvironment;
         if (!measuredEnvironmentValid(environment)
           || environment.nodeVersion !== process.version
-          || environment.platform !== `${process.platform}-${release()}-${process.arch}`) return null;
+          || !isRuntimePlatformCompatible(environment, process.platform, process.arch)) return null;
         if (!await this.#runtimeEnvironmentMatches(environment)) return null;
         return environment;
       } catch {
