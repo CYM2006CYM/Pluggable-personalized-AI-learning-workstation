@@ -1,0 +1,177 @@
+﻿{
+    "schemaVersion":  "w3-d4-e-final-affected-command-summary-v1",
+    "commandCount":  10,
+    "nonzeroExitCount":  0,
+    "commands":  [
+                     {
+                         "id":  "npm-ci",
+                         "command":  "npm.cmd ci",
+                         "workingDirectory":  "D:\\.A_C_code\\PPALW\\W3-D4\\final-r2-worktree\\pi-study-helper",
+                         "startedAt":  "2026-08-10T22:19:06.4758956+08:00",
+                         "completedAt":  "2026-08-10T22:21:15.0473066+08:00",
+                         "exitCode":  0,
+                         "observedCounts":  {
+                                                "testFilesPassed":  null,
+                                                "testFilesFailed":  null,
+                                                "testsPassed":  null,
+                                                "testsFailed":  null,
+                                                "testsSkipped":  null
+                                            },
+                         "stdoutSha256":  "fb1c7d3c17b03eba174ac3f509a6ed527387468fb8844d8eef880ca1aa06990b",
+                         "stderrSha256":  "8c6390aadd824dafda01bf1b2a3e65a8fd57e18b76bbff7cfc2dd619942a4d62"
+                     },
+                     {
+                         "id":  "test-web",
+                         "command":  "npm.cmd run test:web",
+                         "workingDirectory":  "D:\\.A_C_code\\PPALW\\W3-D4\\final-r2-worktree\\pi-study-helper",
+                         "startedAt":  "2026-08-10T22:21:29.4125133+08:00",
+                         "completedAt":  "2026-08-10T22:22:09.7616296+08:00",
+                         "exitCode":  0,
+                         "observedCounts":  {
+                                                "testFilesPassed":  6,
+                                                "testFilesFailed":  null,
+                                                "testsPassed":  81,
+                                                "testsFailed":  null,
+                                                "testsSkipped":  null
+                                            },
+                         "stdoutSha256":  "f907d220f76dcddb5fe08b7855e3490063140047186ca07150acd471aa3a92ef",
+                         "stderrSha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                     },
+                     {
+                         "id":  "build-web",
+                         "command":  "npm.cmd run build:web",
+                         "workingDirectory":  "D:\\.A_C_code\\PPALW\\W3-D4\\final-r2-worktree\\pi-study-helper",
+                         "startedAt":  "2026-08-10T22:22:34.2117974+08:00",
+                         "completedAt":  "2026-08-10T22:22:35.8245061+08:00",
+                         "exitCode":  0,
+                         "observedCounts":  {
+                                                "testFilesPassed":  null,
+                                                "testFilesFailed":  null,
+                                                "testsPassed":  null,
+                                                "testsFailed":  null,
+                                                "testsSkipped":  null
+                                            },
+                         "stdoutSha256":  "948a0379b3f5ed0562fcdeffbda0ab194f5db5f928e3c98a6979aa4c407d593c",
+                         "stderrSha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                     },
+                     {
+                         "id":  "typecheck",
+                         "command":  "npm.cmd run typecheck",
+                         "workingDirectory":  "D:\\.A_C_code\\PPALW\\W3-D4\\final-r2-worktree\\pi-study-helper",
+                         "startedAt":  "2026-08-10T22:22:36.0901337+08:00",
+                         "completedAt":  "2026-08-10T22:23:07.7633357+08:00",
+                         "exitCode":  0,
+                         "observedCounts":  {
+                                                "testFilesPassed":  null,
+                                                "testFilesFailed":  null,
+                                                "testsPassed":  null,
+                                                "testsFailed":  null,
+                                                "testsSkipped":  null
+                                            },
+                         "stdoutSha256":  "5f71351942617c69ee3afdd53e10b5b96ef073369624b06ab084e3fd51017566",
+                         "stderrSha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                     },
+                     {
+                         "id":  "full-test",
+                         "command":  "npm.cmd test -- --run --maxWorkers=1",
+                         "workingDirectory":  "D:\\.A_C_code\\PPALW\\W3-D4\\final-r2-worktree\\pi-study-helper",
+                         "startedAt":  "2026-08-10T22:23:22.2609477+08:00",
+                         "completedAt":  "2026-08-10T22:26:03.8366522+08:00",
+                         "exitCode":  0,
+                         "observedCounts":  {
+                                                "testFilesPassed":  60,
+                                                "testFilesFailed":  null,
+                                                "testsPassed":  636,
+                                                "testsFailed":  null,
+                                                "testsSkipped":  1
+                                            },
+                         "stdoutSha256":  "f4226a608d496d3ff146e9ca4aa601561da961cb77f8718e9cf307ecf3ba8f2e",
+                         "stderrSha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                     },
+                     {
+                         "id":  "check-docs",
+                         "command":  "npm.cmd run check:docs",
+                         "workingDirectory":  "D:\\.A_C_code\\PPALW\\W3-D4\\final-r2-worktree\\pi-study-helper",
+                         "startedAt":  "2026-08-10T22:26:21.7687406+08:00",
+                         "completedAt":  "2026-08-10T22:26:22.0916036+08:00",
+                         "exitCode":  0,
+                         "observedCounts":  {
+                                                "testFilesPassed":  null,
+                                                "testFilesFailed":  null,
+                                                "testsPassed":  null,
+                                                "testsFailed":  null,
+                                                "testsSkipped":  null
+                                            },
+                         "stdoutSha256":  "62849f732cc1d6e92df71b1697639ff1ba6cf8bf9283eb1e08432219ea8b4ac8",
+                         "stderrSha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                     },
+                     {
+                         "id":  "smoke-extension",
+                         "command":  "npm.cmd run smoke:extension",
+                         "workingDirectory":  "D:\\.A_C_code\\PPALW\\W3-D4\\final-r2-worktree\\pi-study-helper",
+                         "startedAt":  "2026-08-10T22:26:22.3341952+08:00",
+                         "completedAt":  "2026-08-10T22:26:24.3705989+08:00",
+                         "exitCode":  0,
+                         "observedCounts":  {
+                                                "testFilesPassed":  null,
+                                                "testFilesFailed":  null,
+                                                "testsPassed":  null,
+                                                "testsFailed":  null,
+                                                "testsSkipped":  null
+                                            },
+                         "stdoutSha256":  "7884fff3ac712e13faad46091d4f3ccf62a3ec118ea092e0d9ead8d1fcd4f61f",
+                         "stderrSha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                     },
+                     {
+                         "id":  "check-release",
+                         "command":  "npm.cmd run check:release",
+                         "workingDirectory":  "D:\\.A_C_code\\PPALW\\W3-D4\\final-r2-worktree\\pi-study-helper",
+                         "startedAt":  "2026-08-10T22:26:24.6166134+08:00",
+                         "completedAt":  "2026-08-10T22:26:24.9978370+08:00",
+                         "exitCode":  0,
+                         "observedCounts":  {
+                                                "testFilesPassed":  null,
+                                                "testFilesFailed":  null,
+                                                "testsPassed":  null,
+                                                "testsFailed":  null,
+                                                "testsSkipped":  null
+                                            },
+                         "stdoutSha256":  "a6ba8770bcdb51c2c815b68a6af11f6a3f6cd7e0c07f79fb62da1b776e034654",
+                         "stderrSha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                     },
+                     {
+                         "id":  "verify",
+                         "command":  "npm.cmd run verify",
+                         "workingDirectory":  "D:\\.A_C_code\\PPALW\\W3-D4\\final-r2-worktree\\pi-study-helper",
+                         "startedAt":  "2026-08-10T22:26:37.6567926+08:00",
+                         "completedAt":  "2026-08-10T22:28:09.0968983+08:00",
+                         "exitCode":  0,
+                         "observedCounts":  {
+                                                "testFilesPassed":  60,
+                                                "testFilesFailed":  null,
+                                                "testsPassed":  636,
+                                                "testsFailed":  null,
+                                                "testsSkipped":  1
+                                            },
+                         "stdoutSha256":  "75e180f3fe850fdd8fb0672ed674a6f3b3654d21a60eac4aed383f736827ebda",
+                         "stderrSha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                     },
+                     {
+                         "id":  "git-diff-check",
+                         "command":  "git diff --check",
+                         "workingDirectory":  "D:\\.A_C_code\\PPALW\\W3-D4\\final-r2-worktree",
+                         "startedAt":  "2026-08-10T22:28:19.7150591+08:00",
+                         "completedAt":  "2026-08-10T22:28:19.7611845+08:00",
+                         "exitCode":  0,
+                         "observedCounts":  {
+                                                "testFilesPassed":  null,
+                                                "testFilesFailed":  null,
+                                                "testsPassed":  null,
+                                                "testsFailed":  null,
+                                                "testsSkipped":  null
+                                            },
+                         "stdoutSha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                         "stderrSha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                     }
+                 ]
+}

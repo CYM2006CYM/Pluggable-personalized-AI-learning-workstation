@@ -1,0 +1,13 @@
+{
+  "schemaVersion": "e-w3-d1-seal-v1",
+  "status": "SEALED",
+  "file": "e-final-021-060.jsonl",
+  "sha256": "af450ede185be215e12e5d13688ebc7b34cb3af9816f50803e5612c2219da266",
+  "byteLength": 56016,
+  "lineCount": 40,
+  "firstCaseId": "final-021",
+  "lastCaseId": "final-060",
+  "sealedAt": "2026-08-07T06:58:04.684Z",
+  "commitStatus": "NOT_COMMITTED",
+  "pushStatus": "NOT_PUSHED"
+}

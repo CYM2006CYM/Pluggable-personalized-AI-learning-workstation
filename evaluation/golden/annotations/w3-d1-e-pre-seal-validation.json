@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "e-w3-d1-pre-seal-validation-v1",
+  "status": "PASS",
+  "executionHead": "2db7127bcd22035951474ddd3f86de4e8cfa77be",
+  "checks": {
+    "jsonlSyntax": "PASS",
+    "lineCount": 40,
+    "stableCaseOrder": "final-021..final-060",
+    "uniqueCaseIds": 40,
+    "annotatorRoleE": 40,
+    "exactFieldSet": "PASS",
+    "nodeConstraintSchema": "PASS",
+    "frozenEnumUsage": "PASS",
+    "inputBinding": "PASS"
+  },
+  "counts": {
+    "selfLearner": 20,
+    "practiceOriented": 20,
+    "noImmediateRemediation": 8,
+    "remediationRequired": 32
+  },
+  "inputSha256": "4fcc7c3e2c605f912890ddec5af7d4fa875c861d1636dcaf425a63ddb17f4b9d",
+  "outputSha256": "af450ede185be215e12e5d13688ebc7b34cb3af9816f50803e5612c2219da266",
+  "validatedAt": "2026-08-07T06:58:04.684Z"
+}

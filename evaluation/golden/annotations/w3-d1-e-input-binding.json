@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "e-w3-d1-input-binding-v1",
+  "contract": "W3-C3/W3-R2",
+  "w3StartCommit": "f190326a4a906b46e4001484ffa30a7839b82ed2",
+  "executionHead": "2db7127bcd22035951474ddd3f86de4e8cfa77be",
+  "profileRevision": 2,
+  "input": {
+    "path": "evaluation/personas/final-60.jsonl",
+    "caseRange": {
+      "first": "final-021",
+      "last": "final-060",
+      "count": 40
+    },
+    "rawByteSha256": "4fcc7c3e2c605f912890ddec5af7d4fa875c861d1636dcaf425a63ddb17f4b9d",
+    "normalizedTextSha256": "b77ba4902003ba20bc5b233c4797838eb26325d1b38fd02bc68ba02206cb1d1c",
+    "byteLength": 56144
+  },
+  "ruleAssets": [
+    "assessments/diagnostic/questions.json",
+    "assessments/diagnostic/private/answer-key.json",
+    "knowledge/knowledge-points.json",
+    "activities/learning-activities.json"
+  ],
+  "generatedAt": "2026-08-07T06:58:04.684Z"
+}

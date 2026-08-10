@@ -1,0 +1,36 @@
+{
+  "schemaVersion": "w3-d4-e-final-v3-summary-v1",
+  "contractVersion": "W3-C5/W3-R2",
+  "executionId": "W3-D47-RUNTIME-COMPAT-1+D2-R2-BINDING-REMEDIATION",
+  "baselineCommit": "af7386276d8a6e56e5263942b29b53e6d861250c",
+  "gates": [
+    {"gate":"V3-1","finalStatus":"PASS","evidence":"PRESERVED_ORIGINAL_D4","inputChanged":false},
+    {"gate":"V3-2","finalStatus":"PASS","evidence":"PRESERVED_ORIGINAL_D4","inputChanged":false},
+    {"gate":"V3-3","finalStatus":"PASS","evidence":"PRESERVED_D47_RUNTIME_RECHECK","testFiles":3,"passed":30,"failed":0,"skipped":0},
+    {"gate":"V3-4","finalStatus":"PASS","evidence":"PRESERVED_ORIGINAL_D4_PLUS_D47_BOUNDARY_RECHECK","sourceFilesScanned":4,"forbiddenMatches":0},
+    {"gate":"V3-5","finalStatus":"PASS","evidence":"PRESERVED_D47_RUNTIME_RECHECK","testFiles":2,"passed":37,"failed":0,"skipped":0},
+    {"gate":"V3-6","finalStatus":"PASS","evidence":"PRESERVED_D47_RUNTIME_RECHECK","testFiles":6,"passed":51,"failed":0,"skipped":0},
+    {"gate":"V3-7","finalStatus":"PASS","evidence":"PRESERVED_ORIGINAL_D4_60_CASE_READ_ONLY_CANDIDATE","inputChanged":false},
+    {"gate":"V3-8","finalStatus":"PASS","evidence":"D2_R2_27_OF_27_BINDING_AND_CURRENT_WEB_RECHECK","candidateFiles":27,"matched":27,"webTestFiles":6,"passed":81,"failed":0,"skipped":0,"leakFindings":0}
+  ],
+  "d47PlatformCompatibility": {"status":"PASS","testFiles":1,"passed":5,"failed":0,"skipped":0},
+  "fullTests": {"status":"PASS","testFiles":60,"passed":636,"failed":0,"skipped":1},
+  "aggregateGates": {
+    "npmCi":"PASS",
+    "testWeb":"PASS",
+    "buildWeb":"PASS",
+    "typecheck":"PASS",
+    "fullTest":"PASS",
+    "checkDocs":"PASS",
+    "extensionSmoke":"PASS",
+    "releaseCheck":"PASS",
+    "verify":"PASS",
+    "gitDiffCheck":"PASS"
+  },
+  "fixedTraceDemo": {"status":"PASS","tests":23,"onlineModelStatus":"LIVE_NOT_RUN","realKeyUsed":false},
+  "candidateConclusion": "PASS",
+  "ownerFinalReview": "PENDING",
+  "notCommitted": true,
+  "notPushed": true,
+  "uploadLock": "NOT_REQUESTED"
+}

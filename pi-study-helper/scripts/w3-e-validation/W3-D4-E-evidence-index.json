@@ -1,0 +1,32 @@
+{
+  "schemaVersion": "w3-d4-e-final-evidence-index-v1",
+  "contractVersion": "W3-C5/W3-R2",
+  "baselineCommit": "af7386276d8a6e56e5263942b29b53e6d861250c",
+  "candidateConclusion": "PASS",
+  "evidenceSets": [
+    {"id":"d4-preflight","path":"preflight","scope":"D4 readiness Execute and resolved input manifest"},
+    {"id":"environment","path":"environment","scope":"approved Node 22.23.1, Python 3.13.7, Pandas 3.0.5, win32/x64 evidence"},
+    {"id":"d1-seal","path":"d1","scope":"E annotations, input binding, independence and seal evidence"},
+    {"id":"d2-r2-freeze","path":"d2","scope":"correct D2-R2 ZIP and frozen hash list"},
+    {"id":"candidate-binding","path":"v3-8/candidate-binding","scope":"27/27 initial and post-test worktree binding"},
+    {"id":"web-audit","path":"v3-8/web-audit","scope":"separate DTO/fixture leak scans and Web boundary scan"},
+    {"id":"web-and-aggregate-commands","path":"v3-8/commands","scope":"ten affected commands with timestamps, exit codes, counts and output hashes"},
+    {"id":"v3-1","path":"preserved-evidence/v3-execution/V3-1","scope":"unchanged-input original D4 evidence"},
+    {"id":"v3-2","path":"preserved-evidence/v3-execution/V3-2","scope":"unchanged-input original D4 evidence"},
+    {"id":"v3-3","path":"runtime-recheck/V3-3","scope":"D47 approved environment recheck"},
+    {"id":"v3-4","path":"preserved-evidence/v3-execution/V3-4","scope":"original C boundary test evidence"},
+    {"id":"v3-4-d47","path":"runtime-recheck/V3-4-boundary","scope":"D47 affected source boundary recheck"},
+    {"id":"v3-5","path":"runtime-recheck/V3-5","scope":"independent repository test recheck"},
+    {"id":"v3-6","path":"runtime-recheck/V3-6","scope":"evaluator failure matrix recheck"},
+    {"id":"v3-7","path":"preserved-evidence/v3-execution/V3-7","scope":"60-case read-only candidate freeze, order and hash validation"},
+    {"id":"fixed-trace-demo","path":"preserved-evidence/fixed-trace-demo","scope":"mock fixed trace; LIVE_NOT_RUN; no real key"},
+    {"id":"d47-platform","path":"runtime-recheck/D47-platform","scope":"Windows runtime compatibility test"}
+  ],
+  "invalidatedEvidence": {
+    "pathExcludedFromFinalPackage":"preserved-evidence/v3-execution/V3-8 from previous runtime package",
+    "reason":"old worktree had 5 Web test files and 61 tests; it was not a 27/27 binding of D2-R2"
+  },
+  "hashAuthority": "payload-files.sha256 inside the final review ZIP",
+  "gitStatus": "NOT_COMMITTED_NOT_PUSHED",
+  "uploadLock": "NOT_REQUESTED"
+}
