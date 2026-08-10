@@ -1,0 +1,3 @@
+# Gold and sealed annotations use canonical LF bytes on every platform.
+evaluation/golden/*.jsonl text eol=lf
+evaluation/golden/annotations/*.jsonl text eol=lf
