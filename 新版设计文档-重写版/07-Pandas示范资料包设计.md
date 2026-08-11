@@ -123,9 +123,9 @@ order_id, customer_id, amount, city, order_date, status, note
 
 Pandas蓝图固定`minimumCoverage=1`：每题必须回答或显式跳过后才能完成。单选使用题目选项中的唯一字符串作为答案，判断使用布尔值；跳过不生成Evidence、不写0分。逐题提交只形成答案记录与Evidence候选，完成时由会话事务批量提交正式事实。
 
-每个知识点学习后由AI决定4至6道单选/判断的题量和固定/动态比例，优先使用动态题。AI只能改变难度、情境、典型错误针对性和措辞；程序校验知识点、来源、选项和`correct_answer`；高风险争议才进入Hunter/Judge；代码直接比较答案。Pandas v2暂不加入动态简答。
+每个知识点学习后使用4—6道单选/判断。AI只返回动态候选，并只能改变难度、情境、典型错误针对性和措辞；A所有的确定性题组服务负责校验知识点、来源、选项、`correct_answer`和去重，并决定采用动态候选、supplemental补位、完整fixed组或`insufficient`。高风险争议才进入Hunter/Judge，代码直接比较答案，模型不得决定题量、组题和判分。Pandas v2暂不加入动态简答。
 
-动态题成功时缓存；失败时从该知识点未做过的固定兜底题补充。兜底题不是主要题库：每个核心知识点默认只准备1至2道固定兜底题，用于模型/API/审核失败时维持流程。若动态题失败后固定兜底题仍不足4道，则结束本轮并标记“验证证据不足”，不阻塞页面，也不虚报题组通过。75%通过线使用 `ceil(questionCount × 0.75)`。每题保留明细证据，同一题组在置信度和证据形式数量中只计一次相关验证。诊断题、学习兜底题和05号正式评测题分开管理。
+动态题成功时缓存；失败时使用该知识点未做过的固定资产。revision 3每点准备一个完整4—6题fixed组保证首次模型故障仍可形成有效题组，另有1—2道supplemental题只用于补足动态候选；完整fixed组已经使用且重试补位后仍不足4题时，结束本轮并标记`insufficient`，不阻塞页面，也不虚报题组通过。75%通过线使用`ceil(questionCount × 0.75)`，Evidence分数固定为`correctCount/questionCount`。每题保留内部明细，同一题组只生成一条整组Evidence。诊断题、学习题和05号正式评测题分开管理。
 
 ## 7. 代码补全和最终实操
 
@@ -146,3 +146,13 @@ Pandas蓝图固定`minimumCoverage=1`：每题必须回答或显式跳过后才�
 ## 10. 降级和边界
 
 进度不足时依次隐藏五维高级图形但保留画像数据、减少动态题和关闭运行时CIDPP，回退到固定诊断、固定代码任务、确定性判分和固定中文反馈。不得削减Profile校验、来源记录、私有测试隔离、最终实操和证据恢复。完整AI代码题生成六周关闭，只保留12号赛后设计，不属于本Pandas六周主链。
+
+## 11. W4 revision 3候选
+
+新建`pandas-cleaning-revision-3-draft`，保持`schemaVersion=2`、`revision=3`、`revisionOf=2`；revision 2及其冻结资产不得原地修改。六个核心知识点各自必须声明`activityPolicy=all_in_order`和`contentEstimatedMinutes`，并各有一张结构化固定卡片、一个稳定mcq题组活动、一个完整fixed组及1—2道supplemental题。固定卡片包含目标、讲解、例子、常见错误和来源锚点，但不是计分Activity；卡片估时必须与知识点内容估时相等。
+
+mcq继续使用现有活动种类并兼容revision 2单题。revision 3每个有效题组4—6题；私有Schema保存正确答案、固定解释和来源，公开活动资产及浏览器打开视图不得包含答案。每张卡片通过唯一`knowledgePointId`绑定知识点而不进入`activityIds`；`goal.requiredActivityIds`只保留最终综合实操，计分活动序列由知识点`activityIds`和`activityPolicy`决定。
+
+题组公开容器、私有答案容器和活动引用字段以42号为准；B同时生成`quality/revision-seal.json`，seal排除自身并覆盖revision 3其他文件。固定私有答案随active只读副本由服务端读取；D运行时生成的答案、轨迹和缓存才写Profile族`_user`，二者不得混写。
+
+两种入口的背景字段统一为`python_experience`、`pandas_experience`和`explanation_preference`。章节模式只是从所选章节开始完成同一目标，不创建章节专属终测，也不删除最终实操。
