@@ -1,5 +1,5 @@
-import { lstat, readFile } from "node:fs/promises";
-import { resolve } from "node:path";
+import { lstat, readFile, readdir } from "node:fs/promises";
+import { relative, resolve } from "node:path";
 import type {
   ActivityReferenceDefinition,
   KnowledgePointDefinition,
@@ -67,6 +67,8 @@ const KNOWLEDGE_POINT_KEYS = new Set([
   "activityIds",
   "importance",
   "requiresCodeEvidence",
+  "activityPolicy",
+  "contentEstimatedMinutes",
 ]);
 const ACTIVITY_BASE_KEYS = [
   "activityId",
@@ -87,7 +89,7 @@ const ACTIVITY_BASE_KEYS = [
   "runtimePolicyId",
   "allowedScaffolds",
 ] as const;
-const MCQ_ACTIVITY_KEYS = new Set([...ACTIVITY_BASE_KEYS, "subtype", "options", "evaluatorRef"]);
+const MCQ_ACTIVITY_KEYS = new Set([...ACTIVITY_BASE_KEYS, "subtype", "options", "evaluatorRef", "fixedQuestionGroupId", "supplementalQuestionGroupId"]);
 const EXPLAIN_ACTIVITY_KEYS = new Set([
   ...ACTIVITY_BASE_KEYS,
   "responseContract",
@@ -112,6 +114,13 @@ const CODE_COMPLETION_ACTIVITY_KEYS = new Set(CODE_ACTIVITY_KEYS);
 const CODING_PRACTICAL_ACTIVITY_KEYS = new Set([...CODE_ACTIVITY_KEYS, "businessAcceptanceCriteria"]);
 const DEBUG_ACTIVITY_KEYS = new Set([...CODE_ACTIVITY_KEYS, "defectCategory"]);
 const EDITABLE_REGION_KEYS = new Set(["regionId", "startMarker", "endMarker", "required", "maxCharacters"]);
+const CARD_CONTAINER_KEYS = new Set(["cards"]);
+const CARD_KEYS = new Set(["cardId", "knowledgePointId", "title", "objective", "explanation", "example", "commonMistake", "sourceAnchorIds", "estimatedMinutes"]);
+const GROUP_CONTAINER_KEYS = new Set(["groups"]);
+const PUBLIC_GROUP_KEYS = new Set(["groupId", "role", "activityId", "knowledgePointId", "questions"]);
+const PRIVATE_GROUP_KEYS = new Set(["groupId", "answers"]);
+const PUBLIC_QUESTION_KEYS = new Set(["questionId", "kind", "prompt", "options"]);
+const PRIVATE_QUESTION_KEYS = new Set([...PUBLIC_QUESTION_KEYS, "correctAnswer", "explanation", "sourceAnchorIds"]);
 
 const ACTIVITY_KINDS = new Set(["mcq", "code_completion", "coding_practical", "explain", "debug"]);
 const TASK_SOURCES = new Set(["profile_fixed", "ai_generated"]);
@@ -388,6 +397,13 @@ function parseKnowledgePointsAsset(raw: string): KnowledgePointsAsset {
     if (point.requiresCodeEvidence !== undefined && typeof point.requiresCodeEvidence !== "boolean") {
       issues.push(`${location}.requiresCodeEvidence must be boolean when present`);
     }
+    if (point.activityPolicy !== undefined && point.activityPolicy !== "select_one" && point.activityPolicy !== "all_in_order") {
+      issues.push(`${location}.activityPolicy must be select_one or all_in_order`);
+    }
+    if (point.contentEstimatedMinutes !== undefined
+        && (!Number.isInteger(point.contentEstimatedMinutes) || (point.contentEstimatedMinutes as number) < 1)) {
+      issues.push(`${location}.contentEstimatedMinutes must be a positive integer when present`);
+    }
   });
 
   if (issues.length > 0) failInvalidProfile(issues);
@@ -464,10 +480,18 @@ function validateActivityEntry(activity: unknown, index: number, issues: string[
   requireEnumArray(activity, "allowedScaffolds", SCAFFOLD_LEVELS, location, issues);
 
   if (kind === "mcq") {
-    if (typeof activity.subtype !== "string" || !MCQ_SUBTYPES.has(activity.subtype)) {
+    const hasLegacyShape = activity.subtype !== undefined || activity.options !== undefined;
+    const hasGroupShape = activity.fixedQuestionGroupId !== undefined || activity.supplementalQuestionGroupId !== undefined;
+    if (hasLegacyShape && hasGroupShape) issues.push(`${location} cannot mix legacy single-question and W4 question-group fields`);
+    if (!hasLegacyShape && !hasGroupShape) issues.push(`${location} must declare legacy single-question or W4 question-group fields`);
+    if (hasLegacyShape && (typeof activity.subtype !== "string" || !MCQ_SUBTYPES.has(activity.subtype))) {
       issues.push(`${location}.subtype must be single_choice or judgment`);
     }
-    requireStringArray(activity, "options", location, issues);
+    if (hasLegacyShape) requireStringArray(activity, "options", location, issues);
+    if (hasGroupShape) {
+      requireStableId(activity, "fixedQuestionGroupId", location, issues);
+      if (activity.supplementalQuestionGroupId !== undefined) requireStableId(activity, "supplementalQuestionGroupId", location, issues);
+    }
     requireNonEmptyString(activity, "evaluatorRef", location, issues);
   } else if (kind === "explain") {
     requireNonEmptyString(activity, "responseContract", location, issues);
@@ -501,6 +525,163 @@ function parseLearningActivitiesAsset(raw: string, requireNonEmpty: boolean): Le
 
   if (issues.length > 0) failInvalidProfile(issues);
   return value as LearningActivitiesAsset;
+}
+
+async function jsonDocuments(root: string): Promise<Array<{ path: string; value: unknown }>> {
+  const rootEntry = await lstat(root);
+  if (rootEntry.isFile()) return [{ path: relative(resolve(root, ".."), root).replaceAll("\\", "/"), value: parseJson(await readFile(root, "utf8"), root) }];
+  const documents: Array<{ path: string; value: unknown }> = [];
+  const visit = async (directory: string): Promise<void> => {
+    for (const entry of (await readdir(directory, { withFileTypes: true })).sort((left, right) => left.name.localeCompare(right.name, "en"))) {
+      const absolute = assertPathInside(root, resolve(directory, entry.name));
+      if (entry.isSymbolicLink()) failInvalidProfile([`${relative(root, absolute).replaceAll("\\", "/")} must not be a symbolic link`]);
+      if (entry.isDirectory()) await visit(absolute);
+      else if (entry.isFile() && entry.name.endsWith(".json")) {
+        documents.push({ path: relative(root, absolute).replaceAll("\\", "/"), value: parseJson(await readFile(absolute, "utf8"), absolute) });
+      }
+    }
+  };
+  await visit(root);
+  return documents;
+}
+
+function validateRevision3CardAsset(
+  documents: readonly { path: string; value: unknown }[],
+  points: readonly KnowledgePointDefinition[],
+): void {
+  const issues: string[] = [];
+  const containers = documents.filter((document) => isRecord(document.value) && Array.isArray(document.value.cards));
+  if (containers.length !== 1) issues.push("revision 3 cards path must contain exactly one { cards: [...] } container");
+  const container = containers[0];
+  if (container === undefined || !isRecord(container.value)) failInvalidProfile(issues);
+  addUnknownKeyIssues(container.value, CARD_CONTAINER_KEYS, `cards asset ${container.path}`, issues, false);
+  const cards = container.value.cards as unknown[];
+  const pointIndex = new Map(points.map((point) => [point.id, point]));
+  const seenCards = new Set<string>();
+  const seenPoints = new Set<string>();
+  cards.forEach((card, index) => {
+    const location = `cards asset.cards[${index}]`;
+    if (!isRecord(card)) { issues.push(`${location} must be an object`); return; }
+    addUnknownKeyIssues(card, CARD_KEYS, location, issues, false);
+    requireStableId(card, "cardId", location, issues);
+    requireStableId(card, "knowledgePointId", location, issues);
+    requireNonEmptyString(card, "title", location, issues);
+    requireNonEmptyString(card, "objective", location, issues);
+    requireStringArray(card, "explanation", location, issues);
+    requireNonEmptyString(card, "example", location, issues);
+    requireNonEmptyString(card, "commonMistake", location, issues);
+    requireStringArray(card, "sourceAnchorIds", location, issues, true);
+    if (!Number.isInteger(card.estimatedMinutes) || (card.estimatedMinutes as number) < 1) issues.push(`${location}.estimatedMinutes must be a positive integer`);
+    if (typeof card.cardId === "string" && seenCards.has(card.cardId)) issues.push(`${location}.cardId must be unique`);
+    if (typeof card.cardId === "string") seenCards.add(card.cardId);
+    if (typeof card.knowledgePointId === "string" && seenPoints.has(card.knowledgePointId)) issues.push(`${location}.knowledgePointId must be unique`);
+    if (typeof card.knowledgePointId === "string") seenPoints.add(card.knowledgePointId);
+    const point = typeof card.knowledgePointId === "string" ? pointIndex.get(card.knowledgePointId) : undefined;
+    if (point === undefined) issues.push(`${location}.knowledgePointId references a missing knowledge point`);
+    else if (card.estimatedMinutes !== point.contentEstimatedMinutes) issues.push(`${location}.estimatedMinutes must equal knowledge point contentEstimatedMinutes`);
+  });
+  for (const point of points) if (!seenPoints.has(point.id)) issues.push(`knowledge point ${point.id} must have exactly one fixed card`);
+  if (cards.length !== points.length) issues.push("revision 3 card count must equal knowledge point count");
+  if (issues.length > 0) failInvalidProfile(issues);
+}
+
+function validateQuestion(value: unknown, location: string, privateShape: boolean, issues: string[]): void {
+  if (!isRecord(value)) { issues.push(`${location} must be an object`); return; }
+  addUnknownKeyIssues(value, privateShape ? PRIVATE_QUESTION_KEYS : PUBLIC_QUESTION_KEYS, location, issues, false);
+  requireStableId(value, "questionId", location, issues);
+  if (value.kind !== "single_choice" && value.kind !== "judgment") issues.push(`${location}.kind must be single_choice or judgment`);
+  requireNonEmptyString(value, "prompt", location, issues);
+  requireStringArray(value, "options", location, issues);
+  if (Array.isArray(value.options) && new Set(value.options).size !== value.options.length) issues.push(`${location}.options must be unique`);
+  if (!privateShape) return;
+  if (value.kind === "single_choice" && (typeof value.correctAnswer !== "string" || !Array.isArray(value.options) || !value.options.includes(value.correctAnswer))) {
+    issues.push(`${location}.correctAnswer must equal one option`);
+  }
+  if (value.kind === "judgment" && typeof value.correctAnswer !== "boolean") issues.push(`${location}.correctAnswer must be boolean`);
+  requireNonEmptyString(value, "explanation", location, issues);
+  requireStringArray(value, "sourceAnchorIds", location, issues, true);
+}
+
+function validateRevision3QuizAssets(
+  documents: readonly { path: string; value: unknown }[],
+  points: readonly KnowledgePointDefinition[],
+  activities: readonly ActivityReferenceDefinition[],
+): void {
+  const issues: string[] = [];
+  const groupDocuments = documents.filter((document) => isRecord(document.value) && Array.isArray(document.value.groups));
+  const publicGroups: Record<string, unknown>[] = [];
+  const privateGroups: Record<string, unknown>[] = [];
+  for (const document of groupDocuments) {
+    const container = document.value as Record<string, unknown>;
+    addUnknownKeyIssues(container, GROUP_CONTAINER_KEYS, `question group asset ${document.path}`, issues, false);
+    for (const group of container.groups as unknown[]) {
+      if (isRecord(group) && Array.isArray(group.questions)) publicGroups.push(group);
+      else if (isRecord(group) && Array.isArray(group.answers)) privateGroups.push(group);
+      else issues.push(`question group asset ${document.path} contains an unsupported group shape`);
+    }
+  }
+  const publicIndex = new Map<string, Record<string, unknown>>();
+  const privateIndex = new Map<string, Record<string, unknown>>();
+  const questionIds = new Set<string>();
+  for (const [index, group] of publicGroups.entries()) {
+    const location = `public quiz groups[${index}]`;
+    addUnknownKeyIssues(group, PUBLIC_GROUP_KEYS, location, issues, false);
+    requireStableId(group, "groupId", location, issues);
+    requireStableId(group, "activityId", location, issues);
+    requireStableId(group, "knowledgePointId", location, issues);
+    if (group.role !== "fixed" && group.role !== "supplemental") issues.push(`${location}.role must be fixed or supplemental`);
+    const questions = Array.isArray(group.questions) ? group.questions : [];
+    const expected = group.role === "fixed" ? [4, 6] : [1, 2];
+    if (questions.length < expected[0] || questions.length > expected[1]) issues.push(`${location}.questions count is outside the role limit`);
+    questions.forEach((question, questionIndex) => {
+      validateQuestion(question, `${location}.questions[${questionIndex}]`, false, issues);
+      if (isRecord(question) && typeof question.questionId === "string") {
+        if (questionIds.has(question.questionId)) issues.push(`questionId ${question.questionId} must not repeat across revision 3 groups`);
+        questionIds.add(question.questionId);
+      }
+    });
+    if (typeof group.groupId === "string") {
+      if (publicIndex.has(group.groupId)) issues.push(`quiz group ${group.groupId} must be unique`);
+      publicIndex.set(group.groupId, group);
+    }
+  }
+  for (const [index, group] of privateGroups.entries()) {
+    const location = `private quiz groups[${index}]`;
+    addUnknownKeyIssues(group, PRIVATE_GROUP_KEYS, location, issues, false);
+    requireStableId(group, "groupId", location, issues);
+    const answers = Array.isArray(group.answers) ? group.answers : [];
+    answers.forEach((answer, answerIndex) => validateQuestion(answer, `${location}.answers[${answerIndex}]`, true, issues));
+    if (typeof group.groupId === "string") {
+      if (privateIndex.has(group.groupId)) issues.push(`private quiz group ${group.groupId} must be unique`);
+      privateIndex.set(group.groupId, group);
+    }
+  }
+  for (const [groupId, group] of publicIndex) {
+    const privateGroup = privateIndex.get(groupId);
+    const publicQuestions = (group.questions as Record<string, unknown>[]).map((question) => question.questionId);
+    const answers = (privateGroup?.answers as Record<string, unknown>[] | undefined) ?? [];
+    if (privateGroup === undefined || answers.length !== publicQuestions.length || answers.some((answer, index) => answer.questionId !== publicQuestions[index])) {
+      issues.push(`quiz group ${groupId} must have one ordered private answer for every public question`);
+    }
+  }
+  for (const groupId of privateIndex.keys()) if (!publicIndex.has(groupId)) issues.push(`private quiz group ${groupId} has no public group`);
+  const pointIds = new Set(points.map((point) => point.id));
+  const activityIds = new Set(activities.map((activity) => activity.activityId));
+  for (const group of publicGroups) {
+    if (typeof group.knowledgePointId === "string" && !pointIds.has(group.knowledgePointId)) issues.push(`quiz group ${String(group.groupId)} references missing knowledge point`);
+    if (typeof group.activityId === "string" && !activityIds.has(group.activityId)) issues.push(`quiz group ${String(group.groupId)} references missing activity`);
+  }
+  for (const point of points) {
+    const quiz = activities.find((activity) => activity.primaryKnowledgePointId === point.id && activity.fixedQuestionGroupId !== undefined);
+    if (quiz === undefined) { issues.push(`knowledge point ${point.id} must reference one revision 3 mcq activity`); continue; }
+    const fixed = publicIndex.get(quiz.fixedQuestionGroupId!);
+    const supplemental = quiz.supplementalQuestionGroupId === undefined ? undefined : publicIndex.get(quiz.supplementalQuestionGroupId);
+    if (fixed?.role !== "fixed" || fixed.activityId !== quiz.activityId || fixed.knowledgePointId !== point.id) issues.push(`activity ${quiz.activityId} fixed question group binding is invalid`);
+    if (quiz.supplementalQuestionGroupId === undefined || supplemental?.role !== "supplemental" || supplemental.activityId !== quiz.activityId || supplemental.knowledgePointId !== point.id) {
+      issues.push(`activity ${quiz.activityId} supplemental question group binding is invalid`);
+    }
+  }
+  if (issues.length > 0) failInvalidProfile(issues);
 }
 
 function buildUniqueIndex<T>(items: T[], idOf: (item: T) => string, label: string): Map<string, T> {
@@ -681,5 +862,25 @@ export async function validateProfileV2Directory(
       );
 
   validateCrossFileClosure(goalsAsset, knowledgeAsset, activitiesAsset);
+  if (manifest.revision === 3) {
+    if (manifest.revisionOf !== 2 || manifest.paths.cards === undefined || manifest.paths.assessments === undefined) {
+      failInvalidProfile(["revision 3 must declare revisionOf=2, cards, and assessments paths"]);
+    }
+    const coreKnowledgePointIds = new Set(
+      goalsAsset.goals.flatMap((goal) => goal.targetKnowledgePointIds),
+    );
+    const coreKnowledgePoints = knowledgeAsset.knowledgePoints.filter((point) => coreKnowledgePointIds.has(point.id));
+    for (const point of coreKnowledgePoints) {
+      if (point.activityPolicy !== "all_in_order" || point.contentEstimatedMinutes === undefined) {
+        failInvalidProfile([`revision 3 knowledge point ${point.id} must declare all_in_order and contentEstimatedMinutes`]);
+      }
+    }
+    const [cardDocuments, assessmentDocuments] = await Promise.all([
+      jsonDocuments(assertPathInside(directory, resolve(directory, manifest.paths.cards))),
+      jsonDocuments(assertPathInside(directory, resolve(directory, manifest.paths.assessments))),
+    ]);
+    validateRevision3CardAsset(cardDocuments, coreKnowledgePoints);
+    validateRevision3QuizAssets(assessmentDocuments, coreKnowledgePoints, activitiesAsset.activities);
+  }
   return manifest;
 }

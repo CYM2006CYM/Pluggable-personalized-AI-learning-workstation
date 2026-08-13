@@ -4,6 +4,7 @@ import type {
   CommittedSessionSnapshot,
   GetSessionSnapshotInput,
   PathSafeSnapshot,
+  BoundLearningCardSnapshot,
 } from "./learning-session-repository.js";
 
 /** A-only persistence detail. It is deliberately separate from public contract 21. */
@@ -15,6 +16,7 @@ export type InternalPersistedPathSnapshot = Omit<LearningPath, "status" | "nodes
 /** Required by PathRuntime in addition to the public LearningSessionRepository contract. */
 export interface InternalPathSessionPort {
   getInternalPathSnapshot(input: GetSessionSnapshotInput): Promise<InternalPersistedPathSnapshot | undefined>;
+  getBoundLearningCards(input: GetSessionSnapshotInput): Promise<BoundLearningCardSnapshot[]>;
   commitInternalPath(
     input: CommitLearningSessionInput,
     path: InternalPersistedPathSnapshot,
@@ -35,6 +37,10 @@ export function toPathSafeSnapshot(path: InternalPersistedPathSnapshot): PathSaf
       status: node.status,
       estimatedMinutes: node.estimatedMinutes,
       reasonCodes: [...node.reasonCodes],
+      difficulty: node.difficulty,
+      scaffold: node.scaffold,
+      required: node.required,
+      positionLocked: node.positionLocked,
     })),
   };
 }

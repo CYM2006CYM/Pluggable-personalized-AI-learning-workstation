@@ -44,6 +44,26 @@ function state(id: string, partial: Partial<KnowledgeState> = {}): KnowledgeStat
 }
 
 describe("PathEngine path-engine-v1", () => {
+  it("keeps every all_in_order activity with content time and reports low budgets as infeasible", () => {
+    const ordered: PathEngineProfile = {
+      profileRevision: 3,
+      goals: [{ goalId: "ordered", title: "ordered", targetKnowledgePointIds: ["target"], requiredActivityIds: ["target-final"], finalActivityId: "target-final" }],
+      knowledgePoints: [
+        { id: "prerequisite", title: "prerequisite", chapterId: "chapter", sectionId: "section", prerequisiteIds: [], relatedKnowledgePointIds: [], sourceAnchorIds: ["source"], activityIds: ["first", "second"], importance: 1, activityPolicy: "all_in_order", contentEstimatedMinutes: 3 },
+        { id: "target", title: "target", chapterId: "chapter", sectionId: "section", prerequisiteIds: ["prerequisite"], relatedKnowledgePointIds: [], sourceAnchorIds: ["source"], activityIds: ["target-final"], importance: 1 },
+      ],
+      activities: [
+        { activityId: "first", primaryKnowledgePointId: "prerequisite", supportingKnowledgePointIds: [], goalIds: ["ordered"], estimatedMinutes: 4 },
+        { activityId: "second", primaryKnowledgePointId: "prerequisite", supportingKnowledgePointIds: [], goalIds: ["ordered"], estimatedMinutes: 5 },
+        { activityId: "target-final", primaryKnowledgePointId: "target", supportingKnowledgePointIds: ["prerequisite"], goalIds: ["ordered"], estimatedMinutes: 6, kind: "coding_practical" },
+      ],
+    };
+    const build = (availableMinutes: number) => new PathEngine(ordered).build({ sessionId: "ordered", profileRevision: 3, evidenceVersion: 0, goalId: "ordered", mode: "recommended", availableMinutes, selectedKnowledgePointIds: [], lockedNodeIds: [], knowledgeStates: [state("prerequisite"), state("target")] });
+    const exact = build(18);
+    expect(exact).toMatchObject({ status: "ok", path: { estimatedMinutes: 18, nodes: [{ knowledgePointId: "prerequisite", activityIds: ["first", "second"], estimatedMinutes: 12 }, { knowledgePointId: "target", activityIds: ["target-final"], estimatedMinutes: 6 }] } });
+    expect(build(17)).toMatchObject({ status: "infeasible", failure: { minimumRequiredMinutes: 18 } });
+  });
+
   it("builds a stable prerequisite-closed topological path", () => {
     const engine = new PathEngine(profile);
     const input = {
@@ -290,7 +310,7 @@ describe("PathEngine path-engine-v1", () => {
     if (unchanged.status === "ok") expect(unchanged.path.changeReasons).toEqual([]);
     const changed = engine.replan({ sessionId: "reasons", profileRevision: 2, evidenceVersion: 1, goalId: "goal-main", mode: "recommended", availableMinutes: 40, selectedKnowledgePointIds: ["a"], lockedNodeIds: [], knowledgeStates: [state("a", { status: "mastered", mastery: 1, confidence: 1, skipEligible: true }), state("b", { status: "support_needed", mastery: 0.2, confidence: 1 }), state("c", { status: "mastered", mastery: 1, confidence: 1, skipEligible: true })], previousPath: previous.path, trigger: "error_remediation" });
     expect(changed.status).toBe("ok");
-    if (changed.status === "ok") expect(changed.path.changeReasons).toEqual(["error_remediation", "user_selected", "low_mastery"]);
+    if (changed.status === "ok") expect(changed.path.changeReasons).toEqual(["error_remediation", "user_selected", "low_mastery", "prerequisite_gap"]);
   });
 
   it("emits prerequisite, evidence, and time compression reasons only when their path delta exists", () => {

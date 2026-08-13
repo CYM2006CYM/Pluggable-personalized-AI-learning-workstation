@@ -11,7 +11,7 @@ import type {
   RecoverSessionOutput,
   SessionSafeView,
   StartSessionOutput,
-} from "../../application/learning-runtime-facade.js";
+} from "../../contracts/index.js";
 
 export interface ProfileDisplayFixture {
   subjectId: string;
@@ -115,6 +115,7 @@ export const diagnosticCompleteMock = {
   diagnosticId: "diagnostic-demo-001",
   evidenceVersion: 4,
   capabilityProfileRevision: 1,
+  diagnosticDraftVersion: 3,
   insufficientKnowledgePointIds: ["pandas.clean.duplicate-orders"],
   knowledgeStates: [
     {
@@ -186,6 +187,10 @@ export const pathCandidateMock = {
       status: "completed",
       estimatedMinutes: 10,
       reasonCodes: ["prior_evidence"],
+      difficulty: "S-R",
+      scaffold: "none",
+      required: true,
+      positionLocked: true,
     },
     {
       nodeId: "node-missing-values",
@@ -194,6 +199,10 @@ export const pathCandidateMock = {
       status: "available",
       estimatedMinutes: 20,
       reasonCodes: ["low_mastery", "goal_required"],
+      difficulty: "M-U",
+      scaffold: "hint",
+      required: true,
+      positionLocked: false,
     },
     {
       nodeId: "node-duplicates",
@@ -202,6 +211,10 @@ export const pathCandidateMock = {
       status: "locked",
       estimatedMinutes: 25,
       reasonCodes: ["evidence_insufficient"],
+      difficulty: "M-A",
+      scaffold: "worked_example",
+      required: true,
+      positionLocked: false,
     },
     {
       nodeId: "node-practical",
@@ -210,6 +223,10 @@ export const pathCandidateMock = {
       status: "locked",
       estimatedMinutes: 60,
       reasonCodes: ["prerequisite_gap", "goal_required"],
+      difficulty: "C-A",
+      scaffold: "none",
+      required: true,
+      positionLocked: true,
     },
   ],
 } satisfies PathCandidateOutput;
@@ -261,6 +278,7 @@ export const contextAnswerMock = {
 } satisfies ContextAnswerOutput;
 
 export const activityDraftMock = {
+  kind: "code",
   requestId: "mock-activity-open-001",
   sessionId: "session-demo-001",
   sessionVersion: 11,
@@ -289,6 +307,7 @@ export const preparedActivityMock = {
 } satisfies PreparedActivityOutput;
 
 export const activitySubmissionMock = {
+  kind: "code",
   requestId: "mock-activity-submit-001",
   sessionId: "session-demo-001",
   sessionVersion: 12,
@@ -313,6 +332,7 @@ export const activitySubmissionMock = {
 } satisfies ActivitySubmissionOutput;
 
 export const evaluatorFeedbackMock = {
+  kind: "code",
   requestId: "mock-activity-submit-002",
   sessionId: "session-demo-001",
   sessionVersion: 11,
@@ -336,12 +356,14 @@ export const activityRecoveryMock = {
   sessionVersion: 11,
   profileRevision: 2,
   attempt: {
+    kind: "code",
     sessionId: "session-demo-001",
     sessionVersion: 11,
     profileRevision: 2,
     activityId: "act-missing",
     attemptId: "attempt-demo-001",
     status: "draft",
+    draftVersion: 3,
     codeHash: "sha256:learner-draft-demo",
   },
   draftVersion: 3,

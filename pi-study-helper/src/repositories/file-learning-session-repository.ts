@@ -2,7 +2,9 @@ import { createHash } from "node:crypto";
 import { mkdir, readFile, readdir, rename, rm, stat } from "node:fs/promises";
 import { resolve } from "node:path";
 import { profileFamiliesRoot, resolveStudyDataRoot } from "../config/data-paths.js";
+import type { BackgroundQuestionnaire, LearningCardSafeView } from "../contracts/index.js";
 import type { Evidence, KnowledgeState, LearnerDiagnostic } from "../domain/v2-types.js";
+import type { QuizAttemptSnapshot } from "../domain/quiz-runtime.js";
 import {
   assertSafeFileComponent,
   assertSafeSubjectId,
@@ -23,6 +25,10 @@ import type {
   SessionSnapshot,
   SessionBindingReader,
   RecoverableActivityCommitReader,
+  DiagnosticDraftSessionPort,
+  QuizAttemptSessionPort,
+  LearningSessionCatalogPort,
+  StoredDiagnosticAnswerState,
 } from "./learning-session-repository.js";
 import {
   toPathSafeSnapshot,
@@ -32,6 +38,7 @@ import {
 
 interface StoredSnapshot extends Omit<SessionSnapshot, "path"> {
   path?: PathSafeSnapshot;
+  boundLearningCards: import("./learning-session-repository.js").BoundLearningCardSnapshot[];
   /** Full deterministic path state is never reconstructed from the public safe DTO. */
   internalPath?: InternalPersistedPathSnapshot;
   createRequestId: string;
@@ -45,6 +52,11 @@ interface StoredCommitResult {
   response: CommittedSessionSnapshot;
 }
 
+interface StoredDiagnosticDraftCommit {
+  inputHash: string;
+  diagnosticDraftVersion: number;
+}
+
 interface PreparedTransaction {
   formatVersion: 1;
   input: CommitLearningSessionInput;
@@ -55,6 +67,7 @@ interface PreparedTransaction {
   evidenceToPublish: Evidence[];
   archivedPathsToPublish: InternalPersistedPathSnapshot[];
   internalPathCandidate?: InternalPersistedPathSnapshot;
+  quizAttemptToPublish?: QuizAttemptSnapshot;
 }
 
 export interface FileLearningSessionRepositoryOptions {
@@ -66,9 +79,11 @@ export interface FileLearningSessionRepositoryOptions {
 
 export type FileLearningSessionPublishStage =
   | "candidate_written"
+  | "attempt_written"
   | "evidence_written"
   | "knowledge_state_written"
   | "path_written"
+  | "progress_written"
   | "checkpoint_written";
 
 async function exists(path: string): Promise<boolean> {
@@ -102,6 +117,22 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+function parseStoredBackgroundQuestionnaire(value: unknown): BackgroundQuestionnaire | undefined {
+  if (!isRecord(value)) return undefined;
+  const keys = Object.keys(value).sort();
+  if (!sameValue(keys, ["explanation_preference", "pandas_experience", "python_experience"])) return undefined;
+  const experience = new Set(["none", "basic", "comfortable", "uncertain"]);
+  const preference = new Set(["concise", "step_by_step", "example_first", "uncertain"]);
+  if (!experience.has(String(value.python_experience))
+      || !experience.has(String(value.pandas_experience))
+      || !preference.has(String(value.explanation_preference))) return undefined;
+  return {
+    python_experience: value.python_experience as BackgroundQuestionnaire["python_experience"],
+    pandas_experience: value.pandas_experience as BackgroundQuestionnaire["pandas_experience"],
+    explanation_preference: value.explanation_preference as BackgroundQuestionnaire["explanation_preference"],
+  };
+}
+
 function isPathSafeCandidate(value: unknown): value is PathSafeSnapshot {
   if (!isRecord(value) || typeof value.pathId !== "string" || typeof value.pathVersion !== "number"
       || !Number.isInteger(value.pathVersion) || value.pathVersion < 1
@@ -124,7 +155,10 @@ function validatePublicPathCandidate(value: unknown): PathSafeSnapshot {
         || node.activityIds.some((id) => typeof id !== "string" || id.length === 0)
         || !["locked", "available", "in_progress", "completed", "skipped"].includes(String(node.status))
         || !Number.isInteger(node.estimatedMinutes) || node.estimatedMinutes < 0
-        || !Array.isArray(node.reasonCodes) || node.reasonCodes.some((reason) => typeof reason !== "string")) {
+        || !Array.isArray(node.reasonCodes) || node.reasonCodes.some((reason) => typeof reason !== "string")
+        || !["S-R", "S-U", "M-U", "M-A", "C-A"].includes(String(node.difficulty))
+        || !["none", "hint", "worked_example"].includes(String(node.scaffold))
+        || typeof node.required !== "boolean" || typeof node.positionLocked !== "boolean") {
       throw new LearningSessionRepositoryError("evidence_invalid", "PathSafeSnapshot node is structurally invalid");
     }
     if (nodeIds.has(node.nodeId) || knowledgePointIds.has(node.knowledgePointId)) {
@@ -139,6 +173,10 @@ function validatePublicPathCandidate(value: unknown): PathSafeSnapshot {
       status: node.status,
       estimatedMinutes: node.estimatedMinutes,
       reasonCodes: [...node.reasonCodes],
+      difficulty: node.difficulty,
+      scaffold: node.scaffold,
+      required: node.required,
+      positionLocked: node.positionLocked,
     };
   });
   return {
@@ -204,7 +242,7 @@ function validateKnowledgeStates(states: readonly KnowledgeState[], input: Commi
     if (!isRecord(rawState) || typeof rawState.knowledgePointId !== "string" || rawState.knowledgePointId.length === 0) {
       throw new LearningSessionRepositoryError("evidence_invalid", "KnowledgeState identifier must be non-empty");
     }
-    const checked = rawState as unknown as KnowledgeState;
+    const checked = state;
     if (ids.has(checked.knowledgePointId)) {
       throw new LearningSessionRepositoryError("evidence_invalid", "KnowledgeState identifiers must be unique");
     }
@@ -221,13 +259,13 @@ function validateKnowledgeStates(states: readonly KnowledgeState[], input: Commi
         || !Number.isInteger(checked.validEvidenceCount) || checked.validEvidenceCount < 0
         || !Number.isInteger(checked.evidenceFormCount) || checked.evidenceFormCount < 0
         || checked.evidenceFormCount > checked.validEvidenceCount
-        || !Array.isArray(checked.evidenceIds) || checked.evidenceIds.some((id) => typeof id !== "string" || id.length === 0)
+        || !Array.isArray(checked.evidenceIds) || checked.evidenceIds.some((id: string) => typeof id !== "string" || id.length === 0)
         || !Array.isArray(checked.consideredEvidenceIds)
-        || checked.consideredEvidenceIds.some((id) => typeof id !== "string" || id.length === 0)
+        || checked.consideredEvidenceIds.some((id: string) => typeof id !== "string" || id.length === 0)
         || new Set(checked.evidenceIds).size !== checked.evidenceIds.length
         || new Set(checked.consideredEvidenceIds).size !== checked.consideredEvidenceIds.length
         || checked.validEvidenceCount !== checked.consideredEvidenceIds.length
-        || checked.consideredEvidenceIds.some((id) => !checked.evidenceIds.includes(id))
+        || checked.consideredEvidenceIds.some((id: string) => !checked.evidenceIds.includes(id))
         || !Number.isFinite(Date.parse(checked.asOf))
         || !Number.isFinite(Date.parse(checked.lastUpdatedAt))) {
       throw new LearningSessionRepositoryError("evidence_invalid", "KnowledgeState fields are not semantically valid");
@@ -347,7 +385,100 @@ function validateDiagnostic(
   }
 }
 
-export class FileLearningSessionRepository implements LearningSessionRepository, InternalPathSessionPort, SessionBindingReader, RecoverableActivityCommitReader {
+function validateQuizAttempt(attempt: QuizAttemptSnapshot | undefined, input: CommitLearningSessionInput): void {
+  if (attempt === undefined) return;
+  try {
+    assertSafeFileComponent(attempt.attemptId, "attemptId");
+    assertSafeFileComponent(attempt.activityId, "activityId");
+  } catch {
+    throw new LearningSessionRepositoryError("evidence_invalid", "Quiz Attempt identifiers are not path-safe");
+  }
+  if (attempt.sessionId !== input.sessionId || attempt.profileRevision !== input.profileRevision
+      || !Number.isInteger(attempt.activityVersion) || attempt.activityVersion < 1
+      || typeof attempt.title !== "string" || attempt.title.length === 0
+      || typeof attempt.prompt !== "string"
+      || typeof attempt.primaryKnowledgePointId !== "string" || attempt.primaryKnowledgePointId.length === 0
+      || !Array.isArray(attempt.supportingKnowledgePointIds) || attempt.supportingKnowledgePointIds.some((id) => typeof id !== "string" || id.length === 0)
+      || (attempt.retryNumber !== 0 && attempt.retryNumber !== 1)
+      || (attempt.status !== "draft" && attempt.status !== "submitted")
+      || !Array.isArray(attempt.questions)) {
+    throw new LearningSessionRepositoryError("evidence_invalid", "Quiz Attempt binding is invalid");
+  }
+  const ids = new Set<string>();
+  for (const question of attempt.questions) {
+    if (!question.questionId || ids.has(question.questionId)
+        || (question.kind !== "single_choice" && question.kind !== "judgment")
+        || typeof question.prompt !== "string" || !Array.isArray(question.options)
+        || typeof question.explanation !== "string" || !Array.isArray(question.sourceAnchorIds)) {
+      throw new LearningSessionRepositoryError("evidence_invalid", "Quiz Attempt question snapshot is invalid");
+    }
+    ids.add(question.questionId);
+  }
+  if (attempt.status === "submitted" && (attempt.result === undefined || attempt.result.kind !== "quiz" || !attempt.submissionRequestId || !attempt.submissionHash)) {
+    throw new LearningSessionRepositoryError("evidence_invalid", "Submitted Quiz Attempt is incomplete");
+  }
+  const reference = input.candidate.currentAttempt;
+  if (reference !== undefined && reference !== null && (reference.kind !== "quiz" || reference.activityId !== attempt.activityId || reference.attemptId !== attempt.attemptId || reference.retryNumber !== attempt.retryNumber)) {
+    throw new LearningSessionRepositoryError("evidence_invalid", "Current Attempt reference does not match Quiz Attempt");
+  }
+}
+
+function validateActivityProgress(input: CommitLearningSessionInput, current: StoredSnapshot): void {
+  const progress = input.candidate.activityProgress;
+  if (progress === undefined) return;
+  if (!Array.isArray(progress)) throw new LearningSessionRepositoryError("evidence_invalid", "Activity progress must be an array");
+  const nodeIds = new Set<string>();
+  for (const node of progress) {
+    if (!node.nodeId || nodeIds.has(node.nodeId) || !Array.isArray(node.activities)) {
+      throw new LearningSessionRepositoryError("evidence_invalid", "Activity progress node is invalid or duplicated");
+    }
+    nodeIds.add(node.nodeId);
+    const activityIds = new Set<string>();
+    for (const activity of node.activities) {
+      if (!activity.activityId || activityIds.has(activity.activityId)
+          || !["pending", "in_progress", "completed", "insufficient"].includes(activity.status)
+          || !Array.isArray(activity.attemptIds) || new Set(activity.attemptIds).size !== activity.attemptIds.length
+          || (activity.quizRetryCount !== 0 && activity.quizRetryCount !== 1)
+          || !Number.isFinite(Date.parse(activity.updatedAt))) {
+        throw new LearningSessionRepositoryError("evidence_invalid", "Activity progress entry is invalid");
+      }
+      if ((activity.status === "completed" || activity.status === "insufficient") && activity.result === undefined) {
+        throw new LearningSessionRepositoryError("evidence_invalid", "Terminal Activity progress requires a result");
+      }
+      activityIds.add(activity.activityId);
+    }
+    const pathNode = (input.candidate.pathCandidate ?? current.path)?.nodes.find((candidate) => candidate.nodeId === node.nodeId);
+    if (pathNode !== undefined && JSON.stringify(pathNode.activityIds) !== JSON.stringify(node.activities.map((activity) => activity.activityId))) {
+      throw new LearningSessionRepositoryError("evidence_invalid", "Activity progress order must match the path node");
+    }
+  }
+}
+
+function validateBoundLearningCards(input: CommitLearningSessionInput, current: StoredSnapshot): void {
+  const bindings = input.candidate.boundLearningCards ?? current.boundLearningCards;
+  if (!Array.isArray(bindings) || new Set(bindings.map((binding) => binding.nodeId)).size !== bindings.length) {
+    throw new LearningSessionRepositoryError("evidence_invalid", "Bound learning cards must contain unique path nodes");
+  }
+  const path = input.candidate.pathCandidate ?? current.path;
+  const progress = input.candidate.activityProgress ?? current.activityProgress;
+  for (const binding of bindings) {
+    const card = binding.card as LearningCardSafeView;
+    const pathNode = path?.nodes.find((node) => node.nodeId === binding.nodeId);
+    const progressCard = progress.find((node) => node.nodeId === binding.nodeId)?.card;
+    if (!binding.nodeId || (binding.source !== "dynamic" && binding.source !== "fixed")
+        || !card?.cardId || !card.knowledgePointId || !card.title || !card.objective
+        || !Array.isArray(card.explanation) || !card.example || !card.commonMistake
+        || !Array.isArray(card.sourceAnchorIds) || !Number.isFinite(card.estimatedMinutes)
+        || pathNode?.knowledgePointId !== card.knowledgePointId || progressCard?.cardId !== card.cardId) {
+      throw new LearningSessionRepositoryError("evidence_invalid", "Bound learning card snapshot is invalid");
+    }
+  }
+  if (progress.some((node) => node.card !== undefined && !bindings.some((binding) => binding.nodeId === node.nodeId && binding.card.cardId === node.card?.cardId))) {
+    throw new LearningSessionRepositoryError("evidence_invalid", "Every projected learning card must have one complete bound snapshot");
+  }
+}
+
+export class FileLearningSessionRepository implements LearningSessionRepository, InternalPathSessionPort, SessionBindingReader, RecoverableActivityCommitReader, DiagnosticDraftSessionPort, QuizAttemptSessionPort, LearningSessionCatalogPort {
   readonly dataRoot: string;
   readonly familiesRoot: string;
   private readonly now: () => Date;
@@ -408,7 +539,34 @@ export class FileLearningSessionRepository implements LearningSessionRepository,
         || snapshot.latestCommit.evidenceVersion !== marker.evidenceVersion) {
       throw new LearningSessionRepositoryError("storage_error", "Committed snapshot does not match latest marker");
     }
-    return snapshot;
+    let diagnosticDraftVersion = snapshot.diagnosticDraftVersion ?? 0;
+    const draftMarkerPath = resolve(directory, "diagnostic", "checkpoint.json");
+    if (await exists(draftMarkerPath)) {
+      const draftMarker = await readJson<{ diagnosticDraftVersion: number }>(draftMarkerPath, "diagnostic checkpoint");
+      if (!Number.isInteger(draftMarker.diagnosticDraftVersion) || draftMarker.diagnosticDraftVersion < diagnosticDraftVersion) {
+        throw new LearningSessionRepositoryError("storage_error", "Diagnostic draft checkpoint is invalid");
+      }
+      diagnosticDraftVersion = draftMarker.diagnosticDraftVersion;
+      const draft = await readJson<Record<string, unknown>>(
+        resolve(directory, "diagnostic", "drafts", `${diagnosticDraftVersion}.json`),
+        "diagnostic draft version",
+      );
+      const background = parseStoredBackgroundQuestionnaire(draft.background);
+      snapshot.diagnosticDraft = {
+        diagnosticDraftVersion,
+        ...(background === undefined ? {} : { background }),
+        ...(typeof draft.currentQuestionId === "string" ? { currentQuestionId: draft.currentQuestionId } : {}),
+        processedQuestionIds: Array.isArray(draft.processedQuestionIds)
+          ? draft.processedQuestionIds.filter((value): value is string => typeof value === "string")
+          : [],
+      };
+    }
+    return {
+      ...snapshot,
+      activityProgress: snapshot.activityProgress ?? [],
+      boundLearningCards: snapshot.boundLearningCards ?? [],
+      diagnosticDraftVersion,
+    };
   }
 
   private publicSnapshot(snapshot: StoredSnapshot): SessionSnapshot {
@@ -417,6 +575,7 @@ export class FileLearningSessionRepository implements LearningSessionRepository,
       createInputHash: _createInputHash,
       pathHistory: _pathHistory,
       internalPath: _internalPath,
+      boundLearningCards: _boundLearningCards,
       ...safe
     } = snapshot;
     return structuredClone(safe);
@@ -478,6 +637,9 @@ export class FileLearningSessionRepository implements LearningSessionRepository,
     }
     validateKnowledgeStates(input.candidate.knowledgeStates, input, nextEvidenceVersion);
     validateDiagnostic(input.candidate.diagnosticCandidate, input.candidate.knowledgeStates, input, nextEvidenceVersion);
+    validateQuizAttempt(input.candidate.quizAttemptCandidate, input);
+    validateActivityProgress(input, current);
+    validateBoundLearningCards(input, current);
     const safePathCandidate = input.candidate.pathCandidate === undefined
       ? undefined
       : validatePublicPathCandidate(input.candidate.pathCandidate);
@@ -509,6 +671,7 @@ export class FileLearningSessionRepository implements LearningSessionRepository,
       sessionVersion: nextSessionVersion,
       ...(safePathCandidate === undefined ? {} : { pathVersion: safePathCandidate.pathVersion }),
       ...(input.candidate.nextStage === undefined ? {} : { stage: input.candidate.nextStage }),
+      ...(input.candidate.nextStage === "completed" ? { status: "completed" as const } : {}),
     };
     const marker: LatestCommitMarker = {
       evidenceVersion: nextEvidenceVersion,
@@ -526,6 +689,16 @@ export class FileLearningSessionRepository implements LearningSessionRepository,
       view: nextView,
       evidence: [...current.evidence, ...evidenceToPublish],
       knowledgeStates: input.candidate.knowledgeStates,
+      activityProgress: input.candidate.activityProgress === undefined
+        ? current.activityProgress
+        : structuredClone(input.candidate.activityProgress),
+      boundLearningCards: input.candidate.boundLearningCards === undefined
+        ? current.boundLearningCards
+        : structuredClone(input.candidate.boundLearningCards),
+      diagnosticDraftVersion: input.candidate.diagnosticDraftVersion ?? current.diagnosticDraftVersion,
+      ...(input.candidate.currentAttempt === undefined
+        ? current.currentAttempt === undefined ? {} : { currentAttempt: structuredClone(current.currentAttempt) }
+        : input.candidate.currentAttempt === null ? {} : { currentAttempt: structuredClone(input.candidate.currentAttempt) }),
       ...(input.candidate.diagnosticCandidate !== undefined
         ? { latestDiagnostic: input.candidate.diagnosticCandidate }
         : current.latestDiagnostic === undefined ? {} : { latestDiagnostic: current.latestDiagnostic }),
@@ -542,6 +715,7 @@ export class FileLearningSessionRepository implements LearningSessionRepository,
     const response: CommittedSessionSnapshot = {
       ...publicSnapshot,
       committed: true,
+      replayed: false,
       ...(single === undefined ? {} : { committedEvidenceId: evidenceToPublish[0]?.evidenceId }),
       ...(batch === undefined ? {} : { committedEvidenceIds: evidenceToPublish.map((item) => item.evidenceId) }),
       ...(input.candidate.diagnosticCandidate === undefined
@@ -561,6 +735,9 @@ export class FileLearningSessionRepository implements LearningSessionRepository,
       response,
       evidenceToPublish,
       archivedPathsToPublish,
+      ...(input.candidate.quizAttemptCandidate === undefined
+        ? {}
+        : { quizAttemptToPublish: structuredClone(input.candidate.quizAttemptCandidate) }),
       ...(storedInternalPath === undefined ? {} : { internalPathCandidate: storedInternalPath }),
     };
   }
@@ -568,7 +745,7 @@ export class FileLearningSessionRepository implements LearningSessionRepository,
   private validatePreparedTransaction(
     current: StoredSnapshot,
     requestId: string,
-    candidate: unknown,
+    candidate: PreparedTransaction,
   ): PreparedTransaction {
     assertSafeFileComponent(requestId, "candidate requestId");
     if (!isRecord(candidate)
@@ -577,21 +754,20 @@ export class FileLearningSessionRepository implements LearningSessionRepository,
         || typeof candidate.inputHash !== "string") {
       throw new LearningSessionRepositoryError("storage_error", "Prepared transaction format is incomplete");
     }
-    const prepared = candidate as unknown as PreparedTransaction;
-    if (prepared.input.requestId !== requestId
-        || prepared.previousSessionVersion !== current.sessionVersion
-        || prepared.input.sessionId !== current.sessionId
-        || prepared.input.profileRevision !== current.profileRevision) {
+    if (candidate.input.requestId !== requestId
+        || candidate.previousSessionVersion !== current.sessionVersion
+        || candidate.input.sessionId !== current.sessionId
+        || candidate.input.profileRevision !== current.profileRevision) {
       throw new LearningSessionRepositoryError("storage_error", "Prepared transaction does not follow latest commit");
     }
-    if (hashValue(commitIdentity(prepared.input, prepared.internalPathCandidate)) !== prepared.inputHash) {
+    if (hashValue(commitIdentity(candidate.input, candidate.internalPathCandidate)) !== candidate.inputHash) {
       throw new LearningSessionRepositoryError("storage_error", "Prepared transaction input hash does not close");
     }
-    const expected = this.prepareTransaction(current, prepared.input, prepared.internalPathCandidate);
-    if (!sameValue(prepared, expected)) {
+    const expected = this.prepareTransaction(current, candidate.input, candidate.internalPathCandidate);
+    if (!sameValue(candidate, expected)) {
       throw new LearningSessionRepositoryError("storage_error", "Prepared transaction semantic closure failed");
     }
-    return prepared;
+    return expected;
   }
 
   async create(input: CreateLearningSessionRecord) {
@@ -636,6 +812,9 @@ export class FileLearningSessionRepository implements LearningSessionRepository,
         view,
         evidence: [],
         knowledgeStates: [],
+        activityProgress: [],
+        boundLearningCards: [],
+        diagnosticDraftVersion: 0,
         latestCommit: marker,
         createRequestId: input.requestId,
         createInputHash: inputHash,
@@ -662,6 +841,9 @@ export class FileLearningSessionRepository implements LearningSessionRepository,
     if (stored.profileRevision !== input.profileRevision) {
       throw new LearningSessionRepositoryError("profile_revision_conflict", "Profile revision does not match session");
     }
+    if (stored.sessionVersion !== input.sessionVersion) {
+      throw new LearningSessionRepositoryError("session_version_conflict", "Session version is stale");
+    }
     return this.publicSnapshot(stored);
   }
 
@@ -669,6 +851,185 @@ export class FileLearningSessionRepository implements LearningSessionRepository,
     const directory = await this.findSessionDirectory(sessionId);
     const stored = await this.loadStoredSnapshot(directory);
     return this.publicSnapshot(stored);
+  }
+
+  async listBoundSnapshots(): Promise<SessionSnapshot[]> {
+    await mkdir(this.familiesRoot, { recursive: true });
+    const snapshots: SessionSnapshot[] = [];
+    for (const family of (await readdir(this.familiesRoot, { withFileTypes: true })).sort((left, right) => left.name.localeCompare(right.name, "en"))) {
+      if (!family.isDirectory()) continue;
+      const root = resolveInside(this.familiesRoot, family.name, "_user", "learning_sessions");
+      if (!(await exists(root))) continue;
+      for (const session of (await readdir(root, { withFileTypes: true })).sort((left, right) => left.name.localeCompare(right.name, "en"))) {
+        if (!session.isDirectory() || !(await exists(resolve(root, session.name, "checkpoints", "latest.json")))) continue;
+        snapshots.push(this.publicSnapshot(await this.loadStoredSnapshot(resolve(root, session.name))));
+      }
+    }
+    return snapshots;
+  }
+
+  async getQuizAttempt(input: GetSessionSnapshotInput & { activityId: string; attemptId: string }): Promise<QuizAttemptSnapshot | undefined> {
+    assertSafeFileComponent(input.activityId, "activityId");
+    assertSafeFileComponent(input.attemptId, "attemptId");
+    const directory = await this.findSessionDirectory(input.sessionId);
+    const current = await this.loadStoredSnapshot(directory);
+    if (current.profileRevision !== input.profileRevision) {
+      throw new LearningSessionRepositoryError("profile_revision_conflict", "Profile revision does not match session");
+    }
+    if (current.sessionVersion !== input.sessionVersion) {
+      throw new LearningSessionRepositoryError("session_version_conflict", "Session version is stale");
+    }
+    const attemptDirectory = resolve(directory, "activities", input.activityId, "quiz-attempts", input.attemptId);
+    if (!(await exists(attemptDirectory))) return undefined;
+    const versions = (await readdir(attemptDirectory, { withFileTypes: true }))
+      .filter((entry) => entry.isFile() && /^\d+\.json$/u.test(entry.name))
+      .map((entry) => Number.parseInt(entry.name, 10))
+      .filter((version) => version <= current.sessionVersion)
+      .sort((left, right) => right - left);
+    if (versions[0] === undefined) return undefined;
+    return structuredClone(await readJson<QuizAttemptSnapshot>(resolve(attemptDirectory, `${versions[0]}.json`), "Quiz Attempt"));
+  }
+
+  async saveDiagnosticDraftState(input: {
+    requestId: string;
+    sessionId: string;
+    sessionVersion: number;
+    profileRevision: number;
+    diagnosticDraftVersion: number;
+    draft: Record<string, unknown>;
+    background?: unknown;
+  }): Promise<{ diagnosticDraftVersion: number }> {
+    assertSafeFileComponent(input.requestId, "requestId");
+    return this.withLock(input.sessionId, async () => {
+      const directory = await this.findSessionDirectory(input.sessionId);
+      const current = await this.loadStoredSnapshot(directory);
+      if (current.sessionVersion !== input.sessionVersion) {
+        throw new LearningSessionRepositoryError("session_version_conflict", "Session version is stale");
+      }
+      if (current.profileRevision !== input.profileRevision) {
+        throw new LearningSessionRepositoryError("profile_revision_conflict", "Profile revision does not match session");
+      }
+      const identity = {
+        sessionId: input.sessionId,
+        sessionVersion: input.sessionVersion,
+        profileRevision: input.profileRevision,
+        diagnosticDraftVersion: input.diagnosticDraftVersion,
+        draft: input.draft,
+        background: input.background,
+      };
+      const inputHash = hashValue(identity);
+      const commits = resolve(directory, "diagnostic", "draft-commits");
+      const commitPath = resolve(commits, `${input.requestId}.json`);
+      if (await exists(commitPath)) {
+        const committed = await readJson<StoredDiagnosticDraftCommit>(commitPath, "diagnostic draft commit");
+        if (committed.inputHash !== inputHash) {
+          throw new LearningSessionRepositoryError("idempotency_conflict", "Diagnostic draft requestId has different content");
+        }
+        if (current.diagnosticDraftVersion < committed.diagnosticDraftVersion) {
+          if (committed.diagnosticDraftVersion !== current.diagnosticDraftVersion + 1
+              || !(await exists(resolve(directory, "diagnostic", "drafts", `${committed.diagnosticDraftVersion}.json`)))) {
+            throw new LearningSessionRepositoryError("storage_error", "Diagnostic draft commit cannot be recovered");
+          }
+          await writeJsonAtomic(resolve(directory, "diagnostic", "checkpoint.json"), {
+            diagnosticDraftVersion: committed.diagnosticDraftVersion,
+            requestId: input.requestId,
+          });
+        }
+        return { diagnosticDraftVersion: committed.diagnosticDraftVersion };
+      }
+      if (current.diagnosticDraftVersion !== input.diagnosticDraftVersion) {
+        throw new LearningSessionRepositoryError("session_version_conflict", "Diagnostic draft version is stale");
+      }
+      const nextVersion = current.diagnosticDraftVersion + 1;
+      const versions = resolve(directory, "diagnostic", "drafts");
+      await mkdir(versions, { recursive: true });
+      await mkdir(commits, { recursive: true });
+      const previous = current.diagnosticDraftVersion === 0
+        ? {}
+        : await readJson<Record<string, unknown>>(resolve(versions, `${current.diagnosticDraftVersion}.json`), "previous diagnostic draft");
+      const processedQuestionIds = [
+        ...(Array.isArray(previous.processedQuestionIds) ? previous.processedQuestionIds.filter((value): value is string => typeof value === "string") : []),
+        ...(typeof input.draft.processedQuestionId === "string" ? [input.draft.processedQuestionId] : []),
+      ];
+      const { processedQuestionId: _processedQuestionId, ...draft } = input.draft;
+      await writeJsonAtomic(resolve(versions, `${nextVersion}.json`), {
+        ...previous,
+        ...draft,
+        ...(input.background === undefined ? {} : { background: input.background }),
+        processedQuestionIds: [...new Set(processedQuestionIds)],
+        diagnosticDraftVersion: nextVersion,
+      });
+      await writeJsonAtomic(commitPath, { inputHash, diagnosticDraftVersion: nextVersion } satisfies StoredDiagnosticDraftCommit);
+      await writeJsonAtomic(resolve(directory, "diagnostic", "checkpoint.json"), { diagnosticDraftVersion: nextVersion, requestId: input.requestId });
+      return { diagnosticDraftVersion: nextVersion };
+    });
+  }
+
+  async saveDiagnosticAnswerState(input: {
+    requestId: string;
+    sessionId: string;
+    sessionVersion: number;
+    profileRevision: number;
+    diagnosticDraftVersion: number;
+    answer: StoredDiagnosticAnswerState;
+  }): Promise<{ diagnosticDraftVersion: number; output: import("../contracts/facade.js").DiagnosticAnswerOutput }> {
+    assertSafeFileComponent(input.requestId, "requestId");
+    assertSafeFileComponent(input.answer.questionId, "questionId");
+    return this.withLock(input.sessionId, async () => {
+      const directory = await this.findSessionDirectory(input.sessionId);
+      const current = await this.loadStoredSnapshot(directory);
+      if (current.sessionVersion !== input.sessionVersion) {
+        throw new LearningSessionRepositoryError("session_version_conflict", "Session version is stale");
+      }
+      if (current.profileRevision !== input.profileRevision) {
+        throw new LearningSessionRepositoryError("profile_revision_conflict", "Profile revision does not match session");
+      }
+      const answersDirectory = resolve(directory, "diagnostic", "answers");
+      const answerPath = resolve(answersDirectory, `${input.answer.questionId}.json`);
+      let recoverableAnswer: StoredDiagnosticAnswerState | undefined;
+      for (const entry of await readdir(answersDirectory, { withFileTypes: true })) {
+        if (!entry.isFile() || !entry.name.endsWith(".json")) continue;
+        const existing = await readJson<StoredDiagnosticAnswerState>(resolve(answersDirectory, entry.name), entry.name);
+        if (existing.requestId !== input.requestId) continue;
+        if (existing.submissionHash !== input.answer.submissionHash) {
+          throw new LearningSessionRepositoryError("idempotency_conflict", "Diagnostic requestId has different content");
+        }
+        if (existing.output.diagnosticDraftVersion <= current.diagnosticDraftVersion) {
+          return { diagnosticDraftVersion: existing.output.diagnosticDraftVersion, output: structuredClone(existing.output) };
+        }
+        recoverableAnswer = existing;
+      }
+      if (await exists(answerPath) && recoverableAnswer === undefined) {
+        throw new LearningSessionRepositoryError("diagnostic_answer_conflict", "Diagnostic question was already answered or skipped");
+      }
+      if (current.diagnosticDraftVersion !== input.diagnosticDraftVersion) {
+        throw new LearningSessionRepositoryError("session_version_conflict", "Diagnostic draft version is stale");
+      }
+      const nextVersion = current.diagnosticDraftVersion + 1;
+      if (input.answer.draftVersionBefore !== input.diagnosticDraftVersion
+          || input.answer.output.diagnosticDraftVersion !== nextVersion) {
+        throw new LearningSessionRepositoryError("evidence_invalid", "Diagnostic answer draft version binding is invalid");
+      }
+      const versions = resolve(directory, "diagnostic", "drafts");
+      await mkdir(versions, { recursive: true });
+      const previous = current.diagnosticDraftVersion === 0
+        ? {}
+        : await readJson<Record<string, unknown>>(resolve(versions, `${current.diagnosticDraftVersion}.json`), "previous diagnostic draft");
+      const priorIds = Array.isArray(previous.processedQuestionIds)
+        ? previous.processedQuestionIds.filter((value): value is string => typeof value === "string")
+        : [];
+      await writeJsonAtomic(answerPath, recoverableAnswer ?? input.answer);
+      await writeJsonAtomic(resolve(versions, `${nextVersion}.json`), {
+        ...previous,
+        processedQuestionIds: [...new Set([...priorIds, input.answer.questionId])],
+        diagnosticDraftVersion: nextVersion,
+      });
+      await writeJsonAtomic(resolve(directory, "diagnostic", "checkpoint.json"), {
+        diagnosticDraftVersion: nextVersion,
+        requestId: input.requestId,
+      });
+      return { diagnosticDraftVersion: nextVersion, output: structuredClone(input.answer.output) };
+    });
   }
 
   async hasRecoverableActivityCommit(input: { sessionId: string; requestId: string }): Promise<boolean> {
@@ -689,8 +1050,20 @@ export class FileLearningSessionRepository implements LearningSessionRepository,
     return stored.internalPath === undefined ? undefined : structuredClone(stored.internalPath);
   }
 
+  async getBoundLearningCards(input: GetSessionSnapshotInput) {
+    const directory = await this.findSessionDirectory(input.sessionId);
+    const stored = await this.loadStoredSnapshot(directory);
+    if (stored.profileRevision !== input.profileRevision) {
+      throw new LearningSessionRepositoryError("profile_revision_conflict", "Profile revision does not match session");
+    }
+    if (stored.sessionVersion !== input.sessionVersion) {
+      throw new LearningSessionRepositoryError("session_version_conflict", "Session version is stale");
+    }
+    return structuredClone(stored.boundLearningCards);
+  }
+
   async commit(input: CommitLearningSessionInput): Promise<CommittedSessionSnapshot> {
-    return this.commitWithPath(input);
+    return this.commitWithPath(input, input.candidate.internalPathCandidate);
   }
 
   async commitInternalPath(
@@ -720,7 +1093,7 @@ export class FileLearningSessionRepository implements LearningSessionRepository,
           if (!(await exists(preparedPath))) {
             throw new LearningSessionRepositoryError("storage_error", "Commit result exists without a published marker or candidate");
           }
-          const candidate = await readJson<unknown>(preparedPath, "prepared transaction");
+          const candidate = await readJson<PreparedTransaction>(preparedPath, "prepared transaction");
           const current = await this.loadStoredSnapshot(directory);
           const prepared = this.validatePreparedTransaction(current, input.requestId, candidate);
           if (committed.inputHash !== prepared.inputHash || !sameValue(committed.response, prepared.response)) {
@@ -728,7 +1101,7 @@ export class FileLearningSessionRepository implements LearningSessionRepository,
           }
           await this.publishPrepared(directory, input.requestId, prepared);
         }
-        return committed.response;
+        return { ...committed.response, replayed: true };
       }
 
       const current = await this.loadStoredSnapshot(directory);
@@ -744,7 +1117,7 @@ export class FileLearningSessionRepository implements LearningSessionRepository,
       await mkdir(candidateDirectory, { recursive: true });
       await writeJsonAtomic(resolve(candidateDirectory, "transaction.json"), prepared);
       await this.beforePublish?.(input.sessionId, input.requestId, "candidate_written");
-      const durable = await readJson<unknown>(resolve(candidateDirectory, "transaction.json"), "prepared transaction");
+      const durable = await readJson<PreparedTransaction>(resolve(candidateDirectory, "transaction.json"), "prepared transaction");
       const validated = this.validatePreparedTransaction(current, input.requestId, durable);
       await this.publishPrepared(directory, input.requestId, validated);
       return validated.response;
@@ -753,6 +1126,14 @@ export class FileLearningSessionRepository implements LearningSessionRepository,
 
   private async publishPrepared(directory: string, requestId: string, prepared: PreparedTransaction): Promise<void> {
     assertSafeFileComponent(requestId, "requestId");
+    if (prepared.quizAttemptToPublish !== undefined) {
+      const attempt = prepared.quizAttemptToPublish;
+      await writeJsonAtomic(
+        resolve(directory, "activities", attempt.activityId, "quiz-attempts", attempt.attemptId, `${prepared.snapshot.sessionVersion}.json`),
+        attempt,
+      );
+    }
+    await this.beforePublish?.(prepared.input.sessionId, requestId, "attempt_written");
     await this.beforePublish?.(prepared.input.sessionId, requestId, "evidence_written");
     for (const evidence of prepared.evidenceToPublish) {
       assertSafeFileComponent(evidence.evidenceId, "evidenceId");
@@ -771,6 +1152,7 @@ export class FileLearningSessionRepository implements LearningSessionRepository,
       resolve(directory, "snapshots", `${prepared.snapshot.sessionVersion}.json`),
       prepared.snapshot,
     );
+    await this.beforePublish?.(prepared.input.sessionId, requestId, "progress_written");
     await writeJsonAtomic(resolve(directory, "session.json"), prepared.snapshot.view);
     await writeJsonAtomic(resolve(directory, "commits", `${requestId}.json`), {
       inputHash: prepared.inputHash,
@@ -802,7 +1184,7 @@ export class FileLearningSessionRepository implements LearningSessionRepository,
         if (!entry.isDirectory()) continue;
         try {
           assertSafeFileComponent(entry.name, "candidate requestId");
-          const candidate = await readJson<unknown>(
+          const candidate = await readJson<PreparedTransaction>(
             resolve(candidateRoot, entry.name, "transaction.json"),
             "prepared transaction",
           );

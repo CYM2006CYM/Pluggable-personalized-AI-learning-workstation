@@ -13,10 +13,12 @@ import type {
   PrepareActivityRunInput,
   PreparedActivityRun,
   RecordActivityResultInput,
+  DerivedFormalActivityCommitInput,
 } from "../repositories/activity-repository.js";
 import { LearningSessionUnitOfWork } from "../repositories/activity-repository.js";
 import type { LearningSessionRepository } from "../repositories/learning-session-repository.js";
 import type { ActivitySubmissionOutput } from "./learning-runtime-facade.js";
+import type { RuntimeCommitContext } from "./runtime-commit-context.js";
 import { EvaluationPreparationError, EvaluationRunError } from "../infrastructure/code-evaluation-port.js";
 
 export interface ActivityRunPreparationInput extends PrepareActivityRunInput {
@@ -78,6 +80,7 @@ export class ActivityRuntimeService {
     });
     if (isEvaluationFailure(committed)) {
       return {
+        kind: "code",
         requestId: input.requestId,
         attemptId: input.attemptId,
         committed: false,
@@ -90,6 +93,7 @@ export class ActivityRuntimeService {
     }
     if (isActivityResultRecord(committed)) {
       return {
+        kind: "code",
         requestId: input.requestId,
         attemptId: input.attemptId,
         committed: false,
@@ -102,6 +106,7 @@ export class ActivityRuntimeService {
     }
     const evidence = committed.evidence.find((item) => item.attemptId === input.attemptId);
     return {
+      kind: "code",
       requestId: input.requestId,
       attemptId: input.attemptId,
       committed: true,
@@ -112,6 +117,61 @@ export class ActivityRuntimeService {
       ...(evidence?.evidenceId === undefined ? {} : { evidenceId: evidence.evidenceId }),
       ...(evidence?.evidenceVersion === undefined ? {} : { evidenceVersion: evidence.evidenceVersion }),
     };
+  }
+
+  /** Same formal transaction, with all session facts derived after C returns its result. */
+  async submitDerivedFormalActivity(
+    input: Omit<ActivitySubmissionInput, "result"> & {
+      sessionRepository: LearningSessionRepository;
+      deriveCandidate: DerivedFormalActivityCommitInput["deriveCandidate"];
+    },
+    signal: AbortSignal,
+  ): Promise<ActivitySubmissionOutput> {
+    return (await this.submitDerivedFormalActivityWithContext(input, signal)).output;
+  }
+
+  async submitDerivedFormalActivityWithContext(
+    input: Omit<ActivitySubmissionInput, "result"> & {
+      sessionRepository: LearningSessionRepository;
+      deriveCandidate: DerivedFormalActivityCommitInput["deriveCandidate"];
+    },
+    signal: AbortSignal,
+  ): Promise<RuntimeCommitContext<ActivitySubmissionOutput>> {
+    const result = await this.runEvaluation(input, signal);
+    const activity = toActivityResultInput(input, result);
+    const unit = new LearningSessionUnitOfWork(this.repository, input.sessionRepository);
+    const committed = await unit.commitDerived({
+      repository: this.repository,
+      sessionRepository: input.sessionRepository,
+      activity,
+      deriveCandidate: input.deriveCandidate,
+    });
+    if (isEvaluationFailure(committed) || isActivityResultRecord(committed)) {
+      return { replayed: false, output: {
+        kind: "code",
+        requestId: input.requestId,
+        attemptId: input.attemptId,
+        committed: false,
+        result,
+        sessionId: input.sessionId,
+        sessionVersion: input.sessionVersion,
+        profileRevision: input.profileRevision,
+        ...(isEvaluationFailure(committed) ? { errorCode: committed.errorCode } : result.errorCode === undefined ? {} : { errorCode: result.errorCode }),
+      } };
+    }
+    const evidence = committed.evidence.find((item) => item.attemptId === input.attemptId);
+    return { replayed: committed.replayed, snapshot: committed, output: {
+      kind: "code",
+      requestId: input.requestId,
+      attemptId: input.attemptId,
+      committed: true,
+      result,
+      sessionId: committed.sessionId,
+      sessionVersion: committed.sessionVersion,
+      profileRevision: committed.profileRevision,
+      ...(evidence?.evidenceId === undefined ? {} : { evidenceId: evidence.evidenceId }),
+      ...(evidence?.evidenceVersion === undefined ? {} : { evidenceVersion: evidence.evidenceVersion }),
+    } };
   }
 
   private async runEvaluation(input: Pick<ActivitySubmissionInput, "requestId" | "attemptId" | "prepared" | "code">, signal: AbortSignal): Promise<ActivityResult> {

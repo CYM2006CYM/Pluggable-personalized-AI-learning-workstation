@@ -17,6 +17,7 @@ import type {
   RecordActivityResultInput,
   SaveActivityDraftInput,
   ActivityResultRecord,
+  ActivityDraftRecoveryReader,
 } from "./activity-repository.js";
 import { ActivityRepositoryError } from "./activity-repository.js";
 
@@ -93,7 +94,7 @@ function validateAssignment(value: ActivityAssignment): void {
   }
 }
 
-export class FileActivityRepository implements ActivityRepository {
+export class FileActivityRepository implements ActivityRepository, ActivityDraftRecoveryReader {
   private readonly dataRoot: string;
   private readonly familiesRoot: string;
   private readonly now: () => Date;
@@ -215,6 +216,28 @@ export class FileActivityRepository implements ActivityRepository {
     const attempt = await readJson<StoredAttempt>(attemptPath, "attempt.json");
     const result = await readJson<RecordActivityResultInput["result"]>(resolve(directory, "attempts", input.attemptId, "result.json"), "result.json");
     return { attempt: clone(attempt), result: clone(result) };
+  }
+
+  async getDraft(input: { subjectId: string; sessionId: string; activityId: string; attemptId: string }): Promise<ActivityDraft | undefined> {
+    const directory = this.activityDirectory(input.subjectId, input.sessionId, input.activityId);
+    const path = resolve(directory, "draft.json");
+    if (!(await exists(path))) return undefined;
+    const draft = await this.readDraft(directory);
+    return draft.attemptId === input.attemptId ? clone(draft) : undefined;
+  }
+
+  async getEvaluationFailure(input: { subjectId: string; sessionId: string; activityId: string; attemptId: string }): Promise<EvaluationFailureRecord | undefined> {
+    const directory = resolve(this.activityDirectory(input.subjectId, input.sessionId, input.activityId), "failures");
+    if (!(await exists(directory))) return undefined;
+    const files = (await readdir(directory, { withFileTypes: true }))
+      .filter((entry) => entry.isFile() && entry.name.endsWith(".json"))
+      .map((entry) => entry.name)
+      .sort((left, right) => left.localeCompare(right, "en"));
+    for (const file of files) {
+      const failure = await readJson<EvaluationFailureRecord>(resolve(directory, file), "evaluation failure");
+      if (failure.attemptId === input.attemptId) return clone(failure);
+    }
+    return undefined;
   }
 
   async markCommitted(input: { subjectId: string; sessionId: string; activityId: string; attemptId: string; committedAt?: string }): Promise<ActivityAttemptCandidate> {

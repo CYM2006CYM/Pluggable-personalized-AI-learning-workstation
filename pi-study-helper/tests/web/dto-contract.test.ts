@@ -49,7 +49,7 @@ describe("W3 D2 safe DTO mocks", () => {
     ].sort());
     expect(keys(diagnosticCompleteMock)).toEqual([
       "capabilityProfileRevision", "diagnosticId", "evidenceVersion", "insufficientKnowledgePointIds",
-      "knowledgeStates", "profileRevision", "requestId", "sessionId", "sessionVersion",
+      "knowledgeStates", "profileRevision", "requestId", "sessionId", "sessionVersion", "diagnosticDraftVersion",
     ].sort());
     for (const state of diagnosticCompleteMock.knowledgeStates) {
       expect(keys(state)).toEqual([
@@ -67,7 +67,8 @@ describe("W3 D2 safe DTO mocks", () => {
     ].sort());
     for (const node of pathCandidateMock.nodes) {
       expect(keys(node)).toEqual([
-        "activityIds", "estimatedMinutes", "knowledgePointId", "nodeId", "reasonCodes", "status",
+        "activityIds", "difficulty", "estimatedMinutes", "knowledgePointId", "nodeId", "positionLocked",
+        "reasonCodes", "required", "scaffold", "status",
       ].sort());
     }
     expect(keys(nextStepMock)).toEqual([
@@ -77,7 +78,7 @@ describe("W3 D2 safe DTO mocks", () => {
 
   it("keeps activity lifecycle mocks on the 21号 public contract", () => {
     expect(keys(activityDraftMock)).toEqual([
-      "activity", "attemptId", "draftVersion", "profileRevision", "requestId", "sessionId",
+      "activity", "attemptId", "draftVersion", "kind", "profileRevision", "requestId", "sessionId",
       "sessionVersion", "userText",
     ].sort());
     expect(keys(preparedActivityMock)).toEqual([
@@ -85,7 +86,7 @@ describe("W3 D2 safe DTO mocks", () => {
       "publicTestSources", "requestId", "runId", "sessionId", "sessionVersion", "starterCodeHash",
     ].sort());
     expect(keys(activitySubmissionMock)).toEqual([
-      "committed", "evidenceId", "evidenceVersion", "attemptId", "profileRevision", "requestId",
+      "committed", "evidenceId", "evidenceVersion", "attemptId", "kind", "profileRevision", "requestId",
       "result", "sessionId", "sessionVersion",
     ].sort());
     expect(keys(activitySubmissionMock.result)).toEqual([

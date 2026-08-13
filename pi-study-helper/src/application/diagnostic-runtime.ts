@@ -20,7 +20,9 @@ import {
 } from "../infrastructure/safe-files.js";
 import {
   LearningSessionRepositoryError,
+  type DiagnosticDraftSessionPort,
   type LearningSessionRepository,
+  type SessionBindingReader,
 } from "../repositories/learning-session-repository.js";
 import type {
   CompleteDiagnosticInput,
@@ -31,6 +33,8 @@ import type {
   SaveDiagnosticDraftInput,
   SubmitDiagnosticAnswerInput,
 } from "./learning-runtime-facade.js";
+import type { BackgroundQuestionnaire } from "../contracts/index.js";
+import type { RuntimeCommitContext } from "./runtime-commit-context.js";
 
 export interface DiagnosticRuntimeAssets {
   blueprint: DiagnosticBlueprintAsset;
@@ -51,6 +55,7 @@ interface StoredDiagnosticAnswer extends DiagnosticAnswerRecord {
   submissionHash: string;
   output: DiagnosticAnswerOutput;
   evidenceCandidate?: Evidence;
+  draftVersionBefore: number;
 }
 
 interface StoredCompletionCandidate {
@@ -60,7 +65,7 @@ interface StoredCompletionCandidate {
 }
 
 export interface DiagnosticRuntimeOptions {
-  repository: LearningSessionRepository;
+  repository: LearningSessionRepository & DiagnosticDraftSessionPort & SessionBindingReader;
   loadAssets: DiagnosticAssetsLoader;
   dataRoot?: string;
   now?: () => Date;
@@ -106,6 +111,31 @@ function assertSubmissionShape(input: unknown): asserts input is SubmitDiagnosti
   }
 }
 
+function assertDiagnosticDraftVersion(value: unknown): asserts value is number {
+  if (!Number.isInteger(value) || (value as number) < 0) {
+    throw new DiagnosticValidationError("diagnostic_answer_invalid", "diagnosticDraftVersion is required and must be a non-negative integer");
+  }
+}
+
+function assertBackgroundQuestionnaire(value: unknown): asserts value is BackgroundQuestionnaire {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    throw new DiagnosticValidationError("diagnostic_answer_invalid", "Background questionnaire must be an object");
+  }
+  const candidate = value as Record<string, unknown>;
+  const keys = Object.keys(candidate).sort();
+  const expected = ["explanation_preference", "pandas_experience", "python_experience"];
+  if (JSON.stringify(keys) !== JSON.stringify(expected)) {
+    throw new DiagnosticValidationError("diagnostic_answer_invalid", "Background questionnaire fields are invalid");
+  }
+  const experience = new Set(["none", "basic", "comfortable", "uncertain"]);
+  const preference = new Set(["concise", "step_by_step", "example_first", "uncertain"]);
+  if (!experience.has(String(candidate.python_experience))
+      || !experience.has(String(candidate.pandas_experience))
+      || !preference.has(String(candidate.explanation_preference))) {
+    throw new DiagnosticValidationError("diagnostic_answer_invalid", "Background questionnaire values are invalid");
+  }
+}
+
 const diagnosticSubmissionLocks = new Map<string, Promise<void>>();
 
 async function withDiagnosticSubmissionLock<T>(key: string, operation: () => Promise<T>): Promise<T> {
@@ -135,7 +165,7 @@ export class DiagnosticRuntime implements Pick<
   LearningRuntimeFacade,
   "saveDiagnosticDraft" | "submitDiagnosticAnswer" | "completeDiagnostic"
 > {
-  private readonly repository: LearningSessionRepository;
+  private readonly repository: LearningSessionRepository & DiagnosticDraftSessionPort & SessionBindingReader;
   private readonly loadAssets: DiagnosticAssetsLoader;
   private readonly familiesRoot: string;
   private readonly now: () => Date;
@@ -168,9 +198,15 @@ export class DiagnosticRuntime implements Pick<
   }
 
   async saveDiagnosticDraft(input: SaveDiagnosticDraftInput): Promise<DiagnosticDraftOutput> {
+    assertDiagnosticDraftVersion((input as { diagnosticDraftVersion?: unknown }).diagnosticDraftVersion);
+    assertBackgroundQuestionnaire(input.background);
     assertSafeFileComponent(input.requestId, "requestId");
     assertSafeFileComponent(input.diagnosticId, "diagnosticId");
     const snapshot = await this.snapshot(input);
+    const draftVersion = input.diagnosticDraftVersion;
+    if (draftVersion !== snapshot.diagnosticDraftVersion) {
+      throw new LearningSessionRepositoryError("session_version_conflict", "Diagnostic draft version is stale");
+    }
     const assets = await this.loadAssets(snapshot.view.subjectId, input.profileRevision);
     validateAssets(assets, input.profileRevision);
     if (!assets.blueprint.questions.some((question) => question.questionId === input.currentQuestionId)
@@ -179,19 +215,19 @@ export class DiagnosticRuntime implements Pick<
     }
 
     const savedAt = this.now().toISOString();
-    const directory = await this.sessionDirectory(snapshot.view.subjectId, input.sessionId);
-    await writeJsonAtomic(resolve(directory, "diagnostic", "background.json"), {
-      diagnosticId: input.diagnosticId,
-      diagnosticVersion: input.diagnosticVersion,
-      background: input.background,
-      savedAt,
-    });
-    await writeJsonAtomic(resolve(directory, "diagnostic", "draft.json"), {
+    const committed = await this.repository.saveDiagnosticDraftState({
       requestId: input.requestId,
+      sessionId: input.sessionId,
+      sessionVersion: input.sessionVersion,
+      profileRevision: input.profileRevision,
+      diagnosticDraftVersion: draftVersion,
+      background: input.background,
+      draft: {
       diagnosticId: input.diagnosticId,
       diagnosticVersion: input.diagnosticVersion,
       ...(input.currentQuestionId === undefined ? {} : { currentQuestionId: input.currentQuestionId }),
       savedAt,
+      },
     });
     return {
       requestId: input.requestId,
@@ -202,46 +238,27 @@ export class DiagnosticRuntime implements Pick<
       diagnosticVersion: input.diagnosticVersion,
       ...(input.currentQuestionId === undefined ? {} : { currentQuestionId: input.currentQuestionId }),
       savedAt,
+      diagnosticDraftVersion: committed.diagnosticDraftVersion,
     };
   }
 
   async submitDiagnosticAnswer(input: DiagnosticSubmissionInput): Promise<DiagnosticAnswerOutput> {
     assertSubmissionShape(input);
+    assertDiagnosticDraftVersion((input as { diagnosticDraftVersion?: unknown }).diagnosticDraftVersion);
     assertSafeFileComponent(input.requestId, "requestId");
     assertSafeFileComponent(input.diagnosticId, "diagnosticId");
     assertSafeFileComponent(input.questionId, "questionId");
     const lockKey = JSON.stringify([input.sessionId, input.diagnosticId, input.diagnosticVersion]);
     return withDiagnosticSubmissionLock(lockKey, async () => {
     const snapshot = await this.repository.getSnapshot(input);
-    const directory = await this.sessionDirectory(snapshot.view.subjectId, input.sessionId);
-    const answerPath = resolve(directory, "diagnostic", "answers", `${input.questionId}.json`);
     const submissionHash = hashValue(input);
-    const answersDirectory = resolve(directory, "diagnostic", "answers");
-    if (await exists(answersDirectory)) {
-      for (const entry of await readdir(answersDirectory, { withFileTypes: true })) {
-        if (!entry.isFile() || !entry.name.endsWith(".json")) continue;
-        const existing = await readJson<StoredDiagnosticAnswer>(resolve(answersDirectory, entry.name), entry.name);
-        if (existing.requestId !== input.requestId) continue;
-        if (existing.submissionHash !== submissionHash) {
-          throw new LearningSessionRepositoryError("idempotency_conflict", "Diagnostic requestId has different content");
-        }
-        return existing.output;
-      }
-    }
-    if (await exists(answerPath)) {
-      const existing = await readJson<StoredDiagnosticAnswer>(answerPath, "diagnostic answer");
-      if (existing.requestId === input.requestId) {
-        if (existing.submissionHash !== submissionHash) {
-          throw new LearningSessionRepositoryError("idempotency_conflict", "Diagnostic requestId has different content");
-        }
-        return existing.output;
-      }
-      throw new DiagnosticValidationError("diagnostic_answer_conflict", "Diagnostic question was already answered or skipped");
-    }
-
     if (snapshot.sessionVersion !== input.sessionVersion) {
       throw new LearningSessionRepositoryError("session_version_conflict", "Session version is stale");
     }
+    if (snapshot.view.mode === "recommended" && snapshot.diagnosticDraft?.background === undefined) {
+      throw new DiagnosticValidationError("diagnostic_incomplete", "Background questionnaire must be saved before diagnostic answers");
+    }
+    const draftVersion = input.diagnosticDraftVersion;
     const assets = await this.loadAssets(snapshot.view.subjectId, input.profileRevision);
     validateAssets(assets, input.profileRevision);
     const question = assets.blueprint.questions.find((item) => item.questionId === input.questionId);
@@ -260,7 +277,7 @@ export class DiagnosticRuntime implements Pick<
     };
 
     if (input.action === "skip") {
-      const output: DiagnosticAnswerOutput = { ...baseOutput, result: "skipped" };
+      const output: DiagnosticAnswerOutput = { ...baseOutput, result: "skipped", diagnosticDraftVersion: draftVersion + 1 };
       const record: StoredDiagnosticAnswer = {
         questionId: input.questionId,
         requestId: input.requestId,
@@ -270,9 +287,17 @@ export class DiagnosticRuntime implements Pick<
         diagnosticVersion: input.diagnosticVersion,
         submissionHash,
         output,
+        draftVersionBefore: draftVersion,
       };
-      await writeJsonAtomic(answerPath, record);
-      return output;
+      const saved = await this.repository.saveDiagnosticAnswerState({
+        requestId: input.requestId,
+        sessionId: input.sessionId,
+        sessionVersion: input.sessionVersion,
+        profileRevision: input.profileRevision,
+        diagnosticDraftVersion: draftVersion,
+        answer: record,
+      });
+      return saved.output;
     }
 
     if (question.kind === "single_choice") {
@@ -306,7 +331,7 @@ export class DiagnosticRuntime implements Pick<
       evaluatorVersion: assets.answerKey.evaluatorVersion,
       createdAt,
     };
-    const output: DiagnosticAnswerOutput = { ...baseOutput, result: correct ? "pass" : "fail" };
+    const output: DiagnosticAnswerOutput = { ...baseOutput, result: correct ? "pass" : "fail", diagnosticDraftVersion: draftVersion + 1 };
     const record: StoredDiagnosticAnswer = {
       questionId: input.questionId,
       requestId: input.requestId,
@@ -321,21 +346,107 @@ export class DiagnosticRuntime implements Pick<
       submissionHash,
       output,
       evidenceCandidate,
+      draftVersionBefore: draftVersion,
     };
-    await writeJsonAtomic(answerPath, record);
-    return output;
+    const saved = await this.repository.saveDiagnosticAnswerState({
+      requestId: input.requestId,
+      sessionId: input.sessionId,
+      sessionVersion: input.sessionVersion,
+      profileRevision: input.profileRevision,
+      diagnosticDraftVersion: draftVersion,
+      answer: record,
+    });
+    return saved.output;
     });
   }
 
   async completeDiagnostic(input: CompleteDiagnosticInput): Promise<DiagnosticCompleteOutput> {
+    return (await this.completeDiagnosticWithContext(input)).output;
+  }
+
+  async completeDiagnosticWithContext(input: CompleteDiagnosticInput): Promise<RuntimeCommitContext<DiagnosticCompleteOutput>> {
+    assertDiagnosticDraftVersion((input as { diagnosticDraftVersion?: unknown }).diagnosticDraftVersion);
+    if (input.mode === "background_only") {
+      assertBackgroundQuestionnaire(input.background);
+      const snapshot = await this.repository.getBoundSnapshot(input.sessionId);
+      if (snapshot.profileRevision !== input.profileRevision) {
+        throw new LearningSessionRepositoryError("profile_revision_conflict", "Profile revision does not match session");
+      }
+      if (snapshot.sessionVersion !== input.sessionVersion) {
+        const assets = await this.loadAssets(snapshot.view.subjectId, input.profileRevision);
+        validateAssets(assets, input.profileRevision);
+        const replay = await this.repository.commit({
+          ...input,
+          candidate: { requestId: input.requestId, knowledgeStates: snapshot.knowledgeStates, nextStage: "path" },
+        });
+        return { replayed: true, snapshot: replay, output: {
+          requestId: input.requestId,
+          sessionId: replay.sessionId,
+          sessionVersion: replay.sessionVersion,
+          profileRevision: replay.profileRevision,
+          mode: "background_only",
+          evidenceVersion: replay.latestCommit.evidenceVersion,
+          knowledgeStates: replay.knowledgeStates,
+          insufficientKnowledgePointIds: (assets.knowledgePoints ?? [])
+            .map((point) => point.id)
+            .filter((id) => replay.knowledgeStates.find((state) => state.knowledgePointId === id)?.status === "unverified"
+              || !replay.knowledgeStates.some((state) => state.knowledgePointId === id)),
+          diagnosticDraftVersion: replay.diagnosticDraftVersion,
+        } };
+      }
+      if (snapshot.diagnosticDraftVersion !== input.diagnosticDraftVersion) {
+        throw new LearningSessionRepositoryError("session_version_conflict", "Diagnostic draft version is stale");
+      }
+      if (snapshot.diagnosticDraft?.background === undefined
+          || hashValue(snapshot.diagnosticDraft.background) !== hashValue(input.background)) {
+        throw new LearningSessionRepositoryError("idempotency_conflict", "Background questionnaire differs from the latest saved draft");
+      }
+      const assets = await this.loadAssets(snapshot.view.subjectId, input.profileRevision);
+      validateAssets(assets, input.profileRevision);
+      const stateByPoint = new Map(snapshot.knowledgeStates.map((state) => [state.knowledgePointId, state]));
+      const insufficientKnowledgePointIds = (assets.knowledgePoints ?? [])
+        .map((point) => point.id)
+        .filter((id) => stateByPoint.get(id)?.status === "unverified" || !stateByPoint.has(id));
+      const committed = await this.repository.commit({
+        ...input,
+        candidate: {
+          requestId: input.requestId,
+          knowledgeStates: snapshot.knowledgeStates,
+          nextStage: "path",
+        },
+      });
+      return { replayed: committed.replayed, snapshot: committed, output: {
+        requestId: input.requestId,
+        sessionId: input.sessionId,
+        sessionVersion: committed.sessionVersion,
+        profileRevision: input.profileRevision,
+        mode: "background_only",
+        evidenceVersion: committed.latestCommit.evidenceVersion,
+        knowledgeStates: committed.knowledgeStates,
+        insufficientKnowledgePointIds,
+        diagnosticDraftVersion: committed.diagnosticDraftVersion,
+      } };
+    }
+    if (!input.diagnosticId || input.diagnosticVersion === undefined) {
+      throw new DiagnosticValidationError("diagnostic_answer_invalid", "Fixed diagnostic requires diagnosticId and diagnosticVersion");
+    }
     assertSafeFileComponent(input.requestId, "requestId");
     assertSafeFileComponent(input.diagnosticId, "diagnosticId");
-    const snapshot = await this.repository.getSnapshot(input);
+    const snapshot = await this.repository.getBoundSnapshot(input.sessionId);
+    if (snapshot.profileRevision !== input.profileRevision) {
+      throw new LearningSessionRepositoryError("profile_revision_conflict", "Profile revision does not match session");
+    }
     if (snapshot.latestDiagnostic?.diagnosticId === input.diagnosticId) {
-      if (snapshot.latestCommit.requestId !== input.requestId) {
+      const directory = await this.sessionDirectory(snapshot.view.subjectId, input.sessionId);
+      const completionPath = resolve(directory, "diagnostic", `completion-${input.requestId}.json`);
+      if (snapshot.latestCommit.requestId !== input.requestId || !(await exists(completionPath))) {
         throw new LearningSessionRepositoryError("idempotency_conflict", "Diagnostic is already committed");
       }
-      return {
+      const prepared = await readJson<StoredCompletionCandidate>(completionPath, "diagnostic completion candidate");
+      if (prepared.inputHash !== hashValue(input)) {
+        throw new LearningSessionRepositoryError("idempotency_conflict", "Completion requestId has different content");
+      }
+      return { replayed: true, snapshot, output: {
         requestId: input.requestId,
         sessionId: input.sessionId,
         sessionVersion: snapshot.sessionVersion,
@@ -344,10 +455,17 @@ export class DiagnosticRuntime implements Pick<
         evidenceVersion: snapshot.latestCommit.evidenceVersion,
         knowledgeStates: snapshot.knowledgeStates,
         insufficientKnowledgePointIds: snapshot.latestDiagnostic.insufficientKnowledgePointIds,
-      };
+        diagnosticDraftVersion: snapshot.diagnosticDraftVersion,
+      } };
     }
     if (snapshot.sessionVersion !== input.sessionVersion) {
       throw new LearningSessionRepositoryError("session_version_conflict", "Session version is stale");
+    }
+    if (snapshot.diagnosticDraftVersion !== input.diagnosticDraftVersion) {
+      throw new LearningSessionRepositoryError("session_version_conflict", "Diagnostic draft version is stale");
+    }
+    if (snapshot.view.mode === "recommended" && snapshot.diagnosticDraft?.background === undefined) {
+      throw new DiagnosticValidationError("diagnostic_incomplete", "Background questionnaire must be saved before fixed diagnostic completion");
     }
     const assets = await this.loadAssets(snapshot.view.subjectId, input.profileRevision);
     validateAssets(assets, input.profileRevision);
@@ -359,7 +477,11 @@ export class DiagnosticRuntime implements Pick<
     for (const entry of await readdir(answersDirectory, { withFileTypes: true })) {
       if (!entry.isFile() || !entry.name.endsWith(".json")) continue;
       const answer = await readJson<StoredDiagnosticAnswer>(resolve(answersDirectory, entry.name), entry.name);
-      if (answer.diagnosticId === input.diagnosticId && answer.diagnosticVersion === input.diagnosticVersion) {
+      if (answer.diagnosticId === input.diagnosticId
+          && answer.diagnosticVersion === input.diagnosticVersion
+          && Number.isInteger(answer.draftVersionBefore)
+          && answer.draftVersionBefore < snapshot.diagnosticDraftVersion
+          && answer.output.diagnosticDraftVersion <= snapshot.diagnosticDraftVersion) {
         answers.set(answer.questionId, answer);
       }
     }
@@ -422,7 +544,7 @@ export class DiagnosticRuntime implements Pick<
         nextStage: "path",
       },
     });
-    return {
+    return { replayed: committed.replayed, snapshot: committed, output: {
       requestId: input.requestId,
       sessionId: input.sessionId,
       sessionVersion: committed.sessionVersion,
@@ -431,7 +553,8 @@ export class DiagnosticRuntime implements Pick<
       evidenceVersion: committed.latestCommit.evidenceVersion,
       knowledgeStates: committed.knowledgeStates,
       insufficientKnowledgePointIds: prepared.diagnostic.insufficientKnowledgePointIds,
-    };
+      diagnosticDraftVersion: committed.diagnosticDraftVersion,
+    } };
   }
 }
 

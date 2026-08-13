@@ -1,7 +1,7 @@
 import { mkdtemp, readFile, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { createPathRuntimeMethods, type PathProfileResolver } from "../src/application/path-learning-facade.js";
 import type { PathEngineProfile } from "../src/domain/path-engine.js";
 import { FileLearningSessionRepository } from "../src/repositories/file-learning-session-repository.js";
@@ -36,6 +36,131 @@ async function activePath(requestId: string, beforePublish?: (sessionId: string,
 }
 
 describe("path runtime collaborator", () => {
+  it("prepares all path cards in one shared window and restores the bound safe snapshot without replacement", async () => {
+    const root = await mkdtemp(resolve(tmpdir(), "pi-study-helper-path-cards-")); roots.push(root);
+    let failConfirmationAtCheckpoint = false;
+    const sessions = new FileLearningSessionRepository({
+      dataRoot: root,
+      now: () => new Date("2026-08-06T00:00:00.000Z"),
+      beforePublish: async (_sessionId, requestId, stage) => {
+        if (requestId === "cards-confirm" && stage === "checkpoint_written" && failConfirmationAtCheckpoint) {
+          failConfirmationAtCheckpoint = false;
+          throw new Error("fault:checkpoint_written");
+        }
+      },
+    });
+    const cardProfile: PathEngineProfile = {
+      profileRevision: 3,
+      goals: [{ goalId: "cards", title: "cards", targetKnowledgePointIds: ["second"], requiredActivityIds: ["first-activity", "second-activity"] }],
+      knowledgePoints: [
+        { id: "first", title: "First", chapterId: "chapter", sectionId: "section", prerequisiteIds: [], relatedKnowledgePointIds: [], sourceAnchorIds: ["source-first"], activityIds: ["first-activity"], importance: 1, contentEstimatedMinutes: 2 },
+        { id: "second", title: "Second", chapterId: "chapter", sectionId: "section", prerequisiteIds: ["first"], relatedKnowledgePointIds: [], sourceAnchorIds: ["source-second"], activityIds: ["second-activity"], importance: 1, contentEstimatedMinutes: 2 },
+      ],
+      activities: [
+        { activityId: "first-activity", primaryKnowledgePointId: "first", supportingKnowledgePointIds: [], goalIds: ["cards"], estimatedMinutes: 3 },
+        { activityId: "second-activity", primaryKnowledgePointId: "second", supportingKnowledgePointIds: ["first"], goalIds: ["cards"], estimatedMinutes: 3 },
+      ],
+    };
+    const fixedCard = (knowledgePointId: string) => ({
+      cardId: `fixed-${knowledgePointId}`, knowledgePointId, title: knowledgePointId, objective: "objective",
+      explanation: ["fixed"], example: "example", commonMistake: "mistake",
+      sourceAnchorIds: [`source-${knowledgePointId}`], estimatedMinutes: 2,
+    });
+    let prepareCalls = 0;
+    let resolveAllPreparationsStarted!: () => void;
+    const allPreparationsStarted = new Promise<void>((resolveStarted) => {
+      resolveAllPreparationsStarted = resolveStarted;
+    });
+    let resolveLateCard: ((value: { status: "accepted"; card: ReturnType<typeof fixedCard> }) => void) | undefined;
+    const profileResolver: PathProfileResolver = {
+      load: async () => structuredClone(cardProfile),
+      loadCard: async (_subjectId, _revision, knowledgePointId) => fixedCard(knowledgePointId),
+    };
+    const content = {
+      prepareCard: async ({ knowledgePointId }: { knowledgePointId: string }) => {
+        prepareCalls += 1;
+        if (prepareCalls === 2) resolveAllPreparationsStarted();
+        if (knowledgePointId === "second") {
+          return new Promise<{ status: "accepted"; card: ReturnType<typeof fixedCard> }>((resolveLate) => {
+            resolveLateCard = resolveLate;
+          });
+        }
+        return { status: "accepted" as const, card: { ...fixedCard(knowledgePointId), cardId: `dynamic-${knowledgePointId}`, explanation: ["dynamic"] } };
+      },
+      prepareQuiz: async () => ({ status: "unavailable" as const }),
+    };
+    const view = await sessions.create({ requestId: "cards-create", subjectId: "subject", mode: "recommended", goalId: "cards", availableMinutes: 10, profileRevision: 3, diagnosticRequired: false });
+    const runtime = createPathRuntimeMethods({ sessions, profile: profileResolver, content, cardPreparationTimeoutMs: 10 });
+    const candidate = await runtime.buildPath({ requestId: "cards-build", sessionId: view.sessionId, sessionVersion: 1, profileRevision: 3, goalId: "cards", mode: "recommended", availableMinutes: 10, evidenceVersion: 0, selectedKnowledgePointIds: [], lockedNodeIds: [] });
+    if (candidate.status !== "candidate") throw new Error("expected candidate");
+    failConfirmationAtCheckpoint = true;
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    try {
+      const confirmation = runtime.confirmPath({ requestId: "cards-confirm", sessionId: view.sessionId, sessionVersion: 2, profileRevision: 3, pathId: candidate.pathId!, pathVersion: 1 })
+        .then(() => undefined, (error: unknown) => error);
+      await allPreparationsStarted;
+      expect(prepareCalls).toBe(2);
+      expect(vi.getTimerCount()).toBe(1);
+      await vi.advanceTimersByTimeAsync(10);
+      await expect(confirmation).resolves.toMatchObject({ message: "fault:checkpoint_written" });
+    } finally {
+      vi.useRealTimers();
+    }
+    await expect(sessions.getBoundLearningCards({ sessionId: view.sessionId, sessionVersion: 2, profileRevision: 3 })).resolves.toEqual([]);
+    await expect(sessions.recover({ requestId: "cards-recover", sessionId: view.sessionId, sessionVersion: 2, profileRevision: 3 }))
+      .resolves.toMatchObject({ recoveryAction: "completed_candidate_commit", sessionVersion: 3 });
+    await expect(sessions.getBoundLearningCards({ sessionId: view.sessionId, sessionVersion: 3, profileRevision: 3 })).resolves.toMatchObject([
+      { nodeId: "node-first", source: "dynamic", card: { cardId: "dynamic-first", explanation: ["dynamic"] } },
+      { nodeId: "node-second", source: "fixed", card: { cardId: "fixed-second", explanation: ["fixed"] } },
+    ]);
+    resolveLateCard?.({ status: "accepted", card: { ...fixedCard("second"), cardId: "dynamic-second", explanation: ["late-dynamic"] } });
+    await new Promise((resolveLate) => setTimeout(resolveLate, 0));
+    await expect(sessions.getBoundLearningCards({ sessionId: view.sessionId, sessionVersion: 3, profileRevision: 3 })).resolves.toMatchObject([
+      { nodeId: "node-first", source: "dynamic", card: { cardId: "dynamic-first" } },
+      { nodeId: "node-second", source: "fixed", card: { cardId: "fixed-second", explanation: ["fixed"] } },
+    ]);
+    const restarted = createPathRuntimeMethods({ sessions, profile: profileResolver, content, cardPreparationTimeoutMs: 10 });
+    await expect(restarted.confirmPath({ requestId: "cards-confirm", sessionId: view.sessionId, sessionVersion: 2, profileRevision: 3, pathId: candidate.pathId!, pathVersion: 1 })).resolves.toMatchObject({ sessionVersion: 3, status: "active" });
+    expect(prepareCalls).toBe(2);
+    await expect(restarted.confirmPath({ requestId: "cards-confirm", sessionId: view.sessionId, sessionVersion: 2, profileRevision: 3, pathId: "changed-path", pathVersion: 1 }))
+      .rejects.toMatchObject({ errorCode: "idempotency_conflict" });
+    await expect(restarted.getNextStep({ sessionId: view.sessionId, sessionVersion: 3, profileRevision: 3, pathVersion: 1 })).resolves.toMatchObject({
+      card: { cardId: "dynamic-first", explanation: ["dynamic"] }, contentReadiness: "ready",
+    });
+    expect(prepareCalls).toBe(2);
+  });
+
+  it("projects node completion from activityProgress and advances without mutating the path structure", async () => {
+    const root = await mkdtemp(resolve(tmpdir(), "pi-study-helper-path-progress-")); roots.push(root);
+    const sessions = new FileLearningSessionRepository({ dataRoot: root, now: () => new Date("2026-08-06T00:00:00.000Z") });
+    const sequential: PathEngineProfile = {
+      profileRevision: 2,
+      goals: [{ goalId: "sequential", title: "Sequential", targetKnowledgePointIds: ["second"], requiredActivityIds: ["first-activity", "second-activity"] }],
+      knowledgePoints: [
+        { id: "first", title: "First", chapterId: "chapter", sectionId: "section", prerequisiteIds: [], relatedKnowledgePointIds: [], sourceAnchorIds: ["source"], activityIds: ["first-activity"], importance: 1 },
+        { id: "second", title: "Second", chapterId: "chapter", sectionId: "section", prerequisiteIds: ["first"], relatedKnowledgePointIds: [], sourceAnchorIds: ["source"], activityIds: ["second-activity"], importance: 1 },
+      ],
+      activities: [
+        { activityId: "first-activity", primaryKnowledgePointId: "first", supportingKnowledgePointIds: [], goalIds: ["sequential"], estimatedMinutes: 5 },
+        { activityId: "second-activity", primaryKnowledgePointId: "second", supportingKnowledgePointIds: ["first"], goalIds: ["sequential"], estimatedMinutes: 5 },
+      ],
+    };
+    const view = await sessions.create({ requestId: "progress-create", subjectId: "subject", mode: "recommended", goalId: "sequential", availableMinutes: 10, profileRevision: 2, diagnosticRequired: false });
+    const runtime = createPathRuntimeMethods({ sessions, profile: { load: async () => structuredClone(sequential) }, now: () => new Date("2026-08-06T00:00:00.000Z") });
+    const candidate = await runtime.buildPath({ requestId: "progress-build", sessionId: view.sessionId, sessionVersion: 1, profileRevision: 2, goalId: "sequential", mode: "recommended", availableMinutes: 10, evidenceVersion: 0, selectedKnowledgePointIds: [], lockedNodeIds: [] });
+    if (candidate.status !== "candidate") throw new Error("expected candidate");
+    await runtime.confirmPath({ requestId: "progress-confirm", sessionId: view.sessionId, sessionVersion: 2, profileRevision: 2, pathId: candidate.pathId!, pathVersion: 1 });
+    const confirmed = await sessions.getSnapshot({ sessionId: view.sessionId, sessionVersion: 3, profileRevision: 2 });
+    const progress = structuredClone(confirmed.activityProgress);
+    progress[0]!.activities[0] = { ...progress[0]!.activities[0]!, status: "completed", result: "pass" };
+    await sessions.commit({ requestId: "progress-first-complete", sessionId: view.sessionId, sessionVersion: 3, profileRevision: 2, candidate: { requestId: "progress-first-complete", knowledgeStates: [], activityProgress: progress } });
+    await expect(runtime.getNextStep({ sessionId: view.sessionId, sessionVersion: 4, profileRevision: 2, pathVersion: 1 })).resolves.toMatchObject({ completed: false, node: { knowledgePointId: "second", status: "available" }, activity: { activityId: "second-activity" } });
+    progress[1]!.activities[0] = { ...progress[1]!.activities[0]!, status: "completed", result: "pass" };
+    await sessions.commit({ requestId: "progress-second-complete", sessionId: view.sessionId, sessionVersion: 4, profileRevision: 2, candidate: { requestId: "progress-second-complete", knowledgeStates: [], activityProgress: progress } });
+    await expect(runtime.getNextStep({ sessionId: view.sessionId, sessionVersion: 5, profileRevision: 2, pathVersion: 1 })).resolves.toMatchObject({ completed: true });
+    expect((await sessions.getInternalPathSnapshot({ sessionId: view.sessionId, sessionVersion: 5, profileRevision: 2 }))?.nodes.map((node) => node.status)).toEqual(["available", "locked"]);
+  });
+
   it("persists candidates through the repository so a fresh collaborator can confirm after restart", async () => {
     const { sessions, view } = await setup("create-one");
     const first = createPathRuntimeMethods({ sessions, profile: resolver, now: () => new Date("2026-08-06T00:00:00.000Z") });
@@ -44,10 +169,7 @@ describe("path runtime collaborator", () => {
     if (candidate.status !== "candidate") return;
     const snapshot = await sessions.getSnapshot({ sessionId: view.sessionId, sessionVersion: 2, profileRevision: 2 });
     expect(snapshot.path).toMatchObject({ status: "candidate", pathId: candidate.pathId, pathVersion: 1, goalId: "goal", mode: "recommended", nodes: [{ nodeId: "node-kp", knowledgePointId: "kp", activityIds: ["activity"], status: "available", estimatedMinutes: 5, reasonCodes: expect.any(Array) }] });
-    expect(snapshot.path?.nodes[0]).not.toHaveProperty("difficulty");
-    expect(snapshot.path?.nodes[0]).not.toHaveProperty("scaffold");
-    expect(snapshot.path?.nodes[0]).not.toHaveProperty("positionLocked");
-    expect(snapshot.path?.nodes[0]).not.toHaveProperty("required");
+    expect(snapshot.path?.nodes[0]).toMatchObject({ difficulty: "S-U", scaffold: "none", positionLocked: false, required: true });
     const internal = await sessions.getInternalPathSnapshot({ sessionId: view.sessionId, sessionVersion: 2, profileRevision: 2 });
     expect(internal?.nodes[0]).toMatchObject({ difficulty: "S-U", scaffold: "none", required: true, positionLocked: false });
     const restarted = createPathRuntimeMethods({ sessions, profile: resolver, now: () => new Date("2026-08-06T00:00:00.000Z") });
@@ -130,7 +252,7 @@ describe("path runtime collaborator", () => {
     expect(replanned).toMatchObject({ changed: false, fallbackToPrevious: true, pathVersion: 2, sessionVersion: 4, errorCode: "path_infeasible" });
     const after = await sessions.getSnapshot({ sessionId: view.sessionId, sessionVersion: 4, profileRevision: 2 });
     expect(after).toEqual(before);
-    await expect(runtime.getNextStep({ sessionId: view.sessionId, sessionVersion: 4, profileRevision: 2, pathVersion: 2 })).resolves.toMatchObject({ completed: false, node: { status: "in_progress", knowledgePointId: "p" } });
+    await expect(runtime.getNextStep({ sessionId: view.sessionId, sessionVersion: 4, profileRevision: 2, pathVersion: 2 })).resolves.toMatchObject({ completed: false, node: { status: "available", knowledgePointId: "p" } });
     expect(await readdir(resolve(root, "profile_families", "subject", "_user", "learning_sessions", view.sessionId, "paths", "superseded"))).toEqual(["1.json"]);
   });
 });

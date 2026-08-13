@@ -9,7 +9,9 @@ import {
   validateCanonicalProfileDirectory,
 } from "../domain/profile-schema.js";
 import { validateProfileV2Directory } from "../domain/profile-v2-schema.js";
+import { validateRevisionSeal, type RevisionSeal } from "../domain/profile-revision-seal.js";
 import type { ProfileManifestV2 } from "../domain/v2-types.js";
+import type { LearningCardSafeView, QuizQuestionGroupAsset } from "../contracts/index.js";
 import type { Profile } from "../domain/types.js";
 import type { ProfileRevisionChange, ProfileFileSnapshot } from "../domain/profile-revision.js";
 import { isMutableProfileContentPath } from "../domain/profile-revision.js";
@@ -43,6 +45,12 @@ export interface ProfileRevisionCandidate {
   hasDraft: boolean;
   activeRevision?: number;
   draftRevision?: number;
+}
+
+export interface ActivatedRevision3Profile {
+  manifest: ProfileManifestV2;
+  seal: RevisionSeal;
+  activation: "activated" | "reused";
 }
 
 async function pathExists(path: string): Promise<boolean> {
@@ -187,6 +195,16 @@ export class ProfileFamilyRepository {
     return validateProfileV2Directory(this.slotDirectory(subjectId, "active"), "active");
   }
 
+  async listActiveProfileV2Manifests(): Promise<ProfileManifestV2[]> {
+    await mkdir(this.familiesRoot, { recursive: true });
+    const manifests: ProfileManifestV2[] = [];
+    for (const family of (await readdir(this.familiesRoot, { withFileTypes: true })).sort((left, right) => left.name.localeCompare(right.name, "en"))) {
+      if (!family.isDirectory()) continue;
+      try { manifests.push(await this.loadActiveProfileV2(family.name)); } catch { /* v1 or invalid families are not v2 bootstrap entries. */ }
+    }
+    return manifests;
+  }
+
   /** Read a v2 asset without exposing the profile directory to callers. */
   async readActiveProfileV2File(subjectId: string, relativePath: string): Promise<string> {
     assertSafeRelativePath(relativePath);
@@ -229,6 +247,54 @@ export class ProfileFamilyRepository {
     return readFile(resolveInside(directory, relativePath), "utf8");
   }
 
+  async loadProfileV2RevisionCards(subjectId: string, revision: number): Promise<LearningCardSafeView[]> {
+    const directory = await this.profileV2RevisionDirectory(subjectId, revision);
+    const manifest = await validateProfileV2Directory(directory);
+    if (manifest.paths.cards === undefined) return [];
+    const cardsRoot = resolveInside(directory, manifest.paths.cards);
+    const entry = await stat(cardsRoot);
+    const candidates: string[] = [];
+    const visit = async (current: string): Promise<void> => {
+      for (const child of await readdir(current, { withFileTypes: true })) {
+        const absolute = resolveInside(current, child.name);
+        if (child.isDirectory()) await visit(absolute);
+        else if (child.isFile() && child.name.endsWith(".json")) candidates.push(absolute);
+      }
+    };
+    if (entry.isFile()) candidates.push(cardsRoot); else await visit(cardsRoot);
+    for (const path of candidates.sort((left, right) => left.localeCompare(right, "en"))) {
+      const parsed = JSON.parse(await readFile(path, "utf8")) as { cards?: LearningCardSafeView[] };
+      if (Array.isArray(parsed.cards)) return structuredClone(parsed.cards);
+    }
+    return [];
+  }
+
+  async loadProfileV2RevisionQuizGroups(subjectId: string, revision: number): Promise<QuizQuestionGroupAsset> {
+    const directory = await this.profileV2RevisionDirectory(subjectId, revision);
+    const manifest = await validateProfileV2Directory(directory);
+    if (manifest.paths.assessments === undefined) return { groups: [] };
+    const assessmentsRoot = resolveInside(directory, manifest.paths.assessments);
+    const groups: QuizQuestionGroupAsset["groups"] = [];
+    const visit = async (current: string): Promise<void> => {
+      for (const child of (await readdir(current, { withFileTypes: true })).sort((left, right) => left.name.localeCompare(right.name, "en"))) {
+        if (child.name === "private") continue;
+        const absolute = resolveInside(current, child.name);
+        if (child.isDirectory()) await visit(absolute);
+        else if (child.isFile() && child.name.endsWith(".json")) {
+          const value = JSON.parse(await readFile(absolute, "utf8")) as { groups?: unknown[] };
+          if (!Array.isArray(value.groups)) continue;
+          for (const group of value.groups) {
+            if (typeof group === "object" && group !== null && Array.isArray((group as { questions?: unknown }).questions)) {
+              groups.push(structuredClone(group) as QuizQuestionGroupAsset["groups"][number]);
+            }
+          }
+        }
+      }
+    };
+    await visit(assessmentsRoot);
+    return { groups };
+  }
+
   async loadDraftProfile(subjectId: string): Promise<Profile> {
     return validateCanonicalProfileDirectory(this.slotDirectory(subjectId, "draft"), subjectId, "draft");
   }
@@ -240,6 +306,9 @@ export class ProfileFamilyRepository {
    */
   async activateV2Draft(subjectId: string): Promise<ProfileManifestV2> {
     assertSafeSubjectId(subjectId);
+    if (await pathExists(resolveInside(this.fixturesRoot, "pandas-cleaning-revision-3-draft"))) {
+      return (await this.activateRevision3Draft(subjectId)).manifest;
+    }
     const candidate = resolveInside(this.fixturesRoot, "pandas-cleaning-v2-draft");
     const family = this.familyDirectory(subjectId);
     const active = resolveInside(family, "active");
@@ -304,6 +373,56 @@ export class ProfileFamilyRepository {
       await rm(archivePrepared, { recursive: true, force: true });
       await rm(oldBackup, { recursive: true, force: true });
       await rm(archiveTarget, { recursive: true, force: true });
+      throw error;
+    }
+  }
+
+  /** W4 strict activation. It never auto-migrates an existing active revision. */
+  async activateRevision3Draft(subjectId: string): Promise<ActivatedRevision3Profile> {
+    assertSafeSubjectId(subjectId);
+    const candidate = resolveInside(this.fixturesRoot, "pandas-cleaning-revision-3-draft");
+    const manifest = await validateProfileV2Directory(candidate, "draft");
+    if (manifest.subjectId !== subjectId || manifest.revision !== 3 || manifest.revisionOf !== 2) {
+      throw new Error("W4 Profile candidate must be pandas-cleaning revision 3 revisionOf=2");
+    }
+    const candidateSeal = await validateRevisionSeal(candidate, subjectId);
+    await this.beforeV2ActivationStage?.("candidate_validated");
+
+    const family = this.familyDirectory(subjectId);
+    const active = resolveInside(family, "active");
+    await mkdir(resolveInside(family, "archived"), { recursive: true });
+    if (await pathExists(active)) {
+      const activeManifest = await validateProfileV2Directory(active, "active");
+      if (activeManifest.revision !== 3) {
+        throw new Error("Existing active Profile requires owner-approved migration before revision 3 activation");
+      }
+      const activeSeal = await validateRevisionSeal(active, subjectId);
+      if (activeSeal.assetTreeSha256 !== candidateSeal.assetTreeSha256) {
+        throw new Error("Existing active revision 3 has a different seal and cannot be auto-migrated");
+      }
+      return { manifest: activeManifest, seal: activeSeal, activation: "reused" };
+    }
+
+    const token = crypto.randomUUID();
+    const prepared = resolveInside(family, `.revision-3-activation-${token}`);
+    let published = false;
+    try {
+      await cp(candidate, prepared, { recursive: true, errorOnExist: true });
+      await writeJsonAtomic(resolve(prepared, "profile.json"), { ...manifest, status: "active" as const });
+      await this.beforeV2ActivationStage?.("active_manifest_written");
+      await validateProfileV2Directory(prepared, "active");
+      const preparedSeal = await validateRevisionSeal(prepared, subjectId);
+      if (preparedSeal.assetTreeSha256 !== candidateSeal.assetTreeSha256) throw new Error("Prepared revision 3 seal changed during activation");
+      await rename(prepared, active);
+      published = true;
+      await this.beforeV2ActivationStage?.("active_published");
+      const activeManifest = await validateProfileV2Directory(active, "active");
+      const activeSeal = await validateRevisionSeal(active, subjectId);
+      if (activeSeal.assetTreeSha256 !== candidateSeal.assetTreeSha256) throw new Error("Published revision 3 seal changed during activation");
+      return { manifest: activeManifest, seal: activeSeal, activation: "activated" };
+    } catch (error) {
+      if (published && await pathExists(active)) await rm(active, { recursive: true, force: true });
+      await rm(prepared, { recursive: true, force: true });
       throw error;
     }
   }

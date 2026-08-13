@@ -133,9 +133,11 @@ describe("path session boundary and transaction closure", () => {
     const sessions = {
       create: (input) => repository.create(input),
       getSnapshot: (input) => repository.getSnapshot(input),
+      getBoundSnapshot: (sessionId) => repository.getBoundSnapshot(sessionId),
       commit: (input) => repository.commit(input),
       recover: (input) => repository.recover(input),
       getInternalPathSnapshot: (input) => repository.getInternalPathSnapshot(input),
+      getBoundLearningCards: (input) => repository.getBoundLearningCards(input),
       commitInternalPath: async (input, path) => {
         const result = await repository.commitInternalPath(input, path);
         if (!injectConcurrentCommit) return result;
@@ -154,7 +156,7 @@ describe("path session boundary and transaction closure", () => {
         });
         return result;
       },
-    } satisfies LearningSessionRepository & InternalPathSessionPort;
+    } satisfies LearningSessionRepository & InternalPathSessionPort & import("../src/repositories/learning-session-repository.js").SessionBindingReader;
     const runtime = createPathRuntimeMethods({
       sessions,
       profile: { load: async () => structuredClone(profile) },

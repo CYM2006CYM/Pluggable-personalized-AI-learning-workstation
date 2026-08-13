@@ -148,6 +148,12 @@ export interface ActivityRepository {
   recover(input: { subjectId: string; sessionId: string }): Promise<ActivityRecoveryReport>;
 }
 
+/** Read-only recovery projection kept separate from the W3 write repository. */
+export interface ActivityDraftRecoveryReader {
+  getDraft(input: { subjectId: string; sessionId: string; activityId: string; attemptId: string }): Promise<ActivityDraft | undefined>;
+  getEvaluationFailure(input: { subjectId: string; sessionId: string; activityId: string; attemptId: string }): Promise<EvaluationFailureRecord | undefined>;
+}
+
 export interface ActivityRecoveryReport {
   publishedCandidates: string[];
   quarantinedCandidates: string[];
@@ -170,6 +176,16 @@ export interface FormalActivityCommitInput {
   nextStage?: CommitLearningSessionInput["candidate"]["nextStage"];
 }
 
+export interface DerivedFormalActivityCommitInput {
+  repository: ActivityRepository;
+  sessionRepository: LearningSessionRepository;
+  activity: RecordActivityResultInput;
+  deriveCandidate(input: {
+    record: ActivityResultRecord;
+    evidence: Evidence;
+  }): Promise<Omit<CommitLearningSessionInput["candidate"], "requestId" | "evidenceCandidate">>;
+}
+
 export async function commitFormalActivity(input: FormalActivityCommitInput): Promise<CommittedSessionSnapshot | EvaluationFailureRecord | ActivityResultRecord> {
   return new LearningSessionUnitOfWork(input.repository, input.sessionRepository).commit(input);
 }
@@ -189,42 +205,56 @@ export class LearningSessionUnitOfWork {
   constructor(private readonly activityRepository: ActivityRepository, private readonly sessionRepository: LearningSessionRepository) {}
 
   async commit(input: FormalActivityCommitInput): Promise<CommittedSessionSnapshot | EvaluationFailureRecord | ActivityResultRecord> {
-    const recorded = await this.activityRepository.recordResult(input.activity);
+    return this.commitRecorded(input.activity, async () => ({
+      knowledgeStates: input.knowledgeStates,
+      ...(input.pathCandidate === undefined ? {} : { pathCandidate: input.pathCandidate }),
+      ...(input.nextStage === undefined ? {} : { nextStage: input.nextStage }),
+    }));
+  }
+
+  async commitDerived(input: DerivedFormalActivityCommitInput): Promise<CommittedSessionSnapshot | EvaluationFailureRecord | ActivityResultRecord> {
+    return this.commitRecorded(input.activity, ({ record, evidence }) => input.deriveCandidate({ record, evidence }));
+  }
+
+  private async commitRecorded(
+    activity: RecordActivityResultInput,
+    deriveCandidate: (input: { record: ActivityResultRecord; evidence: Evidence }) => Promise<Omit<CommitLearningSessionInput["candidate"], "requestId" | "evidenceCandidate">>,
+  ): Promise<CommittedSessionSnapshot | EvaluationFailureRecord | ActivityResultRecord> {
+    const recorded = await this.activityRepository.recordResult(activity);
     if ("errorCode" in recorded && !("attempt" in recorded)) return recorded;
     const resultRecord = recorded as ActivityResultRecord;
     const evidence = activityResultToEvidence(resultRecord.attempt, resultRecord.result);
     if (!evidence || evidence.impact === "none") return resultRecord;
     let committed: CommittedSessionSnapshot;
     try {
+      const derived = await deriveCandidate({ record: resultRecord, evidence });
       committed = await this.sessionRepository.commit({
-        requestId: input.activity.requestId,
-        sessionId: input.activity.sessionId,
-        sessionVersion: input.activity.sessionVersion,
-        profileRevision: input.activity.profileRevision,
+        requestId: activity.requestId,
+        sessionId: activity.sessionId,
+        sessionVersion: activity.sessionVersion,
+        profileRevision: activity.profileRevision,
         candidate: {
-          requestId: input.activity.requestId,
+          requestId: activity.requestId,
           evidenceCandidate: evidence,
-          knowledgeStates: input.knowledgeStates,
-          pathCandidate: input.pathCandidate,
-          activityAttemptId: input.activity.attemptId,
-          nextStage: input.nextStage,
+          ...derived,
+          activityAttemptId: activity.attemptId,
         },
       });
     } catch (error) {
-      const recoverable = await this.hasRecoverableCandidate(input.activity.sessionId, input.activity.requestId);
+      const recoverable = await this.hasRecoverableCandidate(activity.sessionId, activity.requestId);
       if (!recoverable) await this.activityRepository.discardAttempt({
-          subjectId: input.activity.subjectId,
-          sessionId: input.activity.sessionId,
-          activityId: input.activity.activityId,
-          attemptId: input.activity.attemptId,
+          subjectId: activity.subjectId,
+          sessionId: activity.sessionId,
+          activityId: activity.activityId,
+          attemptId: activity.attemptId,
         }).catch(() => undefined);
       throw error;
     }
     await this.activityRepository.markCommitted({
-      subjectId: input.activity.subjectId,
-      sessionId: input.activity.sessionId,
-      activityId: input.activity.activityId,
-      attemptId: input.activity.attemptId,
+      subjectId: activity.subjectId,
+      sessionId: activity.sessionId,
+      activityId: activity.activityId,
+      attemptId: activity.attemptId,
     });
     return committed;
   }

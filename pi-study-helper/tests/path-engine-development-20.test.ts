@@ -31,6 +31,21 @@ interface RunEvidence {
   legalityReason: string;
 }
 
+function questionnaire(fields: DevelopmentCase["background"]) {
+  const values = new Map(fields.map((field) => [field.fieldId, field.value]));
+  const python = new Map<unknown, "basic" | "uncertain">([
+    ["有 Python 课程基础", "basic"], ["自学过基础 Python", "basic"], ["以工作任务为主", "uncertain"],
+  ]).get(values.get("python_experience"));
+  const pandas = new Map<unknown, "basic" | "comfortable">([
+    ["刚接触 pandas", "basic"], ["有零散表格处理经验", "basic"], ["经常处理订单表", "comfortable"],
+  ]).get(values.get("pandas_experience"));
+  const explanation = new Map<unknown, "step_by_step" | "example_first" | "concise">([
+    ["希望分步骤说明", "step_by_step"], ["希望看到数据结构解释", "example_first"], ["希望先看验收条件", "concise"],
+  ]).get(values.get("explanation_preference"));
+  if (python === undefined || pandas === undefined || explanation === undefined) throw new Error("unsupported frozen W2 background label");
+  return { python_experience: python, pandas_experience: pandas, explanation_preference: explanation };
+}
+
 interface BoundaryRunEvidence extends RunEvidence {
   keyNodes: Array<{ knowledgePointId: string; status: string; required: boolean; reasonCodes: string[] }>;
   missingPrerequisiteIds: string[];
@@ -161,10 +176,22 @@ async function freezeCases(profile: PathEngineProfile, cases: DevelopmentCase[],
     const repository = new FileLearningSessionRepository({ dataRoot, now: frozenNow });
     const view = await repository.create({ requestId: `create-${persona.caseId}`, subjectId: "pandas-cleaning", mode: "recommended", goalId: persona.goalId, availableMinutes: persona.availableMinutes, profileRevision: profile.profileRevision, diagnosticRequired: true });
     const diagnostic = new DiagnosticRuntime({ repository, loadAssets: createProfileDirectoryDiagnosticLoader(() => profileDirectory), dataRoot, now: frozenNow });
+    const draft = await diagnostic.saveDiagnosticDraft({
+      requestId: `background-${persona.caseId}`,
+      sessionId: view.sessionId,
+      sessionVersion: view.sessionVersion,
+      profileRevision: profile.profileRevision,
+      diagnosticId: `diagnostic-${persona.caseId}`,
+      diagnosticVersion: 1,
+      diagnosticDraftVersion: 0,
+      background: questionnaire(persona.background),
+    });
+    let diagnosticDraftVersion = draft.diagnosticDraftVersion;
     for (const answer of persona.diagnosticAnswers) {
-      await diagnostic.submitDiagnosticAnswer({ requestId: `${persona.caseId}-${answer.questionId}`, sessionId: view.sessionId, sessionVersion: view.sessionVersion, profileRevision: profile.profileRevision, diagnosticId: `diagnostic-${persona.caseId}`, diagnosticVersion: 1, ...answer });
+      const saved = await diagnostic.submitDiagnosticAnswer({ requestId: `${persona.caseId}-${answer.questionId}`, sessionId: view.sessionId, sessionVersion: view.sessionVersion, profileRevision: profile.profileRevision, diagnosticId: `diagnostic-${persona.caseId}`, diagnosticVersion: 1, diagnosticDraftVersion, ...answer });
+      diagnosticDraftVersion = saved.diagnosticDraftVersion;
     }
-    const completed = await diagnostic.completeDiagnostic({ requestId: `complete-${persona.caseId}`, sessionId: view.sessionId, sessionVersion: view.sessionVersion, profileRevision: profile.profileRevision, diagnosticId: `diagnostic-${persona.caseId}`, diagnosticVersion: 1 });
+    const completed = await diagnostic.completeDiagnostic({ requestId: `complete-${persona.caseId}`, sessionId: view.sessionId, sessionVersion: view.sessionVersion, profileRevision: profile.profileRevision, mode: "fixed", diagnosticId: `diagnostic-${persona.caseId}`, diagnosticVersion: 1, diagnosticDraftVersion });
     const input = { caseId: persona.caseId, personaType: persona.personaType, background: persona.background, goalId: persona.goalId, diagnosticAnswers: persona.diagnosticAnswers, availableMinutes: persona.availableMinutes, mode: "recommended" as const, evidenceVersion: completed.evidenceVersion, knowledgeStates: completed.knowledgeStates };
     frozen.push({ ...persona, mode: "recommended", evidenceVersion: completed.evidenceVersion, knowledgeStates: completed.knowledgeStates, frozenInputSha256: sha256(stableJson(input)) });
   }

@@ -108,6 +108,7 @@ describe("W1-C2 LearningRuntimeFacade contract", () => {
       profileRevision: 2,
       diagnosticId: "diagnostic-1",
       diagnosticVersion: 1,
+      diagnosticDraftVersion: 0,
       questionId: "question-1",
     } as const;
     const answer = { ...meta, action: "answer", answer: true } satisfies Facade.SubmitDiagnosticAnswerInput;

@@ -6,11 +6,12 @@ import type {
   KnowledgeState,
   LearningGoalDefinition,
 } from "./v2-types.js";
+import type { ScaffoldLevel } from "../contracts/domain.js";
+export type { ScaffoldLevel } from "../contracts/domain.js";
 
 export type PathMode = "chapter" | "recommended";
 export type PathStatus = "draft" | "confirmed" | "superseded";
 export type PathNodeStatus = "locked" | "available" | "in_progress" | "completed" | "skipped";
-export type ScaffoldLevel = "none" | "hint" | "worked_example";
 export type PathReasonCode =
   | "prerequisite_gap"
   | "low_mastery"
@@ -165,6 +166,12 @@ function activityMinutes(activity: PathActivityDefinition): number {
   return Number.isInteger(activity.estimatedMinutes) && (activity.estimatedMinutes as number) > 0
     ? activity.estimatedMinutes as number
     : 10;
+}
+
+function contentMinutes(point: KnowledgePointDefinition): number {
+  return Number.isInteger(point.contentEstimatedMinutes) && (point.contentEstimatedMinutes as number) > 0
+    ? point.contentEstimatedMinutes as number
+    : 0;
 }
 
 function activityDifficulty(activity: PathActivityDefinition): Difficulty {
@@ -323,7 +330,7 @@ export class PathEngine {
         positionLocked: input.lockedNodeIds.includes(`node-${pointId}`) || input.lockedNodeIds.includes(pointId),
         required, difficulty: nodeActivities.map(activityDifficulty).sort((left, right) => DIFFICULTIES.indexOf(right) - DIFFICULTIES.indexOf(left))[0]!,
         scaffold: this.chooseNodeScaffold(nodeActivities, state),
-        estimatedMinutes: nodeActivities.reduce((total, activity) => total + activityMinutes(activity), 0), reasonCodes: reasons,
+        estimatedMinutes: contentMinutes(point) + nodeActivities.reduce((total, activity) => total + activityMinutes(activity), 0), reasonCodes: reasons,
       });
     }
     let estimatedMinutes = nodes.filter((node) => node.status !== "skipped").reduce((total, node) => total + node.estimatedMinutes, 0);
@@ -331,7 +338,8 @@ export class PathEngine {
       // 只压缩真实 Profile 活动中、且不属于 required/final 的可选活动。
       // 节点本身仍保留；必做节点、最终活动和不可跳过先修不可删除。
       const mandatoryActivityIds = new Set(requiredActivityIds);
-      const optionalNodes = nodes.filter((node) => node.status !== "skipped" && node.required)
+      const optionalNodes = nodes.filter((node) => node.status !== "skipped" && node.required
+          && this.profile.knowledgePoints.find((point) => point.id === node.knowledgePointId)?.activityPolicy !== "all_in_order")
         .map((node) => ({ node, optionalIds: node.activityIds.filter((id) => !mandatoryActivityIds.has(id)) }))
         .filter((item) => item.optionalIds.length > 0)
         .reverse();
@@ -341,7 +349,8 @@ export class PathEngine {
         const selected = retained.map((id) => activities.get(id)).filter((activity): activity is PathActivityDefinition => activity !== undefined);
         const before = node.estimatedMinutes;
         node.activityIds = retained;
-        node.estimatedMinutes = selected.reduce((total, activity) => total + activityMinutes(activity), 0);
+        node.estimatedMinutes = contentMinutes(this.profile.knowledgePoints.find((point) => point.id === node.knowledgePointId)!)
+          + selected.reduce((total, activity) => total + activityMinutes(activity), 0);
         node.difficulty = selected.map(activityDifficulty).sort((left, right) => DIFFICULTIES.indexOf(right) - DIFFICULTIES.indexOf(left))[0]!;
         node.scaffold = this.chooseNodeScaffold(selected, states.get(node.knowledgePointId));
         addReasons(node.reasonCodes, "time_compressed");
@@ -448,6 +457,17 @@ export class PathEngine {
     state: KnowledgeState | undefined,
     allowOptional: boolean,
   ): PathActivityDefinition[] {
+    const point = this.profile.knowledgePoints.find((item) => item.id === pointId);
+    if (point?.activityPolicy === "all_in_order") {
+      const orderedIds = [...pointActivityIds];
+      for (const requiredId of requiredActivityIds) {
+        const required = activities.get(requiredId);
+        if (required?.primaryKnowledgePointId === pointId && !orderedIds.includes(requiredId)) orderedIds.push(requiredId);
+      }
+      return orderedIds
+        .map((id) => activities.get(id))
+        .filter((activity): activity is PathActivityDefinition => activity !== undefined);
+    }
     const required = requiredActivityIds
       .map((id) => activities.get(id))
       .filter((activity): activity is PathActivityDefinition => activity !== undefined && activity.primaryKnowledgePointId === pointId);
@@ -526,7 +546,7 @@ export class PathEngine {
       if (selected.some((activity) => activity === undefined || activity.primaryKnowledgePointId !== node.knowledgePointId)) {
         return this.failureDetails([], path.estimatedMinutes, "change_goal");
       }
-      const actualMinutes = selected.reduce((total, activity) => total + activityMinutes(activity!), 0);
+      const actualMinutes = contentMinutes(point) + selected.reduce((total, activity) => total + activityMinutes(activity!), 0);
       if (node.estimatedMinutes !== actualMinutes) return this.failureDetails([], path.estimatedMinutes, "change_goal");
       if (node.status !== "skipped") estimatedMinutes += node.estimatedMinutes;
       if (point.prerequisiteIds.some((id) => (positions.get(id) ?? Number.MAX_SAFE_INTEGER) >= index)) {
@@ -581,6 +601,10 @@ export class PathEngine {
     const actualBudgetCompression = input.availableMinutes < previous.availableMinutes
       && optionalActivityRemoved
       && newCodes.has("time_compressed");
+    const prerequisiteAvailabilityChanged = previous.nodes.some((oldNode) => {
+      const nextNode = next.nodes.find((candidate) => candidate.nodeId === oldNode.nodeId);
+      return nextNode !== undefined && (oldNode.status === "locked") !== (nextNode.status === "locked");
+    });
     const reasons: PathReasonCode[] = [];
     const candidates: Array<[PathReasonCode, boolean]> = [
       ["error_remediation", input.trigger === "error_remediation" && pathChanged],
@@ -588,7 +612,7 @@ export class PathEngine {
       ["user_selected", symmetric("user_selected")],
       ["evidence_insufficient", symmetric("evidence_insufficient")],
       ["low_mastery", symmetric("low_mastery")],
-      ["prerequisite_gap", symmetric("prerequisite_gap")],
+      ["prerequisite_gap", symmetric("prerequisite_gap") || prerequisiteAvailabilityChanged],
     ];
     for (const [reason, enabled] of candidates) if (enabled) reasons.push(reason);
     return reasons;

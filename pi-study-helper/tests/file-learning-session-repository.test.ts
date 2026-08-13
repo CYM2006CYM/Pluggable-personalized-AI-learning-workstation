@@ -5,6 +5,7 @@ import { resolve } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { FileLearningSessionRepository, type FileLearningSessionPublishStage } from "../src/repositories/file-learning-session-repository.js";
 import type { Evidence, KnowledgeState, LearnerDiagnostic } from "../src/domain/v2-types.js";
+import type { QuizAttemptSnapshot } from "../src/domain/quiz-runtime.js";
 
 const roots: string[] = [];
 
@@ -156,7 +157,21 @@ describe("FileLearningSessionRepository", () => {
         nextStage: "path",
       },
     });
-    expect(committed).toMatchObject({ committed: true, committedEvidenceIds: ["evidence-1"], committedDiagnosticId: "diagnostic-1" });
+    expect(committed).toMatchObject({ committed: true, replayed: false, committedEvidenceIds: ["evidence-1"], committedDiagnosticId: "diagnostic-1" });
+    const replay = await repo.commit({
+      requestId: "complete-1",
+      sessionId: view.sessionId,
+      sessionVersion: 1,
+      profileRevision: 2,
+      candidate: {
+        requestId: "complete-1",
+        evidenceCandidates: [item],
+        knowledgeStates: [state(1)],
+        diagnosticCandidate: candidate,
+        nextStage: "path",
+      },
+    });
+    expect(replay).toMatchObject({ replayed: true, sessionVersion: 2, committedEvidenceIds: ["evidence-1"] });
     expect(committed.latestCommit).toMatchObject({ evidenceVersion: 1, sessionVersion: 2 });
     expect(committed.evidence[0]?.evidenceVersion).toBe(1);
     const reread = await repo.getSnapshot({ sessionId: view.sessionId, sessionVersion: 2, profileRevision: 2 });
@@ -189,7 +204,7 @@ describe("FileLearningSessionRepository", () => {
       status: "candidate" as const,
       goalId: "goal-1",
       mode: "recommended" as const,
-      nodes: [{ nodeId: "node-kp-1", knowledgePointId: "kp-1", activityIds: ["activity-1"], status: "available" as const, estimatedMinutes: 5, reasonCodes: ["goal_required"] }],
+      nodes: [{ nodeId: "node-kp-1", knowledgePointId: "kp-1", activityIds: ["activity-1"], status: "available" as const, estimatedMinutes: 5, reasonCodes: ["goal_required"], difficulty: "S-U" as const, scaffold: "none" as const, required: true, positionLocked: false }],
     };
     const committed = await repo.commit({
       requestId: "public-path-commit",
@@ -215,7 +230,7 @@ describe("FileLearningSessionRepository", () => {
       status: "candidate" as const,
       goalId: "goal-1",
       mode: "recommended" as const,
-      nodes: [{ nodeId: "node-kp-1", knowledgePointId: "kp-1", activityIds: [], status: "available" as const, estimatedMinutes: 5, reasonCodes: [] }],
+      nodes: [{ nodeId: "node-kp-1", knowledgePointId: "kp-1", activityIds: [], status: "available" as const, estimatedMinutes: 5, reasonCodes: [], difficulty: "S-U" as const, scaffold: "none" as const, required: true, positionLocked: false }],
     };
     await expect(repo.commit({ requestId: "invalid-public-path", sessionId: view.sessionId, sessionVersion: 1, profileRevision: 2, candidate: { requestId: "invalid-public-path", knowledgeStates: [state(0)], pathCandidate: invalid } })).rejects.toMatchObject({ errorCode: "evidence_invalid" });
     const snapshot = await repo.getSnapshot({ sessionId: view.sessionId, sessionVersion: 1, profileRevision: 2 });
@@ -225,17 +240,14 @@ describe("FileLearningSessionRepository", () => {
 
   it("uses one public safe path projection for getSnapshot, commit and recover", async () => {
     const { repo, view } = await repository();
-    const pathCandidate = { pathId: "public-path-2", pathVersion: 1, status: "candidate" as const, goalId: "goal-1", mode: "recommended" as const, nodes: [{ nodeId: "node-kp-2", knowledgePointId: "kp-1", activityIds: ["activity-2"], status: "available" as const, estimatedMinutes: 6, reasonCodes: [] }] };
+    const pathCandidate = { pathId: "public-path-2", pathVersion: 1, status: "candidate" as const, goalId: "goal-1", mode: "recommended" as const, nodes: [{ nodeId: "node-kp-2", knowledgePointId: "kp-1", activityIds: ["activity-2"], status: "available" as const, estimatedMinutes: 6, reasonCodes: [], difficulty: "S-U" as const, scaffold: "none" as const, required: true, positionLocked: false }] };
     const committed = await repo.commit({ requestId: "public-path-2", sessionId: view.sessionId, sessionVersion: 1, profileRevision: 2, candidate: { requestId: "public-path-2", knowledgeStates: [state(0)], pathCandidate } });
     const recovered = await repo.recover({ requestId: "recover-public-path", sessionId: view.sessionId, sessionVersion: 2, profileRevision: 2 });
     for (const output of [committed, await repo.getSnapshot({ sessionId: view.sessionId, sessionVersion: 2, profileRevision: 2 }), recovered]) {
       expect(output.path).toEqual(pathCandidate);
       const node = output.path?.nodes[0]!;
-      expect(Object.keys(node).sort()).toEqual(["activityIds", "estimatedMinutes", "knowledgePointId", "nodeId", "reasonCodes", "status"]);
-      expect(node).not.toHaveProperty("difficulty");
-      expect(node).not.toHaveProperty("scaffold");
-      expect(node).not.toHaveProperty("positionLocked");
-      expect(node).not.toHaveProperty("required");
+      expect(Object.keys(node).sort()).toEqual(["activityIds", "difficulty", "estimatedMinutes", "knowledgePointId", "nodeId", "positionLocked", "reasonCodes", "required", "scaffold", "status"]);
+      expect(node).toMatchObject({ difficulty: "S-U", scaffold: "none", required: true, positionLocked: false });
     }
   });
 
@@ -250,7 +262,7 @@ describe("FileLearningSessionRepository", () => {
     };
     const first = await repo.commit(input);
     const retry = await repo.commit(input);
-    expect(retry).toEqual(first);
+    expect(retry).toMatchObject({ ...first, replayed: true });
     await expect(repo.commit({ ...input, requestId: "stale-commit" })).rejects.toMatchObject({ errorCode: "session_version_conflict" });
   });
 
@@ -290,7 +302,7 @@ describe("FileLearningSessionRepository", () => {
       latestCommit: { evidenceVersion: 1, sessionVersion: 2 },
       evidence: [{ evidenceId: "evidence-1" }],
     });
-    expect(await repo.commit(firstInput)).toEqual(first);
+    expect(await repo.commit(firstInput)).toMatchObject({ ...first, replayed: true });
     await expect(repo.commit({
       ...firstInput,
       candidate: {
@@ -320,7 +332,7 @@ describe("FileLearningSessionRepository", () => {
     expect(recovered.sessionVersion).toBe(2);
   });
 
-  it.each(["candidate_written", "evidence_written", "knowledge_state_written", "path_written", "checkpoint_written"] as const)("keeps the committed session invisible and recovers uniquely when %s faults", async (stage: FileLearningSessionPublishStage) => {
+  it.each(["candidate_written", "attempt_written", "evidence_written", "knowledge_state_written", "path_written", "progress_written", "checkpoint_written"] as const)("keeps the committed session invisible and recovers uniquely when %s faults", async (stage: FileLearningSessionPublishStage) => {
     let injected: FileLearningSessionPublishStage | undefined = stage;
     const { repo, view } = await repository({
       beforePublish: async (_sessionId, _requestId, currentStage) => {
@@ -337,14 +349,30 @@ describe("FileLearningSessionRepository", () => {
       status: "candidate" as const,
       goalId: "goal-1",
       mode: "recommended" as const,
-      nodes: [{ nodeId: "fault-node", knowledgePointId: "kp-1", activityIds: ["activity-1"], status: "available" as const, estimatedMinutes: 5, reasonCodes: ["goal_required"] }],
+      nodes: [{ nodeId: "fault-node", knowledgePointId: "kp-1", activityIds: ["activity-1"], status: "available" as const, estimatedMinutes: 5, reasonCodes: ["goal_required"], difficulty: "S-U" as const, scaffold: "none" as const, required: true, positionLocked: false }],
     };
     const input = {
       requestId: `fault-${stage}`,
       sessionId: view.sessionId,
       sessionVersion: 1,
       profileRevision: 2,
-      candidate: { requestId: `fault-${stage}`, evidenceCandidate: item, knowledgeStates: [state(1)], pathCandidate },
+      candidate: {
+        requestId: `fault-${stage}`,
+        evidenceCandidate: item,
+        knowledgeStates: [state(1)],
+        pathCandidate,
+        activityProgress: [{
+          nodeId: "fault-node",
+          activities: [{
+            activityId: "activity-1",
+            status: "completed" as const,
+            attemptIds: ["attempt-1"],
+            result: "pass" as const,
+            quizRetryCount: 0 as const,
+            updatedAt: "2026-08-08T00:00:00.000Z",
+          }],
+        }],
+      },
     };
     await expect(repo.commit(input)).rejects.toThrow(`fault:${stage}`);
     expect((await repo.getSnapshot({ sessionId: view.sessionId, sessionVersion: 1, profileRevision: 2 })).evidence).toEqual([]);
@@ -352,7 +380,50 @@ describe("FileLearningSessionRepository", () => {
     expect(recovered).toMatchObject({ recoveryAction: "completed_candidate_commit", sessionVersion: 2 });
     expect(recovered.evidence).toHaveLength(1);
     expect(recovered.path).toMatchObject({ pathId: "fault-path", pathVersion: 1 });
+    expect(recovered.activityProgress[0]?.activities[0]).toMatchObject({ activityId: "activity-1", status: "completed" });
     expect((await repo.getSnapshot({ sessionId: view.sessionId, sessionVersion: 2, profileRevision: 2 })).evidence).toHaveLength(1);
+  });
+
+  it("keeps a real Quiz Attempt invisible at attempt_written and publishes it once during recovery", async () => {
+    let fail = true;
+    const { repo, view } = await repository({ beforePublish: async (_sessionId, _requestId, stage) => {
+      if (fail && stage === "attempt_written") { fail = false; throw new Error("fault:attempt_written"); }
+    } });
+    const quizAttempt = {
+      attemptId: "attempt-quiz-fault", sessionId: view.sessionId, activityId: "quiz", activityVersion: 1, profileRevision: 2,
+      title: "Quiz", prompt: "Answer", primaryKnowledgePointId: "kp-1", supportingKnowledgePointIds: [], retryNumber: 0 as const,
+      questions: [{ questionId: "q", kind: "single_choice" as const, prompt: "Q", options: ["A", "B"], correctAnswer: "A", explanation: "review", sourceAnchorIds: ["source"] }],
+      status: "draft" as const,
+    };
+    const input = { requestId: "quiz-attempt-fault", sessionId: view.sessionId, sessionVersion: 1, profileRevision: 2, candidate: {
+      requestId: "quiz-attempt-fault", knowledgeStates: [state(0)], quizAttemptCandidate: quizAttempt,
+      currentAttempt: { kind: "quiz" as const, activityId: "quiz", attemptId: quizAttempt.attemptId, status: "draft" as const, retryNumber: 0 as const },
+    } };
+    await expect(repo.commit(input)).rejects.toThrow("fault:attempt_written");
+    expect(await repo.getQuizAttempt({ sessionId: view.sessionId, sessionVersion: 1, profileRevision: 2, activityId: "quiz", attemptId: quizAttempt.attemptId })).toBeUndefined();
+    const recovered = await repo.recover({ requestId: "recover-quiz-attempt", sessionId: view.sessionId, sessionVersion: 1, profileRevision: 2 });
+    expect(recovered).toMatchObject({ recoveryAction: "completed_candidate_commit", sessionVersion: 2, currentAttempt: { attemptId: quizAttempt.attemptId } });
+    expect(await repo.getQuizAttempt({ sessionId: view.sessionId, sessionVersion: 2, profileRevision: 2, activityId: "quiz", attemptId: quizAttempt.attemptId })).toEqual(quizAttempt);
+    expect((await repo.recover({ requestId: "recover-quiz-attempt-again", sessionId: view.sessionId, sessionVersion: 2, profileRevision: 2 })).recoveryAction).toBe("none");
+  });
+
+  it("rejects a submitted Quiz Attempt whose runtime result kind is not quiz", async () => {
+    const { repo, view } = await repository();
+    const malformed: QuizAttemptSnapshot = {
+      attemptId: "attempt-kind-mismatch", sessionId: view.sessionId, activityId: "quiz", activityVersion: 1, profileRevision: 2,
+      title: "Quiz", prompt: "Answer", primaryKnowledgePointId: "kp-1", supportingKnowledgePointIds: [], retryNumber: 0,
+      questions: [{ questionId: "q", kind: "judgment", prompt: "Q", options: ["true", "false"], correctAnswer: true, explanation: "review", sourceAnchorIds: ["source"] }],
+      status: "submitted", result: { kind: "quiz", verdict: "pass", correctCount: 1, totalCount: 1, requiredCorrectCount: 1, retryAllowed: false, safeFeedback: "done" },
+      submissionRequestId: "submit-kind-mismatch", submissionHash: "hash",
+    };
+    Object.assign(malformed, { result: { kind: "code", executionStatus: "completed", verdict: "pass" } });
+    await expect(repo.commit({
+      requestId: "attempt-kind-mismatch", sessionId: view.sessionId, sessionVersion: 1, profileRevision: 2,
+      candidate: { requestId: "attempt-kind-mismatch", knowledgeStates: [state(0)], quizAttemptCandidate: malformed },
+    })).rejects.toMatchObject({ errorCode: "evidence_invalid" });
+    const unchanged = await repo.getSnapshot({ sessionId: view.sessionId, sessionVersion: 1, profileRevision: 2 });
+    expect(unchanged).toMatchObject({ sessionVersion: 1, evidence: [] });
+    expect(unchanged.currentAttempt).toBeUndefined();
   });
 
   it.each(semanticCorruptions)("isolates a JSON-valid candidate with corrupted %s", async (_label, corrupt) => {

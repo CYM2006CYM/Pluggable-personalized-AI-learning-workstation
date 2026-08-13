@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 2,
+  "checkpointRule": "Candidates and facts are written before checkpoints/latest.json; readers expose only the last published checkpoint.",
+  "formalTransactionStages": [
+    { "stage": "candidate_written", "failureVisibility": "prior checkpoint", "recovery": "validate and publish once", "test": "file-learning-session-repository.test.ts", "result": "PASS" },
+    { "stage": "attempt_written", "failureVisibility": "prior checkpoint; new Attempt hidden", "recovery": "publish same Attempt and snapshot once", "test": "file-learning-session-repository.test.ts", "result": "PASS" },
+    { "stage": "evidence_written", "failureVisibility": "prior Evidence set/version", "recovery": "publish deterministic Evidence once", "test": "file-learning-session-repository.test.ts", "result": "PASS" },
+    { "stage": "knowledge_state_written", "failureVisibility": "prior KnowledgeState", "recovery": "publish recomputed state once", "test": "file-learning-session-repository.test.ts", "result": "PASS" },
+    { "stage": "path_written", "failureVisibility": "prior path", "recovery": "publish candidate path/suffix once", "test": "file-learning-session-repository.test.ts", "result": "PASS" },
+    { "stage": "progress_written", "failureVisibility": "prior card/activity progress", "recovery": "publish authoritative progress once", "test": "file-learning-session-repository.test.ts", "result": "PASS" },
+    { "stage": "checkpoint_written", "failureVisibility": "prior checkpoint until final marker", "recovery": "publish marker last and remove candidate", "test": "file-learning-session-repository.test.ts", "result": "PASS" }
+  ],
+  "diagnosticCases": [
+    { "case": "missing/stale diagnosticDraftVersion", "invariant": "snapshot, stage, session/evidence/draft versions and answers unchanged", "test": "diagnostic-runtime.test.ts", "result": "PASS" },
+    { "case": "draft checkpoint interrupted after state write", "invariant": "same request resumes publication; no duplicate version", "test": "diagnostic-runtime.test.ts", "result": "PASS" },
+    { "case": "answer file newer than draft checkpoint", "invariant": "completion reads checkpoint-published answers only", "test": "diagnostic-runtime.test.ts", "result": "PASS" },
+    { "case": "background_only complete", "invariant": "sessionVersion +1; stage path; Evidence/evidenceVersion unchanged", "test": "diagnostic-runtime.test.ts", "result": "PASS" },
+    { "case": "completion replay", "invariant": "same request/input returns same result; changed input conflicts", "test": "diagnostic-runtime.test.ts", "result": "PASS" }
+  ],
+  "activityCases": [
+    { "case": "path confirmation checkpoint fault with bound cards", "invariant": "cards remain invisible before checkpoint; recovery publishes the same full safe snapshots exactly once", "test": "path-runtime.test.ts", "result": "PASS" },
+    { "case": "dynamic card resolves after shared preparation deadline", "invariant": "the already bound fixed card remains authoritative and getNextStep never prepares a replacement", "test": "path-runtime.test.ts", "result": "PASS" },
+    { "case": "missing/wrong/previous/unknown card ID", "invariant": "no Attempt, version, progress, card or Evidence change", "test": "code-activity-facade-adapter.test.ts; quiz-activity-runtime.test.ts", "result": "PASS" },
+    { "case": "correct card ID replay", "invariant": "same Attempt/result; no duplicate fact", "test": "code-activity-facade-adapter.test.ts; quiz-activity-runtime.test.ts", "result": "PASS" },
+    { "case": "evaluator_error", "invariant": "draft recoverable; no formal commit, Evidence or cursor advance", "test": "code-activity-facade-adapter.test.ts", "result": "PASS" },
+    { "case": "Attempt kind/result mismatch", "invariant": "candidate rejected; committed snapshot unchanged", "test": "file-learning-session-repository.test.ts", "result": "PASS" }
+  ],
+  "otherCases": [
+    { "case": "corrupted prepared candidate", "result": "PASS", "detail": "quarantined; prior committed snapshot stays visible" },
+    { "case": "revision 3 activation publication fault", "result": "PASS", "detail": "prepared/published directory rolls back; no accidental active revision" }
+  ]
+}

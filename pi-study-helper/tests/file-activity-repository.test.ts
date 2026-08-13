@@ -144,7 +144,7 @@ describe("FileActivityRepository W3-D2 local candidate", () => {
       status: "candidate" as const,
       goalId: "goal-1",
       mode: "recommended" as const,
-      nodes: [{ nodeId: `node-${faultStage}`, knowledgePointId: "kp-dataframe", activityIds: [assignment.activityId], status: "available" as const, estimatedMinutes: 5, reasonCodes: ["goal_required"] }],
+      nodes: [{ nodeId: `node-${faultStage}`, knowledgePointId: "kp-dataframe", activityIds: [assignment.activityId], status: "available" as const, estimatedMinutes: 5, reasonCodes: ["goal_required"], difficulty: "S-U" as const, scaffold: "none" as const, required: true, positionLocked: false }],
     };
     const unit = new LearningSessionUnitOfWork(activities, sessions);
     await expect(unit.commit({ repository: activities, sessionRepository: sessions, activity: input, knowledgeStates: [{ knowledgePointId: "kp-dataframe", profileRevision: 2, evidenceVersion: 1, aggregationVersion: "knowledge-state-v1", mastery: 1, confidence: 1, status: "mastered", validEvidenceCount: 1, evidenceFormCount: 1, evidenceIds: [`evidence-${input.attemptId}`], consideredEvidenceIds: [`evidence-${input.attemptId}`], asOf: "2026-08-08T01:02:03.000Z", skipEligible: true, lastUpdatedAt: "2026-08-08T01:02:03.000Z" }], pathCandidate })).rejects.toThrow(`session-fault:${faultStage}`);

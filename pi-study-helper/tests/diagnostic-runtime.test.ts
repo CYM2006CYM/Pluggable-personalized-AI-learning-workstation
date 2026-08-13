@@ -6,6 +6,11 @@ import { DiagnosticRuntime, type DiagnosticRuntimeAssets } from "../src/applicat
 import { FileLearningSessionRepository } from "../src/repositories/file-learning-session-repository.js";
 
 const roots: string[] = [];
+const background = {
+  python_experience: "basic",
+  pandas_experience: "none",
+  explanation_preference: "step_by_step",
+} as const;
 
 const assets: DiagnosticRuntimeAssets = {
   blueprint: {
@@ -56,7 +61,7 @@ afterEach(async () => {
   await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true })));
 });
 
-async function setup(runtimeAssets: DiagnosticRuntimeAssets = assets) {
+async function setup(runtimeAssets: DiagnosticRuntimeAssets = assets, mode: "recommended" | "chapter" = "chapter") {
   const root = await mkdtemp(resolve(tmpdir(), "pi-study-helper-diagnostic-"));
   roots.push(root);
   const repository = new FileLearningSessionRepository({
@@ -66,7 +71,7 @@ async function setup(runtimeAssets: DiagnosticRuntimeAssets = assets) {
   const view = await repository.create({
     requestId: "create-1",
     subjectId: "smoke-subject",
-    mode: "recommended",
+    mode,
     goalId: "goal-1",
     availableMinutes: 10,
     profileRevision: 2,
@@ -82,8 +87,62 @@ async function setup(runtimeAssets: DiagnosticRuntimeAssets = assets) {
 }
 
 describe("DiagnosticRuntime", () => {
+  it("rejects recommended diagnostic writes before a questionnaire is saved without changing formal facts", async () => {
+    const { repository, runtime, view } = await setup(assets, "recommended");
+    const base = {
+      sessionId: view.sessionId,
+      sessionVersion: 1,
+      profileRevision: 2,
+      diagnosticId: "javascript-diagnostic-v1",
+      diagnosticVersion: 1,
+      diagnosticDraftVersion: 0,
+    } as const;
+    const before = await repository.getSnapshot({ sessionId: view.sessionId, sessionVersion: 1, profileRevision: 2 });
+    await expect(runtime.submitDiagnosticAnswer({ ...base, requestId: "answer-without-background", questionId: "q-1", action: "answer", answer: "const" }))
+      .rejects.toMatchObject({ errorCode: "diagnostic_incomplete" });
+    await expect(runtime.completeDiagnostic({ ...base, requestId: "complete-without-background", mode: "fixed" }))
+      .rejects.toMatchObject({ errorCode: "diagnostic_incomplete" });
+    const after = await repository.getSnapshot({ sessionId: view.sessionId, sessionVersion: 1, profileRevision: 2 });
+    expect(after).toEqual(before);
+    expect(after).toMatchObject({ sessionVersion: 1, diagnosticDraftVersion: 0, latestCommit: { evidenceVersion: 0 }, evidence: [], view: { stage: "diagnostic" } });
+  });
+
+  it("uses independent draft CAS and restores background-only completion without formal Evidence", async () => {
+    const { root, repository, runtime, view } = await setup(assets, "recommended");
+    const saved = await runtime.saveDiagnosticDraft({
+      requestId: "background-draft", sessionId: view.sessionId, sessionVersion: 1, profileRevision: 2,
+      diagnosticId: "javascript-diagnostic-v1", diagnosticVersion: 1, diagnosticDraftVersion: 0,
+      currentQuestionId: "q-1", background,
+    });
+    expect(saved).toMatchObject({ sessionVersion: 1, diagnosticDraftVersion: 1 });
+    await expect(runtime.saveDiagnosticDraft({
+      requestId: "stale-background", sessionId: view.sessionId, sessionVersion: 1, profileRevision: 2,
+      diagnosticId: "javascript-diagnostic-v1", diagnosticVersion: 1, diagnosticDraftVersion: 0, background,
+    })).rejects.toMatchObject({ errorCode: "session_version_conflict" });
+    const beforeCompletion = await repository.getSnapshot({ sessionId: view.sessionId, sessionVersion: 1, profileRevision: 2 });
+    expect(beforeCompletion).toMatchObject({ sessionVersion: 1, diagnosticDraftVersion: 1, evidence: [], view: { stage: "diagnostic" } });
+    const restartedRepository = new FileLearningSessionRepository({ dataRoot: root, now: () => new Date("2026-07-30T12:00:00.000Z") });
+    const restartedRuntime = new DiagnosticRuntime({ repository: restartedRepository, dataRoot: root, now: () => new Date("2026-07-30T12:00:00.000Z"), loadAssets: async () => assets });
+    const recovered = await restartedRepository.getSnapshot({ sessionId: view.sessionId, sessionVersion: 1, profileRevision: 2 });
+    expect(recovered.diagnosticDraft).toMatchObject({ diagnosticDraftVersion: 1, background, processedQuestionIds: [] });
+    const completed = await restartedRuntime.completeDiagnostic({
+      requestId: "background-complete", sessionId: view.sessionId, sessionVersion: 1, profileRevision: 2,
+      mode: "background_only", background, diagnosticDraftVersion: 1,
+    });
+    expect(completed).toMatchObject({ mode: "background_only", sessionVersion: 2, evidenceVersion: 0, diagnosticDraftVersion: 1, knowledgeStates: [], insufficientKnowledgePointIds: ["kp-1", "kp-2"] });
+    const replay = await restartedRuntime.completeDiagnostic({ requestId: "background-complete", sessionId: view.sessionId, sessionVersion: 1, profileRevision: 2, mode: "background_only", background, diagnosticDraftVersion: 1 });
+    expect(replay).toEqual(completed);
+    await expect(restartedRuntime.completeDiagnostic({ requestId: "background-complete", sessionId: view.sessionId, sessionVersion: 1, profileRevision: 2, mode: "background_only", background: { ...background, python_experience: "none" }, diagnosticDraftVersion: 1 }))
+      .rejects.toMatchObject({ errorCode: "idempotency_conflict" });
+    const refreshed = await restartedRepository.getSnapshot({ sessionId: view.sessionId, sessionVersion: 2, profileRevision: 2 });
+    expect(refreshed.view.stage).toBe("path");
+    expect(refreshed.evidence).toEqual([]);
+    expect(refreshed.latestCommit).toMatchObject({ sessionVersion: 2, evidenceVersion: 0 });
+    expect(refreshed.diagnosticDraft).toMatchObject({ background, processedQuestionIds: [] });
+  });
+
   it("saves a draft, deterministically grades an answer, and is idempotent", async () => {
-    const { runtime, view } = await setup();
+    const { repository, runtime, view } = await setup();
     const draft = await runtime.saveDiagnosticDraft({
       requestId: "draft-1",
       sessionId: view.sessionId,
@@ -91,8 +150,9 @@ describe("DiagnosticRuntime", () => {
       profileRevision: 2,
       diagnosticId: "javascript-diagnostic-v1",
       diagnosticVersion: 1,
+      diagnosticDraftVersion: 0,
       currentQuestionId: "q-1",
-      background: [{ fieldId: "pythonExperience", value: "unknown" }],
+      background,
     });
     expect(draft.currentQuestionId).toBe("q-1");
 
@@ -103,6 +163,7 @@ describe("DiagnosticRuntime", () => {
       profileRevision: 2,
       diagnosticId: "javascript-diagnostic-v1",
       diagnosticVersion: 1,
+      diagnosticDraftVersion: 1,
       questionId: "q-1",
       action: "answer",
       answer: "const",
@@ -110,8 +171,10 @@ describe("DiagnosticRuntime", () => {
     const first = await runtime.submitDiagnosticAnswer(input);
     const retry = await runtime.submitDiagnosticAnswer(input);
     expect(first).toEqual(retry);
-    expect(first).toMatchObject({ result: "pass" });
+    expect(first).toMatchObject({ result: "pass", diagnosticDraftVersion: 2 });
     expect(first).not.toHaveProperty("evidenceId");
+    expect((await repository.getSnapshot({ sessionId: view.sessionId, sessionVersion: 1, profileRevision: 2 })).diagnosticDraft)
+      .toMatchObject({ currentQuestionId: "q-1", processedQuestionIds: ["q-1"] });
 
     await expect(runtime.submitDiagnosticAnswer({ ...input, requestId: "answer-2" })).rejects.toMatchObject({
       errorCode: "diagnostic_answer_conflict",
@@ -128,6 +191,7 @@ describe("DiagnosticRuntime", () => {
       profileRevision: 2,
       diagnosticId: "javascript-diagnostic-v1",
       diagnosticVersion: 1,
+      diagnosticDraftVersion: 0,
       questionId: "q-1",
     } as const;
     const answer = await runtime.submitDiagnosticAnswer(skip);
@@ -140,6 +204,7 @@ describe("DiagnosticRuntime", () => {
       diagnosticId: "javascript-diagnostic-v1",
       diagnosticVersion: 1,
       questionId: "q-2",
+      diagnosticDraftVersion: 1,
       action: "answer",
       answer: true,
     });
@@ -150,6 +215,8 @@ describe("DiagnosticRuntime", () => {
       profileRevision: 2,
       diagnosticId: "javascript-diagnostic-v1",
       diagnosticVersion: 1,
+      diagnosticDraftVersion: 2,
+      mode: "fixed",
     });
     expect(completed.evidenceVersion).toBe(1);
     expect(completed.insufficientKnowledgePointIds).toEqual(["kp-1"]);
@@ -171,9 +238,9 @@ describe("DiagnosticRuntime", () => {
       diagnosticId: "javascript-diagnostic-v1",
       diagnosticVersion: 1,
     } as const;
-    await runtime.submitDiagnosticAnswer({ ...base, action: "skip", requestId: "skip-1", questionId: "q-1" });
-    await runtime.submitDiagnosticAnswer({ ...base, action: "skip", requestId: "skip-2", questionId: "q-2" });
-    const completed = await runtime.completeDiagnostic({ ...base, requestId: "complete-1" });
+    await runtime.submitDiagnosticAnswer({ ...base, diagnosticDraftVersion: 0, action: "skip", requestId: "skip-1", questionId: "q-1" });
+    await runtime.submitDiagnosticAnswer({ ...base, diagnosticDraftVersion: 1, action: "skip", requestId: "skip-2", questionId: "q-2" });
+    const completed = await runtime.completeDiagnostic({ ...base, mode: "fixed", diagnosticDraftVersion: 2, requestId: "complete-1" });
     expect(completed.evidenceVersion).toBe(0);
     expect(completed.insufficientKnowledgePointIds).toEqual(["kp-1", "kp-2"]);
     const snapshot = await repository.getSnapshot({ sessionId: view.sessionId, sessionVersion: 2, profileRevision: 2 });
@@ -198,12 +265,14 @@ describe("DiagnosticRuntime", () => {
       diagnosticId: "javascript-diagnostic-v1",
       diagnosticVersion: 1,
     } as const;
-    await runtime.submitDiagnosticAnswer({ ...base, requestId: "answer-1", questionId: "q-1", action: "answer", answer: "const" });
-    await runtime.submitDiagnosticAnswer({ ...base, action: "skip", requestId: "skip-2", questionId: "q-2" });
-    const completionInput = { ...base, requestId: "complete-1" };
-    const completed = await runtime.completeDiagnostic(completionInput);
-    const retry = await runtime.completeDiagnostic(completionInput);
-    expect(retry).toEqual(completed);
+    await runtime.submitDiagnosticAnswer({ ...base, diagnosticDraftVersion: 0, requestId: "answer-1", questionId: "q-1", action: "answer", answer: "const" });
+    await runtime.submitDiagnosticAnswer({ ...base, diagnosticDraftVersion: 1, action: "skip", requestId: "skip-2", questionId: "q-2" });
+    const completionInput = { ...base, mode: "fixed" as const, diagnosticDraftVersion: 2, requestId: "complete-1" };
+    const completedContext = await runtime.completeDiagnosticWithContext(completionInput);
+    const completed = completedContext.output;
+    const retry = await runtime.completeDiagnosticWithContext(completionInput);
+    expect(completedContext).toMatchObject({ replayed: false, snapshot: { sessionVersion: completed.sessionVersion } });
+    expect(retry).toMatchObject({ output: completed, replayed: true, snapshot: { sessionVersion: completed.sessionVersion } });
     expect(completed.insufficientKnowledgePointIds).toEqual(["kp-1"]);
     expect(completed.knowledgeStates).toHaveLength(1);
     expect(completed.knowledgeStates[0]).toMatchObject({ knowledgePointId: "kp-1", mastery: 1, status: "ready" });
@@ -226,9 +295,9 @@ describe("DiagnosticRuntime", () => {
       diagnosticId: "javascript-diagnostic-v1",
       diagnosticVersion: 1,
     } as const;
-    await runtime.submitDiagnosticAnswer({ ...base, action: "skip", requestId: "skip-1", questionId: "q-1" });
-    await runtime.submitDiagnosticAnswer({ ...base, action: "skip", requestId: "skip-2", questionId: "q-2" });
-    const completed = await runtime.completeDiagnostic({ ...base, requestId: "complete-1" });
+    await runtime.submitDiagnosticAnswer({ ...base, diagnosticDraftVersion: 0, action: "skip", requestId: "skip-1", questionId: "q-1" });
+    await runtime.submitDiagnosticAnswer({ ...base, diagnosticDraftVersion: 1, action: "skip", requestId: "skip-2", questionId: "q-2" });
+    const completed = await runtime.completeDiagnostic({ ...base, mode: "fixed", diagnosticDraftVersion: 2, requestId: "complete-1" });
     expect(completed.insufficientKnowledgePointIds).toEqual(["kp-1"]);
     expect(completed.knowledgeStates).toEqual([
       expect.objectContaining({ knowledgePointId: "kp-1", mastery: null, confidence: 0, status: "unverified" }),
@@ -244,9 +313,9 @@ describe("DiagnosticRuntime", () => {
       diagnosticId: "javascript-diagnostic-v1",
       diagnosticVersion: 1,
     } as const;
-    await expect(runtime.submitDiagnosticAnswer({ ...base, requestId: "bad", questionId: "q-1", action: "answer", answer: "let" }))
+    await expect(runtime.submitDiagnosticAnswer({ ...base, diagnosticDraftVersion: 0, requestId: "bad", questionId: "q-1", action: "answer", answer: "let" }))
       .resolves.toMatchObject({ result: "fail" });
-    await expect(runtime.completeDiagnostic({ ...base, requestId: "incomplete" })).rejects.toMatchObject({
+    await expect(runtime.completeDiagnostic({ ...base, mode: "fixed", diagnosticDraftVersion: 1, requestId: "incomplete" })).rejects.toMatchObject({
       errorCode: "diagnostic_incomplete",
     });
   });
@@ -261,15 +330,18 @@ describe("DiagnosticRuntime", () => {
       diagnosticVersion: 1,
     } as const;
 
-    await expect(runtime.submitDiagnosticAnswer({ ...base, requestId: "missing-action", questionId: "q-1", answer: "const" } as never))
+    const submitUnchecked = (value: object) => Reflect.apply(runtime.submitDiagnosticAnswer, runtime, [value]);
+    await expect(submitUnchecked({ ...base, diagnosticDraftVersion: 0, requestId: "missing-action", questionId: "q-1", answer: "const" }))
       .rejects.toMatchObject({ errorCode: "diagnostic_answer_invalid" });
-    await expect(runtime.submitDiagnosticAnswer({ ...base, requestId: "skip-with-answer", questionId: "q-1", action: "skip", answer: "const" } as never))
+    await expect(submitUnchecked({ ...base, diagnosticDraftVersion: 0, requestId: "skip-with-answer", questionId: "q-1", action: "skip", answer: "const" }))
       .rejects.toMatchObject({ errorCode: "diagnostic_answer_invalid" });
-    await expect(runtime.submitDiagnosticAnswer({ ...base, requestId: "answer-without-answer", questionId: "q-1", action: "answer" } as never))
+    await expect(submitUnchecked({ ...base, diagnosticDraftVersion: 0, requestId: "answer-without-answer", questionId: "q-1", action: "answer" }))
+      .rejects.toMatchObject({ errorCode: "diagnostic_answer_invalid" });
+    await expect(submitUnchecked({ ...base, requestId: "missing-cas", questionId: "q-1", action: "answer", answer: "const" }))
       .rejects.toMatchObject({ errorCode: "diagnostic_answer_invalid" });
 
-    await runtime.submitDiagnosticAnswer({ ...base, requestId: "shared-request", questionId: "q-1", action: "answer", answer: "const" });
-    await expect(runtime.submitDiagnosticAnswer({ ...base, requestId: "shared-request", questionId: "q-2", action: "answer", answer: true }))
+    await runtime.submitDiagnosticAnswer({ ...base, diagnosticDraftVersion: 0, requestId: "shared-request", questionId: "q-1", action: "answer", answer: "const" });
+    await expect(runtime.submitDiagnosticAnswer({ ...base, diagnosticDraftVersion: 1, requestId: "shared-request", questionId: "q-2", action: "answer", answer: true }))
       .rejects.toMatchObject({ errorCode: "idempotency_conflict" });
   });
 
@@ -283,6 +355,7 @@ describe("DiagnosticRuntime", () => {
       diagnosticVersion: 1,
       questionId: "q-1",
       action: "answer",
+      diagnosticDraftVersion: 0,
     } as const;
     const results = await Promise.allSettled([
       runtime.submitDiagnosticAnswer({ ...base, requestId: "concurrent-1", answer: "const" }),
@@ -322,6 +395,7 @@ describe("DiagnosticRuntime", () => {
       questionId: "q-1",
       action: "answer",
       answer: "const",
+      diagnosticDraftVersion: 0,
     } as const;
     const [first, retry] = await Promise.all([
       runtime.submitDiagnosticAnswer(input),
