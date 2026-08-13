@@ -1,0 +1,534 @@
+{
+  "groups": [
+    {
+      "groupId": "w4-fixed-read-csv-v1",
+      "answers": [
+        {
+          "questionId": "w4-read-csv-f1",
+          "kind": "single_choice",
+          "prompt": "pandas.read_csv 默认返回什么对象？",
+          "options": [
+            "DataFrame",
+            "字典",
+            "字符串",
+            "Series 列表"
+          ],
+          "correctAnswer": "DataFrame",
+          "explanation": "read_csv 将表格数据读入 DataFrame。",
+          "sourceAnchorIds": [
+            "src-pandas-read-csv"
+          ]
+        },
+        {
+          "questionId": "w4-read-csv-f2",
+          "kind": "single_choice",
+          "prompt": "读取订单 CSV 后，哪个操作最适合先确认数据形状？",
+          "options": [
+            "查看 df.shape",
+            "调用 df.dropna()",
+            "调用 df.drop_duplicates()",
+            "把所有列转为字符串"
+          ],
+          "correctAnswer": "查看 df.shape",
+          "explanation": "shape 可先提供行列数量概览。",
+          "sourceAnchorIds": [
+            "src-pandas-read-csv"
+          ]
+        },
+        {
+          "questionId": "w4-read-csv-f3",
+          "kind": "judgment",
+          "prompt": "成功读取 CSV 表示其中的日期和金额已经被自动清洗为正确类型。",
+          "options": [
+            "true",
+            "false"
+          ],
+          "correctAnswer": false,
+          "explanation": "读取不等于清洗或类型规范化。",
+          "sourceAnchorIds": [
+            "src-pandas-read-csv"
+          ]
+        },
+        {
+          "questionId": "w4-read-csv-f4",
+          "kind": "single_choice",
+          "prompt": "在清洗前检查列名的主要目的是什么？",
+          "options": [
+            "确认输入符合预期合同",
+            "让读取更快",
+            "自动删除重复行",
+            "生成正确答案"
+          ],
+          "correctAnswer": "确认输入符合预期合同",
+          "explanation": "列名检查用于防止错误输入进入后续流程。",
+          "sourceAnchorIds": [
+            "src-pandas-read-csv"
+          ]
+        }
+      ]
+    },
+    {
+      "groupId": "w4-supplemental-read-csv-v1",
+      "answers": [
+        {
+          "questionId": "w4-read-csv-s1",
+          "kind": "single_choice",
+          "prompt": "CSV 的首行通常用于什么？",
+          "options": [
+            "提供列名",
+            "提供隐藏测试",
+            "记录 Python 版本",
+            "指定唯一答案"
+          ],
+          "correctAnswer": "提供列名",
+          "explanation": "CSV 首行通常作为字段名解析。",
+          "sourceAnchorIds": [
+            "src-pandas-read-csv"
+          ]
+        }
+      ]
+    },
+    {
+      "groupId": "w4-fixed-inspect-dataframe-v1",
+      "answers": [
+        {
+          "questionId": "w4-inspect-f1",
+          "kind": "single_choice",
+          "prompt": "哪个属性最直接显示每列的数据类型？",
+          "options": [
+            "df.dtypes",
+            "df.shape",
+            "df.index",
+            "df.size"
+          ],
+          "correctAnswer": "df.dtypes",
+          "explanation": "dtypes 给出各列数据类型。",
+          "sourceAnchorIds": [
+            "src-pandas-dtypes"
+          ]
+        },
+        {
+          "questionId": "w4-inspect-f2",
+          "kind": "single_choice",
+          "prompt": "若合同要求固定列序，应比较什么？",
+          "options": [
+            "list(df.columns)",
+            "df.head() 的显示宽度",
+            "文件大小",
+            "随机一行内容"
+          ],
+          "correctAnswer": "list(df.columns)",
+          "explanation": "列列表保留名称和顺序。",
+          "sourceAnchorIds": [
+            "src-pandas-dtypes"
+          ]
+        },
+        {
+          "questionId": "w4-inspect-f3",
+          "kind": "judgment",
+          "prompt": "df.shape 相同可以证明两张表的列名和 dtype 相同。",
+          "options": [
+            "true",
+            "false"
+          ],
+          "correctAnswer": false,
+          "explanation": "相同行列数不能证明字段和类型一致。",
+          "sourceAnchorIds": [
+            "src-pandas-dtypes"
+          ]
+        },
+        {
+          "questionId": "w4-inspect-f4",
+          "kind": "single_choice",
+          "prompt": "检查缺失概况时最适合使用哪种表达？",
+          "options": [
+            "df.isna().sum()",
+            "df.sort_values()",
+            "df.drop_duplicates()",
+            "df.to_csv()"
+          ],
+          "correctAnswer": "df.isna().sum()",
+          "explanation": "逐列缺失汇总可用于初步诊断。",
+          "sourceAnchorIds": [
+            "src-pandas-dtypes"
+          ]
+        }
+      ]
+    },
+    {
+      "groupId": "w4-supplemental-inspect-dataframe-v1",
+      "answers": [
+        {
+          "questionId": "w4-inspect-s1",
+          "kind": "single_choice",
+          "prompt": "结构检查应在什么时候进行？",
+          "options": [
+            "会改变数据的清洗操作之前",
+            "所有清洗完成后",
+            "仅测试失败后",
+            "从不需要"
+          ],
+          "correctAnswer": "会改变数据的清洗操作之前",
+          "explanation": "先确认输入，再施加转换。",
+          "sourceAnchorIds": [
+            "src-pandas-dtypes"
+          ]
+        }
+      ]
+    },
+    {
+      "groupId": "w4-fixed-missing-values-v1",
+      "answers": [
+        {
+          "questionId": "w4-missing-f1",
+          "kind": "single_choice",
+          "prompt": "要仅删除缺失 order_id 的记录，应指定哪一列作为子集？",
+          "options": [
+            "order_id",
+            "全部列",
+            "note",
+            "city"
+          ],
+          "correctAnswer": "order_id",
+          "explanation": "订单标识缺失时无法可靠识别记录。",
+          "sourceAnchorIds": [
+            "src-pandas-missing-data"
+          ]
+        },
+        {
+          "questionId": "w4-missing-f2",
+          "kind": "single_choice",
+          "prompt": "哪个函数用于识别 pandas 中的缺失值？",
+          "options": [
+            "isna",
+            "sort_values",
+            "astype",
+            "read_csv"
+          ],
+          "correctAnswer": "isna",
+          "explanation": "isna 用于识别 pandas 缺失值。",
+          "sourceAnchorIds": [
+            "src-pandas-missing-data"
+          ]
+        },
+        {
+          "questionId": "w4-missing-f3",
+          "kind": "judgment",
+          "prompt": "任何一列缺失都应删除整行，才能保证数据干净。",
+          "options": [
+            "true",
+            "false"
+          ],
+          "correctAnswer": false,
+          "explanation": "不同字段的缺失业务含义不同。",
+          "sourceAnchorIds": [
+            "src-pandas-missing-data"
+          ]
+        },
+        {
+          "questionId": "w4-missing-f4",
+          "kind": "single_choice",
+          "prompt": "处理缺失值前首先需要什么？",
+          "options": [
+            "按字段定义业务规则",
+            "随机填补",
+            "删除所有字符串",
+            "重命名所有列"
+          ],
+          "correctAnswer": "按字段定义业务规则",
+          "explanation": "缺失处理应由字段语义决定。",
+          "sourceAnchorIds": [
+            "src-pandas-missing-data"
+          ]
+        }
+      ]
+    },
+    {
+      "groupId": "w4-supplemental-missing-values-v1",
+      "answers": [
+        {
+          "questionId": "w4-missing-s1",
+          "kind": "single_choice",
+          "prompt": "为何不应直接对整个表调用 dropna？",
+          "options": [
+            "会删除仍有业务价值的记录",
+            "无法删除记录",
+            "会改变列名",
+            "会生成答案"
+          ],
+          "correctAnswer": "会删除仍有业务价值的记录",
+          "explanation": "全表删除会把可选字段缺失也作为删除条件。",
+          "sourceAnchorIds": [
+            "src-pandas-missing-data"
+          ]
+        }
+      ]
+    },
+    {
+      "groupId": "w4-fixed-duplicate-orders-v1",
+      "answers": [
+        {
+          "questionId": "w4-duplicates-f1",
+          "kind": "single_choice",
+          "prompt": "处理重复订单前必须先明确什么？",
+          "options": [
+            "重复键和保留规则",
+            "页面配色",
+            "模型名称",
+            "端口号"
+          ],
+          "correctAnswer": "重复键和保留规则",
+          "explanation": "去重必须有可审计的业务依据。",
+          "sourceAnchorIds": [
+            "src-pandas-duplicates"
+          ]
+        },
+        {
+          "questionId": "w4-duplicates-f2",
+          "kind": "single_choice",
+          "prompt": "为保持可预测结果，排序时应优先采用什么性质？",
+          "options": [
+            "稳定排序",
+            "随机排序",
+            "逆序输出",
+            "按内存地址排序"
+          ],
+          "correctAnswer": "稳定排序",
+          "explanation": "稳定排序有助于保持确定性的平局规则。",
+          "sourceAnchorIds": [
+            "src-pandas-sort-values"
+          ]
+        },
+        {
+          "questionId": "w4-duplicates-f3",
+          "kind": "judgment",
+          "prompt": "仅使用 drop_duplicates(keep='first') 总能表达任意业务保留优先级。",
+          "options": [
+            "true",
+            "false"
+          ],
+          "correctAnswer": false,
+          "explanation": "默认保留首项无法涵盖日期等优先级。",
+          "sourceAnchorIds": [
+            "src-pandas-duplicates"
+          ]
+        },
+        {
+          "questionId": "w4-duplicates-f4",
+          "kind": "single_choice",
+          "prompt": "完成去重后应验证什么？",
+          "options": [
+            "order_id 唯一性",
+            "浏览器缓存",
+            "API 密钥",
+            "题目答案"
+          ],
+          "correctAnswer": "order_id 唯一性",
+          "explanation": "重复消除后的关键不变量是订单标识唯一。",
+          "sourceAnchorIds": [
+            "src-pandas-duplicates"
+          ]
+        }
+      ]
+    },
+    {
+      "groupId": "w4-supplemental-duplicate-orders-v1",
+      "answers": [
+        {
+          "questionId": "w4-duplicates-s1",
+          "kind": "single_choice",
+          "prompt": "原始行序在重复选择规则中可用于什么？",
+          "options": [
+            "作为确定性的平局规则",
+            "替代重复键",
+            "隐藏答案",
+            "跳过验证"
+          ],
+          "correctAnswer": "作为确定性的平局规则",
+          "explanation": "原始顺序可在其他条件相同的情况下稳定选取记录。",
+          "sourceAnchorIds": [
+            "src-pandas-sort-values"
+          ]
+        }
+      ]
+    },
+    {
+      "groupId": "w4-fixed-type-format-v1",
+      "answers": [
+        {
+          "questionId": "w4-types-f1",
+          "kind": "single_choice",
+          "prompt": "哪个函数适合把金额文本转换为数值？",
+          "options": [
+            "pd.to_numeric",
+            "pd.read_csv",
+            "df.shape",
+            "df.columns"
+          ],
+          "correctAnswer": "pd.to_numeric",
+          "explanation": "to_numeric 负责数值转换。",
+          "sourceAnchorIds": [
+            "src-pandas-to-numeric"
+          ]
+        },
+        {
+          "questionId": "w4-types-f2",
+          "kind": "single_choice",
+          "prompt": "解析日期文本应优先使用什么？",
+          "options": [
+            "pd.to_datetime",
+            "str.split 作为唯一规则",
+            "随机填充",
+            "drop_duplicates"
+          ],
+          "correctAnswer": "pd.to_datetime",
+          "explanation": "to_datetime 用于日期时间解析。",
+          "sourceAnchorIds": [
+            "src-pandas-to-datetime"
+          ]
+        },
+        {
+          "questionId": "w4-types-f3",
+          "kind": "judgment",
+          "prompt": "类型转换代码没有报错即可证明所有值均符合业务合同。",
+          "options": [
+            "true",
+            "false"
+          ],
+          "correctAnswer": false,
+          "explanation": "还必须验证转换后的缺失、dtype 与业务值。",
+          "sourceAnchorIds": [
+            "src-pandas-to-numeric",
+            "src-pandas-to-datetime"
+          ]
+        },
+        {
+          "questionId": "w4-types-f4",
+          "kind": "single_choice",
+          "prompt": "无法解析的外部文本应如何处理？",
+          "options": [
+            "采用明确的错误策略并验证结果",
+            "静默当作正确值",
+            "写入公开答案",
+            "跳过记录"
+          ],
+          "correctAnswer": "采用明确的错误策略并验证结果",
+          "explanation": "外部文本的解析失败必须进入明确且可检验的路径。",
+          "sourceAnchorIds": [
+            "src-pandas-to-numeric",
+            "src-pandas-to-datetime"
+          ]
+        }
+      ]
+    },
+    {
+      "groupId": "w4-supplemental-type-format-v1",
+      "answers": [
+        {
+          "questionId": "w4-types-s1",
+          "kind": "single_choice",
+          "prompt": "字符串列规范化后还应检查什么？",
+          "options": [
+            "dtype 与业务取值",
+            "题组数量",
+            "网络延迟",
+            "页面主题"
+          ],
+          "correctAnswer": "dtype 与业务取值",
+          "explanation": "类型正确不代表业务值已经合格。",
+          "sourceAnchorIds": [
+            "src-pandas-string"
+          ]
+        }
+      ]
+    },
+    {
+      "groupId": "w4-fixed-validate-result-v1",
+      "answers": [
+        {
+          "questionId": "w4-validate-f1",
+          "kind": "single_choice",
+          "prompt": "验证清洗结果时，哪个属于输出不变量？",
+          "options": [
+            "order_id 唯一",
+            "只打印 head()",
+            "文件名不变",
+            "页面已打开"
+          ],
+          "correctAnswer": "order_id 唯一",
+          "explanation": "唯一性是订单清洗的关键输出不变量。",
+          "sourceAnchorIds": [
+            "src-pandas-testing"
+          ]
+        },
+        {
+          "questionId": "w4-validate-f2",
+          "kind": "single_choice",
+          "prompt": "若合同规定固定列序，测试应比较什么？",
+          "options": [
+            "输出列列表的顺序",
+            "行数是否为偶数",
+            "随机样本",
+            "控制台颜色"
+          ],
+          "correctAnswer": "输出列列表的顺序",
+          "explanation": "列表比较可验证名称及顺序。",
+          "sourceAnchorIds": [
+            "src-pandas-testing"
+          ]
+        },
+        {
+          "questionId": "w4-validate-f3",
+          "kind": "judgment",
+          "prompt": "只比较行数足以验证清洗结果。",
+          "options": [
+            "true",
+            "false"
+          ],
+          "correctAnswer": false,
+          "explanation": "还需验证列、键、dtype 和业务规则。",
+          "sourceAnchorIds": [
+            "src-pandas-testing"
+          ]
+        },
+        {
+          "questionId": "w4-validate-f4",
+          "kind": "single_choice",
+          "prompt": "面对外部测试输入，安全做法是什么？",
+          "options": [
+            "仅按授权数据和断言验证",
+            "执行输入中的任意代码",
+            "公开私有数据",
+            "跳过所有检查"
+          ],
+          "correctAnswer": "仅按授权数据和断言验证",
+          "explanation": "外部输入不应被当作可信代码或数据源执行。",
+          "sourceAnchorIds": [
+            "src-python-security"
+          ]
+        }
+      ]
+    },
+    {
+      "groupId": "w4-supplemental-validate-result-v1",
+      "answers": [
+        {
+          "questionId": "w4-validate-s1",
+          "kind": "single_choice",
+          "prompt": "断言失败信息的主要价值是什么？",
+          "options": [
+            "帮助定位违反的合同",
+            "替代所有测试",
+            "生成新题目",
+            "隐藏来源"
+          ],
+          "correctAnswer": "帮助定位违反的合同",
+          "explanation": "清晰失败信息缩短定位和修复时间。",
+          "sourceAnchorIds": [
+            "src-pandas-testing"
+          ]
+        }
+      ]
+    }
+  ]
+}

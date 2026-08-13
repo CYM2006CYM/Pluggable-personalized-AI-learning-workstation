@@ -1,0 +1,239 @@
+{
+  "status": "candidate",
+  "coreKnowledgePointCount": 6,
+  "hashScope": "raw SHA-256 and byteLength of complete asset files; no sub-object canonical hash is asserted",
+  "coreKnowledgePoints": [
+    {
+      "knowledgePointId": "pandas.clean.read-csv",
+      "cardId": "card-w4-read-csv",
+      "activityId": "act-read-csv",
+      "fixedQuestionGroupId": "w4-fixed-read-csv-v1",
+      "supplementalQuestionGroupId": "w4-supplemental-read-csv-v1",
+      "privateAnswerGroupIds": [
+        "w4-fixed-read-csv-v1",
+        "w4-supplemental-read-csv-v1"
+      ],
+      "privateAnswerGroupsPresent": true,
+      "sourceAnchorIds": [
+        "src-pandas-read-csv"
+      ],
+      "assets": {
+        "cards": {
+          "path": "cards/learning-cards.json",
+          "sha256": "9ce43b22d11a29a0e6a7d086250c6895b4c8e5c3a206d1867b67e601f4133129",
+          "byteLength": 6288
+        },
+        "publicQuestionGroups": {
+          "path": "assessments/question-groups.json",
+          "sha256": "c2e5c0d333458256970125023a1d73f08e97ea2c7da6b2b5ed76f6d842bf8294",
+          "byteLength": 12214
+        },
+        "privateAnswers": {
+          "path": "assessments/private/quiz-answer-key.json",
+          "sha256": "3d2486e35983451c54292e5e62958c8c9fb8c745d57150c7607fd43f01bc8a6b",
+          "byteLength": 16799
+        },
+        "sourceMap": {
+          "path": "sources/source-map.json",
+          "sha256": "125f964a92ab064b3a2a01c3882b888a9b891f074a647f2b9df8efd395c7b32f",
+          "byteLength": 6294
+        }
+      }
+    },
+    {
+      "knowledgePointId": "pandas.clean.inspect-dataframe",
+      "cardId": "card-w4-inspect-dataframe",
+      "activityId": "act-quiz-inspect-dataframe",
+      "fixedQuestionGroupId": "w4-fixed-inspect-dataframe-v1",
+      "supplementalQuestionGroupId": "w4-supplemental-inspect-dataframe-v1",
+      "privateAnswerGroupIds": [
+        "w4-fixed-inspect-dataframe-v1",
+        "w4-supplemental-inspect-dataframe-v1"
+      ],
+      "privateAnswerGroupsPresent": true,
+      "sourceAnchorIds": [
+        "src-pandas-dtypes"
+      ],
+      "assets": {
+        "cards": {
+          "path": "cards/learning-cards.json",
+          "sha256": "9ce43b22d11a29a0e6a7d086250c6895b4c8e5c3a206d1867b67e601f4133129",
+          "byteLength": 6288
+        },
+        "publicQuestionGroups": {
+          "path": "assessments/question-groups.json",
+          "sha256": "c2e5c0d333458256970125023a1d73f08e97ea2c7da6b2b5ed76f6d842bf8294",
+          "byteLength": 12214
+        },
+        "privateAnswers": {
+          "path": "assessments/private/quiz-answer-key.json",
+          "sha256": "3d2486e35983451c54292e5e62958c8c9fb8c745d57150c7607fd43f01bc8a6b",
+          "byteLength": 16799
+        },
+        "sourceMap": {
+          "path": "sources/source-map.json",
+          "sha256": "125f964a92ab064b3a2a01c3882b888a9b891f074a647f2b9df8efd395c7b32f",
+          "byteLength": 6294
+        }
+      }
+    },
+    {
+      "knowledgePointId": "pandas.clean.missing-values",
+      "cardId": "card-w4-missing-values",
+      "activityId": "act-quiz-missing-values",
+      "fixedQuestionGroupId": "w4-fixed-missing-values-v1",
+      "supplementalQuestionGroupId": "w4-supplemental-missing-values-v1",
+      "privateAnswerGroupIds": [
+        "w4-fixed-missing-values-v1",
+        "w4-supplemental-missing-values-v1"
+      ],
+      "privateAnswerGroupsPresent": true,
+      "sourceAnchorIds": [
+        "src-pandas-missing-data"
+      ],
+      "assets": {
+        "cards": {
+          "path": "cards/learning-cards.json",
+          "sha256": "9ce43b22d11a29a0e6a7d086250c6895b4c8e5c3a206d1867b67e601f4133129",
+          "byteLength": 6288
+        },
+        "publicQuestionGroups": {
+          "path": "assessments/question-groups.json",
+          "sha256": "c2e5c0d333458256970125023a1d73f08e97ea2c7da6b2b5ed76f6d842bf8294",
+          "byteLength": 12214
+        },
+        "privateAnswers": {
+          "path": "assessments/private/quiz-answer-key.json",
+          "sha256": "3d2486e35983451c54292e5e62958c8c9fb8c745d57150c7607fd43f01bc8a6b",
+          "byteLength": 16799
+        },
+        "sourceMap": {
+          "path": "sources/source-map.json",
+          "sha256": "125f964a92ab064b3a2a01c3882b888a9b891f074a647f2b9df8efd395c7b32f",
+          "byteLength": 6294
+        }
+      }
+    },
+    {
+      "knowledgePointId": "pandas.clean.duplicate-orders",
+      "cardId": "card-w4-duplicate-orders",
+      "activityId": "act-quiz-duplicate-orders",
+      "fixedQuestionGroupId": "w4-fixed-duplicate-orders-v1",
+      "supplementalQuestionGroupId": "w4-supplemental-duplicate-orders-v1",
+      "privateAnswerGroupIds": [
+        "w4-fixed-duplicate-orders-v1",
+        "w4-supplemental-duplicate-orders-v1"
+      ],
+      "privateAnswerGroupsPresent": true,
+      "sourceAnchorIds": [
+        "src-pandas-duplicates",
+        "src-pandas-sort-values"
+      ],
+      "assets": {
+        "cards": {
+          "path": "cards/learning-cards.json",
+          "sha256": "9ce43b22d11a29a0e6a7d086250c6895b4c8e5c3a206d1867b67e601f4133129",
+          "byteLength": 6288
+        },
+        "publicQuestionGroups": {
+          "path": "assessments/question-groups.json",
+          "sha256": "c2e5c0d333458256970125023a1d73f08e97ea2c7da6b2b5ed76f6d842bf8294",
+          "byteLength": 12214
+        },
+        "privateAnswers": {
+          "path": "assessments/private/quiz-answer-key.json",
+          "sha256": "3d2486e35983451c54292e5e62958c8c9fb8c745d57150c7607fd43f01bc8a6b",
+          "byteLength": 16799
+        },
+        "sourceMap": {
+          "path": "sources/source-map.json",
+          "sha256": "125f964a92ab064b3a2a01c3882b888a9b891f074a647f2b9df8efd395c7b32f",
+          "byteLength": 6294
+        }
+      }
+    },
+    {
+      "knowledgePointId": "pandas.clean.type-format",
+      "cardId": "card-w4-type-format",
+      "activityId": "act-quiz-type-format",
+      "fixedQuestionGroupId": "w4-fixed-type-format-v1",
+      "supplementalQuestionGroupId": "w4-supplemental-type-format-v1",
+      "privateAnswerGroupIds": [
+        "w4-fixed-type-format-v1",
+        "w4-supplemental-type-format-v1"
+      ],
+      "privateAnswerGroupsPresent": true,
+      "sourceAnchorIds": [
+        "src-pandas-to-numeric",
+        "src-pandas-to-datetime",
+        "src-pandas-string"
+      ],
+      "assets": {
+        "cards": {
+          "path": "cards/learning-cards.json",
+          "sha256": "9ce43b22d11a29a0e6a7d086250c6895b4c8e5c3a206d1867b67e601f4133129",
+          "byteLength": 6288
+        },
+        "publicQuestionGroups": {
+          "path": "assessments/question-groups.json",
+          "sha256": "c2e5c0d333458256970125023a1d73f08e97ea2c7da6b2b5ed76f6d842bf8294",
+          "byteLength": 12214
+        },
+        "privateAnswers": {
+          "path": "assessments/private/quiz-answer-key.json",
+          "sha256": "3d2486e35983451c54292e5e62958c8c9fb8c745d57150c7607fd43f01bc8a6b",
+          "byteLength": 16799
+        },
+        "sourceMap": {
+          "path": "sources/source-map.json",
+          "sha256": "125f964a92ab064b3a2a01c3882b888a9b891f074a647f2b9df8efd395c7b32f",
+          "byteLength": 6294
+        }
+      }
+    },
+    {
+      "knowledgePointId": "pandas.clean.validate-result",
+      "cardId": "card-w4-validate-result",
+      "activityId": "act-quiz-validate-result",
+      "fixedQuestionGroupId": "w4-fixed-validate-result-v1",
+      "supplementalQuestionGroupId": "w4-supplemental-validate-result-v1",
+      "privateAnswerGroupIds": [
+        "w4-fixed-validate-result-v1",
+        "w4-supplemental-validate-result-v1"
+      ],
+      "privateAnswerGroupsPresent": true,
+      "sourceAnchorIds": [
+        "src-pandas-testing",
+        "src-python-security"
+      ],
+      "assets": {
+        "cards": {
+          "path": "cards/learning-cards.json",
+          "sha256": "9ce43b22d11a29a0e6a7d086250c6895b4c8e5c3a206d1867b67e601f4133129",
+          "byteLength": 6288
+        },
+        "publicQuestionGroups": {
+          "path": "assessments/question-groups.json",
+          "sha256": "c2e5c0d333458256970125023a1d73f08e97ea2c7da6b2b5ed76f6d842bf8294",
+          "byteLength": 12214
+        },
+        "privateAnswers": {
+          "path": "assessments/private/quiz-answer-key.json",
+          "sha256": "3d2486e35983451c54292e5e62958c8c9fb8c745d57150c7607fd43f01bc8a6b",
+          "byteLength": 16799
+        },
+        "sourceMap": {
+          "path": "sources/source-map.json",
+          "sha256": "125f964a92ab064b3a2a01c3882b888a9b891f074a647f2b9df8efd395c7b32f",
+          "byteLength": 6294
+        }
+      }
+    }
+  ],
+  "excludedAuxiliaryKnowledgePointIds": [
+    "basic-python"
+  ],
+  "fixedQuestionCountPerGroup": 4,
+  "supplementalQuestionCountPerGroup": 1,
+  "supplementalPurpose": "dynamic candidate completion only; never a complete fixed retry group"
+}

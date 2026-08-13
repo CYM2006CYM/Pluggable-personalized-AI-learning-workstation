@@ -1,0 +1,10 @@
+{
+  "status": "draft",
+  "profileRevision": 2,
+  "questions": [
+    {"questionId":"fallback-basic-python-01","knowledgePointId":"basic-python","type":"single_choice","prompt":"DataFrame 的列名通常通过哪个属性查看？","options":["df.columns","df.names","df.fields","df.columns()"],"privateAnswerRef":"quiz-fallback/private/answer-key.json#fallback-basic-python-01"},
+    {"questionId":"fallback-read-csv-01","knowledgePointId":"pandas.clean.read-csv","type":"single_choice","prompt":"pandas.read_csv 默认返回什么对象？","options":["DataFrame","字典","字符串","Series 列表"],"privateAnswerRef":"quiz-fallback/private/answer-key.json#fallback-read-csv-01"},
+    {"questionId":"fallback-missing-01","knowledgePointId":"pandas.clean.missing-values","type":"judgment","prompt":"缺失 note 应转换为空字符串。","options":["正确","错误"],"privateAnswerRef":"quiz-fallback/private/answer-key.json#fallback-missing-01"},
+    {"questionId":"fallback-duplicates-01","knowledgePointId":"pandas.clean.duplicate-orders","type":"judgment","prompt":"日期相同的重复订单保留原始第一条。","options":["正确","错误"],"privateAnswerRef":"quiz-fallback/private/answer-key.json#fallback-duplicates-01"}
+  ]
+}

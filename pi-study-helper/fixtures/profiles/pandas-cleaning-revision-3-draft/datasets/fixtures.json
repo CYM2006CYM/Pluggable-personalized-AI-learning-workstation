@@ -1,0 +1,25 @@
+{
+  "fixtures": [
+    {
+      "fixtureId": "dataset-public-orders",
+      "visibility": "public",
+      "fileRef": "datasets/public/orders-learning.csv",
+      "format": "csv",
+      "assetHash": "sha256:99b2923bfde4a6a824ed69bb410dc9c9f5d10f69e30b9bc5692ae986c6ab09f9"
+    },
+    {
+      "fixtureId": "dataset-private-variant-01",
+      "visibility": "private",
+      "fileRef": "datasets/private/orders-variant-01.csv",
+      "format": "csv",
+      "assetHash": "sha256:3fa17a9f134f2e861ef2b039fa3d83220b502e7f23a97d8dabfe23a52f1822b5"
+    },
+    {
+      "fixtureId": "dataset-private-variant-02",
+      "visibility": "private",
+      "fileRef": "datasets/private/orders-variant-02.csv",
+      "format": "csv",
+      "assetHash": "sha256:01655a4df5edcc5c173b3dca370135e5f2e6010bc7dfba6fc1263d2e30cc0f83"
+    }
+  ]
+}

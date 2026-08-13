@@ -1,0 +1,192 @@
+{
+  "status": "candidate",
+  "publicAssets": [
+    "cards/learning-cards.json",
+    "assessments/question-groups.json"
+  ],
+  "privateAssets": [
+    {
+      "path": "assessments/diagnostic/private/answer-key.json",
+      "sha256": "4c9ca4b56e46d189e11475c06eb0f956207887fa7d7b3b00bcb080ea17b0099d",
+      "byteLength": 797
+    },
+    {
+      "path": "assessments/private/known-wrong/wrong-duplicates.py",
+      "sha256": "575bc318813c0864dccee46416acbe59810ea960c655dcaf2b812b9f2e9645ef",
+      "byteLength": 83
+    },
+    {
+      "path": "assessments/private/known-wrong/wrong-missing.py",
+      "sha256": "4998136540f88314c43a527186ec2411bc925e0184f0073bcd6aeec3c3695f28",
+      "byteLength": 46
+    },
+    {
+      "path": "assessments/private/known-wrong/wrong-practical.py",
+      "sha256": "74e323f2defd470a4693de54907421a054e3a4b53b0ed0cbcf4af26c0f39bc51",
+      "byteLength": 110
+    },
+    {
+      "path": "assessments/private/known-wrong/wrong-structure.py",
+      "sha256": "b69266121f954761295d7ea8dce38959d7fa6d6f31925bdb86f645e1f136d973",
+      "byteLength": 62
+    },
+    {
+      "path": "assessments/private/known-wrong/wrong-types.py",
+      "sha256": "b0738bad062cada5c4c3b65cf3e32ff7ef6df8e1ca9676b75825e0e5f649cfc0",
+      "byteLength": 116
+    },
+    {
+      "path": "assessments/private/quiz-answer-key.json",
+      "sha256": "3d2486e35983451c54292e5e62958c8c9fb8c745d57150c7607fd43f01bc8a6b",
+      "byteLength": 16799
+    },
+    {
+      "path": "assessments/private/task-bundles.json",
+      "sha256": "3ca1df592f78366a73bf07c1ea82a9dc8a5eb24ae92da20fbab1d8f7a9894426",
+      "byteLength": 32070
+    },
+    {
+      "path": "assessments/private/test-cases.json",
+      "sha256": "373ced00c649cad669b300cad61f884018726fd9c34b276329104056635bc27c",
+      "byteLength": 4267
+    },
+    {
+      "path": "assessments/private/tests/test-duplicates-hidden.py",
+      "sha256": "7f9449a3e924c734314649ffd056465ce19e3971e15b9a806c928360472b3be3",
+      "byteLength": 781
+    },
+    {
+      "path": "assessments/private/tests/test-missing-hidden.py",
+      "sha256": "8d798c0cecd733579901a04630dbcdcb0333efaef731568467dda003abaa3e0f",
+      "byteLength": 177
+    },
+    {
+      "path": "assessments/private/tests/test-practical-engineering-static.py",
+      "sha256": "4482632a8c545b1f9efdaa4558d40fe6e67b4c38ea96486d99c0b92f5c1887d0",
+      "byteLength": 2246
+    },
+    {
+      "path": "assessments/private/tests/test-practical-hidden-01.py",
+      "sha256": "6d762bf0059d7fb77368dbcdd42eb810d565e3c593008c8eced76262d7b20829",
+      "byteLength": 626
+    },
+    {
+      "path": "assessments/private/tests/test-practical-hidden-02.py",
+      "sha256": "e501c858969bd6ccefaf21585ad125fc7a26dc9a178b6c09cc52e16137ba5cd1",
+      "byteLength": 1854
+    },
+    {
+      "path": "assessments/private/tests/test-practical-hidden-duplicates.py",
+      "sha256": "bceba5a6f97dac2df6929061b0e0590758e0e5edfaf76dfd5c8d9f9e7a0d0566",
+      "byteLength": 966
+    },
+    {
+      "path": "assessments/private/tests/test-practical-hidden-missing.py",
+      "sha256": "4da0a6df601fdad50d4481c6fce02dcc3b7f377c0d1b91a50e8af2b524d452f5",
+      "byteLength": 773
+    },
+    {
+      "path": "assessments/private/tests/test-practical-hidden-structure.py",
+      "sha256": "8092b3b4fbced655acb2a0fb65d94b84cfe44a197a824271503ebc57ac39e5c3",
+      "byteLength": 775
+    },
+    {
+      "path": "assessments/private/tests/test-practical-hidden-types.py",
+      "sha256": "a8d5cbe461f3ac525e3a954af39270b0306bf446bdb0baa9c9d7e92b7613ddf6",
+      "byteLength": 1031
+    },
+    {
+      "path": "assessments/private/tests/test-structure-hidden.py",
+      "sha256": "935f988b1d21ebd927fec8015328599376ca0ce05be593130130c9ede7c4dc4e",
+      "byteLength": 292
+    },
+    {
+      "path": "assessments/private/tests/test-types-hidden.py",
+      "sha256": "b3153bab7097369623ae2d6bfa8eae11f8414646d006030836f07e5e1e3b3285",
+      "byteLength": 1221
+    },
+    {
+      "path": "assessments/quiz-fallback/private/answer-key.json",
+      "sha256": "2ee287dd9c4fa72f9a2afbdb3411cf0d7307491d7b2a840269ef354c5c08a34c",
+      "byteLength": 342
+    },
+    {
+      "path": "datasets/private/orders-variant-01.csv",
+      "sha256": "3fa17a9f134f2e861ef2b039fa3d83220b502e7f23a97d8dabfe23a52f1822b5",
+      "byteLength": 1274
+    },
+    {
+      "path": "datasets/private/orders-variant-02.csv",
+      "sha256": "01655a4df5edcc5c173b3dca370135e5f2e6010bc7dfba6fc1263d2e30cc0f83",
+      "byteLength": 1238
+    },
+    {
+      "path": "reference-solutions/solution-duplicates.py",
+      "sha256": "36c04016fd4d14fbcc7b03f6bc4c19b1e83976c3c660641f9b47042416359f06",
+      "byteLength": 706
+    },
+    {
+      "path": "reference-solutions/solution-missing.py",
+      "sha256": "38875b16b36890674eba36211d88f0221eb84643595fc1bfdafe83601108e630",
+      "byteLength": 366
+    },
+    {
+      "path": "reference-solutions/solution-practical.py",
+      "sha256": "0c142feaf8ba469e9101807d6a33eceedead6ff99f63e14c071a88912bbf4e48",
+      "byteLength": 1809
+    },
+    {
+      "path": "reference-solutions/solution-structure.py",
+      "sha256": "4408b65632045e036f9f877f6fb5af8d7ddeb31e38f118dc8756929316df55f5",
+      "byteLength": 220
+    },
+    {
+      "path": "reference-solutions/solution-types.py",
+      "sha256": "92273b1b18f120b08174825f13986a73a8f7875182c2ee74192a69407a989386",
+      "byteLength": 1008
+    },
+    {
+      "path": "rubrics/rubric-duplicates.json",
+      "sha256": "195bc12f1d4a10fd10a70b1769264314bbe7afe89d9d4ac955bb0565dd645672",
+      "byteLength": 290
+    },
+    {
+      "path": "rubrics/rubric-missing.json",
+      "sha256": "d06b36adbb306acf5217492d5ac207c21c82b3351a717bf98aca5658d321dcec",
+      "byteLength": 264
+    },
+    {
+      "path": "rubrics/rubric-practical.json",
+      "sha256": "880a988dabd30c1067621ca5323b5c89c13449cbd60ad93b50f850b22f0388dd",
+      "byteLength": 2427
+    },
+    {
+      "path": "rubrics/rubric-structure.json",
+      "sha256": "5547a5b20a403e546c29aed3510cac982f1ab0467ae26de2425fbf97eb19357f",
+      "byteLength": 498
+    },
+    {
+      "path": "rubrics/rubric-types.json",
+      "sha256": "54e559842706662bfb83f63f083e92e3d1d7640c63afdb37da5389b02dd6e03e",
+      "byteLength": 299
+    }
+  ],
+  "privatePrefixes": [
+    "assessments/private/",
+    "assessments/diagnostic/private/",
+    "assessments/quiz-fallback/private/",
+    "datasets/private/",
+    "rubrics/",
+    "reference-solutions/"
+  ],
+  "ownerAuditRequirement": "Private asset bodies are excluded from ordinary transport ZIPs, but must be supplied in a responsible-person-readable complete audit directory that is bound by this report, the full file manifest and the revision seal.",
+  "prohibitedPublicTokens": [
+    "correctAnswer",
+    "privateAnswerRef",
+    "referenceSolution",
+    "hiddenTest",
+    "rubric",
+    "orders-variant"
+  ],
+  "conclusion": "Public card and quiz assets contain no answer keys, explanations, private answer references, rubrics, hidden-test references, reference solutions, or private CSV identifiers."
+}

@@ -1,0 +1,5 @@
+{
+  "status": "draft",
+  "conflicts": [],
+  "resolutionPolicy": "Record both locators and mark pending_owner_decision; B must not adjudicate by convention."
+}

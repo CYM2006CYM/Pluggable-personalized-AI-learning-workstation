@@ -1,0 +1,18 @@
+{
+  "blueprintId": "diagnostic-pandas-cleaning-v2-draft",
+  "profileRevision": 2,
+  "goalIds": ["goal-clean-orders"],
+  "estimatedMinutes": 8,
+  "minimumCoverage": 1,
+  "scoringVersion": "diagnostic-v2-draft",
+  "questions": [
+    {"questionId":"diag-01","knowledgePointId":"basic-python","kind":"single_choice","difficulty":"S-R","prompt":"要查看 DataFrame 的行列数量，应读取哪个属性？","options":["df.shape","df.rows","shape(df)","df.shape()"],"maxScore":1,"required":false,"evaluatorRef":"private/answer-key.json#diag-01","sourceAnchorIds":["src-python-basic-types"]},
+    {"questionId":"diag-02","knowledgePointId":"pandas.clean.read-csv","kind":"single_choice","difficulty":"S-U","prompt":"读取逗号分隔的订单文件后，pandas.read_csv 默认返回什么对象？","options":["DataFrame","字典","字符串","Series 列表"],"maxScore":1,"required":true,"evaluatorRef":"private/answer-key.json#diag-02","sourceAnchorIds":["src-pandas-read-csv"]},
+    {"questionId":"diag-03","knowledgePointId":"pandas.clean.inspect-dataframe","kind":"judgment","difficulty":"S-U","prompt":"在清洗前，检查 columns 和 dtypes 有助于确认字段结构。","maxScore":1,"required":true,"evaluatorRef":"private/answer-key.json#diag-03","sourceAnchorIds":["src-pandas-dtypes"]},
+    {"questionId":"diag-04","knowledgePointId":"pandas.clean.missing-values","kind":"single_choice","difficulty":"M-U","prompt":"order_id 缺失时，按固定订单清洗合同应如何处理该行？","options":["删除该行","将 order_id 填为 0","保留原值","用 customer_id 替代"],"maxScore":1,"required":true,"evaluatorRef":"private/answer-key.json#diag-04","sourceAnchorIds":["src-pandas-missing-data"]},
+    {"questionId":"diag-05","knowledgePointId":"pandas.clean.duplicate-orders","kind":"single_choice","difficulty":"M-A","prompt":"同一 order_id 的两条记录中，仅一条日期可解析时应保留哪条？","options":["日期可解析的记录","原始最后一条","金额最大的记录","任意一条"],"maxScore":1,"required":true,"evaluatorRef":"private/answer-key.json#diag-05","sourceAnchorIds":["src-pandas-duplicates","src-pandas-sort-values"]},
+    {"questionId":"diag-06","knowledgePointId":"pandas.clean.type-format","kind":"single_choice","difficulty":"M-A","prompt":"不符合 YYYY-MM-DD 的订单日期文本应如何处理？","options":["转换为缺失时间值","宽松猜测日期","保留原字符串","删除整行"],"maxScore":1,"required":true,"evaluatorRef":"private/answer-key.json#diag-06","sourceAnchorIds":["src-pandas-to-datetime"]},
+    {"questionId":"diag-07","knowledgePointId":"pandas.clean.validate-result","kind":"judgment","difficulty":"M-A","prompt":"验证 clean_df 时，列序、dtype 和行序都属于需要比较的不变量。","maxScore":1,"required":true,"evaluatorRef":"private/answer-key.json#diag-07","sourceAnchorIds":["src-pandas-testing"]},
+    {"questionId":"diag-08","knowledgePointId":"pandas.clean.validate-result","kind":"single_choice","difficulty":"C-A","prompt":"为比较两个清洗结果而重置索引后，仍必须保持什么不变量？","options":["被选记录的相对行序","按 order_id 排序","所有空值填零","金额改为字符串"],"maxScore":1,"required":false,"evaluatorRef":"private/answer-key.json#diag-08","sourceAnchorIds":["src-pandas-testing"]}
+  ]
+}

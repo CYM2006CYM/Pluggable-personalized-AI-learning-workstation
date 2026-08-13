@@ -1,0 +1,25 @@
+order_id,customer_id,amount,city,order_date,status,note
+ V101 , VC01 ,"¥10",上海市,2026-02-01,completed,首条
+V102,VC02,20,沪,2026-02-02,pending,
+V103,VC03,invalid,北京市,2026-02-03,cancelled,非法金额
+V104,VC04,40,京,2026/02/04,completed,非法日期
+V105,,50,广州市,2026-02-05,pending,客户缺失
+,VC06,60,穗,2026-02-06,completed,删除主键缺失
+V107,VC07,70,深圳,2026-02-07,other,非法状态
+V108,VC08,80,上海,2026-02-08,completed,未知别名保留
+V109,VC09,"￥90",北京市,2026-02-09,pending,货币
+V110,VC10,100,京,bad-date,cancelled,日期失败
+V111,VC11,110,上海市,2026-02-10,pending,旧
+V111,VC11,111,沪,2026-02-11,completed,新
+V112,VC12,120,广州市,not-a-date,pending,平局首条
+V112,VC12,121,穗,also-bad,cancelled,平局第二条
+V113,VC13,130,未知城,2026-02-12,completed,未知城市
+V114,VC14,Infinity,北京市,2026-02-13,pending,无穷
+V115,VC15,150,京,2026-02-14, completed ,空格
+V116,VC16,160,广州,2026-02-15,pending,
+V117,VC17,170,上海市,2026-02-16,cancelled,稳定
+V118,VC18,180,沪,2026-02-17,pending,末尾
+V119,VC19,190,北京市,2026-02-18,completed,补充
+V120,VC20,200,广州市,2026-02-19,pending,补充
+V121,VC21,210,穗,2026-02-20,cancelled,补充
+V122,VC22,220,京,2026-02-21,completed,补充

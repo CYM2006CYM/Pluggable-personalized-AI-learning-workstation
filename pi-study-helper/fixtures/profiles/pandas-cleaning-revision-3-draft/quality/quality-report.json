@@ -1,0 +1,30 @@
+{
+  "status": "candidate",
+  "approval": "pending_owner_decision",
+  "cidpp": {
+    "clarity": "pending_human_review",
+    "completeness": "candidate_complete",
+    "depth": "pending_human_review",
+    "practicality": "pending_human_review",
+    "specificity": "pending_human_review"
+  },
+  "gates": {
+    "profileSchema": "candidate_validated_by_formal_a_schema_entrypoint",
+    "crossFileClosure": "candidate_validated_by_w4_b_script",
+    "sourceApproval": "pending_owner_decision",
+    "datasetApproval": "inherited_revision_2_frozen_asset",
+    "environmentLock": "inherited_revision_2_frozen_asset",
+    "privateAssetIsolation": "candidate_validated_by_w4_b_script",
+    "revision2Immutability": "candidate_validated_by_w4_b_script",
+    "revisionSeal": "candidate_generated_and_independently_recomputed"
+  },
+  "artifacts": {
+    "coverageMatrix": "quality/w4-b-coverage-matrix.json",
+    "answerIsolation": "quality/w4-b-answer-isolation-report.json",
+    "revision2Immutability": "quality/w4-b-revision-2-immutability.json",
+    "assetInventory": "quality/w4-b-asset-inventory.json",
+    "revisionSeal": "quality/revision-seal.json"
+  },
+  "activeEligible": false,
+  "deliveryState": "NOT_COMMITTED_NOT_PUSHED_UPLOAD_LOCK_NOT_REQUESTED"
+}

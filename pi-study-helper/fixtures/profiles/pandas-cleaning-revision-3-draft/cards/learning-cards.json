@@ -1,0 +1,110 @@
+{
+  "cards": [
+    {
+      "cardId": "card-w4-read-csv",
+      "knowledgePointId": "pandas.clean.read-csv",
+      "title": "读取 CSV：先确认表格对象与解析边界",
+      "objective": "能用 pandas.read_csv 将订单 CSV 读成 DataFrame，并在清洗前检查输入是否符合预期。",
+      "explanation": [
+        "read_csv 的默认结果是二维表 DataFrame；列名来自文件首行。",
+        "读取只是把文本解析成表，不等于数据已经干净或类型已经正确。",
+        "清洗流程应把文件路径、分隔符和缺失值规则作为明确输入，而不是依赖猜测。"
+      ],
+      "example": "import pandas as pd\norders = pd.read_csv('orders.csv')\nprint(orders.head())",
+      "commonMistake": "把 read_csv 的结果当作字典或 Series 列表，或读取后跳过结构检查直接进行去重。",
+      "sourceAnchorIds": [
+        "src-pandas-read-csv"
+      ],
+      "estimatedMinutes": 8
+    },
+    {
+      "cardId": "card-w4-inspect-dataframe",
+      "knowledgePointId": "pandas.clean.inspect-dataframe",
+      "title": "检查 DataFrame：先看列、类型和缺失概况",
+      "objective": "能在转换前检查列集合、列顺序、dtype 与缺失情况，并据此决定后续清洗步骤。",
+      "explanation": [
+        "columns 用于确认列名和顺序；dtypes 用于确认每列当前的表示方式。",
+        "shape 只说明行列数，不能替代对列名、类型和缺失的检查。",
+        "检查应发生在会改变数据的操作之前，避免把结构错误误判为清洗结果。"
+      ],
+      "example": "expected = ['order_id', 'customer_id', 'amount', 'order_date', 'city', 'status', 'note']\nassert list(df.columns) == expected\nprint(df.dtypes)\nprint(df.isna().sum())",
+      "commonMistake": "只看前几行样例，未检查 dtype 或固定列序，就假定输入符合合同。",
+      "sourceAnchorIds": [
+        "src-pandas-dtypes"
+      ],
+      "estimatedMinutes": 10
+    },
+    {
+      "cardId": "card-w4-missing-values",
+      "knowledgePointId": "pandas.clean.missing-values",
+      "title": "处理缺失值：按字段业务语义行动",
+      "objective": "能区分关键标识、可选备注和需要转换的字段，采用明确且可复现的缺失处理规则。",
+      "explanation": [
+        "缺失值不是统一删除的信号；应先区分哪一列决定记录是否可用。",
+        "检测缺失时使用 pandas 的 isna/notna 语义，避免把空字符串、NaN 与 None 混为一谈。",
+        "先删除无法识别订单的记录，再对保留字段做后续类型和格式处理。"
+      ],
+      "example": "clean_df = df.dropna(subset=['order_id']).copy()\nmissing_amount = clean_df['amount'].isna()",
+      "commonMistake": "对整个 DataFrame 调用 dropna，意外删除仅缺少备注但仍应保留的订单。",
+      "sourceAnchorIds": [
+        "src-pandas-missing-data"
+      ],
+      "estimatedMinutes": 12
+    },
+    {
+      "cardId": "card-w4-duplicate-orders",
+      "knowledgePointId": "pandas.clean.duplicate-orders",
+      "title": "处理重复订单：定义并稳定执行保留规则",
+      "objective": "能按订单标识分组，依据冻结优先级选择一条记录，并保持最终行序可预测。",
+      "explanation": [
+        "去重前必须明确重复键和保留规则；仅用 keep='first' 不能表达全部业务优先级。",
+        "日期可解析性和日期新旧可作为选择依据，原始顺序可作为最终平局规则。",
+        "排序和去重后应验证 order_id 唯一，并恢复被选记录的原始相对顺序。"
+      ],
+      "example": "ranked = df.assign(_row=range(len(df))).sort_values(['order_id', '_row'], kind='stable')\nchosen = ranked.drop_duplicates('order_id', keep='first').sort_values('_row')",
+      "commonMistake": "直接 drop_duplicates 而没有说明保留依据，或使用不稳定排序导致同一输入输出不同。",
+      "sourceAnchorIds": [
+        "src-pandas-duplicates",
+        "src-pandas-sort-values"
+      ],
+      "estimatedMinutes": 12
+    },
+    {
+      "cardId": "card-w4-type-format",
+      "knowledgePointId": "pandas.clean.type-format",
+      "title": "规范类型与格式：将文本变成可验证的数据",
+      "objective": "能把金额、日期和字符串列转换为约定 dtype，并对无法解析的值采取明确策略。",
+      "explanation": [
+        "to_numeric 和 to_datetime 可把外部文本转换为可计算类型；错误策略必须显式。",
+        "日期、数值和字符串的格式规范化应在结构和缺失规则明确后进行。",
+        "转换后仍需检查 dtype 与业务取值，而不是仅确认代码未报错。"
+      ],
+      "example": "df['amount'] = pd.to_numeric(df['amount'], errors='coerce')\ndf['order_date'] = pd.to_datetime(df['order_date'], errors='coerce')\ndf['city'] = df['city'].astype('string').str.strip()",
+      "commonMistake": "用 astype(float) 强制转换混杂文本，或忽略解析失败后产生的缺失值。",
+      "sourceAnchorIds": [
+        "src-pandas-to-numeric",
+        "src-pandas-to-datetime",
+        "src-pandas-string"
+      ],
+      "estimatedMinutes": 15
+    },
+    {
+      "cardId": "card-w4-validate-result",
+      "knowledgePointId": "pandas.clean.validate-result",
+      "title": "验证清洗结果：检查不变量而非只看样例",
+      "objective": "能用列、唯一性、缺失、dtype 和行序等不变量验证清洗产物。",
+      "explanation": [
+        "验证针对输出合同：列集合及顺序、order_id 唯一性、关键类型和业务规则。",
+        "断言应给出可定位的失败信息，并将正常结果与预期基线比较。",
+        "测试输入不可信；不要为方便而执行其中携带的代码或加载未授权的私有数据。"
+      ],
+      "example": "assert list(clean_df.columns) == expected\nassert clean_df['order_id'].notna().all()\nassert clean_df['order_id'].is_unique",
+      "commonMistake": "只打印 head() 或只比较行数，把 dtype、列序和重复键问题漏掉。",
+      "sourceAnchorIds": [
+        "src-pandas-testing",
+        "src-python-security"
+      ],
+      "estimatedMinutes": 15
+    }
+  ]
+}

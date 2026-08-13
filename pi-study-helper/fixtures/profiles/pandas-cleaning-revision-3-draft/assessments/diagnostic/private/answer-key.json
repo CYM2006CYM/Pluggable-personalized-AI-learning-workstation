@@ -1,0 +1,14 @@
+{
+  "blueprintId": "diagnostic-pandas-cleaning-v2-draft",
+  "evaluatorVersion": "diagnostic-v2-draft",
+  "answers": [
+    {"questionId":"diag-01","kind":"single_choice","correctAnswer":"df.shape"},
+    {"questionId":"diag-02","kind":"single_choice","correctAnswer":"DataFrame"},
+    {"questionId":"diag-03","kind":"judgment","correctAnswer":true},
+    {"questionId":"diag-04","kind":"single_choice","correctAnswer":"删除该行"},
+    {"questionId":"diag-05","kind":"single_choice","correctAnswer":"日期可解析的记录"},
+    {"questionId":"diag-06","kind":"single_choice","correctAnswer":"转换为缺失时间值"},
+    {"questionId":"diag-07","kind":"judgment","correctAnswer":true},
+    {"questionId":"diag-08","kind":"single_choice","correctAnswer":"被选记录的相对行序"}
+  ]
+}

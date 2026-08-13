@@ -1,0 +1,50 @@
+{
+  "role": "B",
+  "day": "W4-D1-B-3",
+  "contract": "W4-C2/W4-R1",
+  "issues": {
+    "B-R2-01": {
+      "status": "OWNER_EVIDENCE_EXCEPTION_APPROVED",
+      "decision": "50-W4-D1-B历史证据例外裁决与最终整改执行单.md §3.2",
+      "evidence": [
+        "scripts/w4-b-validation/command-results.json",
+        "scripts/w4-b-validation/b-r2-01-stop-report.md",
+        "repository-external W4-D1-B-2-historical-reproduction-logs-v3"
+      ]
+    },
+    "B-R2-02": {
+      "status": "CONFIRMED_CLOSED",
+      "evidence": [
+        "quality/w4-b-coverage-matrix.json",
+        "quality/w4-b-answer-isolation-report.json",
+        "quality/w4-b-asset-inventory.json",
+        "quality/quality-report.json",
+        "quality/revision-seal.json"
+      ],
+      "verifiedBy": ["validate-w4-b-d1.mjs", "verify-a-schema-seal.mjs"]
+    },
+    "B-R3-01": {
+      "status": "CLOSED_BY_COMPLETE_RECORDS",
+      "fixedBy": [
+        "scripts/w4-b-validation/run-remediation-verification.mjs",
+        "scripts/w4-b-validation/build-formal-command-results.mjs",
+        "scripts/w4-b-validation/command-results.json",
+        "../../新版设计文档-重写版/第四周任务/handoff-w4-b-d1.md"
+      ],
+      "verifiedBy": [
+        "node scripts/w2-verification/v2-6-preconditions.mjs --development ../evaluation/personas/development-20.jsonl --final ../evaluation/personas/final-60.jsonl --profile fixtures/profiles/pandas-cleaning-v2-draft",
+        "npm test -- --maxWorkers=1 scripts/w2-verification/v2-6-preconditions.test.mjs",
+        "build-formal-command-results negative-record checks"
+      ]
+    },
+    "B-R3-02": {
+      "status": "CLOSED_BY_FINAL_PACKAGE_SIDECARS",
+      "fixedBy": [
+        "scripts/w4-b-validation/generate-proposed-submit-manifest.mjs",
+        "scripts/w4-b-validation/scope-audit.md",
+        "repository-external W4-D1-B-3 delivery manifest and ZIP sidecars"
+      ],
+      "verifiedBy": ["Get-FileHash <ordinary-zip> -Algorithm SHA256", "Get-FileHash <owner-audit-zip> -Algorithm SHA256", "delivery self-check"]
+    }
+  }
+}

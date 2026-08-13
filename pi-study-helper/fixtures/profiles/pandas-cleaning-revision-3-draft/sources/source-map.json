@@ -1,0 +1,149 @@
+{
+  "status": "draft",
+  "approval": "pending_owner_decision",
+  "sources": [
+    {
+      "sourceId": "src-python-basic-types",
+      "type": "official",
+      "title": "The Python Tutorial: An Informal Introduction to Python",
+      "versionOrAccessDate": "accessed 2026-07-30",
+      "locator": "https://docs.python.org/3/tutorial/introduction.html",
+      "license": "PSF License Version 2",
+      "excerptRange": "Variables, expressions, and basic collection examples used by the remediation card.",
+      "summaryHash": "sha256:067c6fcf8e04266b3c60ff2169d253e36a57c33bc2a5fb2f68ee7cb1a1d6dc47",
+      "knowledgePointIds": [
+        "basic-python"
+      ]
+    },
+    {
+      "sourceId": "src-pandas-read-csv",
+      "type": "official",
+      "title": "pandas.read_csv API reference",
+      "versionOrAccessDate": "accessed 2026-07-30",
+      "locator": "https://pandas.pydata.org/docs/reference/api/pandas.read_csv.html",
+      "license": "BSD-3-Clause",
+      "excerptRange": "Input parsing parameters and DataFrame return semantics.",
+      "summaryHash": "sha256:60642ed8366be383cc2eeaaa2eec5d9c6a10a2f6cb159a36ebff800de1a84f3f",
+      "knowledgePointIds": [
+        "pandas.clean.read-csv"
+      ]
+    },
+    {
+      "sourceId": "src-pandas-dtypes",
+      "type": "official",
+      "title": "Pandas user guide: Basics / dtypes",
+      "versionOrAccessDate": "accessed 2026-07-30",
+      "locator": "https://pandas.pydata.org/docs/user_guide/basics.html#dtypes",
+      "license": "BSD-3-Clause",
+      "excerptRange": "DataFrame shape, columns, and dtype inspection.",
+      "summaryHash": "sha256:d79105709178a7e350ab87b8ca8921dec7178f12cd48f84e005425048aaa99ac",
+      "knowledgePointIds": [
+        "pandas.clean.inspect-dataframe"
+      ]
+    },
+    {
+      "sourceId": "src-pandas-missing-data",
+      "type": "official",
+      "title": "Pandas user guide: Working with missing data",
+      "versionOrAccessDate": "accessed 2026-07-30",
+      "locator": "https://pandas.pydata.org/docs/user_guide/missing_data.html",
+      "license": "BSD-3-Clause",
+      "excerptRange": "Missing-value detection and the semantics of dropping or preserving values.",
+      "summaryHash": "sha256:d087dbfdc8b6438d603b0499bd6339667218f55e8ddc4af4cf5576280a52a1c5",
+      "knowledgePointIds": [
+        "pandas.clean.missing-values"
+      ]
+    },
+    {
+      "sourceId": "src-pandas-duplicates",
+      "type": "official",
+      "title": "DataFrame.drop_duplicates API reference",
+      "versionOrAccessDate": "accessed 2026-07-30",
+      "locator": "https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.drop_duplicates.html",
+      "license": "BSD-3-Clause",
+      "excerptRange": "Duplicate-row selection semantics.",
+      "summaryHash": "sha256:adbf2ea9b44967441a47f67b7a52edc18edd81b8af9f8af91dfeadba6ba2184e",
+      "knowledgePointIds": [
+        "pandas.clean.duplicate-orders"
+      ]
+    },
+    {
+      "sourceId": "src-pandas-sort-values",
+      "type": "official",
+      "title": "DataFrame.sort_values API reference",
+      "versionOrAccessDate": "accessed 2026-07-30",
+      "locator": "https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.sort_values.html",
+      "license": "BSD-3-Clause",
+      "excerptRange": "Stable sorting and missing-value placement needed for deterministic duplicate selection.",
+      "summaryHash": "sha256:10f07bc4b1692530cececea48af2ba2648f0b21e4440a17a871d8c618e8c9ec8",
+      "knowledgePointIds": [
+        "pandas.clean.duplicate-orders"
+      ]
+    },
+    {
+      "sourceId": "src-pandas-to-numeric",
+      "type": "official",
+      "title": "pandas.to_numeric API reference",
+      "versionOrAccessDate": "accessed 2026-07-30",
+      "locator": "https://pandas.pydata.org/docs/reference/api/pandas.to_numeric.html",
+      "license": "BSD-3-Clause",
+      "excerptRange": "Numeric conversion and invalid-value coercion.",
+      "summaryHash": "sha256:43c81c25e76d9768d8e5ccb5922e01b3e1fea780018c518d0612e22fc4510e50",
+      "knowledgePointIds": [
+        "pandas.clean.type-format"
+      ]
+    },
+    {
+      "sourceId": "src-pandas-to-datetime",
+      "type": "official",
+      "title": "pandas.to_datetime API reference",
+      "versionOrAccessDate": "accessed 2026-07-30",
+      "locator": "https://pandas.pydata.org/docs/reference/api/pandas.to_datetime.html",
+      "license": "BSD-3-Clause",
+      "excerptRange": "Datetime conversion and invalid-value handling.",
+      "summaryHash": "sha256:79d627628ae73ee431b1c30c3b8b182d9a643831754a739322a2523137285d55",
+      "knowledgePointIds": [
+        "pandas.clean.type-format"
+      ]
+    },
+    {
+      "sourceId": "src-pandas-string",
+      "type": "official",
+      "title": "Pandas user guide: Working with text data",
+      "versionOrAccessDate": "accessed 2026-07-30",
+      "locator": "https://pandas.pydata.org/docs/user_guide/text.html",
+      "license": "BSD-3-Clause",
+      "excerptRange": "StringDtype and vectorized string operations.",
+      "summaryHash": "sha256:8a7d46da159e71cf227048621b8de1f36be28a0d3a8c01ee613928c29e81d528",
+      "knowledgePointIds": [
+        "pandas.clean.type-format"
+      ]
+    },
+    {
+      "sourceId": "src-pandas-testing",
+      "type": "official",
+      "title": "pandas.testing.assert_frame_equal API reference",
+      "versionOrAccessDate": "accessed 2026-07-30",
+      "locator": "https://pandas.pydata.org/docs/reference/api/pandas.testing.assert_frame_equal.html",
+      "license": "BSD-3-Clause",
+      "excerptRange": "DataFrame comparison, column order, dtype, and tolerance checks.",
+      "summaryHash": "sha256:abb24a92d205f51c60792b548923f652a70689a4b1506f269ce185ebe85bc345",
+      "knowledgePointIds": [
+        "pandas.clean.validate-result"
+      ]
+    },
+    {
+      "sourceId": "src-python-security",
+      "type": "official",
+      "title": "Python security considerations",
+      "versionOrAccessDate": "accessed 2026-07-30",
+      "locator": "https://docs.python.org/3/library/security_warnings.html",
+      "license": "PSF License Version 2",
+      "excerptRange": "Safe execution boundaries for reproducible exercise code.",
+      "summaryHash": "sha256:07adfafdc68126ec59fbf7885295de660df159a6af81e357652a199d355b9dec",
+      "knowledgePointIds": [
+        "pandas.clean.validate-result"
+      ]
+    }
+  ]
+}

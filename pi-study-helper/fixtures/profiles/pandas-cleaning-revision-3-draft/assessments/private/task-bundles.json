@@ -1,0 +1,892 @@
+{
+  "schemaVersion": 1,
+  "status": "draft",
+  "hashAlgorithm": {
+    "name": "sha256",
+    "canonicalization": "utf8-json-keys-sorted-arrays-preserved-no-whitespace-v1",
+    "excludes": [
+      "assetBundleHash"
+    ],
+    "additionalInputs": [
+      "resolved datasets/fixtures.json entries referenced by activity.datasetRefs"
+    ]
+  },
+  "bundles": [
+    {
+      "bundleId": "bundle-act-inspect-dataframe-v2",
+      "source": "profile_fixed",
+      "activity": {
+        "activityId": "act-inspect-dataframe",
+        "profileRevision": 2,
+        "kind": "code_completion",
+        "allowedSources": [
+          "profile_fixed"
+        ],
+        "primaryKnowledgePointId": "pandas.clean.inspect-dataframe",
+        "supportingKnowledgePointIds": [
+          "pandas.clean.read-csv"
+        ],
+        "goalIds": [
+          "goal-clean-orders"
+        ],
+        "title": "\u8865\u5168\u5217\u7ed3\u6784\u68c0\u67e5",
+        "prompt": "\u8865\u5168\u56fa\u5b9a\u4e03\u5217\u9009\u62e9\u4e0e\u5217\u5e8f\u68c0\u67e5\u6b65\u9aa4\u3002",
+        "difficulty": "S-U",
+        "estimatedMinutes": 15,
+        "sourceAnchorIds": [
+          "src-pandas-dtypes"
+        ],
+        "templateVersion": "2.0.0-draft",
+        "leakagePolicyId": "policy-no-private-assets",
+        "runtimePolicyId": "python-pandas-candidate",
+        "allowedScaffolds": [
+          "hint",
+          "worked_example"
+        ],
+        "starterCode": "def inspect_orders(df):\n    # TODO_BEGIN\n    clean_df = df.copy()\n    # TODO_END\n    return clean_df\n",
+        "editableRegions": [
+          {
+            "regionId": "region-main",
+            "startMarker": "# TODO_BEGIN",
+            "endMarker": "# TODO_END",
+            "required": true,
+            "maxCharacters": 2000
+          }
+        ],
+        "entryPoint": "inspect_orders",
+        "outputContract": "\u8fd4\u56de\u6070\u597d\u4e03\u5217\u4e14\u5217\u5e8f\u56fa\u5b9a\u7684 DataFrame\u3002",
+        "datasetRefs": [
+          "dataset-public-orders"
+        ],
+        "publicTestRefs": [
+          "test-structure-public"
+        ],
+        "hiddenTestRefs": [
+          "test-structure-hidden"
+        ],
+        "rubricRef": "rubric-structure",
+        "referenceSolutionRef": "solution-structure",
+        "knownWrongSolutionRefs": [
+          "wrong-structure"
+        ],
+        "environmentRef": "env-python-pandas-candidate",
+        "allowedLibraries": [
+          "pandas"
+        ]
+      },
+      "contract": {
+        "entryPoint": {
+          "kind": "function",
+          "name": "inspect_orders",
+          "argumentFixtureIds": [
+            "dataset-public-orders"
+          ]
+        },
+        "inputDescription": "\u56fa\u5b9a\u4e03\u5217\u8ba2\u5355DataFrame\uff1b\u6d4b\u8bd5\u53ef\u9644\u52a0\u672a\u58f0\u660e\u5217\u9a8c\u8bc1\u7cbe\u786e\u5217\u9009\u62e9\u3002",
+        "output": {
+          "kind": "dataframe",
+          "comparisonRef": "dfcmp-orders-seven-columns",
+          "includeIndex": false
+        },
+        "outputDescription": "\u8fd4\u56de\u6070\u597d\u4e03\u5217\u4e14\u4e0d\u4fee\u6539\u8f93\u5165\u7684DataFrame\u3002",
+        "invariants": [
+          "\u56fa\u5b9a\u4e03\u5217\u548c\u987a\u5e8f",
+          "\u8f93\u5165DataFrame\u4e0d\u88ab\u4fee\u6539"
+        ],
+        "prohibitedBehaviors": [
+          "\u4fee\u6539\u8f93\u5165DataFrame",
+          "\u5199\u5bbf\u4e3b\u6587\u4ef6",
+          "\u8bbf\u95ee\u7f51\u7edc",
+          "\u8fd0\u884c\u65f6\u5b89\u88c5\u4f9d\u8d56"
+        ]
+      },
+      "publicTests": [
+        {
+          "testId": "test-structure-public",
+          "visibility": "public",
+          "fileRef": "assessments/public/tests/test-structure-public.py",
+          "fixtureRefs": [
+            "dataset-public-orders"
+          ],
+          "dimensionId": "structure",
+          "blocking": true,
+          "assetHash": "sha256:eca54fb129f63799fd2290d2ab13f6d1f0258894357fb656ff68c1e1e02c3ef1"
+        }
+      ],
+      "hiddenTests": [
+        {
+          "testId": "test-structure-hidden",
+          "visibility": "hidden",
+          "fileRef": "assessments/private/tests/test-structure-hidden.py",
+          "fixtureRefs": [
+            "dataset-public-orders"
+          ],
+          "dimensionId": "structure",
+          "blocking": true,
+          "assetHash": "sha256:935f988b1d21ebd927fec8015328599376ca0ce05be593130130c9ede7c4dc4e"
+        }
+      ],
+      "rubric": {
+        "rubricId": "rubric-structure",
+        "version": "1.0.0-draft",
+        "passThreshold": 1.0,
+        "dimensions": [
+          {
+            "dimensionId": "structure",
+            "label": "\u5217\u7ed3\u6784",
+            "weight": 1.0,
+            "scoringMethod": "tests",
+            "blocking": true,
+            "safeFeedbackCodes": [
+              "columns_invalid",
+              "column_order_invalid",
+              "input_mutated"
+            ]
+          }
+        ],
+        "dimensionTestMap": {
+          "structure": [
+            "test-structure-public",
+            "test-structure-hidden"
+          ]
+        }
+      },
+      "environmentRef": "env-python-pandas-candidate",
+      "assetBundleHash": "bcc38620bdacede9d690ee62efbedaf8f0aee8dabaa55e9b7ca5b2452d29905c"
+    },
+    {
+      "bundleId": "bundle-act-missing-v2",
+      "source": "profile_fixed",
+      "activity": {
+        "activityId": "act-missing",
+        "profileRevision": 2,
+        "kind": "code_completion",
+        "allowedSources": [
+          "profile_fixed"
+        ],
+        "primaryKnowledgePointId": "pandas.clean.missing-values",
+        "supportingKnowledgePointIds": [
+          "pandas.clean.inspect-dataframe"
+        ],
+        "goalIds": [
+          "goal-clean-orders"
+        ],
+        "title": "\u8865\u5168\u6309\u5217\u7f3a\u5931\u5904\u7406",
+        "prompt": "\u6309\u51bb\u7ed3\u89c4\u5219\u5904\u7406 order_id\u3001customer_id\u3001amount\u3001order_date \u548c note \u7f3a\u5931\u3002",
+        "difficulty": "M-U",
+        "estimatedMinutes": 20,
+        "sourceAnchorIds": [
+          "src-pandas-missing-data"
+        ],
+        "templateVersion": "2.0.0-draft",
+        "leakagePolicyId": "policy-no-private-assets",
+        "runtimePolicyId": "python-pandas-candidate",
+        "allowedScaffolds": [
+          "hint",
+          "worked_example"
+        ],
+        "starterCode": "def clean_missing(df):\n    clean_df = df.copy()\n    # TODO_BEGIN\n    pass\n    # TODO_END\n    return clean_df\n",
+        "editableRegions": [
+          {
+            "regionId": "region-main",
+            "startMarker": "# TODO_BEGIN",
+            "endMarker": "# TODO_END",
+            "required": true,
+            "maxCharacters": 3000
+          }
+        ],
+        "entryPoint": "clean_missing",
+        "outputContract": "\u4ec5\u7f3a\u5931 order_id \u5220\u9664\u884c\uff0c\u5176\u4f59\u5217\u6309\u5408\u540c\u4fdd\u7559\u6216\u8f6c\u6362\u3002",
+        "datasetRefs": [
+          "dataset-public-orders"
+        ],
+        "publicTestRefs": [
+          "test-missing-public"
+        ],
+        "hiddenTestRefs": [
+          "test-missing-hidden"
+        ],
+        "rubricRef": "rubric-missing",
+        "referenceSolutionRef": "solution-missing",
+        "knownWrongSolutionRefs": [
+          "wrong-missing"
+        ],
+        "environmentRef": "env-python-pandas-candidate",
+        "allowedLibraries": [
+          "pandas"
+        ]
+      },
+      "contract": {
+        "entryPoint": {
+          "kind": "function",
+          "name": "clean_missing",
+          "argumentFixtureIds": [
+            "dataset-public-orders"
+          ]
+        },
+        "inputDescription": "\u56fa\u5b9a\u4e03\u5217\u8ba2\u5355DataFrame\uff0c\u5305\u542b\u4e3b\u952e\u3001\u5ba2\u6237\u3001\u91d1\u989d\u3001\u65e5\u671f\u548c\u5907\u6ce8\u7f3a\u5931\u6837\u4f8b\u3002",
+        "output": {
+          "kind": "dataframe",
+          "comparisonRef": "dfcmp-orders-missing",
+          "includeIndex": false
+        },
+        "outputDescription": "\u4ec5\u5220\u9664\u7f3a\u5931order_id\u884c\uff0c\u4fdd\u7559\u5ba2\u6237\u7f3a\u5931\u5e76\u5c06note\u7f3a\u5931\u53d8\u4e3a\u7a7a\u5b57\u7b26\u4e32\u3002",
+        "invariants": [
+          "order_id\u975e\u7a7a",
+          "customer_id\u7f3a\u5931\u884c\u4fdd\u7559",
+          "note\u65e0\u7f3a\u5931"
+        ],
+        "prohibitedBehaviors": [
+          "\u4fee\u6539\u8f93\u5165DataFrame",
+          "\u5220\u9664\u975eorder_id\u7f3a\u5931\u884c",
+          "\u5199\u5bbf\u4e3b\u6587\u4ef6",
+          "\u8bbf\u95ee\u7f51\u7edc"
+        ]
+      },
+      "publicTests": [
+        {
+          "testId": "test-missing-public",
+          "visibility": "public",
+          "fileRef": "assessments/public/tests/test-missing-public.py",
+          "fixtureRefs": [
+            "dataset-public-orders"
+          ],
+          "dimensionId": "missing",
+          "blocking": true,
+          "assetHash": "sha256:2dc5a6f931e45fbeeff890cd122aa3a5f52a42251228f1beb5a9f660a77ff1e2"
+        }
+      ],
+      "hiddenTests": [
+        {
+          "testId": "test-missing-hidden",
+          "visibility": "hidden",
+          "fileRef": "assessments/private/tests/test-missing-hidden.py",
+          "fixtureRefs": [
+            "dataset-public-orders"
+          ],
+          "dimensionId": "missing",
+          "blocking": true,
+          "assetHash": "sha256:8d798c0cecd733579901a04630dbcdcb0333efaef731568467dda003abaa3e0f"
+        }
+      ],
+      "rubric": {
+        "rubricId": "rubric-missing",
+        "version": "1.0.0-draft",
+        "passThreshold": 1,
+        "dimensions": [
+          {
+            "dimensionId": "missing",
+            "label": "\u7f3a\u5931\u5904\u7406",
+            "weight": 1,
+            "scoringMethod": "tests",
+            "blocking": true,
+            "safeFeedbackCodes": [
+              "order_id_missing",
+              "column_missing_policy_invalid"
+            ]
+          }
+        ]
+      },
+      "environmentRef": "env-python-pandas-candidate",
+      "assetBundleHash": "ae22167b89402d4efb9541cf21745d5db71f6b5ce0d336df19b5aec1eaf51356"
+    },
+    {
+      "bundleId": "bundle-act-duplicates-v2",
+      "source": "profile_fixed",
+      "activity": {
+        "activityId": "act-duplicates",
+        "profileRevision": 2,
+        "kind": "code_completion",
+        "allowedSources": [
+          "profile_fixed"
+        ],
+        "primaryKnowledgePointId": "pandas.clean.duplicate-orders",
+        "supportingKnowledgePointIds": [
+          "pandas.clean.inspect-dataframe"
+        ],
+        "goalIds": [
+          "goal-clean-orders"
+        ],
+        "title": "\u8865\u5168\u7a33\u5b9a\u53bb\u91cd",
+        "prompt": "\u6309\u53ef\u89e3\u6790\u65e5\u671f\u3001\u6700\u65b0\u65e5\u671f\u3001\u539f\u59cb\u7b2c\u4e00\u6761\u7684\u56fa\u5b9a\u4f18\u5148\u7ea7\u9009\u62e9\u91cd\u590d\u8ba2\u5355\u3002",
+        "difficulty": "M-A",
+        "estimatedMinutes": 25,
+        "sourceAnchorIds": [
+          "src-pandas-duplicates",
+          "src-pandas-sort-values"
+        ],
+        "templateVersion": "2.0.0-draft",
+        "leakagePolicyId": "policy-no-private-assets",
+        "runtimePolicyId": "python-pandas-candidate",
+        "allowedScaffolds": [
+          "hint",
+          "worked_example"
+        ],
+        "starterCode": "def deduplicate_orders(df):\n    clean_df = df.copy()\n    # TODO_BEGIN\n    pass\n    # TODO_END\n    return clean_df\n",
+        "editableRegions": [
+          {
+            "regionId": "region-main",
+            "startMarker": "# TODO_BEGIN",
+            "endMarker": "# TODO_END",
+            "required": true,
+            "maxCharacters": 4000
+          }
+        ],
+        "entryPoint": "deduplicate_orders",
+        "outputContract": "order_id \u552f\u4e00\u4e14\u4fdd\u7559\u88ab\u9009\u8bb0\u5f55\u7684\u539f\u59cb\u76f8\u5bf9\u987a\u5e8f\u3002",
+        "datasetRefs": [
+          "dataset-public-orders"
+        ],
+        "publicTestRefs": [
+          "test-duplicates-public"
+        ],
+        "hiddenTestRefs": [
+          "test-duplicates-hidden"
+        ],
+        "rubricRef": "rubric-duplicates",
+        "referenceSolutionRef": "solution-duplicates",
+        "knownWrongSolutionRefs": [
+          "wrong-duplicates"
+        ],
+        "environmentRef": "env-python-pandas-candidate",
+        "allowedLibraries": [
+          "pandas"
+        ]
+      },
+      "contract": {
+        "entryPoint": {
+          "kind": "function",
+          "name": "deduplicate_orders",
+          "argumentFixtureIds": [
+            "dataset-public-orders"
+          ]
+        },
+        "inputDescription": "\u56fa\u5b9a\u4e03\u5217\u8ba2\u5355DataFrame\uff0c\u542b\u53ef\u89e3\u6790\u65e5\u671f\u3001\u4e0d\u53ef\u89e3\u6790\u65e5\u671f\u548c\u540c\u65e5\u91cd\u590d\u5206\u652f\u3002",
+        "output": {
+          "kind": "dataframe",
+          "comparisonRef": "dfcmp-orders-deduplicated",
+          "includeIndex": false
+        },
+        "outputDescription": "\u6309\u51bb\u7ed3\u4f18\u5148\u7ea7\u9009\u62e9\u552f\u4e00order_id\u5e76\u4fdd\u6301\u88ab\u9009\u8bb0\u5f55\u539f\u59cb\u76f8\u5bf9\u987a\u5e8f\u3002",
+        "invariants": [
+          "order_id\u552f\u4e00",
+          "\u53ef\u89e3\u6790\u4e14\u8f83\u65b0\u65e5\u671f\u4f18\u5148",
+          "\u5e73\u5c40\u4fdd\u7559\u539f\u59cb\u7b2c\u4e00\u6761",
+          "\u88ab\u9009\u8bb0\u5f55\u539f\u59cb\u76f8\u5bf9\u987a\u5e8f\u4e0d\u53d8"
+        ],
+        "prohibitedBehaviors": [
+          "\u4fee\u6539\u8f93\u5165DataFrame",
+          "\u6309order_id\u91cd\u6392\u6700\u7ec8\u7ed3\u679c",
+          "\u5199\u5bbf\u4e3b\u6587\u4ef6",
+          "\u8bbf\u95ee\u7f51\u7edc"
+        ]
+      },
+      "publicTests": [
+        {
+          "testId": "test-duplicates-public",
+          "visibility": "public",
+          "fileRef": "assessments/public/tests/test-duplicates-public.py",
+          "fixtureRefs": [
+            "dataset-public-orders"
+          ],
+          "dimensionId": "duplicates",
+          "blocking": true,
+          "assetHash": "sha256:f494513463a02d3168a66d9bd5c312fbc50fcdec89b2a7c20a1cfb4f64bde7f1"
+        }
+      ],
+      "hiddenTests": [
+        {
+          "testId": "test-duplicates-hidden",
+          "visibility": "hidden",
+          "fileRef": "assessments/private/tests/test-duplicates-hidden.py",
+          "fixtureRefs": [
+            "dataset-public-orders"
+          ],
+          "dimensionId": "duplicates",
+          "blocking": true,
+          "assetHash": "sha256:7f9449a3e924c734314649ffd056465ce19e3971e15b9a806c928360472b3be3"
+        }
+      ],
+      "rubric": {
+        "rubricId": "rubric-duplicates",
+        "version": "1.0.0-draft",
+        "passThreshold": 1,
+        "dimensions": [
+          {
+            "dimensionId": "duplicates",
+            "label": "\u91cd\u590d\u5904\u7406",
+            "weight": 1,
+            "scoringMethod": "tests",
+            "blocking": true,
+            "safeFeedbackCodes": [
+              "duplicate_order_id",
+              "duplicate_selection_invalid",
+              "row_order_invalid"
+            ]
+          }
+        ]
+      },
+      "environmentRef": "env-python-pandas-candidate",
+      "assetBundleHash": "51d185bff1a5c7c0180f1df98f8e65cabe8661e5ceb6f18100a859931ae8d990"
+    },
+    {
+      "bundleId": "bundle-act-types-v2",
+      "source": "profile_fixed",
+      "activity": {
+        "activityId": "act-types",
+        "profileRevision": 2,
+        "kind": "code_completion",
+        "allowedSources": [
+          "profile_fixed"
+        ],
+        "primaryKnowledgePointId": "pandas.clean.type-format",
+        "supportingKnowledgePointIds": [
+          "pandas.clean.missing-values"
+        ],
+        "goalIds": [
+          "goal-clean-orders"
+        ],
+        "title": "\u8865\u5168\u7c7b\u578b\u548c\u683c\u5f0f\u89c4\u8303\u5316",
+        "prompt": "\u89c4\u8303\u91d1\u989d\u3001\u57ce\u5e02\u3001\u65e5\u671f\u3001\u72b6\u6001\u4e0e\u5b57\u7b26\u4e32\u5217\u3002",
+        "difficulty": "M-A",
+        "estimatedMinutes": 30,
+        "sourceAnchorIds": [
+          "src-pandas-to-numeric",
+          "src-pandas-to-datetime",
+          "src-pandas-string"
+        ],
+        "templateVersion": "2.0.0-draft",
+        "leakagePolicyId": "policy-no-private-assets",
+        "runtimePolicyId": "python-pandas-candidate",
+        "allowedScaffolds": [
+          "hint",
+          "worked_example"
+        ],
+        "starterCode": "def normalize_types(df):\n    clean_df = df.copy()\n    # TODO_BEGIN\n    pass\n    # TODO_END\n    return clean_df\n",
+        "editableRegions": [
+          {
+            "regionId": "region-main",
+            "startMarker": "# TODO_BEGIN",
+            "endMarker": "# TODO_END",
+            "required": true,
+            "maxCharacters": 5000
+          }
+        ],
+        "entryPoint": "normalize_types",
+        "outputContract": "\u91d1\u989d\u4e3a\u6570\u503c\u3001\u65e5\u671f\u65e0\u65f6\u533a\u3001\u5b57\u7b26\u4e32\u4e3a StringDtype \u4e14\u4e1a\u52a1\u53d6\u503c\u5408\u6cd5\u3002",
+        "datasetRefs": [
+          "dataset-public-orders"
+        ],
+        "publicTestRefs": [
+          "test-types-public"
+        ],
+        "hiddenTestRefs": [
+          "test-types-hidden"
+        ],
+        "rubricRef": "rubric-types",
+        "referenceSolutionRef": "solution-types",
+        "knownWrongSolutionRefs": [
+          "wrong-types"
+        ],
+        "environmentRef": "env-python-pandas-candidate",
+        "allowedLibraries": [
+          "pandas"
+        ]
+      },
+      "contract": {
+        "entryPoint": {
+          "kind": "function",
+          "name": "normalize_types",
+          "argumentFixtureIds": [
+            "dataset-public-orders"
+          ]
+        },
+        "inputDescription": "\u56fa\u5b9a\u4e03\u5217\u8ba2\u5355DataFrame\uff0c\u5305\u542b\u91d1\u989d\u3001\u57ce\u5e02\u3001\u65e5\u671f\u3001\u72b6\u6001\u548c\u5b57\u7b26\u4e32\u5f02\u5e38\u3002",
+        "output": {
+          "kind": "dataframe",
+          "comparisonRef": "dfcmp-orders-types",
+          "includeIndex": false
+        },
+        "outputDescription": "\u8fd4\u56de\u91d1\u989d\u6570\u503c\u5316\u3001\u65e5\u671f\u65e0\u65f6\u533a\u3001\u5b57\u7b26\u4e32\u4e3aPandas StringDtype\u7684DataFrame\u3002",
+        "invariants": [
+          "\u975e\u6cd5\u7a7a\u503c\u548c\u65e0\u7a77\u91d1\u989d\u8f6c\u7f3a\u5931",
+          "\u975eYYYY-MM-DD\u65e5\u671f\u8f6c\u7f3a\u5931",
+          "\u516d\u9879\u57ce\u5e02\u6620\u5c04\u751f\u6548",
+          "\u672a\u77e5\u57ce\u5e02\u4fdd\u7559",
+          "\u72b6\u6001\u4ec5\u9650\u51bb\u7ed3\u96c6\u5408",
+          "\u5b57\u7b26\u4e32\u5217\u4f7f\u7528StringDtype"
+        ],
+        "prohibitedBehaviors": [
+          "\u4fee\u6539\u8f93\u5165DataFrame",
+          "\u65b0\u589e\u672a\u6279\u51c6\u57ce\u5e02\u6620\u5c04",
+          "\u5bbd\u677e\u89e3\u6790\u975e\u6807\u51c6\u65e5\u671f",
+          "\u5199\u5bbf\u4e3b\u6587\u4ef6",
+          "\u8bbf\u95ee\u7f51\u7edc"
+        ]
+      },
+      "publicTests": [
+        {
+          "testId": "test-types-public",
+          "visibility": "public",
+          "fileRef": "assessments/public/tests/test-types-public.py",
+          "fixtureRefs": [
+            "dataset-public-orders"
+          ],
+          "dimensionId": "types",
+          "blocking": true,
+          "assetHash": "sha256:b995f2e36844821afb1d30ba4d3efae72732072a0a0d3f7985056955e40748e6"
+        }
+      ],
+      "hiddenTests": [
+        {
+          "testId": "test-types-hidden",
+          "visibility": "hidden",
+          "fileRef": "assessments/private/tests/test-types-hidden.py",
+          "fixtureRefs": [
+            "dataset-public-orders"
+          ],
+          "dimensionId": "types",
+          "blocking": true,
+          "assetHash": "sha256:b3153bab7097369623ae2d6bfa8eae11f8414646d006030836f07e5e1e3b3285"
+        }
+      ],
+      "rubric": {
+        "rubricId": "rubric-types",
+        "version": "1.0.0-draft",
+        "passThreshold": 1,
+        "dimensions": [
+          {
+            "dimensionId": "types",
+            "label": "\u7c7b\u578b\u4e0e\u683c\u5f0f",
+            "weight": 1,
+            "scoringMethod": "tests",
+            "blocking": true,
+            "safeFeedbackCodes": [
+              "amount_invalid",
+              "date_invalid",
+              "city_invalid",
+              "status_invalid",
+              "string_dtype_invalid"
+            ]
+          }
+        ]
+      },
+      "environmentRef": "env-python-pandas-candidate",
+      "assetBundleHash": "ea8565b66ad4afb4927714a8937379343d3382e9cd84c3635d1b5553f48ae968"
+    },
+    {
+      "bundleId": "bundle-act-practical-v2",
+      "source": "profile_fixed",
+      "activity": {
+        "activityId": "act-practical",
+        "profileRevision": 2,
+        "kind": "coding_practical",
+        "allowedSources": [
+          "profile_fixed"
+        ],
+        "primaryKnowledgePointId": "pandas.clean.validate-result",
+        "supportingKnowledgePointIds": [
+          "pandas.clean.read-csv",
+          "pandas.clean.inspect-dataframe",
+          "pandas.clean.missing-values",
+          "pandas.clean.duplicate-orders",
+          "pandas.clean.type-format"
+        ],
+        "goalIds": [
+          "goal-clean-orders"
+        ],
+        "title": "\u72ec\u7acb\u5b8c\u6210\u8ba2\u5355\u6e05\u6d17",
+        "prompt": "\u5b9e\u73b0 clean_orders \u5e76\u6ee1\u8db3\u5b8c\u6574\u4e03\u5217\u4e1a\u52a1\u5408\u540c\u548c\u7ed3\u679c\u4e0d\u53d8\u91cf\u3002",
+        "difficulty": "C-A",
+        "estimatedMinutes": 60,
+        "sourceAnchorIds": [
+          "src-pandas-read-csv",
+          "src-pandas-missing-data",
+          "src-pandas-duplicates",
+          "src-pandas-to-numeric",
+          "src-pandas-to-datetime",
+          "src-pandas-testing"
+        ],
+        "templateVersion": "2.0.0-draft",
+        "leakagePolicyId": "policy-no-private-assets",
+        "runtimePolicyId": "python-pandas-candidate",
+        "allowedScaffolds": [
+          "none",
+          "hint"
+        ],
+        "starterCode": "def clean_orders(df):\n    # TODO_BEGIN\n    raise NotImplementedError\n    # TODO_END\n",
+        "editableRegions": [
+          {
+            "regionId": "region-main",
+            "startMarker": "# TODO_BEGIN",
+            "endMarker": "# TODO_END",
+            "required": true,
+            "maxCharacters": 8000
+          }
+        ],
+        "entryPoint": "clean_orders",
+        "outputContract": "\u8fd4\u56de\u6ee1\u8db3\u4e03\u5217\u3001\u7f3a\u5931\u3001\u53bb\u91cd\u3001dtype \u4e0e\u884c\u5e8f\u4e0d\u53d8\u91cf\u7684 clean_df\u3002",
+        "datasetRefs": [
+          "dataset-public-orders",
+          "dataset-private-variant-01",
+          "dataset-private-variant-02"
+        ],
+        "publicTestRefs": [
+          "test-practical-public"
+        ],
+        "hiddenTestRefs": [
+          "test-practical-hidden-01",
+          "test-practical-hidden-02",
+          "test-practical-hidden-structure",
+          "test-practical-hidden-missing",
+          "test-practical-hidden-duplicates",
+          "test-practical-hidden-types",
+          "test-practical-engineering-static"
+        ],
+        "rubricRef": "rubric-practical",
+        "referenceSolutionRef": "solution-practical",
+        "knownWrongSolutionRefs": [
+          "wrong-practical"
+        ],
+        "environmentRef": "env-python-pandas-candidate",
+        "allowedLibraries": [
+          "pandas"
+        ],
+        "businessAcceptanceCriteria": [
+          "\u56fa\u5b9a\u4e03\u5217\u548c\u987a\u5e8f",
+          "order_id \u975e\u7a7a\u4e14\u552f\u4e00",
+          "\u91d1\u989d\u548c\u65e5\u671f dtype \u7b26\u5408\u73af\u5883\u9501",
+          "\u5b57\u7b26\u4e32\u5217\u4f7f\u7528 StringDtype",
+          "\u4fdd\u6301\u88ab\u9009\u8bb0\u5f55\u539f\u59cb\u76f8\u5bf9\u987a\u5e8f"
+        ]
+      },
+      "contract": {
+        "entryPoint": {
+          "kind": "function",
+          "name": "clean_orders",
+          "argumentFixtureIds": [
+            "dataset-public-orders",
+            "dataset-private-variant-01",
+            "dataset-private-variant-02"
+          ]
+        },
+        "inputDescription": "\u56fa\u5b9a\u4e03\u5217\u516c\u5f00\u8ba2\u5355\u6570\u636e\u53ca\u4e24\u4efd\u79c1\u6709\u53d8\u4f53\uff0c\u7531\u6d4b\u8bd5fixtureRefs\u51b3\u5b9a\u5f53\u524d\u9636\u6bb5\u8f93\u5165\u3002",
+        "output": {
+          "kind": "dataframe",
+          "comparisonRef": "dfcmp-orders-clean-final",
+          "includeIndex": false
+        },
+        "outputDescription": "\u8fd4\u56de\u6ee1\u8db3\u5b8c\u6574\u4e03\u5217\u4e1a\u52a1\u5408\u540c\u3001dtype\u548c\u884c\u5e8f\u4e0d\u53d8\u91cf\u7684clean_df\u3002",
+        "invariants": [
+          "\u56fa\u5b9a\u4e03\u5217\u548c\u987a\u5e8f",
+          "order_id\u975e\u7a7a\u4e14\u552f\u4e00",
+          "\u91d1\u989d\u4e0e\u65e5\u671f\u9075\u5faa\u51bb\u7ed3\u8f6c\u6362",
+          "\u5b57\u7b26\u4e32\u5217\u4f7f\u7528StringDtype",
+          "\u88ab\u9009\u8bb0\u5f55\u539f\u59cb\u76f8\u5bf9\u987a\u5e8f\u4e0d\u53d8",
+          "\u8f93\u5165DataFrame\u4e0d\u88ab\u4fee\u6539"
+        ],
+        "prohibitedBehaviors": [
+          "\u4fee\u6539\u8f93\u5165DataFrame",
+          "\u5199\u5bbf\u4e3b\u6587\u4ef6",
+          "\u8bbf\u95ee\u7f51\u7edc",
+          "\u542f\u52a8\u5b50\u8fdb\u7a0b",
+          "\u8fd0\u884c\u65f6\u5b89\u88c5\u4f9d\u8d56"
+        ]
+      },
+      "publicTests": [
+        {
+          "testId": "test-practical-public",
+          "visibility": "public",
+          "fileRef": "assessments/public/tests/test-practical-public.py",
+          "fixtureRefs": [
+            "dataset-public-orders"
+          ],
+          "dimensionId": "invariants",
+          "blocking": true,
+          "assetHash": "sha256:acaa0a8141a2d300452dd4bb786376da5b227c339f897325a20e4a359a0b3906"
+        }
+      ],
+      "hiddenTests": [
+        {
+          "testId": "test-practical-hidden-01",
+          "visibility": "hidden",
+          "fileRef": "assessments/private/tests/test-practical-hidden-01.py",
+          "fixtureRefs": [
+            "dataset-private-variant-01"
+          ],
+          "dimensionId": "invariants",
+          "blocking": true,
+          "assetHash": "sha256:6d762bf0059d7fb77368dbcdd42eb810d565e3c593008c8eced76262d7b20829"
+        },
+        {
+          "testId": "test-practical-hidden-02",
+          "visibility": "hidden",
+          "fileRef": "assessments/private/tests/test-practical-hidden-02.py",
+          "fixtureRefs": [
+            "dataset-private-variant-02"
+          ],
+          "dimensionId": "invariants",
+          "blocking": true,
+          "assetHash": "sha256:e501c858969bd6ccefaf21585ad125fc7a26dc9a178b6c09cc52e16137ba5cd1"
+        },
+        {
+          "testId": "test-practical-hidden-structure",
+          "visibility": "hidden",
+          "fileRef": "assessments/private/tests/test-practical-hidden-structure.py",
+          "fixtureRefs": [
+            "dataset-private-variant-02"
+          ],
+          "dimensionId": "structure",
+          "blocking": true,
+          "assetHash": "sha256:8092b3b4fbced655acb2a0fb65d94b84cfe44a197a824271503ebc57ac39e5c3"
+        },
+        {
+          "testId": "test-practical-hidden-missing",
+          "visibility": "hidden",
+          "fileRef": "assessments/private/tests/test-practical-hidden-missing.py",
+          "fixtureRefs": [
+            "dataset-private-variant-02"
+          ],
+          "dimensionId": "missing",
+          "blocking": true,
+          "assetHash": "sha256:4da0a6df601fdad50d4481c6fce02dcc3b7f377c0d1b91a50e8af2b524d452f5"
+        },
+        {
+          "testId": "test-practical-hidden-duplicates",
+          "visibility": "hidden",
+          "fileRef": "assessments/private/tests/test-practical-hidden-duplicates.py",
+          "fixtureRefs": [
+            "dataset-private-variant-02"
+          ],
+          "dimensionId": "duplicates",
+          "blocking": true,
+          "assetHash": "sha256:bceba5a6f97dac2df6929061b0e0590758e0e5edfaf76dfd5c8d9f9e7a0d0566"
+        },
+        {
+          "testId": "test-practical-hidden-types",
+          "visibility": "hidden",
+          "fileRef": "assessments/private/tests/test-practical-hidden-types.py",
+          "fixtureRefs": [
+            "dataset-private-variant-02"
+          ],
+          "dimensionId": "types",
+          "blocking": true,
+          "assetHash": "sha256:a8d5cbe461f3ac525e3a954af39270b0306bf446bdb0baa9c9d7e92b7613ddf6"
+        },
+        {
+          "testId": "test-practical-engineering-static",
+          "visibility": "hidden",
+          "fileRef": "assessments/private/tests/test-practical-engineering-static.py",
+          "fixtureRefs": [
+            "dataset-private-variant-02"
+          ],
+          "dimensionId": "engineering",
+          "blocking": false,
+          "assetHash": "sha256:4482632a8c545b1f9efdaa4558d40fe6e67b4c38ea96486d99c0b92f5c1887d0"
+        }
+      ],
+      "rubric": {
+        "rubricId": "rubric-practical",
+        "version": "1.0.0-draft",
+        "passThreshold": 0.8,
+        "dimensions": [
+          {
+            "dimensionId": "structure",
+            "label": "\u8bfb\u53d6\u4e0e\u5217\u7ed3\u6784",
+            "weight": 0.1,
+            "scoringMethod": "tests",
+            "blocking": true,
+            "safeFeedbackCodes": [
+              "columns_invalid",
+              "column_order_invalid"
+            ]
+          },
+          {
+            "dimensionId": "missing",
+            "label": "\u7f3a\u5931\u5904\u7406",
+            "weight": 0.2,
+            "scoringMethod": "tests",
+            "blocking": true,
+            "safeFeedbackCodes": [
+              "missing_policy_invalid"
+            ]
+          },
+          {
+            "dimensionId": "duplicates",
+            "label": "\u91cd\u590d\u5904\u7406",
+            "weight": 0.15,
+            "scoringMethod": "tests",
+            "blocking": true,
+            "safeFeedbackCodes": [
+              "duplicate_selection_invalid",
+              "row_order_invalid"
+            ]
+          },
+          {
+            "dimensionId": "types",
+            "label": "\u7c7b\u578b\u4e0e\u683c\u5f0f",
+            "weight": 0.25,
+            "scoringMethod": "tests",
+            "blocking": true,
+            "safeFeedbackCodes": [
+              "dtype_invalid",
+              "value_normalization_invalid"
+            ]
+          },
+          {
+            "dimensionId": "invariants",
+            "label": "\u7ed3\u679c\u4e0d\u53d8\u91cf",
+            "weight": 0.2,
+            "scoringMethod": "tests",
+            "blocking": true,
+            "safeFeedbackCodes": [
+              "output_contract_invalid"
+            ]
+          },
+          {
+            "dimensionId": "engineering",
+            "label": "\u53ef\u8bfb\u4e0e\u5b89\u5168",
+            "weight": 0.1,
+            "scoringMethod": "static_check",
+            "blocking": false,
+            "safeFeedbackCodes": [
+              "unsafe_operation",
+              "readability_improvement"
+            ],
+            "staticCheckRef": "assessments/private/tests/test-practical-engineering-static.py",
+            "staticCheckRules": [
+              "AST parse must succeed",
+              "imports and import aliases for forbidden modules are rejected",
+              "eval/exec/open and their aliases are rejected",
+              "file, process, and network calls are rejected"
+            ]
+          }
+        ],
+        "dimensionTestMap": {
+          "invariants": [
+            "test-practical-public",
+            "test-practical-hidden-01",
+            "test-practical-hidden-02"
+          ],
+          "structure": [
+            "test-practical-hidden-structure"
+          ],
+          "missing": [
+            "test-practical-hidden-missing"
+          ],
+          "duplicates": [
+            "test-practical-hidden-duplicates"
+          ],
+          "types": [
+            "test-practical-hidden-types"
+          ],
+          "engineering": [
+            "test-practical-engineering-static"
+          ]
+        }
+      },
+      "environmentRef": "env-python-pandas-candidate",
+      "assetBundleHash": "3273308c4c9829b263a550c2d69eb40e5098b4e0802399c2334053afb3d6815c"
+    }
+  ]
+}

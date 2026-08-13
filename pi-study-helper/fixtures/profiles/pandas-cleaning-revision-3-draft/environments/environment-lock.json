@@ -1,0 +1,29 @@
+{
+  "environmentId": "env-python-pandas-candidate",
+  "schemaVersion": 1,
+  "status": "measured_node_submit",
+  "nodeVersion": "v22.23.1",
+  "pythonVersion": "3.13.7",
+  "pandasVersion": "3.0.5",
+  "pyodideVersion": null,
+  "allowedLibraries": [
+    {"name": "pandas", "version": "3.0.5"}
+  ],
+  "platform": "win32-10.0.26100-x64",
+  "evaluatorVersion": "node-python-evaluator-w3-c1",
+  "limits": {
+    "wallClockMs": 4000,
+    "stdoutBytes": 8192,
+    "stderrBytes": 8192,
+    "sourceBytes": 8000,
+    "datasetBytes": 65536
+  },
+  "capabilityFlags": {
+    "reliableMemoryLimit": false,
+    "networkIsolation": false,
+    "processTreeTermination": true
+  },
+  "prototypeEvidenceRef": "scripts/w3-code-evaluation/environment-prototype-evidence.json",
+  "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+  "createdAt": "2026-08-08T01:30:21+08:00"
+}

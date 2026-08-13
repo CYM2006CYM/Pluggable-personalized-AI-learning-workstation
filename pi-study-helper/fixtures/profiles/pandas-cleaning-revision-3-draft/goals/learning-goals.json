@@ -1,0 +1,20 @@
+{
+  "goals": [
+    {
+      "goalId": "goal-clean-orders",
+      "title": "按冻结业务契约清洗订单数据",
+      "targetKnowledgePointIds": [
+        "pandas.clean.read-csv",
+        "pandas.clean.inspect-dataframe",
+        "pandas.clean.missing-values",
+        "pandas.clean.duplicate-orders",
+        "pandas.clean.type-format",
+        "pandas.clean.validate-result"
+      ],
+      "requiredActivityIds": [
+        "act-practical"
+      ],
+      "finalActivityId": "act-practical"
+    }
+  ]
+}

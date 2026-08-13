@@ -1,0 +1,804 @@
+{
+  "role": "B",
+  "day": "W4-D1-B-3",
+  "contract": "W4-C2/W4-R1",
+  "evidenceRule": "Historical failure, later reproduction, and final contract-environment records are distinct. Any V2-6 PASS wording is derived only from complete revision-2 direct and isolated records below.",
+  "phases": [
+    {
+      "phase": "initial_environment_mismatch",
+      "classification": "HISTORICAL_FACT_RETAINED_OWNER_EVIDENCE_EXCEPTION_APPROVED",
+      "ownerDecision": "50-W4-D1-B历史证据例外裁决与最终整改执行单.md §3.2: OWNER_EVIDENCE_EXCEPTION_APPROVED",
+      "recordedAt": "2026-08-13T14:01:11.4955342+08:00",
+      "environment": {
+        "node": "NOT_AVAILABLE",
+        "python": "3.14.4",
+        "pandas": "3.0.5"
+      },
+      "limitation": "Original first-run stdout/stderr, timestamps and hashes are NOT_AVAILABLE because first evidence retention was incomplete. They are not reconstructed; the approved exception retains this fact together with a separately labelled reproduction and final contract-environment verification.",
+      "records": [
+        {
+          "name": "full-test",
+          "command": "npm test -- --maxWorkers=1",
+          "cwd": "pi-study-helper",
+          "startedAt": null,
+          "endedAt": null,
+          "exitCode": 1,
+          "testStatistics": {
+            "testFiles": null,
+            "passed": 670,
+            "failed": 20,
+            "skipped": 1
+          },
+          "stdoutSha256": null,
+          "stderrSha256": null,
+          "result": "ENVIRONMENT_MISMATCH"
+        },
+        {
+          "name": "verify",
+          "command": "npm run verify",
+          "cwd": "pi-study-helper",
+          "startedAt": null,
+          "endedAt": null,
+          "exitCode": 1,
+          "testStatistics": {
+            "testFiles": null,
+            "passed": 670,
+            "failed": 20,
+            "skipped": 1
+          },
+          "stdoutSha256": null,
+          "stderrSha256": null,
+          "result": "ENVIRONMENT_MISMATCH"
+        }
+      ]
+    },
+    {
+      "phase": "python_3_14_4_environment_reproduction",
+      "classification": "REPRODUCTION_ONLY_NOT_HISTORICAL_ORIGINAL",
+      "purpose": "fresh reproduction in Python 3.14.4; this is not substituted for the missing raw artifacts of the historical initial run",
+      "environment": {
+        "node": "C:\\Users\\Lenovo\\AppData\\Local\\Temp\\node-v22.23.1-win-x64\\node.exe",
+        "npm": "C:\\Users\\Lenovo\\AppData\\Local\\Temp\\node-v22.23.1-win-x64\\npm.cmd",
+        "python": "C:\\Users\\Lenovo\\AppData\\Local\\Programs\\Python\\Python314\\python.exe"
+      },
+      "records": [
+        {
+          "name": "node-version",
+          "command": "C:\\Users\\Lenovo\\AppData\\Local\\Temp\\node-v22.23.1-win-x64\\node.exe --version",
+          "cwd": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\work\\Pluggable-personalized-AI-learning-workstation\\pi-study-helper",
+          "startedAt": "2026-08-13T12:38:38.134Z",
+          "endedAt": "2026-08-13T12:38:38.249Z",
+          "exitCode": 0,
+          "stdoutPath": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\outputs\\W4-D1-B-2-historical-reproduction-logs-v3\\01-node-version.stdout.txt",
+          "stderrPath": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\outputs\\W4-D1-B-2-historical-reproduction-logs-v3\\01-node-version.stderr.txt",
+          "stdoutSha256": "e0e2d0f152e51ce057f65c0a3497fece49245608cd2cdffaa3437d6ec835c0cb",
+          "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stdoutSummary": "v22.23.1\r\n",
+          "stderrSummary": "",
+          "testStatistics": {
+            "testFiles": 0,
+            "passed": 0,
+            "failed": 0,
+            "skipped": 0
+          }
+        },
+        {
+          "name": "python-runtime",
+          "command": "C:\\Users\\Lenovo\\AppData\\Local\\Programs\\Python\\Python314\\python.exe -c import json,sys,pandas; print(json.dumps({'executable':sys.executable,'python':sys.version.split()[0],'pandas':pandas.__version__}))",
+          "cwd": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\work\\Pluggable-personalized-AI-learning-workstation\\pi-study-helper",
+          "startedAt": "2026-08-13T12:38:38.252Z",
+          "endedAt": "2026-08-13T12:38:39.408Z",
+          "exitCode": 0,
+          "stdoutPath": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\outputs\\W4-D1-B-2-historical-reproduction-logs-v3\\02-python-runtime.stdout.txt",
+          "stderrPath": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\outputs\\W4-D1-B-2-historical-reproduction-logs-v3\\02-python-runtime.stderr.txt",
+          "stdoutSha256": "0bddee1898a6f0d3a47c03716ab8ba23d58989c7263456ffc4a82e4a42e0ee5c",
+          "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stdoutSummary": "{\"executable\": \"C:\\\\Users\\\\Lenovo\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python314\\\\python.exe\", \"python\": \"3.14.4\", \"pandas\": \"3.0.5\"}\r\n",
+          "stderrSummary": "",
+          "testStatistics": {
+            "testFiles": 0,
+            "passed": 0,
+            "failed": 0,
+            "skipped": 0
+          }
+        },
+        {
+          "name": "full-test-python-3.14.4-reproduction",
+          "command": "C:\\Users\\Lenovo\\AppData\\Local\\Temp\\node-v22.23.1-win-x64\\npm.cmd test -- --maxWorkers=1",
+          "cwd": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\work\\Pluggable-personalized-AI-learning-workstation\\pi-study-helper",
+          "startedAt": "2026-08-13T12:38:39.410Z",
+          "endedAt": "2026-08-13T12:41:08.683Z",
+          "exitCode": 1,
+          "stdoutPath": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\outputs\\W4-D1-B-2-historical-reproduction-logs-v3\\03-full-test-python-3.14.4-reproduction.stdout.txt",
+          "stderrPath": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\outputs\\W4-D1-B-2-historical-reproduction-logs-v3\\03-full-test-python-3.14.4-reproduction.stderr.txt",
+          "stdoutSha256": "bdbf6c158e2a0f00ce8e8392b0d8a049dcf4f4b407e10b5f5d10edb00d55ec19",
+          "stderrSha256": "cfaaf189b436cadc2c970a38689d88ef17f66d87956cf310ba43298edfaebf09",
+          "stdoutSummary": " deterministically 1139ms\n     × classifies deterministic assertion failures without exposing hidden details 1142ms\n     × classifies an oversized source as a submission contract error 1140ms\n     × rejects preview mode and mismatched formal activity or evidence bindings 1020ms\n     × rejects unmeasured environments and damaged assets as evaluator-owned failures 2486ms\n     × blocks a missing runtime before assets and maps protocol faults to ungraded evaluator results 1197ms\n     × maps injected dependency_missing harness faults to ungraded evaluator results 1170ms\n     × maps injected evaluator_timeout harness faults to ungraded evaluator results 1007ms\n     × maps injected evaluator_error harness faults to ungraded evaluator results 1128ms\n     × maps a child runner crash to an ungraded evaluator result 1165ms\n     × caches learner and evaluator terminal failures without starting Python again 1151ms\n     × enforces request and attempt idempotency 1171ms\n ❯ tests/python-process-evaluation-r2.test.ts (8 tests | 3 failed) 7761ms\n     × rejects changed content, extra/missing/duplicate libraries and damaged bundles 1391ms\n     × rejects unknown or mismatched harness error protocols 1114ms\n     × classifies a real harness timeout separately from learner timeout 1180ms\n\n Test Files  2 failed | 68 passed (70)\n      Tests  20 failed | 670 passed | 1 skipped (691)\n   Start at  20:38:41\n   Duration  147.36s (transform 1.79s, setup 0ms, import 25.50s, tests 94.91s, environment 1.87s)\n\n",
+          "stderrSummary": "on again\nEvaluationPreparationError: The approved Node submit environment is unavailable or does not match this runtime.\n ❯ PythonProcessCodeEvaluationAdapter.#loadApprovedEnvironment src/infrastructure/python-process-evaluation-adapter.ts:412:13\n    410|     const environment = await this.#preflightPromise;\n    411|     if (!environment) {\n    412|       throw new EvaluationPreparationError(\"environment_mismatch\", \"Th…\n       |             ^\n    413|     }\n    414|     return environment;\n ❯ PythonProcessCodeEvaluationAdapter.prepare src/infrastructure/python-process-evaluation-adapter.ts:418:25\n ❯ tests/python-process-evaluation.test.ts:271:26\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/20]⎯\n\n FAIL  tests/python-process-evaluation.test.ts > W3 C Node/Python formal evaluation adapter > enforces request and attempt idempotency\nEvaluationPreparationError: The approved Node submit environment is unavailable or does not match this runtime.\n ❯ PythonProcessCodeEvaluationAdapter.#loadApprovedEnvironment src/infrastructure/python-process-evaluation-adapter.ts:412:13\n    410|     const environment = await this.#preflightPromise;\n    411|     if (!environment) {\n    412|       throw new EvaluationPreparationError(\"environment_mismatch\", \"Th…\n       |             ^\n    413|     }\n    414|     return environment;\n ❯ PythonProcessCodeEvaluationAdapter.prepare src/infrastructure/python-process-evaluation-adapter.ts:418:25\n ❯ tests/python-process-evaluation.test.ts:293:22\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/20]⎯\n\n",
+          "testStatistics": {
+            "testFiles": 2,
+            "passed": 670,
+            "failed": 20,
+            "skipped": 1
+          }
+        },
+        {
+          "name": "verify-python-3.14.4-reproduction",
+          "command": "C:\\Users\\Lenovo\\AppData\\Local\\Temp\\node-v22.23.1-win-x64\\npm.cmd run verify",
+          "cwd": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\work\\Pluggable-personalized-AI-learning-workstation\\pi-study-helper",
+          "startedAt": "2026-08-13T12:41:08.685Z",
+          "endedAt": "2026-08-13T12:43:51.265Z",
+          "exitCode": 1,
+          "stdoutPath": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\outputs\\W4-D1-B-2-historical-reproduction-logs-v3\\04-verify-python-3.14.4-reproduction.stdout.txt",
+          "stderrPath": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\outputs\\W4-D1-B-2-historical-reproduction-logs-v3\\04-verify-python-3.14.4-reproduction.stderr.txt",
+          "stdoutSha256": "5932ebe5d39bb5ddcef98863ba879619a6be56ba8d9144779d69e716feb404d4",
+          "stderrSha256": "cfaaf189b436cadc2c970a38689d88ef17f66d87956cf310ba43298edfaebf09",
+          "stdoutSummary": " deterministically 1075ms\n     × classifies deterministic assertion failures without exposing hidden details 1199ms\n     × classifies an oversized source as a submission contract error 1152ms\n     × rejects preview mode and mismatched formal activity or evidence bindings 1119ms\n     × rejects unmeasured environments and damaged assets as evaluator-owned failures 2264ms\n     × blocks a missing runtime before assets and maps protocol faults to ungraded evaluator results 1178ms\n     × maps injected dependency_missing harness faults to ungraded evaluator results 1227ms\n     × maps injected evaluator_timeout harness faults to ungraded evaluator results 1186ms\n     × maps injected evaluator_error harness faults to ungraded evaluator results 1083ms\n     × maps a child runner crash to an ungraded evaluator result 1055ms\n     × caches learner and evaluator terminal failures without starting Python again 1185ms\n     × enforces request and attempt idempotency 1140ms\n ❯ tests/python-process-evaluation-r2.test.ts (8 tests | 3 failed) 7604ms\n     × rejects changed content, extra/missing/duplicate libraries and damaged bundles 1394ms\n     × rejects unknown or mismatched harness error protocols 1162ms\n     × classifies a real harness timeout separately from learner timeout 1045ms\n\n Test Files  2 failed | 68 passed (70)\n      Tests  20 failed | 670 passed | 1 skipped (691)\n   Start at  20:41:23\n   Duration  148.08s (transform 1.84s, setup 0ms, import 25.80s, tests 95.89s, environment 1.49s)\n\n",
+          "stderrSummary": "on again\nEvaluationPreparationError: The approved Node submit environment is unavailable or does not match this runtime.\n ❯ PythonProcessCodeEvaluationAdapter.#loadApprovedEnvironment src/infrastructure/python-process-evaluation-adapter.ts:412:13\n    410|     const environment = await this.#preflightPromise;\n    411|     if (!environment) {\n    412|       throw new EvaluationPreparationError(\"environment_mismatch\", \"Th…\n       |             ^\n    413|     }\n    414|     return environment;\n ❯ PythonProcessCodeEvaluationAdapter.prepare src/infrastructure/python-process-evaluation-adapter.ts:418:25\n ❯ tests/python-process-evaluation.test.ts:271:26\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/20]⎯\n\n FAIL  tests/python-process-evaluation.test.ts > W3 C Node/Python formal evaluation adapter > enforces request and attempt idempotency\nEvaluationPreparationError: The approved Node submit environment is unavailable or does not match this runtime.\n ❯ PythonProcessCodeEvaluationAdapter.#loadApprovedEnvironment src/infrastructure/python-process-evaluation-adapter.ts:412:13\n    410|     const environment = await this.#preflightPromise;\n    411|     if (!environment) {\n    412|       throw new EvaluationPreparationError(\"environment_mismatch\", \"Th…\n       |             ^\n    413|     }\n    414|     return environment;\n ❯ PythonProcessCodeEvaluationAdapter.prepare src/infrastructure/python-process-evaluation-adapter.ts:418:25\n ❯ tests/python-process-evaluation.test.ts:293:22\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/20]⎯\n\n",
+          "testStatistics": {
+            "testFiles": 2,
+            "passed": 670,
+            "failed": 20,
+            "skipped": 1
+          }
+        }
+      ],
+      "conclusion": "This later reproduction has logs, timestamps and hashes, reproduces the retained environment mismatch, and is not represented as the historical original."
+    },
+    {
+      "phase": "final_contract_environment_reverification",
+      "classification": "COMPLETE_WITH_RETAINED_V2_6_OUTER_WRAPPER_TIMEOUT",
+      "environment": {
+        "nodeHome": "C:\\Users\\Lenovo\\AppData\\Local\\Temp\\node-v22.23.1-win-x64",
+        "node": "C:\\Users\\Lenovo\\AppData\\Local\\Temp\\node-v22.23.1-win-x64\\node.exe",
+        "python": "C:\\Users\\Lenovo\\AppData\\Local\\Temp\\w4-d1-b-python313\\Scripts\\python.exe",
+        "schemaRuntimeRoot": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\work\\w4-b-schema-dist",
+        "pathPrefix": "C:\\Users\\Lenovo\\AppData\\Local\\Temp\\node-v22.23.1-win-x64;C:\\Users\\Lenovo\\AppData\\Local\\Temp\\w4-d1-b-python313\\Scripts"
+      },
+      "records": [
+        {
+          "name": "locked-node",
+          "command": "C:\\Users\\Lenovo\\AppData\\Local\\Temp\\node-v22.23.1-win-x64\\node.exe --version",
+          "cwd": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\work\\Pluggable-personalized-AI-learning-workstation\\pi-study-helper",
+          "startedAt": "2026-08-13T15:09:35.742Z",
+          "endedAt": "2026-08-13T15:09:35.860Z",
+          "exitCode": 0,
+          "stdoutPath": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\outputs\\W4-D1-B-3-release-final-command-logs\\01-locked-node.stdout.txt",
+          "stderrPath": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\outputs\\W4-D1-B-3-release-final-command-logs\\01-locked-node.stderr.txt",
+          "stdoutSha256": "e0e2d0f152e51ce057f65c0a3497fece49245608cd2cdffaa3437d6ec835c0cb",
+          "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stdoutSummary": "v22.23.1\r\n",
+          "stderrSummary": "",
+          "testStatistics": {
+            "testFiles": 0,
+            "passed": 0,
+            "failed": 0,
+            "skipped": 0
+          },
+          "expected": {
+            "node": "v22.23.1"
+          }
+        },
+        {
+          "name": "locked-runtime",
+          "command": "C:\\Users\\Lenovo\\AppData\\Local\\Temp\\w4-d1-b-python313\\Scripts\\python.exe -c import json,sys,pandas as pd; print(json.dumps({'python':sys.version.split()[0],'executable':sys.executable,'pandas':pd.__version__}))",
+          "cwd": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\work\\Pluggable-personalized-AI-learning-workstation\\pi-study-helper",
+          "startedAt": "2026-08-13T15:09:35.864Z",
+          "endedAt": "2026-08-13T15:09:37.061Z",
+          "exitCode": 0,
+          "stdoutPath": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\outputs\\W4-D1-B-3-release-final-command-logs\\02-locked-runtime.stdout.txt",
+          "stderrPath": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\outputs\\W4-D1-B-3-release-final-command-logs\\02-locked-runtime.stderr.txt",
+          "stdoutSha256": "f7b2cecbade0283c60eaf50dc9ec92d27a13a4418c3f8b5447afad42b75736d5",
+          "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stdoutSummary": "{\"python\": \"3.13.7\", \"executable\": \"C:\\\\Users\\\\Lenovo\\\\AppData\\\\Local\\\\Temp\\\\w4-d1-b-python313\\\\Scripts\\\\python.exe\", \"pandas\": \"3.0.5\"}\r\n",
+          "stderrSummary": "",
+          "testStatistics": {
+            "testFiles": 0,
+            "passed": 0,
+            "failed": 0,
+            "skipped": 0
+          },
+          "expected": {
+            "python": "3.13.7",
+            "pandas": "3.0.5"
+          }
+        },
+        {
+          "name": "b-r1-01-full-candidate-validation",
+          "command": "C:\\Users\\Lenovo\\AppData\\Local\\Temp\\node-v22.23.1-win-x64\\node.exe C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\work\\Pluggable-personalized-AI-learning-workstation\\pi-study-helper\\scripts\\w4-b-validation\\validate-w4-b-d1.mjs C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\work\\Pluggable-personalized-AI-learning-workstation\\pi-study-helper\\fixtures\\profiles\\pandas-cleaning-revision-3-draft C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\work\\Pluggable-personalized-AI-learning-workstation\\pi-study-helper\\fixtures\\profiles\\pandas-cleaning-v2-draft C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\outputs\\W4-D1-B-3-release-final-command-logs\\validation-result.json",
+          "cwd": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\work\\Pluggable-personalized-AI-learning-workstation\\pi-study-helper",
+          "startedAt": "2026-08-13T15:09:37.064Z",
+          "endedAt": "2026-08-13T15:09:37.327Z",
+          "exitCode": 0,
+          "stdoutPath": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\outputs\\W4-D1-B-3-release-final-command-logs\\03-b-r1-01-full-candidate-validation.stdout.txt",
+          "stderrPath": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\outputs\\W4-D1-B-3-release-final-command-logs\\03-b-r1-01-full-candidate-validation.stderr.txt",
+          "stdoutSha256": "0ebac59728276a3362f2ecb6654322757fea36ca7acd8f24268eae935e665b4d",
+          "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stdoutSummary": "bric-practical.json\",\n        \"sha256\": \"880a988dabd30c1067621ca5323b5c89c13449cbd60ad93b50f850b22f0388dd\",\n        \"byteLength\": 2427\n      },\n      {\n        \"path\": \"rubrics/rubric-structure.json\",\n        \"sha256\": \"5547a5b20a403e546c29aed3510cac982f1ab0467ae26de2425fbf97eb19357f\",\n        \"byteLength\": 498\n      },\n      {\n        \"path\": \"rubrics/rubric-types.json\",\n        \"sha256\": \"54e559842706662bfb83f63f083e92e3d1d7640c63afdb37da5389b02dd6e03e\",\n        \"byteLength\": 299\n      },\n      {\n        \"path\": \"sources/conflicts.json\",\n        \"sha256\": \"7409cea4bf5649bc1d19ac4251edd26789d77cb3cd7fb35f13ffb1107f695452\",\n        \"byteLength\": 159\n      },\n      {\n        \"path\": \"sources/source-map.json\",\n        \"sha256\": \"125f964a92ab064b3a2a01c3882b888a9b891f074a647f2b9df8efd395c7b32f\",\n        \"byteLength\": 6294\n      },\n      {\n        \"path\": \"subject.md\",\n        \"sha256\": \"c26407fce50b145bc0215483e4a1d37de916e80471eb59bac3df6c9d597078b5\",\n        \"byteLength\": 455\n      }\n    ]\n  },\n  \"leakageTokens\": [\n    \"correctAnswer\",\n    \"privateAnswerRef\",\n    \"referenceSolution\",\n    \"hiddenTest\",\n    \"rubric\",\n    \"orders-variant\"\n  ],\n  \"revision2ExpectedTree\": \"2a4538272cc47a3451b434999d620f429e5deaa0eb0f2c3f95fa76e53d80786d\",\n  \"frozenCopiedAssets\": {\n    \"prefixes\": [\n      \"assessments/private/\",\n      \"assessments/public/\",\n      \"datasets/\",\n      \"environments/\",\n      \"rubrics/\",\n      \"reference-solutions/\"\n    ],\n    \"fileCount\": 41,\n    \"result\": \"PASS\"\n  }\n}\n",
+          "stderrSummary": "",
+          "testStatistics": {
+            "testFiles": 0,
+            "passed": 0,
+            "failed": 0,
+            "skipped": 0
+          },
+          "issueId": "B-R1-01"
+        },
+        {
+          "name": "a-schema-and-seal",
+          "command": "C:\\Users\\Lenovo\\AppData\\Local\\Temp\\node-v22.23.1-win-x64\\node.exe C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\work\\Pluggable-personalized-AI-learning-workstation\\pi-study-helper\\scripts\\w4-b-validation\\verify-a-schema-seal.mjs C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\work\\w4-b-schema-dist C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\work\\Pluggable-personalized-AI-learning-workstation\\pi-study-helper\\fixtures\\profiles\\pandas-cleaning-revision-3-draft C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\outputs\\W4-D1-B-3-release-final-command-logs\\a-schema-seal-result.json",
+          "cwd": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\work\\Pluggable-personalized-AI-learning-workstation\\pi-study-helper",
+          "startedAt": "2026-08-13T15:09:37.328Z",
+          "endedAt": "2026-08-13T15:09:37.529Z",
+          "exitCode": 0,
+          "stdoutPath": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\outputs\\W4-D1-B-3-release-final-command-logs\\04-a-schema-and-seal.stdout.txt",
+          "stderrPath": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\outputs\\W4-D1-B-3-release-final-command-logs\\04-a-schema-and-seal.stderr.txt",
+          "stdoutSha256": "afbfa8ea8ab59c8d709590b76e8d76f39c5fc593089dfc7fe4f2d18a0ad91cc5",
+          "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stdoutSummary": "{\n  \"status\": \"PASS\",\n  \"runtimeRoot\": \"C:\\\\Users\\\\Lenovo\\\\Documents\\\\Codex\\\\2026-08-12\\\\la\\\\work\\\\w4-b-schema-dist\",\n  \"profileRoot\": \"C:\\\\Users\\\\Lenovo\\\\Documents\\\\Codex\\\\2026-08-12\\\\la\\\\work\\\\Pluggable-personalized-AI-learning-workstation\\\\pi-study-helper\\\\fixtures\\\\profiles\\\\pandas-cleaning-revision-3-draft\",\n  \"schemaValidation\": \"PASS\",\n  \"sealValidation\": \"PASS\",\n  \"sealEntryCount\": 78,\n  \"assetTreeSha256\": \"e118fd65c4583821f686cba4faab5990a81d2149a8f73cf89af2c376ba15b352\"\n}\n",
+          "stderrSummary": "",
+          "testStatistics": {
+            "testFiles": 0,
+            "passed": 0,
+            "failed": 0,
+            "skipped": 0
+          },
+          "issueId": "B-R1-01"
+        },
+        {
+          "name": "public-python-test-duplicates-public",
+          "command": "C:\\Users\\Lenovo\\AppData\\Local\\Temp\\w4-d1-b-python313\\Scripts\\python.exe C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\work\\Pluggable-personalized-AI-learning-workstation\\pi-study-helper\\fixtures\\profiles\\pandas-cleaning-revision-3-draft\\assessments\\public\\tests\\test-duplicates-public.py",
+          "cwd": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\work\\Pluggable-personalized-AI-learning-workstation\\pi-study-helper",
+          "startedAt": "2026-08-13T15:09:37.531Z",
+          "endedAt": "2026-08-13T15:09:37.624Z",
+          "exitCode": 0,
+          "stdoutPath": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\outputs\\W4-D1-B-3-release-final-command-logs\\05-public-python-test-duplicates-public.stdout.txt",
+          "stderrPath": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\outputs\\W4-D1-B-3-release-final-command-logs\\05-public-python-test-duplicates-public.stderr.txt",
+          "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stdoutSummary": "",
+          "stderrSummary": "",
+          "testStatistics": {
+            "testFiles": 1,
+            "passed": 1,
+            "failed": 0,
+            "skipped": 0
+          },
+          "issueId": "B-R1-02",
+          "testFiles": 1,
+          "passed": 1,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "name": "public-python-test-missing-public",
+          "command": "C:\\Users\\Lenovo\\AppData\\Local\\Temp\\w4-d1-b-python313\\Scripts\\python.exe C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\work\\Pluggable-personalized-AI-learning-workstation\\pi-study-helper\\fixtures\\profiles\\pandas-cleaning-revision-3-draft\\assessments\\public\\tests\\test-missing-public.py",
+          "cwd": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\work\\Pluggable-personalized-AI-learning-workstation\\pi-study-helper",
+          "startedAt": "2026-08-13T15:09:37.626Z",
+          "endedAt": "2026-08-13T15:09:37.721Z",
+          "exitCode": 0,
+          "stdoutPath": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\outputs\\W4-D1-B-3-release-final-command-logs\\06-public-python-test-missing-public.stdout.txt",
+          "stderrPath": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\outputs\\W4-D1-B-3-release-final-command-logs\\06-public-python-test-missing-public.stderr.txt",
+          "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stdoutSummary": "",
+          "stderrSummary": "",
+          "testStatistics": {
+            "testFiles": 1,
+            "passed": 1,
+            "failed": 0,
+            "skipped": 0
+          },
+          "issueId": "B-R1-02",
+          "testFiles": 1,
+          "passed": 1,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "name": "public-python-test-practical-public",
+          "command": "C:\\Users\\Lenovo\\AppData\\Local\\Temp\\w4-d1-b-python313\\Scripts\\python.exe C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\work\\Pluggable-personalized-AI-learning-workstation\\pi-study-helper\\fixtures\\profiles\\pandas-cleaning-revision-3-draft\\assessments\\public\\tests\\test-practical-public.py",
+          "cwd": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\work\\Pluggable-personalized-AI-learning-workstation\\pi-study-helper",
+          "startedAt": "2026-08-13T15:09:37.722Z",
+          "endedAt": "2026-08-13T15:09:37.813Z",
+          "exitCode": 0,
+          "stdoutPath": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\outputs\\W4-D1-B-3-release-final-command-logs\\07-public-python-test-practical-public.stdout.txt",
+          "stderrPath": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\outputs\\W4-D1-B-3-release-final-command-logs\\07-public-python-test-practical-public.stderr.txt",
+          "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stdoutSummary": "",
+          "stderrSummary": "",
+          "testStatistics": {
+            "testFiles": 1,
+            "passed": 1,
+            "failed": 0,
+            "skipped": 0
+          },
+          "issueId": "B-R1-02",
+          "testFiles": 1,
+          "passed": 1,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "name": "public-python-test-structure-public",
+          "command": "C:\\Users\\Lenovo\\AppData\\Local\\Temp\\w4-d1-b-python313\\Scripts\\python.exe C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\work\\Pluggable-personalized-AI-learning-workstation\\pi-study-helper\\fixtures\\profiles\\pandas-cleaning-revision-3-draft\\assessments\\public\\tests\\test-structure-public.py",
+          "cwd": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\work\\Pluggable-personalized-AI-learning-workstation\\pi-study-helper",
+          "startedAt": "2026-08-13T15:09:37.815Z",
+          "endedAt": "2026-08-13T15:09:37.902Z",
+          "exitCode": 0,
+          "stdoutPath": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\outputs\\W4-D1-B-3-release-final-command-logs\\08-public-python-test-structure-public.stdout.txt",
+          "stderrPath": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\outputs\\W4-D1-B-3-release-final-command-logs\\08-public-python-test-structure-public.stderr.txt",
+          "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stdoutSummary": "",
+          "stderrSummary": "",
+          "testStatistics": {
+            "testFiles": 1,
+            "passed": 1,
+            "failed": 0,
+            "skipped": 0
+          },
+          "issueId": "B-R1-02",
+          "testFiles": 1,
+          "passed": 1,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "name": "public-python-test-types-public",
+          "command": "C:\\Users\\Lenovo\\AppData\\Local\\Temp\\w4-d1-b-python313\\Scripts\\python.exe C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\work\\Pluggable-personalized-AI-learning-workstation\\pi-study-helper\\fixtures\\profiles\\pandas-cleaning-revision-3-draft\\assessments\\public\\tests\\test-types-public.py",
+          "cwd": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\work\\Pluggable-personalized-AI-learning-workstation\\pi-study-helper",
+          "startedAt": "2026-08-13T15:09:37.904Z",
+          "endedAt": "2026-08-13T15:09:37.992Z",
+          "exitCode": 0,
+          "stdoutPath": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\outputs\\W4-D1-B-3-release-final-command-logs\\09-public-python-test-types-public.stdout.txt",
+          "stderrPath": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\outputs\\W4-D1-B-3-release-final-command-logs\\09-public-python-test-types-public.stderr.txt",
+          "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stdoutSummary": "",
+          "stderrSummary": "",
+          "testStatistics": {
+            "testFiles": 1,
+            "passed": 1,
+            "failed": 0,
+            "skipped": 0
+          },
+          "issueId": "B-R1-02",
+          "testFiles": 1,
+          "passed": 1,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "name": "b-asset-and-contract-targeted",
+          "command": "C:\\Users\\Lenovo\\AppData\\Local\\Temp\\node-v22.23.1-win-x64\\npm.cmd test -- --maxWorkers=1 tests/profile-revision-3-activation.test.ts tests/w4-contracts.test.ts",
+          "cwd": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\work\\Pluggable-personalized-AI-learning-workstation\\pi-study-helper",
+          "startedAt": "2026-08-13T15:09:37.994Z",
+          "endedAt": "2026-08-13T15:09:42.078Z",
+          "exitCode": 0,
+          "stdoutPath": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\outputs\\W4-D1-B-3-release-final-command-logs\\10-b-asset-and-contract-targeted.stdout.txt",
+          "stderrPath": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\outputs\\W4-D1-B-3-release-final-command-logs\\10-b-asset-and-contract-targeted.stderr.txt",
+          "stdoutSha256": "c36a582ff3cfd0034469df6c84936be0c851a1a31f69b9615e3943a848f7e205",
+          "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stdoutSummary": "\n> pi-study-helper@0.1.0 test\n> vitest run --maxWorkers=1 tests/profile-revision-3-activation.test.ts tests/w4-contracts.test.ts\n\n\n RUN  v4.1.10 C:/Users/Lenovo/Documents/Codex/2026-08-12/la/work/Pluggable-personalized-AI-learning-workstation/pi-study-helper\n\n\n Test Files  2 passed (2)\n      Tests  15 passed (15)\n   Start at  23:09:39\n   Duration  2.38s (transform 244ms, setup 0ms, import 545ms, tests 1.10s, environment 0ms)\n\n",
+          "stderrSummary": "",
+          "testStatistics": {
+            "testFiles": 2,
+            "passed": 15,
+            "failed": 0,
+            "skipped": 0
+          },
+          "testFiles": 2
+        },
+        {
+          "name": "python-evaluator-affected",
+          "command": "C:\\Users\\Lenovo\\AppData\\Local\\Temp\\node-v22.23.1-win-x64\\npm.cmd test -- --maxWorkers=1 tests/python-process-evaluation.test.ts tests/python-process-evaluation-r2.test.ts",
+          "cwd": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\work\\Pluggable-personalized-AI-learning-workstation\\pi-study-helper",
+          "startedAt": "2026-08-13T15:09:42.080Z",
+          "endedAt": "2026-08-13T15:11:05.421Z",
+          "exitCode": 0,
+          "stdoutPath": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\outputs\\W4-D1-B-3-release-final-command-logs\\11-python-evaluator-affected.stdout.txt",
+          "stderrPath": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\outputs\\W4-D1-B-3-release-final-command-logs\\11-python-evaluator-affected.stderr.txt",
+          "stdoutSha256": "7b6d624355adf27b87c6f788b5598b92421ee8332504d7b278897aea8fd9fca8",
+          "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stdoutSummary": "\n> pi-study-helper@0.1.0 test\n> vitest run --maxWorkers=1 tests/python-process-evaluation.test.ts tests/python-process-evaluation-r2.test.ts\n\n\n RUN  v4.1.10 C:/Users/Lenovo/Documents/Codex/2026-08-12/la/work/Pluggable-personalized-AI-learning-workstation/pi-study-helper\n\n\n Test Files  2 passed (2)\n      Tests  26 passed (26)\n   Start at  23:09:43\n   Duration  81.80s (transform 125ms, setup 0ms, import 415ms, tests 80.67s, environment 0ms)\n\n",
+          "stderrSummary": "",
+          "testStatistics": {
+            "testFiles": 2,
+            "passed": 26,
+            "failed": 0,
+            "skipped": 0
+          },
+          "issueId": "B-R1-02",
+          "testFiles": 2
+        },
+        {
+          "name": "typecheck",
+          "command": "C:\\Users\\Lenovo\\AppData\\Local\\Temp\\node-v22.23.1-win-x64\\npm.cmd run typecheck",
+          "cwd": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\work\\Pluggable-personalized-AI-learning-workstation\\pi-study-helper",
+          "startedAt": "2026-08-13T15:11:05.423Z",
+          "endedAt": "2026-08-13T15:11:15.929Z",
+          "exitCode": 0,
+          "stdoutPath": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\outputs\\W4-D1-B-3-release-final-command-logs\\12-typecheck.stdout.txt",
+          "stderrPath": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\outputs\\W4-D1-B-3-release-final-command-logs\\12-typecheck.stderr.txt",
+          "stdoutSha256": "657f3a771c3ac9b683e5e8bd2354be0cd82fe12a113b8e0fe5cd25311254bd68",
+          "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stdoutSummary": "\n> pi-study-helper@0.1.0 typecheck\n> tsc --noEmit && tsc -p tsconfig.test.json && tsc -p tsconfig.web.json\n\n",
+          "stderrSummary": "",
+          "testStatistics": {
+            "testFiles": 0,
+            "passed": 0,
+            "failed": 0,
+            "skipped": 0
+          }
+        },
+        {
+          "name": "check-docs",
+          "command": "C:\\Users\\Lenovo\\AppData\\Local\\Temp\\node-v22.23.1-win-x64\\npm.cmd run check:docs",
+          "cwd": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\work\\Pluggable-personalized-AI-learning-workstation\\pi-study-helper",
+          "startedAt": "2026-08-13T15:11:15.930Z",
+          "endedAt": "2026-08-13T15:11:16.763Z",
+          "exitCode": 0,
+          "stdoutPath": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\outputs\\W4-D1-B-3-release-final-command-logs\\13-check-docs.stdout.txt",
+          "stderrPath": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\outputs\\W4-D1-B-3-release-final-command-logs\\13-check-docs.stderr.txt",
+          "stdoutSha256": "388711eb6c0eaa0d07021643155c57b57a333af89c332e6fcbaaa4ffd44d738a",
+          "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stdoutSummary": "\n> pi-study-helper@0.1.0 check:docs\n> node scripts/check-doc-links.mjs\n\n已检查 70 个项目 Markdown 文件，本地链接全部有效。\n",
+          "stderrSummary": "",
+          "testStatistics": {
+            "testFiles": 0,
+            "passed": 0,
+            "failed": 0,
+            "skipped": 0
+          }
+        },
+        {
+          "name": "smoke-extension",
+          "command": "C:\\Users\\Lenovo\\AppData\\Local\\Temp\\node-v22.23.1-win-x64\\npm.cmd run smoke:extension",
+          "cwd": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\work\\Pluggable-personalized-AI-learning-workstation\\pi-study-helper",
+          "startedAt": "2026-08-13T15:11:16.765Z",
+          "endedAt": "2026-08-13T15:11:21.157Z",
+          "exitCode": 0,
+          "stdoutPath": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\outputs\\W4-D1-B-3-release-final-command-logs\\14-smoke-extension.stdout.txt",
+          "stderrPath": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\outputs\\W4-D1-B-3-release-final-command-logs\\14-smoke-extension.stderr.txt",
+          "stdoutSha256": "65fd9a6cc0ade27c0f311d0281a9f702b89b28824e1ea5e7244b7849339a4b78",
+          "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stdoutSummary": "\n> pi-study-helper@0.1.0 smoke:extension\n> node scripts/smoke-extension.mjs\n\npi 已成功解析并初始化 Pi Study Helper extension。\n",
+          "stderrSummary": "",
+          "testStatistics": {
+            "testFiles": 0,
+            "passed": 0,
+            "failed": 0,
+            "skipped": 0
+          }
+        },
+        {
+          "name": "full-test",
+          "command": "C:\\Users\\Lenovo\\AppData\\Local\\Temp\\node-v22.23.1-win-x64\\npm.cmd test -- --maxWorkers=1",
+          "cwd": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\work\\Pluggable-personalized-AI-learning-workstation\\pi-study-helper",
+          "startedAt": "2026-08-13T15:11:21.159Z",
+          "endedAt": "2026-08-13T15:14:48.320Z",
+          "exitCode": 1,
+          "stdoutPath": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\outputs\\W4-D1-B-3-release-final-command-logs\\15-full-test.stdout.txt",
+          "stderrPath": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\outputs\\W4-D1-B-3-release-final-command-logs\\15-full-test.stderr.txt",
+          "stdoutSha256": "3fe3b5789d1d1ff6fbe3d3f52e3a440e3658773e4f4a55900b3747c6a4f8e735",
+          "stderrSha256": "6db12edbf444baa9be34aa286e88e3aedce0b2cd081dfa2f837ee4c6c761d988",
+          "stdoutSummary": "\n> pi-study-helper@0.1.0 test\n> vitest run --maxWorkers=1\n\n\n RUN  v4.1.10 C:/Users/Lenovo/Documents/Codex/2026-08-12/la/work/Pluggable-personalized-AI-learning-workstation/pi-study-helper\n\n ❯ tests/file-learning-session-repository.test.ts (27 tests | 1 failed) 1971ms\n     × recovers a complete candidate left before latest.json publication 42ms\n\n Test Files  1 failed | 69 passed (70)\n      Tests  1 failed | 689 passed | 1 skipped (691)\n   Start at  23:11:22\n   Duration  205.51s (transform 1.87s, setup 0ms, import 27.20s, tests 150.81s, environment 1.85s)\n\n",
+          "stderrSummary": "\n⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯\n\n FAIL  tests/file-learning-session-repository.test.ts > FileLearningSessionRepository > recovers a complete candidate left before latest.json publication\nAssertionError: expected 'rebuilt_derived_state' to be 'completed_candidate_commit' // Object.is equality\n\nExpected: \"completed_candidate_commit\"\nReceived: \"rebuilt_derived_state\"\n\n ❯ tests/file-learning-session-repository.test.ts:331:38\n    329|     fail = false;\n    330|     const recovered = await repo.recover({ requestId: \"recover-1\", ses…\n    331|     expect(recovered.recoveryAction).toBe(\"completed_candidate_commit\"…\n       |                                      ^\n    332|     expect(recovered.sessionVersion).toBe(2);\n    333|   });\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\n\n",
+          "testStatistics": {
+            "testFiles": 70,
+            "passed": 689,
+            "failed": 1,
+            "skipped": 1,
+            "passedFiles": 69,
+            "failedFiles": 1,
+            "totalTests": 691
+          },
+          "testFiles": 70
+        },
+        {
+          "name": "v2-6-direct-revision2-20-plus-60",
+          "command": "C:\\Users\\Lenovo\\AppData\\Local\\Temp\\node-v22.23.1-win-x64\\node.exe C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\work\\Pluggable-personalized-AI-learning-workstation\\pi-study-helper\\scripts\\w2-verification\\v2-6-preconditions.mjs --development ../evaluation/personas/development-20.jsonl --final ../evaluation/personas/final-60.jsonl --profile fixtures/profiles/pandas-cleaning-v2-draft",
+          "cwd": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\work\\Pluggable-personalized-AI-learning-workstation\\pi-study-helper",
+          "startedAt": "2026-08-13T15:14:48.323Z",
+          "endedAt": "2026-08-13T15:15:18.233Z",
+          "exitCode": 0,
+          "stdoutPath": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\outputs\\W4-D1-B-3-release-final-command-logs\\16-v2-6-direct-revision2-20-plus-60.stdout.txt",
+          "stderrPath": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\outputs\\W4-D1-B-3-release-final-command-logs\\16-v2-6-direct-revision2-20-plus-60.stderr.txt",
+          "stdoutSha256": "4a181c0ccaac8b3877555552d6e544225e1bcaefa50e91d1bab2c580e68cd984",
+          "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stdoutSummary": "{\"verification\":\"V2-6\",\"status\":\"PASS\",\"inspection\":{\"development\":{\"count\":20,\"sha256\":\"1b238dfae09e5c6ea942329a3a0fd952ad9c190edd9666335ad735301cb27876\"},\"final\":{\"count\":60,\"sha256\":\"4fcc7c3e2c605f912890ddec5af7d4fa875c861d1636dcaf425a63ddb17f4b9d\"},\"errors\":[]},\"runtime\":{\"exitCode\":0,\"stdoutSha256\":\"5a6aabd366ca07a78cd3bff27d3f60dd34d74ac5186d0ac433d850c229920734\",\"stderrSha256\":\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\",\"stdoutBytes\":300,\"stderrBytes\":0}}\n",
+          "stderrSummary": "",
+          "testStatistics": {
+            "testFiles": 0,
+            "passed": 0,
+            "failed": 0,
+            "skipped": 0
+          },
+          "issueId": "B-R3-01",
+          "revision2ProfilePath": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\work\\Pluggable-personalized-AI-learning-workstation\\pi-study-helper\\fixtures\\profiles\\pandas-cleaning-v2-draft",
+          "v26": {
+            "verification": "V2-6",
+            "status": "PASS",
+            "development": {
+              "path": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\work\\Pluggable-personalized-AI-learning-workstation\\evaluation\\personas\\development-20.jsonl",
+              "count": 20,
+              "sha256": "1b238dfae09e5c6ea942329a3a0fd952ad9c190edd9666335ad735301cb27876"
+            },
+            "final": {
+              "path": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\work\\Pluggable-personalized-AI-learning-workstation\\evaluation\\personas\\final-60.jsonl",
+              "count": 60,
+              "sha256": "4fcc7c3e2c605f912890ddec5af7d4fa875c861d1636dcaf425a63ddb17f4b9d"
+            },
+            "runtime": {
+              "exitCode": 0,
+              "stdoutSha256": "5a6aabd366ca07a78cd3bff27d3f60dd34d74ac5186d0ac433d850c229920734",
+              "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "stdoutBytes": 300,
+              "stderrBytes": 0
+            }
+          }
+        },
+        {
+          "name": "v2-6-isolated-revision2",
+          "command": "C:\\Users\\Lenovo\\AppData\\Local\\Temp\\node-v22.23.1-win-x64\\npm.cmd test -- --maxWorkers=1 scripts/w2-verification/v2-6-preconditions.test.mjs",
+          "cwd": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\work\\Pluggable-personalized-AI-learning-workstation\\pi-study-helper",
+          "startedAt": "2026-08-13T15:15:18.234Z",
+          "endedAt": "2026-08-13T15:15:20.154Z",
+          "exitCode": 0,
+          "stdoutPath": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\outputs\\W4-D1-B-3-release-final-command-logs\\17-v2-6-isolated-revision2.stdout.txt",
+          "stderrPath": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\outputs\\W4-D1-B-3-release-final-command-logs\\17-v2-6-isolated-revision2.stderr.txt",
+          "stdoutSha256": "37c3bac314ea1eb98965f280a2e9400352699331cccd2fa21c2b39780052ec33",
+          "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stdoutSummary": "\n> pi-study-helper@0.1.0 test\n> vitest run --maxWorkers=1 scripts/w2-verification/v2-6-preconditions.test.mjs\n\n\n RUN  v4.1.10 C:/Users/Lenovo/Documents/Codex/2026-08-12/la/work/Pluggable-personalized-AI-learning-workstation/pi-study-helper\n\n\n Test Files  1 passed (1)\n      Tests  5 passed (5)\n   Start at  23:15:19\n   Duration  615ms (transform 130ms, setup 0ms, import 275ms, tests 10ms, environment 0ms)\n\n",
+          "stderrSummary": "",
+          "testStatistics": {
+            "testFiles": 1,
+            "passed": 5,
+            "failed": 0,
+            "skipped": 0,
+            "passedFiles": 1,
+            "failedFiles": 0,
+            "totalTests": 5
+          },
+          "issueId": "B-R3-01",
+          "revision2ProfilePath": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\work\\Pluggable-personalized-AI-learning-workstation\\pi-study-helper\\fixtures\\profiles\\pandas-cleaning-v2-draft",
+          "testFiles": 1,
+          "passed": 5,
+          "failed": 0,
+          "skipped": 0
+        },
+        {
+          "name": "verify",
+          "command": "C:\\Users\\Lenovo\\AppData\\Local\\Temp\\node-v22.23.1-win-x64\\npm.cmd run verify",
+          "cwd": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\work\\Pluggable-personalized-AI-learning-workstation\\pi-study-helper",
+          "startedAt": "2026-08-13T15:15:20.155Z",
+          "endedAt": "2026-08-13T15:19:08.957Z",
+          "exitCode": 0,
+          "stdoutPath": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\outputs\\W4-D1-B-3-release-final-command-logs\\18-verify.stdout.txt",
+          "stderrPath": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\outputs\\W4-D1-B-3-release-final-command-logs\\18-verify.stderr.txt",
+          "stdoutSha256": "72275b60f09b799e35f2b72c771e4326333b68bb3ca20a9cfcbf21f2079813fa",
+          "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stdoutSummary": "\n> pi-study-helper@0.1.0 verify\n> npm run typecheck && npm test -- --maxWorkers=1 && npm run check:docs && npm run smoke:extension && npm run check:release\n\n\n> pi-study-helper@0.1.0 typecheck\n> tsc --noEmit && tsc -p tsconfig.test.json && tsc -p tsconfig.web.json\n\n\n> pi-study-helper@0.1.0 test\n> vitest run --maxWorkers=1\n\n\n RUN  v4.1.10 C:/Users/Lenovo/Documents/Codex/2026-08-12/la/work/Pluggable-personalized-AI-learning-workstation/pi-study-helper\n\n\n Test Files  70 passed (70)\n      Tests  690 passed | 1 skipped (691)\n   Start at  23:15:33\n   Duration  207.55s (transform 1.85s, setup 0ms, import 26.78s, tests 154.06s, environment 1.47s)\n\n\n> pi-study-helper@0.1.0 check:docs\n> node scripts/check-doc-links.mjs\n\n已检查 70 个项目 Markdown 文件，本地链接全部有效。\n\n> pi-study-helper@0.1.0 smoke:extension\n> node scripts/smoke-extension.mjs\n\npi 已成功解析并初始化 Pi Study Helper extension。\n\n> pi-study-helper@0.1.0 check:release\n> node scripts/check-release.mjs\n\nRelease check passed: 362 tracked files, no private data or secrets found.\n",
+          "stderrSummary": "",
+          "testStatistics": {
+            "testFiles": 70,
+            "passed": 690,
+            "failed": 0,
+            "skipped": 1,
+            "passedFiles": 70,
+            "failedFiles": 0,
+            "totalTests": 691
+          },
+          "testFiles": 70
+        },
+        {
+          "name": "git-diff-check",
+          "command": "git -C C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\work\\Pluggable-personalized-AI-learning-workstation diff --check",
+          "cwd": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\work\\Pluggable-personalized-AI-learning-workstation",
+          "startedAt": "2026-08-13T15:19:08.959Z",
+          "endedAt": "2026-08-13T15:19:09.081Z",
+          "exitCode": 0,
+          "stdoutPath": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\outputs\\W4-D1-B-3-release-final-command-logs\\19-git-diff-check.stdout.txt",
+          "stderrPath": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\outputs\\W4-D1-B-3-release-final-command-logs\\19-git-diff-check.stderr.txt",
+          "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stdoutSummary": "",
+          "stderrSummary": "",
+          "testStatistics": {
+            "testFiles": 0,
+            "passed": 0,
+            "failed": 0,
+            "skipped": 0
+          }
+        }
+      ],
+      "aggregateFullTest": {
+        "name": "full-test",
+        "command": "C:\\Users\\Lenovo\\AppData\\Local\\Temp\\node-v22.23.1-win-x64\\npm.cmd test -- --maxWorkers=1",
+        "cwd": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\work\\Pluggable-personalized-AI-learning-workstation\\pi-study-helper",
+        "startedAt": "2026-08-13T15:11:21.159Z",
+        "endedAt": "2026-08-13T15:14:48.320Z",
+        "exitCode": 1,
+        "stdoutPath": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\outputs\\W4-D1-B-3-release-final-command-logs\\15-full-test.stdout.txt",
+        "stderrPath": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\outputs\\W4-D1-B-3-release-final-command-logs\\15-full-test.stderr.txt",
+        "stdoutSha256": "3fe3b5789d1d1ff6fbe3d3f52e3a440e3658773e4f4a55900b3747c6a4f8e735",
+        "stderrSha256": "6db12edbf444baa9be34aa286e88e3aedce0b2cd081dfa2f837ee4c6c761d988",
+        "stdoutSummary": "\n> pi-study-helper@0.1.0 test\n> vitest run --maxWorkers=1\n\n\n RUN  v4.1.10 C:/Users/Lenovo/Documents/Codex/2026-08-12/la/work/Pluggable-personalized-AI-learning-workstation/pi-study-helper\n\n ❯ tests/file-learning-session-repository.test.ts (27 tests | 1 failed) 1971ms\n     × recovers a complete candidate left before latest.json publication 42ms\n\n Test Files  1 failed | 69 passed (70)\n      Tests  1 failed | 689 passed | 1 skipped (691)\n   Start at  23:11:22\n   Duration  205.51s (transform 1.87s, setup 0ms, import 27.20s, tests 150.81s, environment 1.85s)\n\n",
+        "stderrSummary": "\n⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯\n\n FAIL  tests/file-learning-session-repository.test.ts > FileLearningSessionRepository > recovers a complete candidate left before latest.json publication\nAssertionError: expected 'rebuilt_derived_state' to be 'completed_candidate_commit' // Object.is equality\n\nExpected: \"completed_candidate_commit\"\nReceived: \"rebuilt_derived_state\"\n\n ❯ tests/file-learning-session-repository.test.ts:331:38\n    329|     fail = false;\n    330|     const recovered = await repo.recover({ requestId: \"recover-1\", ses…\n    331|     expect(recovered.recoveryAction).toBe(\"completed_candidate_commit\"…\n       |                                      ^\n    332|     expect(recovered.sessionVersion).toBe(2);\n    333|   });\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\n\n",
+        "testStatistics": {
+          "testFiles": 70,
+          "passed": 689,
+          "failed": 1,
+          "skipped": 1,
+          "passedFiles": 69,
+          "failedFiles": 1,
+          "totalTests": 691
+        },
+        "testFiles": 70
+      },
+      "v26DirectRevision2": {
+        "name": "v2-6-direct-revision2-20-plus-60",
+        "command": "C:\\Users\\Lenovo\\AppData\\Local\\Temp\\node-v22.23.1-win-x64\\node.exe C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\work\\Pluggable-personalized-AI-learning-workstation\\pi-study-helper\\scripts\\w2-verification\\v2-6-preconditions.mjs --development ../evaluation/personas/development-20.jsonl --final ../evaluation/personas/final-60.jsonl --profile fixtures/profiles/pandas-cleaning-v2-draft",
+        "cwd": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\work\\Pluggable-personalized-AI-learning-workstation\\pi-study-helper",
+        "startedAt": "2026-08-13T15:14:48.323Z",
+        "endedAt": "2026-08-13T15:15:18.233Z",
+        "exitCode": 0,
+        "stdoutPath": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\outputs\\W4-D1-B-3-release-final-command-logs\\16-v2-6-direct-revision2-20-plus-60.stdout.txt",
+        "stderrPath": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\outputs\\W4-D1-B-3-release-final-command-logs\\16-v2-6-direct-revision2-20-plus-60.stderr.txt",
+        "stdoutSha256": "4a181c0ccaac8b3877555552d6e544225e1bcaefa50e91d1bab2c580e68cd984",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdoutSummary": "{\"verification\":\"V2-6\",\"status\":\"PASS\",\"inspection\":{\"development\":{\"count\":20,\"sha256\":\"1b238dfae09e5c6ea942329a3a0fd952ad9c190edd9666335ad735301cb27876\"},\"final\":{\"count\":60,\"sha256\":\"4fcc7c3e2c605f912890ddec5af7d4fa875c861d1636dcaf425a63ddb17f4b9d\"},\"errors\":[]},\"runtime\":{\"exitCode\":0,\"stdoutSha256\":\"5a6aabd366ca07a78cd3bff27d3f60dd34d74ac5186d0ac433d850c229920734\",\"stderrSha256\":\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\",\"stdoutBytes\":300,\"stderrBytes\":0}}\n",
+        "stderrSummary": "",
+        "testStatistics": {
+          "testFiles": 0,
+          "passed": 0,
+          "failed": 0,
+          "skipped": 0
+        },
+        "issueId": "B-R3-01",
+        "revision2ProfilePath": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\work\\Pluggable-personalized-AI-learning-workstation\\pi-study-helper\\fixtures\\profiles\\pandas-cleaning-v2-draft",
+        "v26": {
+          "verification": "V2-6",
+          "status": "PASS",
+          "development": {
+            "path": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\work\\Pluggable-personalized-AI-learning-workstation\\evaluation\\personas\\development-20.jsonl",
+            "count": 20,
+            "sha256": "1b238dfae09e5c6ea942329a3a0fd952ad9c190edd9666335ad735301cb27876"
+          },
+          "final": {
+            "path": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\work\\Pluggable-personalized-AI-learning-workstation\\evaluation\\personas\\final-60.jsonl",
+            "count": 60,
+            "sha256": "4fcc7c3e2c605f912890ddec5af7d4fa875c861d1636dcaf425a63ddb17f4b9d"
+          },
+          "runtime": {
+            "exitCode": 0,
+            "stdoutSha256": "5a6aabd366ca07a78cd3bff27d3f60dd34d74ac5186d0ac433d850c229920734",
+            "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stdoutBytes": 300,
+            "stderrBytes": 0
+          }
+        }
+      },
+      "v26IsolatedRevision2": {
+        "name": "v2-6-isolated-revision2",
+        "command": "C:\\Users\\Lenovo\\AppData\\Local\\Temp\\node-v22.23.1-win-x64\\npm.cmd test -- --maxWorkers=1 scripts/w2-verification/v2-6-preconditions.test.mjs",
+        "cwd": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\work\\Pluggable-personalized-AI-learning-workstation\\pi-study-helper",
+        "startedAt": "2026-08-13T15:15:18.234Z",
+        "endedAt": "2026-08-13T15:15:20.154Z",
+        "exitCode": 0,
+        "stdoutPath": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\outputs\\W4-D1-B-3-release-final-command-logs\\17-v2-6-isolated-revision2.stdout.txt",
+        "stderrPath": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\outputs\\W4-D1-B-3-release-final-command-logs\\17-v2-6-isolated-revision2.stderr.txt",
+        "stdoutSha256": "37c3bac314ea1eb98965f280a2e9400352699331cccd2fa21c2b39780052ec33",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdoutSummary": "\n> pi-study-helper@0.1.0 test\n> vitest run --maxWorkers=1 scripts/w2-verification/v2-6-preconditions.test.mjs\n\n\n RUN  v4.1.10 C:/Users/Lenovo/Documents/Codex/2026-08-12/la/work/Pluggable-personalized-AI-learning-workstation/pi-study-helper\n\n\n Test Files  1 passed (1)\n      Tests  5 passed (5)\n   Start at  23:15:19\n   Duration  615ms (transform 130ms, setup 0ms, import 275ms, tests 10ms, environment 0ms)\n\n",
+        "stderrSummary": "",
+        "testStatistics": {
+          "testFiles": 1,
+          "passed": 5,
+          "failed": 0,
+          "skipped": 0,
+          "passedFiles": 1,
+          "failedFiles": 0,
+          "totalTests": 5
+        },
+        "issueId": "B-R3-01",
+        "revision2ProfilePath": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\work\\Pluggable-personalized-AI-learning-workstation\\pi-study-helper\\fixtures\\profiles\\pandas-cleaning-v2-draft",
+        "testFiles": 1,
+        "passed": 5,
+        "failed": 0,
+        "skipped": 0
+      },
+      "verify": {
+        "name": "verify",
+        "command": "C:\\Users\\Lenovo\\AppData\\Local\\Temp\\node-v22.23.1-win-x64\\npm.cmd run verify",
+        "cwd": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\work\\Pluggable-personalized-AI-learning-workstation\\pi-study-helper",
+        "startedAt": "2026-08-13T15:15:20.155Z",
+        "endedAt": "2026-08-13T15:19:08.957Z",
+        "exitCode": 0,
+        "stdoutPath": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\outputs\\W4-D1-B-3-release-final-command-logs\\18-verify.stdout.txt",
+        "stderrPath": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\outputs\\W4-D1-B-3-release-final-command-logs\\18-verify.stderr.txt",
+        "stdoutSha256": "72275b60f09b799e35f2b72c771e4326333b68bb3ca20a9cfcbf21f2079813fa",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdoutSummary": "\n> pi-study-helper@0.1.0 verify\n> npm run typecheck && npm test -- --maxWorkers=1 && npm run check:docs && npm run smoke:extension && npm run check:release\n\n\n> pi-study-helper@0.1.0 typecheck\n> tsc --noEmit && tsc -p tsconfig.test.json && tsc -p tsconfig.web.json\n\n\n> pi-study-helper@0.1.0 test\n> vitest run --maxWorkers=1\n\n\n RUN  v4.1.10 C:/Users/Lenovo/Documents/Codex/2026-08-12/la/work/Pluggable-personalized-AI-learning-workstation/pi-study-helper\n\n\n Test Files  70 passed (70)\n      Tests  690 passed | 1 skipped (691)\n   Start at  23:15:33\n   Duration  207.55s (transform 1.85s, setup 0ms, import 26.78s, tests 154.06s, environment 1.47s)\n\n\n> pi-study-helper@0.1.0 check:docs\n> node scripts/check-doc-links.mjs\n\n已检查 70 个项目 Markdown 文件，本地链接全部有效。\n\n> pi-study-helper@0.1.0 smoke:extension\n> node scripts/smoke-extension.mjs\n\npi 已成功解析并初始化 Pi Study Helper extension。\n\n> pi-study-helper@0.1.0 check:release\n> node scripts/check-release.mjs\n\nRelease check passed: 362 tracked files, no private data or secrets found.\n",
+        "stderrSummary": "",
+        "testStatistics": {
+          "testFiles": 70,
+          "passed": 690,
+          "failed": 0,
+          "skipped": 1,
+          "passedFiles": 70,
+          "failedFiles": 0,
+          "totalTests": 691
+        },
+        "testFiles": 70
+      },
+      "conclusion": "Aggregate npm test retains a non-zero frozen V2-6 outer 30-second wrapper timeout. Recorded revision 2 direct 20+60 and isolated V2-6 checks both exit 0; verify is recorded separately and is not used to rewrite the aggregate result."
+    }
+  ],
+  "finalConclusion": {
+    "node": "v22.23.1",
+    "python": "3.13.7",
+    "pandas": "3.0.5",
+    "aggregateFullTest": {
+      "exitCode": 1,
+      "testStatistics": {
+        "testFiles": 70,
+        "passed": 689,
+        "failed": 1,
+        "skipped": 1,
+        "passedFiles": 69,
+        "failedFiles": 1,
+        "totalTests": 691
+      },
+      "classification": "NON_ZERO_V2_6_OUTER_WRAPPER_TIMEOUT"
+    },
+    "v26DirectRevision2": {
+      "exitCode": 0,
+      "development": {
+        "path": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\work\\Pluggable-personalized-AI-learning-workstation\\evaluation\\personas\\development-20.jsonl",
+        "count": 20,
+        "sha256": "1b238dfae09e5c6ea942329a3a0fd952ad9c190edd9666335ad735301cb27876"
+      },
+      "final": {
+        "path": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\work\\Pluggable-personalized-AI-learning-workstation\\evaluation\\personas\\final-60.jsonl",
+        "count": 60,
+        "sha256": "4fcc7c3e2c605f912890ddec5af7d4fa875c861d1636dcaf425a63ddb17f4b9d"
+      }
+    },
+    "v26IsolatedRevision2": {
+      "exitCode": 0,
+      "testStatistics": {
+        "testFiles": 1,
+        "passed": 5,
+        "failed": 0,
+        "skipped": 0,
+        "passedFiles": 1,
+        "failedFiles": 0,
+        "totalTests": 5
+      }
+    },
+    "verify": {
+      "exitCode": 0,
+      "testStatistics": {
+        "testFiles": 70,
+        "passed": 690,
+        "failed": 0,
+        "skipped": 1,
+        "passedFiles": 70,
+        "failedFiles": 0,
+        "totalTests": 691
+      },
+      "classification": "PASS"
+    }
+  },
+  "B_R2_01": {
+    "status": "OWNER_EVIDENCE_EXCEPTION_APPROVED",
+    "decision": "50-W4-D1-B历史证据例外裁决与最终整改执行单.md §3.2: OWNER_EVIDENCE_EXCEPTION_APPROVED"
+  },
+  "B_R3_01": {
+    "status": "CLOSED_BY_COMPLETE_DIRECT_AND_ISOLATED_RECORDS"
+  },
+  "deliveryState": "NOT_COMMITTED / NOT_PUSHED / uploadLock=NOT_REQUESTED"
+}
