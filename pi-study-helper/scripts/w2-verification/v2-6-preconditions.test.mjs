@@ -87,6 +87,9 @@ const developmentPath = process.env.W2_V26_DEVELOPMENT_PATH;
 const finalPath = process.env.W2_V26_FINAL_PATH;
 const profilePath = process.env.W2_V26_PROFILE_PATH;
 const temporaryRoots = [];
+// The full 20+60 recomputation takes 65-70 seconds on the approved cold
+// Windows environment. Keep a bounded budget with enough measured headroom.
+const V2_6_RUNTIME_TIMEOUT_MS = 120_000;
 
 afterAll(async () => {
   await Promise.all(temporaryRoots.map((directory) => rm(directory, { recursive: true, force: true })));
@@ -153,5 +156,5 @@ describe("E V2-6 runtime recomputation", () => {
         }
       }
     }
-  }, 60_000);
+  }, V2_6_RUNTIME_TIMEOUT_MS);
 });

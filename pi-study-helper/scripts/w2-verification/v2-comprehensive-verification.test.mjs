@@ -19,6 +19,10 @@ import {
 } from "./v2-comprehensive-verification.mjs";
 import { scanV27 } from "./v2-7-asset-isolation.mjs";
 
+// The nested V2-6 runtime has a 120-second bounded budget. The outer wrapper
+// must remain larger so it can receive and assert the child's natural result.
+const V2_6_COMPREHENSIVE_TIMEOUT_MS = 150_000;
+
 function context(overrides = {}) {
   return {
     v21BaselineRecord: null,
@@ -224,10 +228,9 @@ test("V2-7 blocks a non-contract input surface", async () => {
 });
 
 // The V2-6 executable intentionally invokes an isolated Vitest check.  It can
-// exceed Vitest's default five-second unit-test timeout on a cold dependency
-// cache and the approved Node 22 runtime, so keep the assertion while giving
-// the subprocess a bounded budget.
-test("V2-6 succeeds through the comprehensive runner with repository-relative inputs", { timeout: 30_000 }, async () => {
+// exceed one minute on the approved cold Windows environment, so keep the
+// assertion while giving the subprocess a bounded budget above its own limit.
+test("V2-6 succeeds through the comprehensive runner with repository-relative inputs", { timeout: V2_6_COMPREHENSIVE_TIMEOUT_MS }, async () => {
   const result = await runVerification("V2-6", context(), { execute: true });
   assert.equal(result.status, "PASS");
   assert.equal(result.commandResults[0].exitCode, 0);
