@@ -1,0 +1,68 @@
+﻿{
+    "schemaVersion":  1,
+    "candidate":  "W4-D2-D-3",
+    "scanStatus":  "PASS",
+    "scannedScopes":  [
+                          "fixtures/model-prompts/w4",
+                          "fixtures/model-responses/w4",
+                          "src/application/adaptive-content-service.ts",
+                          "src/application/capability-task-service.ts",
+                          "src/graphs/w4-d-graph-factory.ts",
+                          "src/infrastructure/profile-adaptive-source-provider.ts",
+                          "src/infrastructure/session-capability-evidence-provider.ts",
+                          "src/infrastructure/w4-private-runtime-store.ts",
+                          "tests/*w4-d*",
+                          "tests/adaptive-content-service.test.ts",
+                          "tests/capability-task-service.test.ts",
+                          "tests/session-capability-evidence-provider.test.ts",
+                          "tests/w4-d-formal-ad-binding.test.ts",
+                          "tests/w4-d-graph-factory.test.ts"
+                      ],
+    "checks":  [
+                   {
+                       "name":  "real_api_keys_or_bearer_headers",
+                       "result":  "PASS",
+                       "findingCount":  0
+                   },
+                   {
+                       "name":  "absolute_paths_in_recorded_fixture",
+                       "result":  "PASS",
+                       "findingCount":  0
+                   },
+                   {
+                       "name":  "B_private_answer_assets_copied",
+                       "result":  "PASS",
+                       "findingCount":  0
+                   },
+                   {
+                       "name":  "hidden_test_rubric_reference_solution_or_private_csv_content",
+                       "result":  "PASS",
+                       "findingCount":  0
+                   },
+                   {
+                       "name":  "real_learner_data",
+                       "result":  "PASS",
+                       "findingCount":  0
+                   },
+                   {
+                       "name":  "runtime_CIDPP_reference",
+                       "result":  "PASS",
+                       "findingCount":  0
+                   },
+                   {
+                       "name":  "expected_synthetic_authority_canary",
+                       "result":  "EXPECTED",
+                       "findingCount":  1,
+                       "detail":  "One synthetic Evidence/score field exists solely in the authority-rejection recording and is never accepted."
+                   },
+                   {
+                       "name":  "synthetic_dynamic_correct_answer",
+                       "result":  "EXPECTED_PRIVATE_FIXTURE",
+                       "findingCount":  3,
+                       "detail":  "Synthetic generated-answer fields exercise validation and are not copied from B or a learner."
+                   }
+               ],
+    "storageBoundary":  "Runtime private records are hashed and written only below \u003cprofileFamilyRoot\u003e/_user/w4-d/\u003ckind\u003e/.",
+    "gitBoundary":  "No _user runtime directory or raw runtime trace is part of the candidate.",
+    "liveStatus":  "LIVE_NOT_RUN"
+}

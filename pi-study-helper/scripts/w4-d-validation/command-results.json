@@ -1,0 +1,389 @@
+﻿{
+    "schemaVersion":  1,
+    "candidate":  "W4-D2-D-4",
+    "formalResultSet":  true,
+    "appendOnlyPolicy":  "Historical failures are retained; r2 and r3 final runs are appended independently and never rewritten as PASS.",
+    "generatedAt":  "2026-08-14T17:09:53.0828822Z",
+    "environment":  {
+                        "node":  "v22.23.1",
+                        "python":  "3.13.7",
+                        "pandas":  "3.0.5",
+                        "pythonUserSiteDisabledForFormalRuns":  true
+                    },
+    "results":  [
+                    {
+                        "id":  "r2-typecheck",
+                        "command":  "npm.cmd run typecheck",
+                        "cwd":  "pi-study-helper",
+                        "startTime":  "2026-08-14T12:48:07.9923283Z",
+                        "endTime":  "2026-08-14T12:48:33.2264895Z",
+                        "exitCode":  0,
+                        "testFileCount":  3,
+                        "passed":  3,
+                        "failed":  0,
+                        "skipped":  0,
+                        "stdoutSha256":  "657f3a771c3ac9b683e5e8bd2354be0cd82fe12a113b8e0fe5cd25311254bd68",
+                        "stderrSha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                        "rawLogPaths":  [
+                                            "C:\\Users\\win11\\AppData\\Local\\Temp\\w4-d2-d3-command-logs\\r2-typecheck.stdout.txt",
+                                            "C:\\Users\\win11\\AppData\\Local\\Temp\\w4-d2-d3-command-logs\\r2-typecheck.stderr.txt"
+                                        ],
+                        "stdoutStderrSha256":  "657f3a771c3ac9b683e5e8bd2354be0cd82fe12a113b8e0fe5cd25311254bd68",
+                        "result":  "PASS"
+                    },
+                    {
+                        "id":  "r2-d-targeted",
+                        "command":  "npx.cmd vitest run tests/adaptive-content-service.test.ts tests/capability-task-service.test.ts tests/w4-d-fixed-fallback-integration.test.ts tests/w4-d-recorded-responses.test.ts tests/session-capability-evidence-provider.test.ts tests/w4-d-graph-factory.test.ts tests/w4-d-formal-ad-binding.test.ts --maxWorkers=1",
+                        "cwd":  "pi-study-helper",
+                        "startTime":  "2026-08-14T12:48:33.4477413Z",
+                        "endTime":  "2026-08-14T12:48:45.6033739Z",
+                        "exitCode":  0,
+                        "testFileCount":  7,
+                        "passed":  37,
+                        "failed":  0,
+                        "skipped":  0,
+                        "stdoutSha256":  "3e363d3a03cdcf774f9f924f7249992b93c098a4311c02e8f70344425d179c92",
+                        "stderrSha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                        "rawLogPaths":  [
+                                            "C:\\Users\\win11\\AppData\\Local\\Temp\\w4-d2-d3-command-logs\\r2-d-targeted.stdout.txt",
+                                            "C:\\Users\\win11\\AppData\\Local\\Temp\\w4-d2-d3-command-logs\\r2-d-targeted.stderr.txt"
+                                        ],
+                        "stdoutStderrSha256":  "3e363d3a03cdcf774f9f924f7249992b93c098a4311c02e8f70344425d179c92",
+                        "result":  "PASS"
+                    },
+                    {
+                        "id":  "r2-ad-affected",
+                        "command":  "npx.cmd vitest run tests/composed-learning-runtime-facade.test.ts tests/quiz-activity-runtime.test.ts tests/diagnostic-runtime.test.ts tests/file-learning-session-repository.test.ts tests/adaptive-content-service.test.ts tests/capability-task-service.test.ts tests/w4-d-fixed-fallback-integration.test.ts tests/w4-d-recorded-responses.test.ts tests/session-capability-evidence-provider.test.ts tests/w4-d-graph-factory.test.ts tests/w4-d-formal-ad-binding.test.ts --maxWorkers=1",
+                        "cwd":  "pi-study-helper",
+                        "startTime":  "2026-08-14T12:48:45.6073851Z",
+                        "endTime":  "2026-08-14T12:48:58.7555674Z",
+                        "exitCode":  0,
+                        "testFileCount":  11,
+                        "passed":  83,
+                        "failed":  0,
+                        "skipped":  0,
+                        "stdoutSha256":  "0331eb1900f94d3f762199f652fa9d1ee084ec2623fdc04302f6cc3550c20f7e",
+                        "stderrSha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                        "rawLogPaths":  [
+                                            "C:\\Users\\win11\\AppData\\Local\\Temp\\w4-d2-d3-command-logs\\r2-ad-affected.stdout.txt",
+                                            "C:\\Users\\win11\\AppData\\Local\\Temp\\w4-d2-d3-command-logs\\r2-ad-affected.stderr.txt"
+                                        ],
+                        "stdoutStderrSha256":  "0331eb1900f94d3f762199f652fa9d1ee084ec2623fdc04302f6cc3550c20f7e",
+                        "result":  "PASS"
+                    },
+                    {
+                        "id":  "r2-recording-static",
+                        "command":  "node fixtures/model-responses/w4/validate-w4-recordings.mjs",
+                        "cwd":  "pi-study-helper",
+                        "startTime":  "2026-08-14T12:48:58.7607000Z",
+                        "endTime":  "2026-08-14T12:48:59.7955763Z",
+                        "exitCode":  0,
+                        "testFileCount":  14,
+                        "passed":  14,
+                        "failed":  0,
+                        "skipped":  0,
+                        "stdoutSha256":  "cdf84a9fb605e25ce1ed7e91411b0c34e705c97dd4296c682e3d63e15ca5fcfe",
+                        "stderrSha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                        "rawLogPaths":  [
+                                            "C:\\Users\\win11\\AppData\\Local\\Temp\\w4-d2-d3-command-logs\\r2-recording-static.stdout.txt",
+                                            "C:\\Users\\win11\\AppData\\Local\\Temp\\w4-d2-d3-command-logs\\r2-recording-static.stderr.txt"
+                                        ],
+                        "stdoutStderrSha256":  "cdf84a9fb605e25ce1ed7e91411b0c34e705c97dd4296c682e3d63e15ca5fcfe",
+                        "result":  "PASS"
+                    },
+                    {
+                        "id":  "r2-check-docs",
+                        "command":  "npm.cmd run check:docs",
+                        "cwd":  "pi-study-helper",
+                        "startTime":  "2026-08-14T12:48:59.7990953Z",
+                        "endTime":  "2026-08-14T12:49:00.8214199Z",
+                        "exitCode":  0,
+                        "testFileCount":  79,
+                        "passed":  79,
+                        "failed":  0,
+                        "skipped":  0,
+                        "stdoutSha256":  "ed08d2a7144bfadd45f5d9b7dac5ccf62458b802afa13f7e1ab58da74c98d855",
+                        "stderrSha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                        "rawLogPaths":  [
+                                            "C:\\Users\\win11\\AppData\\Local\\Temp\\w4-d2-d3-command-logs\\r2-check-docs.stdout.txt",
+                                            "C:\\Users\\win11\\AppData\\Local\\Temp\\w4-d2-d3-command-logs\\r2-check-docs.stderr.txt"
+                                        ],
+                        "stdoutStderrSha256":  "ed08d2a7144bfadd45f5d9b7dac5ccf62458b802afa13f7e1ab58da74c98d855",
+                        "result":  "PASS"
+                    },
+                    {
+                        "id":  "r2-smoke-extension",
+                        "command":  "npm.cmd run smoke:extension",
+                        "cwd":  "pi-study-helper",
+                        "startTime":  "2026-08-14T12:49:00.8254193Z",
+                        "endTime":  "2026-08-14T12:49:03.8665617Z",
+                        "exitCode":  0,
+                        "testFileCount":  1,
+                        "passed":  1,
+                        "failed":  0,
+                        "skipped":  0,
+                        "stdoutSha256":  "65fd9a6cc0ade27c0f311d0281a9f702b89b28824e1ea5e7244b7849339a4b78",
+                        "stderrSha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                        "rawLogPaths":  [
+                                            "C:\\Users\\win11\\AppData\\Local\\Temp\\w4-d2-d3-command-logs\\r2-smoke-extension.stdout.txt",
+                                            "C:\\Users\\win11\\AppData\\Local\\Temp\\w4-d2-d3-command-logs\\r2-smoke-extension.stderr.txt"
+                                        ],
+                        "stdoutStderrSha256":  "65fd9a6cc0ade27c0f311d0281a9f702b89b28824e1ea5e7244b7849339a4b78",
+                        "result":  "PASS"
+                    },
+                    {
+                        "id":  "r2-check-release",
+                        "command":  "npm.cmd run check:release",
+                        "cwd":  "pi-study-helper",
+                        "startTime":  "2026-08-14T12:49:03.8710835Z",
+                        "endTime":  "2026-08-14T12:49:04.8979281Z",
+                        "exitCode":  0,
+                        "testFileCount":  456,
+                        "passed":  456,
+                        "failed":  0,
+                        "skipped":  0,
+                        "stdoutSha256":  "3a683e6a301a87c500a8c305ae1c4495c7e87b2917e54339a21499dd82bf01b2",
+                        "stderrSha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                        "rawLogPaths":  [
+                                            "C:\\Users\\win11\\AppData\\Local\\Temp\\w4-d2-d3-command-logs\\r2-check-release.stdout.txt",
+                                            "C:\\Users\\win11\\AppData\\Local\\Temp\\w4-d2-d3-command-logs\\r2-check-release.stderr.txt"
+                                        ],
+                        "stdoutStderrSha256":  "3a683e6a301a87c500a8c305ae1c4495c7e87b2917e54339a21499dd82bf01b2",
+                        "result":  "PASS"
+                    },
+                    {
+                        "id":  "r2-python-evaluator",
+                        "command":  "npx.cmd vitest run tests/python-process-evaluation.test.ts tests/python-process-evaluation-r2.test.ts --maxWorkers=1",
+                        "cwd":  "pi-study-helper",
+                        "startTime":  "2026-08-14T12:49:04.9009469Z",
+                        "endTime":  "2026-08-14T12:50:14.7522188Z",
+                        "exitCode":  0,
+                        "testFileCount":  2,
+                        "passed":  26,
+                        "failed":  0,
+                        "skipped":  0,
+                        "stdoutSha256":  "bf1eafafd3da13719c7f5c579bee2e13b3cecc8e6f1d04a7e8bb062cf18152d3",
+                        "stderrSha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                        "rawLogPaths":  [
+                                            "C:\\Users\\win11\\AppData\\Local\\Temp\\w4-d2-d3-command-logs\\r2-python-evaluator.stdout.txt",
+                                            "C:\\Users\\win11\\AppData\\Local\\Temp\\w4-d2-d3-command-logs\\r2-python-evaluator.stderr.txt"
+                                        ],
+                        "stdoutStderrSha256":  "bf1eafafd3da13719c7f5c579bee2e13b3cecc8e6f1d04a7e8bb062cf18152d3",
+                        "result":  "PASS"
+                    },
+                    {
+                        "id":  "r2-verify",
+                        "command":  "npm.cmd run verify",
+                        "cwd":  "pi-study-helper",
+                        "startTime":  "2026-08-14T12:50:14.8053782Z",
+                        "endTime":  "2026-08-14T12:53:25.6635175Z",
+                        "exitCode":  1,
+                        "testFileCount":  77,
+                        "passed":  726,
+                        "failed":  1,
+                        "skipped":  1,
+                        "stdoutSha256":  "ae59342f3d5b84a28099528c2b59dfdef105d53a0ef6d4f80c253e634a0e9af9",
+                        "stderrSha256":  "a451f0b484aaef44fc85fd628390a492a56ba2a2fba1d7a46d476999aad22d7c",
+                        "rawLogPaths":  [
+                                            "C:\\Users\\win11\\AppData\\Local\\Temp\\w4-d2-d3-command-logs\\r2-verify.stdout.txt",
+                                            "C:\\Users\\win11\\AppData\\Local\\Temp\\w4-d2-d3-command-logs\\r2-verify.stderr.txt"
+                                        ],
+                        "stdoutStderrSha256":  "f9289e8d80e16daa52de7c1249bb51c314c0af9c21e408053c642c36e34c5bae",
+                        "result":  "NON_ZERO_V2_6_OUTER_WRAPPER_TIMEOUT",
+                        "failureAttribution":  "Existing W2 V2-6 fixed 30-second outer wrapper timeout; direct 20+60 runner comparison passes outside this wrapper."
+                    },
+                    {
+                        "id":  "r3-verify",
+                        "command":  "npm.cmd run verify",
+                        "cwd":  "pi-study-helper",
+                        "startTime":  "2026-08-14T12:53:47.4231779Z",
+                        "endTime":  "2026-08-14T12:56:58.3892871Z",
+                        "exitCode":  1,
+                        "testFileCount":  77,
+                        "passed":  726,
+                        "failed":  1,
+                        "skipped":  1,
+                        "stdoutSha256":  "bc020763c7a9b4ee53f0cfdf42670798fbec7739d1d8929a7b92d225266c125e",
+                        "stderrSha256":  "a451f0b484aaef44fc85fd628390a492a56ba2a2fba1d7a46d476999aad22d7c",
+                        "rawLogPaths":  [
+                                            "C:/Users/win11/AppData/Local/Temp/w4-d2-d3-command-logs/r3-verify.stdout.txt",
+                                            "C:/Users/win11/AppData/Local/Temp/w4-d2-d3-command-logs/r3-verify.stderr.txt"
+                                        ],
+                        "stdoutStderrSha256":  "07e808bec2efef9fcf3607b73fdef8b75d03c8efa1033eae7285c66b85b546a2",
+                        "result":  "NON_ZERO_V2_6_OUTER_WRAPPER_TIMEOUT",
+                        "failureAttribution":  "Existing W2 V2-6 fixed 30-second outer wrapper timeout; D code and direct runner were not changed."
+                    },
+                    {
+                        "id":  "final-d-targeted",
+                        "command":  "npx.cmd vitest run tests/adaptive-content-service.test.ts tests/capability-task-service.test.ts tests/session-capability-evidence-provider.test.ts tests/w4-d-fixed-fallback-integration.test.ts tests/w4-d-formal-ad-binding.test.ts tests/w4-d-graph-factory.test.ts tests/w4-d-recorded-responses.test.ts --maxWorkers=1",
+                        "cwd":  "pi-study-helper",
+                        "startTime":  "2026-08-14T17:01:02.0432052Z",
+                        "endTime":  "2026-08-14T17:01:30.8105015Z",
+                        "exitCode":  0,
+                        "testFileCount":  7,
+                        "passed":  37,
+                        "failed":  0,
+                        "skipped":  0,
+                        "stdoutSha256":  "84f0fa1a07313bb55fd1475a6921a44ce82741c2fc51c9c156f457f3c85be394",
+                        "stderrSha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                        "stdoutBytes":  269,
+                        "stderrBytes":  0,
+                        "rawLogPaths":  [
+                                            "C:\\Users\\win11\\AppData\\Local\\Temp\\w4-d2-d4-final-logs\\final-d-targeted.stdout.log",
+                                            "C:\\Users\\win11\\AppData\\Local\\Temp\\w4-d2-d4-final-logs\\final-d-targeted.stderr.log"
+                                        ],
+                        "result":  "PASS"
+                    },
+                    {
+                        "id":  "final-ad-affected",
+                        "command":  "npx.cmd vitest run tests/composed-learning-runtime-facade.test.ts tests/quiz-activity-runtime.test.ts tests/diagnostic-runtime.test.ts tests/file-learning-session-repository.test.ts tests/adaptive-content-service.test.ts tests/capability-task-service.test.ts tests/w4-d-fixed-fallback-integration.test.ts tests/w4-d-recorded-responses.test.ts tests/session-capability-evidence-provider.test.ts tests/w4-d-graph-factory.test.ts tests/w4-d-formal-ad-binding.test.ts --maxWorkers=1",
+                        "cwd":  "pi-study-helper",
+                        "startTime":  "2026-08-14T17:01:31.4967734Z",
+                        "endTime":  "2026-08-14T17:01:45.2307624Z",
+                        "exitCode":  0,
+                        "testFileCount":  11,
+                        "passed":  83,
+                        "failed":  0,
+                        "skipped":  0,
+                        "stdoutSha256":  "dd4b2c3b3c8feb58511697c228542ae72896458ca3521c2271a8efe51221f079",
+                        "stderrSha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                        "stdoutBytes":  272,
+                        "stderrBytes":  0,
+                        "rawLogPaths":  [
+                                            "C:\\Users\\win11\\AppData\\Local\\Temp\\w4-d2-d4-final-logs\\final-ad-affected.stdout.log",
+                                            "C:\\Users\\win11\\AppData\\Local\\Temp\\w4-d2-d4-final-logs\\final-ad-affected.stderr.log"
+                                        ],
+                        "result":  "PASS"
+                    },
+                    {
+                        "id":  "final-cross-role",
+                        "command":  "npx.cmd vitest run tests/profile-revision-3-activation.test.ts tests/pandas-cleaning-v2-assets.test.ts tests/deterministic-content-policy.test.ts tests/quiz-activity-runtime.test.ts tests/composed-learning-runtime-facade.test.ts tests/model-execution-port.test.ts tests/profile-bound-session-runtime.test.ts tests/profile-v2-revision-resolution.test.ts tests/w4-contracts.test.ts tests/w4-d-fixed-fallback-integration.test.ts tests/w4-d-formal-ad-binding.test.ts tests/w4-d-recorded-responses.test.ts tests/w4-d-graph-factory.test.ts --maxWorkers=1",
+                        "cwd":  "pi-study-helper",
+                        "startTime":  "2026-08-14T17:01:45.7264359Z",
+                        "endTime":  "2026-08-14T17:01:58.5588062Z",
+                        "exitCode":  0,
+                        "testFileCount":  13,
+                        "passed":  74,
+                        "failed":  0,
+                        "skipped":  0,
+                        "stdoutSha256":  "e450d610e7a7d4d48e8ae984b89c4ab88b45680b77711cfce5c40d371db91fad",
+                        "stderrSha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                        "stdoutBytes":  271,
+                        "stderrBytes":  0,
+                        "rawLogPaths":  [
+                                            "C:\\Users\\win11\\AppData\\Local\\Temp\\w4-d2-d4-final-logs\\final-cross-role.stdout.log",
+                                            "C:\\Users\\win11\\AppData\\Local\\Temp\\w4-d2-d4-final-logs\\final-cross-role.stderr.log"
+                                        ],
+                        "result":  "PASS"
+                    },
+                    {
+                        "id":  "final-path-boundary",
+                        "command":  "npx.cmd vitest run tests/path-runtime.test.ts tests/path-session-boundary.test.ts tests/activity-path-suffix.test.ts tests/file-learning-session-repository.test.ts --maxWorkers=1",
+                        "cwd":  "pi-study-helper",
+                        "startTime":  "2026-08-14T17:01:58.8790714Z",
+                        "endTime":  "2026-08-14T17:02:05.6581429Z",
+                        "exitCode":  0,
+                        "testFileCount":  4,
+                        "passed":  40,
+                        "failed":  0,
+                        "skipped":  0,
+                        "stdoutSha256":  "8328b7a6c4e24ecf9f6282adc775ec60bb79331e3cc580abfb0a50216adaf193",
+                        "stderrSha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                        "stdoutBytes":  269,
+                        "stderrBytes":  0,
+                        "rawLogPaths":  [
+                                            "C:\\Users\\win11\\AppData\\Local\\Temp\\w4-d2-d4-final-logs\\final-path-boundary.stdout.log",
+                                            "C:\\Users\\win11\\AppData\\Local\\Temp\\w4-d2-d4-final-logs\\final-path-boundary.stderr.log"
+                                        ],
+                        "result":  "PASS"
+                    },
+                    {
+                        "id":  "final-recording-static",
+                        "command":  "node fixtures/model-responses/w4/validate-w4-recordings.mjs",
+                        "cwd":  "pi-study-helper",
+                        "startTime":  "2026-08-14T17:02:05.9608895Z",
+                        "endTime":  "2026-08-14T17:02:06.8987782Z",
+                        "exitCode":  0,
+                        "testFileCount":  14,
+                        "passed":  14,
+                        "failed":  0,
+                        "skipped":  0,
+                        "stdoutSha256":  "cdf84a9fb605e25ce1ed7e91411b0c34e705c97dd4296c682e3d63e15ca5fcfe",
+                        "stderrSha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                        "stdoutBytes":  385,
+                        "stderrBytes":  0,
+                        "rawLogPaths":  [
+                                            "C:\\Users\\win11\\AppData\\Local\\Temp\\w4-d2-d4-final-logs\\final-recording-static.stdout.log",
+                                            "C:\\Users\\win11\\AppData\\Local\\Temp\\w4-d2-d4-final-logs\\final-recording-static.stderr.log"
+                                        ],
+                        "result":  "PASS"
+                    },
+                    {
+                        "id":  "final-python-evaluator",
+                        "command":  "npx.cmd vitest run tests/python-process-evaluation.test.ts tests/python-process-evaluation-r2.test.ts --maxWorkers=1",
+                        "cwd":  "pi-study-helper",
+                        "startTime":  "2026-08-14T17:02:07.0175025Z",
+                        "endTime":  "2026-08-14T17:03:13.9780107Z",
+                        "exitCode":  0,
+                        "testFileCount":  2,
+                        "passed":  26,
+                        "failed":  0,
+                        "skipped":  0,
+                        "stdoutSha256":  "046037f1d8c18ed2b74bb596ba3d18cb5aa0774f25cdf8fd07d164ff30ed0a8e",
+                        "stderrSha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                        "stdoutBytes":  271,
+                        "stderrBytes":  0,
+                        "rawLogPaths":  [
+                                            "C:\\Users\\win11\\AppData\\Local\\Temp\\w4-d2-d4-final-logs\\final-python-evaluator.stdout.log",
+                                            "C:\\Users\\win11\\AppData\\Local\\Temp\\w4-d2-d4-final-logs\\final-python-evaluator.stderr.log"
+                                        ],
+                        "result":  "PASS"
+                    },
+                    {
+                        "id":  "final-verify-wrapper-interrupted",
+                        "command":  "npm.cmd run verify (Start-Process wrapper)",
+                        "cwd":  "pi-study-helper",
+                        "startTime":  "2026-08-14T17:03:14.6477716Z",
+                        "endTime":  "2026-08-14T17:03:34.9835049Z",
+                        "exitCode":  -1073741510,
+                        "testFileCount":  0,
+                        "passed":  0,
+                        "failed":  0,
+                        "skipped":  0,
+                        "stdoutSha256":  "02cbd7fae04bf3fde484e19a92da4a75ae85569f0cb7244590dd1cd7584a5f56",
+                        "stderrSha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                        "stdoutBytes":  423,
+                        "stderrBytes":  0,
+                        "rawLogPaths":  [
+                                            "C:\\Users\\win11\\AppData\\Local\\Temp\\w4-d2-d4-final-logs\\final-verify.stdout.log",
+                                            "C:\\Users\\win11\\AppData\\Local\\Temp\\w4-d2-d4-final-logs\\final-verify.stderr.log"
+                                        ],
+                        "result":  "ABORTED_BY_WINDOWS_CONSOLE_CONTROL_EVENT",
+                        "failureAttribution":  "No Vitest completion summary was produced; excluded from pass counts. The direct rerun final-verify-r2 is authoritative."
+                    },
+                    {
+                        "id":  "final-verify-r2",
+                        "command":  "npm.cmd run verify",
+                        "cwd":  "pi-study-helper",
+                        "startTime":  "2026-08-14T17:05:24.9286567Z",
+                        "endTime":  "2026-08-14T17:08:41.8565594Z",
+                        "exitCode":  0,
+                        "testFileCount":  77,
+                        "passed":  727,
+                        "failed":  0,
+                        "skipped":  1,
+                        "stdoutSha256":  "45035d1c28fe3e660b18905af903067e3446fc3ccfd7e93919155275c150069a",
+                        "stderrSha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                        "stdoutBytes":  2046,
+                        "stderrBytes":  0,
+                        "rawLogPaths":  [
+                                            "C:\\Users\\win11\\AppData\\Local\\Temp\\w4-d2-d4-final-logs\\final-verify-r2.stdout.log",
+                                            "C:\\Users\\win11\\AppData\\Local\\Temp\\w4-d2-d4-final-logs\\final-verify-r2.stderr.log"
+                                        ],
+                        "result":  "PASS"
+                    }
+                ],
+    "releaseState":  "D2_FINAL_CANDIDATE_NOT_COMMITTED_NOT_PUSHED_UPLOAD_LOCK_NOT_REQUESTED",
+    "liveStatus":  "LIVE_NOT_RUN",
+    "baseCommit":  "576d326dbcaf73d92ec56093dd010332c3936e98"
+}

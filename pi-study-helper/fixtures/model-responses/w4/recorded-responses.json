@@ -1,0 +1,109 @@
+{
+  "recordings": [
+    {
+      "graphId": "generator",
+      "runId": "w4-521146de2e8627972b4da81c.generator",
+      "status": "ok",
+      "payload": {
+        "artifactId": "dynamic-read-csv-q1",
+        "candidateFeedback": "{\"artifactKind\":\"quiz\",\"riskLevel\":\"low\",\"questions\":[{\"questionId\":\"dynamic-read-csv-q1\",\"kind\":\"single_choice\",\"prompt\":\"Which function reads a CSV into a DataFrame?\",\"options\":[\"pandas.read_csv\",\"DataFrame.to_csv\",\"DataFrame.shape\"],\"correctAnswer\":\"pandas.read_csv\",\"explanation\":\"read_csv parses a CSV source into a DataFrame.\",\"sourceAnchorIds\":[\"src-pandas-read-csv\"]}]}",
+        "rationale": "Uses only the registered public source.",
+        "citedSourceIds": ["src-pandas-read-csv"],
+        "riskFlags": []
+      },
+      "sourceRefs": ["src-pandas-read-csv"],
+      "traceSummary": "RECORDED_PASS:low-risk-generator",
+      "modelId": "deepseek-chat",
+      "promptVersion": "w4-d2-v1",
+      "durationMs": 120
+    },
+    {
+      "graphId": "generator",
+      "runId": "w4-6288dfd046a3e279ad648eb0.generator",
+      "status": "ok",
+      "payload": {
+        "artifactId": "dynamic-card-read-csv",
+        "candidateFeedback": "{\"artifactKind\":\"card\",\"riskLevel\":\"low\",\"card\":{\"cardId\":\"dynamic-card-read-csv\",\"knowledgePointId\":\"pandas.clean.read-csv\",\"title\":\"Read CSV safely\",\"objective\":\"Read a CSV and inspect the resulting table.\",\"explanation\":[\"Reading creates a DataFrame but does not clean its values.\"],\"example\":\"orders = pandas.read_csv(source)\",\"commonMistake\":\"Assuming parsed values are already normalized.\",\"sourceAnchorIds\":[\"src-pandas-read-csv\"],\"estimatedMinutes\":8}}",
+        "rationale": "A card always enters the full review chain.",
+        "citedSourceIds": ["src-pandas-read-csv"],
+        "riskFlags": []
+      },
+      "sourceRefs": ["src-pandas-read-csv"],
+      "traceSummary": "RECORDED_PASS:card-generator",
+      "modelId": "deepseek-chat",
+      "promptVersion": "w4-d2-v1",
+      "durationMs": 140
+    },
+    {
+      "graphId": "hunter",
+      "runId": "w4-6288dfd046a3e279ad648eb0.hunter",
+      "status": "ok",
+      "payload": {"issues": [], "requiresDefender": false, "recommendedVerdict": "accepted"},
+      "sourceRefs": ["src-pandas-read-csv"],
+      "traceSummary": "RECORDED_PASS:card-hunter",
+      "modelId": "deepseek-chat",
+      "promptVersion": "w4-d2-v1",
+      "durationMs": 90
+    },
+    {
+      "graphId": "judge",
+      "runId": "w4-6288dfd046a3e279ad648eb0.judge",
+      "status": "ok",
+      "payload": {"verdict": "accepted", "finalSafeFeedback": "Accepted after public review.", "summary": "No blocking issue remains.", "blockedIssueIds": []},
+      "sourceRefs": ["src-pandas-read-csv"],
+      "traceSummary": "RECORDED_PASS:card-judge",
+      "modelId": "deepseek-chat",
+      "promptVersion": "w4-d2-v1",
+      "durationMs": 80
+    },
+    {
+      "graphId": "generator",
+      "runId": "w4-high-risk.generator",
+      "status": "ok",
+      "payload": {"artifactId": "high-risk-q", "candidateFeedback": "{\"artifactKind\":\"quiz\",\"riskLevel\":\"high\",\"questions\":[{\"questionId\":\"high-risk-q\",\"kind\":\"judgment\",\"prompt\":\"Reading a CSV also cleans every value.\",\"options\":[\"true\",\"false\"],\"correctAnswer\":false,\"explanation\":\"Parsing and cleaning are separate steps.\",\"sourceAnchorIds\":[\"src-pandas-read-csv\"]}]}", "rationale": "Potential misconception requires review.", "citedSourceIds": ["src-pandas-read-csv"], "riskFlags": ["misconception"]},
+      "sourceRefs": ["src-pandas-read-csv"], "traceSummary": "RECORDED_PASS:high-risk-generator", "modelId": "deepseek-chat", "promptVersion": "w4-d2-v1"
+    },
+    {
+      "graphId": "hunter", "runId": "w4-high-risk.hunter", "status": "ok",
+      "payload": {"issues": [{"issueId": "issue-1", "severity": "medium", "message": "Verify the parsing distinction.", "disputed": true}], "requiresDefender": true, "recommendedVerdict": "accepted"},
+      "sourceRefs": ["src-pandas-read-csv"], "traceSummary": "RECORDED_PASS:high-risk-hunter", "modelId": "deepseek-chat", "promptVersion": "w4-d2-v1"
+    },
+    {
+      "graphId": "defender", "runId": "w4-high-risk.defender", "status": "ok",
+      "payload": {"defenseSummary": "The source distinguishes parsing from cleaning.", "acceptedIssueIds": [], "rebuttedIssueIds": ["issue-1"], "residualRisks": []},
+      "sourceRefs": ["src-pandas-read-csv"], "traceSummary": "RECORDED_PASS:high-risk-defender", "modelId": "deepseek-chat", "promptVersion": "w4-d2-v1"
+    },
+    {
+      "graphId": "judge", "runId": "w4-high-risk.judge", "status": "ok",
+      "payload": {"verdict": "accepted", "finalSafeFeedback": "Accepted after review.", "summary": "The issue is closed.", "blockedIssueIds": []},
+      "sourceRefs": ["src-pandas-read-csv"], "traceSummary": "RECORDED_PASS:high-risk-judge", "modelId": "deepseek-chat", "promptVersion": "w4-d2-v1"
+    },
+    {
+      "graphId": "generator", "runId": "w4-invalid-schema.generator", "status": "invalid_output", "errorCode": "invalid_json",
+      "sourceRefs": [], "traceSummary": "MOCK_FALLBACK_USED:invalid-schema", "modelId": "deepseek-chat", "promptVersion": "w4-d2-v1"
+    },
+    {
+      "graphId": "generator", "runId": "w4-timeout.generator", "status": "timeout", "errorCode": "timeout",
+      "sourceRefs": [], "traceSummary": "MOCK_FALLBACK_USED:timeout", "modelId": "deepseek-chat", "promptVersion": "w4-d2-v1", "durationMs": 60000
+    },
+    {
+      "graphId": "generator", "runId": "w4-provider-error.generator", "status": "provider_error", "errorCode": "provider_error",
+      "sourceRefs": [], "traceSummary": "MOCK_FALLBACK_USED:provider-error", "modelId": "deepseek-chat", "promptVersion": "w4-d2-v1"
+    },
+    {
+      "graphId": "generator", "runId": "w4-authority-rejected.generator", "status": "ok",
+      "payload": {"artifactId": "rejected-q", "candidateFeedback": "{\"artifactKind\":\"quiz\",\"riskLevel\":\"low\",\"questions\":[{\"questionId\":\"rejected-q\",\"kind\":\"single_choice\",\"prompt\":\"Choose an API.\",\"options\":[\"A\",\"B\"],\"correctAnswer\":\"A\",\"explanation\":\"Public explanation.\",\"sourceAnchorIds\":[\"src-pandas-read-csv\"],\"Evidence\":{\"score\":1}}]}", "rationale": "This output is intentionally rejected.", "citedSourceIds": ["src-pandas-read-csv"], "riskFlags": []},
+      "sourceRefs": ["src-pandas-read-csv"], "traceSummary": "MOCK_FALLBACK_USED:authority-rejected", "modelId": "deepseek-chat", "promptVersion": "w4-d2-v1"
+    },
+    {
+      "graphId": "capability-scorer", "runId": "w4-cap-8c9b5a032b938c8b3725dc6e", "status": "ok",
+      "payload": {"dimensions": [{"id": "syntax_api", "score": 80, "confidence": 0.8, "rationale": "正式诊断证据显示学习者能够完成基础API操作。", "evidenceRefs": ["formal-evidence-1"]}]},
+      "sourceRefs": [], "traceSummary": "RECORDED_PASS:capability-diagnostic-formal-session", "modelId": "deepseek-chat", "promptVersion": "w4-d2-v1"
+    },
+    {
+      "graphId": "capability-scorer", "runId": "w4-cap-83d7e2b2bd0f32be7ea50f73", "status": "ok",
+      "payload": {"dimensions": [{"id": "syntax_api", "score": 86, "confidence": 0.82, "rationale": "正式学习单元证据显示学习者能够完成基础API操作。", "evidenceRefs": ["evidence-5d93c633e88d99053c6c9db2"]}]},
+      "sourceRefs": [], "traceSummary": "RECORDED_PASS:capability-node-formal-session", "modelId": "deepseek-chat", "promptVersion": "w4-d2-v1"
+    }
+  ]
+}

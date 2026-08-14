@@ -1,0 +1,66 @@
+﻿{
+    "schemaVersion":  1,
+    "fixture":  "fixtures/model-responses/w4/recorded-responses.json",
+    "fixtureSha256":  "4dc9fae61d7d179947fe24ed661b5a6826484f9c27e79a0b2fc39a55a186061c",
+    "promptVersion":  "w4-d2-v1",
+    "modelId":  "deepseek-chat",
+    "mode":  "recorded_no_key",
+    "liveStatus":  "LIVE_NOT_RUN",
+    "recordingCount":  14,
+    "requiredClasses":  [
+                            {
+                                "class":  "normal_success",
+                                "runIds":  [
+                                               "w4-521146de2e8627972b4da81c.generator",
+                                               "w4-6288dfd046a3e279ad648eb0.generator",
+                                               "w4-cap-8c9b5a032b938c8b3725dc6e",
+                                               "w4-cap-83d7e2b2bd0f32be7ea50f73"
+                                           ],
+                                "status":  "RECORDED_PRESENT"
+                            },
+                            {
+                                "class":  "invalid_schema",
+                                "runIds":  [
+                                               "w4-invalid-schema.generator"
+                                           ],
+                                "status":  "RECORDED_PRESENT"
+                            },
+                            {
+                                "class":  "timeout",
+                                "runIds":  [
+                                               "w4-timeout.generator"
+                                           ],
+                                "status":  "RECORDED_PRESENT"
+                            },
+                            {
+                                "class":  "provider_error",
+                                "runIds":  [
+                                               "w4-provider-error.generator"
+                                           ],
+                                "status":  "RECORDED_PRESENT"
+                            },
+                            {
+                                "class":  "high_risk_review",
+                                "runIds":  [
+                                               "w4-high-risk.generator",
+                                               "w4-high-risk.hunter",
+                                               "w4-high-risk.defender",
+                                               "w4-high-risk.judge"
+                                           ],
+                                "status":  "RECORDED_PRESENT"
+                            },
+                            {
+                                "class":  "authority_rejected",
+                                "runIds":  [
+                                               "w4-authority-rejected.generator"
+                                           ],
+                                "status":  "RECORDED_PRESENT"
+                            }
+                        ],
+    "notes":  [
+                  "All learner-like identifiers and outputs are synthetic.",
+                  "Synthetic dynamic answer fields are required to exercise the private candidate schema; no B fixed answer asset or real learner answer is copied.",
+                  "No live request, header or provider key is recorded.",
+                  "Capability scorer recordings are bound to A FileLearningSessionRepository-created session IDs: session-3da523ed0736ba9ce580f8b9 and session-70a2c6663f3fd05eb4a53a51."
+              ]
+}

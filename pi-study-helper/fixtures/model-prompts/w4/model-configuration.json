@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "promptVersion": "w4-d2-v1",
+  "modelId": "deepseek-chat",
+  "mode": "recorded_responses_default",
+  "networkEnabled": false,
+  "liveModelCapabilityClaimed": false,
+  "runtimeCidppEnabled": false,
+  "fallbackAfterMs": 15000,
+  "discardAfterMs": 60000,
+  "requiredLiveVariables": ["OPENAI_MODEL", "OPENAI_BASE_URL", "OPENAI_API_KEY"]
+}
