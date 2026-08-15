@@ -18,7 +18,7 @@
     {
       "path": "assessments/diagnostic/questions.json",
       "hashMode": "raw-binary",
-      "sha256": "7b2653f838b2698ebedfee52ba39e63dea7167139ad460bd353008327353c485",
+      "sha256": "1c2c3bcd4b60b5280d841c553a406deba549d81c56b64f8458b4de0aa368749b",
       "byteLength": 3370
     },
     {
@@ -318,7 +318,7 @@
     {
       "path": "quality/generate-diagnostic-summary.mjs",
       "hashMode": "raw-binary",
-      "sha256": "5ea67d5b54cc5b48c3ce026c9cbbee61790ba819076e41cb4d3fd099d0186256",
+      "sha256": "3e9000293c62b84093ba13ff5f5a29601f70a47d58bc8cd21057b3571e9578c5",
       "byteLength": 5239
     },
     {
@@ -378,7 +378,7 @@
     {
       "path": "quality/w4-b-asset-inventory.json",
       "hashMode": "raw-binary",
-      "sha256": "9c55a019d715307f8a1445ed18753ffc17857fdc0aba38ad3858d30d3317590c",
+      "sha256": "feb5bdf0d797af5247a6febf356ae40597c0d2a4f1ed6361951de4518bb9e27b",
       "byteLength": 14217
     },
     {
@@ -472,5 +472,5 @@
       "byteLength": 455
     }
   ],
-  "assetTreeSha256": "e118fd65c4583821f686cba4faab5990a81d2149a8f73cf89af2c376ba15b352"
+  "assetTreeSha256": "d1438022a49f83df20fa865443c36f4c3442856c8b679aac989de9e61a3feb30"
 }

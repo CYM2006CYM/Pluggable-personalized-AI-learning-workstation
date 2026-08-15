@@ -51,7 +51,18 @@ async function publicAssetFiles(root) {
   return result;
 }
 
-const [manifest, knowledge, goals, activitiesAsset, cardsAsset, publicAsset, privateAsset, sources] = await Promise.all([
+const [
+  manifest,
+  knowledge,
+  goals,
+  activitiesAsset,
+  cardsAsset,
+  publicAsset,
+  privateAsset,
+  sources,
+  diagnosticBlueprint,
+  diagnosticAnswerKey,
+] = await Promise.all([
   readJson(resolve(profileRoot, "profile.json")),
   readJson(resolve(profileRoot, "knowledge/knowledge-points.json")),
   readJson(resolve(profileRoot, "goals/learning-goals.json")),
@@ -60,6 +71,8 @@ const [manifest, knowledge, goals, activitiesAsset, cardsAsset, publicAsset, pri
   readJson(resolve(profileRoot, "assessments/question-groups.json")),
   readJson(resolve(profileRoot, "assessments/private/quiz-answer-key.json")),
   readJson(resolve(profileRoot, "sources/source-map.json")),
+  readJson(resolve(profileRoot, "assessments/diagnostic/questions.json")),
+  readJson(resolve(profileRoot, "assessments/diagnostic/private/answer-key.json")),
 ]);
 const [coverage, assetInventory, qualityReport] = await Promise.all([
   readJson(resolve(profileRoot, "quality/w4-b-coverage-matrix.json")),
@@ -68,6 +81,8 @@ const [coverage, assetInventory, qualityReport] = await Promise.all([
 ]);
 
 ensure(manifest.schemaVersion === 2 && manifest.revision === 3 && manifest.revisionOf === 2 && manifest.status === "draft", "revision 3 manifest identity is invalid");
+ensure(diagnosticBlueprint.profileRevision === manifest.revision, "diagnostic blueprint revision must match the revision 3 manifest");
+ensure(diagnosticAnswerKey.blueprintId === diagnosticBlueprint.blueprintId, "diagnostic answer key must match the revision 3 blueprint");
 const goalsById = new Map(goals.goals.map((goal) => [goal.goalId, goal]));
 const cleanGoal = goalsById.get("goal-clean-orders");
 ensure(JSON.stringify(cleanGoal.requiredActivityIds) === JSON.stringify(["act-practical"]), "goal requiredActivityIds must contain only act-practical");

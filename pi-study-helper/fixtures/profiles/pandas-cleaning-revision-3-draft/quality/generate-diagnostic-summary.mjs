@@ -77,7 +77,7 @@ async function main() {
         mode: "recommended",
         goalId: candidate.goalId,
         availableMinutes: candidate.availableMinutes,
-        profileRevision: 2,
+        profileRevision: 3,
         diagnosticRequired: true,
       });
       for (const [index, answer] of candidate.diagnosticAnswers.entries()) {
@@ -86,7 +86,7 @@ async function main() {
           requestId: `${requestPrefix}-answer-${String(index + 1).padStart(2, "0")}`,
           sessionId: view.sessionId,
           sessionVersion: view.sessionVersion,
-          profileRevision: 2,
+          profileRevision: 3,
           diagnosticId: blueprint.blueprintId,
           diagnosticVersion: 1,
           questionId: answer.questionId,
@@ -96,7 +96,7 @@ async function main() {
         requestId: `${requestPrefix}-complete`,
         sessionId: view.sessionId,
         sessionVersion: view.sessionVersion,
-        profileRevision: 2,
+        profileRevision: 3,
         diagnosticId: blueprint.blueprintId,
         diagnosticVersion: 1,
       });
@@ -114,7 +114,7 @@ async function main() {
       aCommit: "1008f765e12687a0a1f7d65666a64cf13995e0a3",
       caseCount: summaries.length,
       final60Sha256: sha256(normalizedText(final60Raw)),
-      profileRevision: 2,
+      profileRevision: 3,
       scoringVersion: blueprint.scoringVersion,
       summaryVersion: "w2-diagnostic-knowledge-state-summary-v1",
       summaries,

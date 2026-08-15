@@ -1,6 +1,6 @@
 {
   "blueprintId": "diagnostic-pandas-cleaning-v2-draft",
-  "profileRevision": 2,
+  "profileRevision": 3,
   "goalIds": ["goal-clean-orders"],
   "estimatedMinutes": 8,
   "minimumCoverage": 1,
