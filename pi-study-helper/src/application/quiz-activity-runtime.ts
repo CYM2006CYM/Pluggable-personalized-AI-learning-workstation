@@ -26,6 +26,8 @@ export interface QuizActivityAssets {
   knowledgePoints?: Array<Pick<KnowledgePointDefinition, "id" | "requiresCodeEvidence">>;
   fixedQuestions: QuizQuestionPrivate[];
   supplementalQuestions: QuizQuestionPrivate[];
+  legacyQuestion?: QuizQuestionPrivate;
+  legacySubtype?: "single_choice" | "judgment";
 }
 
 export interface QuizActivityRuntimeOptions {
@@ -99,19 +101,23 @@ export class QuizActivityRuntime {
       .filter((attempt): attempt is QuizAttemptSnapshot => attempt !== undefined);
     const excludedQuestionIds = previousAttempts.flatMap((attempt) => attempt.questions.map((question) => question.questionId));
     const retryNumber = entry.quizRetryCount;
-    const dynamic = await this.options.content.prepareQuiz({
-      profileRevision: input.profileRevision,
-      activityId: input.activityId,
-      retryNumber,
-      excludedQuestionIds,
-    });
-    const selected = selectDeterministicQuizContent({
-      dynamic: dynamic.status === "accepted" ? dynamic.questions ?? [] : [],
-      supplemental: assets.supplementalQuestions,
-      fixed: assets.fixedQuestions,
-      excludedQuestionIds,
-      allowedSourceAnchorIds: assets.knowledgePoint.sourceAnchorIds,
-    });
+    const selected = assets.legacyQuestion === undefined
+      ? await (async () => {
+        const dynamic = await this.options.content.prepareQuiz({
+          profileRevision: input.profileRevision,
+          activityId: input.activityId,
+          retryNumber,
+          excludedQuestionIds,
+        });
+        return selectDeterministicQuizContent({
+          dynamic: dynamic.status === "accepted" ? dynamic.questions ?? [] : [],
+          supplemental: assets.supplementalQuestions,
+          fixed: assets.fixedQuestions,
+          excludedQuestionIds,
+          allowedSourceAnchorIds: assets.knowledgePoint.sourceAnchorIds,
+        });
+      })()
+      : { source: "fixed" as const, questions: [structuredClone(assets.legacyQuestion)] };
     const core = new DeterministicQuizRuntime();
     const opened = core.open({
       requestId: input.requestId,
@@ -120,6 +126,7 @@ export class QuizActivityRuntime {
       activity: assets.activity,
       questions: selected.questions,
       retryNumber,
+      ...(assets.legacySubtype === undefined ? {} : { legacySubtype: assets.legacySubtype }),
     });
     const attempt = core.getAttempt(opened.attemptId);
     entry.status = "in_progress";
@@ -264,6 +271,21 @@ export class QuizActivityRuntime {
   }
 
   private safeActivity(attempt: QuizAttemptSnapshot) {
+    if (attempt.legacySubtype !== undefined) {
+      const question = attempt.questions[0];
+      if (question === undefined) throw new QuizRuntimeError("submission_contract_error", "Legacy Quiz Attempt has no question");
+      return {
+        activityId: attempt.activityId,
+        activityVersion: attempt.activityVersion,
+        kind: "mcq" as const,
+        title: attempt.title,
+        prompt: attempt.prompt,
+        primaryKnowledgePointId: attempt.primaryKnowledgePointId,
+        supportingKnowledgePointIds: [...attempt.supportingKnowledgePointIds],
+        questions: [{ questionId: question.questionId, kind: question.kind, prompt: question.prompt, options: [...question.options] }],
+        retryNumber: attempt.retryNumber,
+      };
+    }
     return {
       activityId: attempt.activityId,
       activityVersion: attempt.activityVersion,
@@ -278,12 +300,27 @@ export class QuizActivityRuntime {
   }
 }
 
-interface StoredQuizActivity extends QuizActivityDefinition {
+interface StoredQuizActivityBase extends QuizActivityDefinition {
   kind: "mcq";
-  fixedQuestionGroupId: string;
-  supplementalQuestionGroupId: string;
   evaluatorRef: string;
+  sourceAnchorIds: string[];
 }
+
+interface StoredLegacyQuizActivity extends StoredQuizActivityBase {
+  subtype: "single_choice" | "judgment";
+  options: string[];
+  fixedQuestionGroupId?: never;
+  supplementalQuestionGroupId?: never;
+}
+
+interface StoredQuestionGroupQuizActivity extends StoredQuizActivityBase {
+  fixedQuestionGroupId: string;
+  supplementalQuestionGroupId?: string;
+  subtype?: never;
+  options?: never;
+}
+
+type StoredQuizActivity = StoredLegacyQuizActivity | StoredQuestionGroupQuizActivity;
 
 interface PublicQuizGroup {
   groupId: string;
@@ -308,13 +345,56 @@ export class ProfileFamilyQuizActivityAssetResolver {
       this.profiles.loadProfileV2RevisionQuizGroups(subjectId, profileRevision),
     ]);
     const stored = (JSON.parse(activitiesRaw) as { activities: StoredQuizActivity[] }).activities.find((activity) => activity.activityId === activityId);
-    if (stored === undefined || stored.kind !== "mcq" || stored.profileRevision !== profileRevision
-        || !stored.fixedQuestionGroupId || !stored.supplementalQuestionGroupId || !stored.evaluatorRef) {
+    if (stored === undefined || stored.kind !== "mcq" || stored.profileRevision !== profileRevision || !stored.evaluatorRef) {
       throw new QuizRuntimeError("activity_version_conflict", "Quiz Activity binding is invalid");
     }
     const [answerRelativePath] = stored.evaluatorRef.split("#", 2);
     if (!answerRelativePath) throw new QuizRuntimeError("submission_contract_error", "Quiz answer key binding is invalid");
     const answersRaw = await this.profiles.readProfileV2RevisionFile(subjectId, profileRevision, `${manifest.paths.assessments}/${answerRelativePath}`);
+    const point = (JSON.parse(knowledgeRaw) as { knowledgePoints: KnowledgePointDefinition[] }).knowledgePoints
+      .find((item) => item.id === stored.primaryKnowledgePointId);
+    if (point === undefined) throw new QuizRuntimeError("submission_contract_error", "Quiz knowledge point binding is invalid");
+    const legacySubtype = stored.subtype;
+    if (legacySubtype !== undefined) {
+      if (!Array.isArray(stored.options) || stored.options.length < 2 || new Set(stored.options).size !== stored.options.length) {
+        throw new QuizRuntimeError("submission_contract_error", "Legacy Quiz options are invalid");
+      }
+      const answerDocument = JSON.parse(answersRaw) as { answers?: Array<{ questionId?: string; correctOptionIndex?: number }> };
+      const answer = answerDocument.answers?.find((item) => item.questionId === stored.evaluatorRef.split("#")[1]);
+      const correctOptionIndex = answer?.correctOptionIndex;
+      if (answer === undefined || typeof correctOptionIndex !== "number" || !Number.isInteger(correctOptionIndex)
+          || correctOptionIndex < 0 || correctOptionIndex >= stored.options.length) {
+        throw new QuizRuntimeError("submission_contract_error", "Legacy Quiz answer binding is invalid");
+      }
+      const questionId = stored.evaluatorRef.split("#")[1];
+      if (!questionId) throw new QuizRuntimeError("submission_contract_error", "Legacy Quiz question binding is invalid");
+      const question: QuizQuestionPrivate = {
+        questionId,
+        kind: legacySubtype,
+        prompt: stored.prompt,
+        options: [...stored.options],
+        correctAnswer: legacySubtype === "judgment" ? correctOptionIndex === 0 : stored.options[correctOptionIndex],
+        explanation: "",
+        sourceAnchorIds: [...stored.sourceAnchorIds],
+      };
+      return {
+        activity: {
+          activityId: stored.activityId,
+          activityVersion: profileRevision,
+          profileRevision,
+          title: stored.title,
+          prompt: stored.prompt,
+          primaryKnowledgePointId: stored.primaryKnowledgePointId,
+          supportingKnowledgePointIds: [...stored.supportingKnowledgePointIds],
+        },
+        knowledgePoint: { id: point.id, sourceAnchorIds: [...point.sourceAnchorIds], ...(point.requiresCodeEvidence === undefined ? {} : { requiresCodeEvidence: point.requiresCodeEvidence }) },
+        knowledgePoints: [point].map((item) => ({ id: item.id, ...(item.requiresCodeEvidence === undefined ? {} : { requiresCodeEvidence: item.requiresCodeEvidence }) })),
+        fixedQuestions: [],
+        supplementalQuestions: [],
+        legacyQuestion: question,
+        legacySubtype,
+      };
+    }
     const publicGroups = publicGroupAsset.groups as PublicQuizGroup[];
     const privateGroups = (JSON.parse(answersRaw) as { groups: Array<{ groupId: string; answers: QuizQuestionPrivate[] }> }).groups;
     const merge = (groupId: string, role: PublicQuizGroup["role"]): QuizQuestionPrivate[] => {
@@ -335,8 +415,7 @@ export class ProfileFamilyQuizActivityAssetResolver {
       });
     };
     const knowledgePoints = (JSON.parse(knowledgeRaw) as { knowledgePoints: KnowledgePointDefinition[] }).knowledgePoints;
-    const point = knowledgePoints.find((item) => item.id === stored.primaryKnowledgePointId);
-    if (point === undefined) throw new QuizRuntimeError("submission_contract_error", "Quiz knowledge point binding is invalid");
+    if (!stored.fixedQuestionGroupId) throw new QuizRuntimeError("submission_contract_error", "Quiz fixed group binding is invalid");
     return {
       activity: {
         activityId: stored.activityId,
@@ -350,7 +429,7 @@ export class ProfileFamilyQuizActivityAssetResolver {
       knowledgePoint: { id: point.id, sourceAnchorIds: [...point.sourceAnchorIds], ...(point.requiresCodeEvidence === undefined ? {} : { requiresCodeEvidence: point.requiresCodeEvidence }) },
       knowledgePoints: knowledgePoints.map((item) => ({ id: item.id, ...(item.requiresCodeEvidence === undefined ? {} : { requiresCodeEvidence: item.requiresCodeEvidence }) })),
       fixedQuestions: merge(stored.fixedQuestionGroupId, "fixed"),
-      supplementalQuestions: merge(stored.supplementalQuestionGroupId, "supplemental"),
+      supplementalQuestions: stored.supplementalQuestionGroupId === undefined ? [] : merge(stored.supplementalQuestionGroupId, "supplemental"),
     };
   }
 }

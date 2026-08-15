@@ -7,6 +7,8 @@ import {
   DiagnosticRuntime,
 } from "../src/application/diagnostic-runtime.js";
 import { FileLearningSessionRepository } from "../src/repositories/file-learning-session-repository.js";
+import { ProfileFamilyQuizActivityAssetResolver } from "../src/application/quiz-activity-runtime.js";
+import { ProfileFamilyRepository } from "../src/repositories/profile-family-repository.js";
 
 const profileRoot = resolve("fixtures/profiles/pandas-cleaning-revision-3-draft");
 const roots: string[] = [];
@@ -100,5 +102,24 @@ describe("Pandas revision 3 diagnostic binding", () => {
       sessionVersion: completed.sessionVersion,
       profileRevision: 3,
     })).evidence).toEqual([]);
+  });
+
+  it("loads the legal revision 3 legacy helper question without treating it as a W4 group", async () => {
+    const dataRoot = await mkdtemp(resolve(tmpdir(), "pandas-revision-3-legacy-quiz-"));
+    roots.push(dataRoot);
+    const profiles = new ProfileFamilyRepository({ dataRoot, fixturesRoot: resolve("fixtures/profiles") });
+    await profiles.activateRevision3Draft("pandas-cleaning");
+    const assets = await new ProfileFamilyQuizActivityAssetResolver(profiles)
+      .loadAssets("pandas-cleaning", 3, "act-basic-python-remediation");
+
+    expect(assets.legacySubtype).toBe("single_choice");
+    expect(assets.legacyQuestion).toMatchObject({
+      questionId: "fallback-basic-python-01",
+      kind: "single_choice",
+      correctAnswer: "df.shape",
+      options: ["df.shape", "shape(df)", "df->shape", "df.shape()"],
+    });
+    expect(assets.fixedQuestions).toEqual([]);
+    expect(assets.supplementalQuestions).toEqual([]);
   });
 });

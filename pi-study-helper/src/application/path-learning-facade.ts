@@ -138,7 +138,14 @@ function activityView(activity: PathActivityDefinition | undefined): import("../
     primaryKnowledgePointId: activity.primaryKnowledgePointId,
     supportingKnowledgePointIds: [...activity.supportingKnowledgePointIds],
   };
-  if (activity.kind === "mcq") return { ...base, kind: "mcq" };
+  if (activity.kind === "mcq") {
+    return {
+      ...base,
+      kind: "mcq",
+      ...(activity.subtype === undefined ? {} : { subtype: activity.subtype }),
+      ...(activity.options === undefined ? {} : { options: [...activity.options] }),
+    };
+  }
   return {
     ...base,
     kind: activity.kind ?? "explain",

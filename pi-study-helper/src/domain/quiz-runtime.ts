@@ -28,6 +28,7 @@ export interface QuizAttemptSnapshot {
   primaryKnowledgePointId: string;
   supportingKnowledgePointIds: string[];
   retryNumber: 0 | 1;
+  legacySubtype?: "single_choice" | "judgment";
   questions: QuizQuestionPrivate[];
   status: "draft" | "submitted";
   result?: QuizActivityResult;
@@ -98,6 +99,7 @@ export class DeterministicQuizRuntime {
     activity: QuizActivityDefinition;
     questions: QuizQuestionPrivate[];
     retryNumber: 0 | 1;
+    legacySubtype?: "single_choice" | "judgment";
     excludedQuestionIds?: string[];
     requestId?: string;
   }): { attemptId: string; activity: QuizActivitySafeView } {
@@ -119,6 +121,7 @@ export class DeterministicQuizRuntime {
       primaryKnowledgePointId: input.activity.primaryKnowledgePointId,
       supportingKnowledgePointIds: [...input.activity.supportingKnowledgePointIds],
       retryNumber: input.retryNumber,
+      ...(input.legacySubtype === undefined ? {} : { legacySubtype: input.legacySubtype }),
       questions: structuredClone(questions),
       status: "draft",
       ...(input.requestId === undefined ? {} : { openedRequestId: input.requestId }),

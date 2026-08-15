@@ -50,7 +50,7 @@ function activeInternalPath(sessionId: string): InternalPersistedPathSnapshot {
 
 afterEach(async () => { await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true }))); });
 
-async function setup() {
+async function setup(runtimeAssets: QuizActivityAssets = assets) {
   const root = await mkdtemp(resolve(tmpdir(), "quiz-activity-runtime-")); roots.push(root);
   const sessions = new FileLearningSessionRepository({ dataRoot: root, now });
   const view = await sessions.create({ requestId: "create", subjectId: "subject", mode: "recommended", goalId: "goal", availableMinutes: 20, profileRevision: 3, diagnosticRequired: false });
@@ -77,11 +77,27 @@ async function setup() {
     },
   }, path);
   const pathSuffix = createActivityPathSuffixReplanner({ sessions, profile: { async load() { return structuredClone(pathProfile); } }, now });
-  const runtime = new QuizActivityRuntime({ sessions, content: createDeterministicContentPort(), loadAssets: async () => structuredClone(assets), pathSuffix, now });
+  const runtime = new QuizActivityRuntime({ sessions, content: createDeterministicContentPort(), loadAssets: async () => structuredClone(runtimeAssets), pathSuffix, now });
   return { root, sessions, view, runtime };
 }
 
 describe("QuizActivityRuntime", () => {
+  it("opens a legal legacy single-question helper without routing it through W4 group selection", async () => {
+    const legacyQuestion = questions("legacy", 1)[0]!;
+    const legacyAssets: QuizActivityAssets = {
+      ...assets,
+      fixedQuestions: [],
+      supplementalQuestions: [],
+      legacyQuestion,
+      legacySubtype: "single_choice",
+    };
+    const { view, runtime } = await setup(legacyAssets);
+    const opened = await runtime.openActivity({ requestId: "legacy-open", sessionId: view.sessionId, sessionVersion: 3, profileRevision: 3, activityId: "quiz", activityVersion: 1, pathVersion: 1, acknowledgedCardId: "actual-card-kp" });
+    expect(opened.activity.questions).toHaveLength(1);
+    expect(opened.activity.questions[0]).toMatchObject({ questionId: "legacy-0", options: ["A", "B"] });
+    expect(JSON.stringify(opened)).not.toContain("correctAnswer");
+  });
+
   it("opens a safe persisted Attempt, commits one Evidence, and advances to the next activity", async () => {
     const { sessions, view, runtime } = await setup();
     const opened = await runtime.openActivity({ requestId: "open", sessionId: view.sessionId, sessionVersion: 3, profileRevision: 3, activityId: "quiz", activityVersion: 1, pathVersion: 1, acknowledgedCardId: "actual-card-kp" });

@@ -31,6 +31,8 @@ export interface PathActivityDefinition extends ActivityReferenceDefinition {
   kind?: "mcq" | "code_completion" | "coding_practical" | "explain" | "debug";
   starterCode?: string;
   profileRevision?: number;
+  subtype?: "single_choice" | "judgment";
+  options?: string[];
 }
 
 export interface PathEngineProfile {
