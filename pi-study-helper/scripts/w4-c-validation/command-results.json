@@ -1,0 +1,290 @@
+{
+  "schemaVersion": 1,
+  "contract": "W4-C2/W4-R1",
+  "head": "c50e2c1aea19a7cf77aacbaa654f9f298b6c0dbe",
+  "historicalRuns": [
+    {
+      "command": "npm.cmd test -- --run tests/w4-c-d3-http.test.ts --maxWorkers=1",
+      "result": "13/14",
+      "failure": "chapter background_only skipped saveDiagnosticDraft and received idempotency_conflict",
+      "captureStatus": "interactive_output_not_retained"
+    },
+    {
+      "command": "npm.cmd test -- --run tests/w4-c-d3-http.test.ts --maxWorkers=1",
+      "result": "13/14",
+      "failure": "chapter path requested 240 minutes while the prerequisite closure required 275",
+      "captureStatus": "interactive_output_not_retained"
+    },
+    {
+      "command": "npm.cmd test -- --run tests/w4-c-d3-http.test.ts --maxWorkers=1",
+      "result": "13/14",
+      "failure": "test incorrectly required a learning card for the legal helper single-question node",
+      "captureStatus": "interactive_output_not_retained"
+    },
+    {
+      "command": "node scripts/w4-c-validation/runtime-smoke.mjs",
+      "result": "FAILED",
+      "failure": "initial Windows npm.cmd direct spawn returned EINVAL; harness changed to explicit cmd.exe invocation",
+      "captureStatus": "interactive_output_not_retained"
+    }
+  ],
+  "commands": [
+    {
+      "id": "build-demo",
+      "command": "npm.cmd run build:demo",
+      "workingDirectory": "pi-study-helper",
+      "environment": {
+        "PYTHONNOUSERSITE": "1"
+      },
+      "startedUtc": "2026-08-15T14:50:27.686Z",
+      "endedUtc": "2026-08-15T14:50:32.742Z",
+      "naturalExitCode": 0,
+      "outerExitCode": 0,
+      "testFiles": 0,
+      "passed": 0,
+      "failed": 0,
+      "skipped": 0,
+      "stdoutBytes": 65,
+      "stdoutSha256": "75625f75f1623ad0de0a349b2d354f9f3bcdc80e58c8acd327316f6f47a23ca5",
+      "stderrBytes": 0,
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "notRunReason": null,
+      "issueIds": [
+        "C-R3-02",
+        "C-R3-04"
+      ],
+      "attribution": "c_validation"
+    },
+    {
+      "id": "c-http",
+      "command": "npm.cmd test -- --run tests/w4-c-d3-http.test.ts --maxWorkers=1",
+      "workingDirectory": "pi-study-helper",
+      "environment": {
+        "PYTHONNOUSERSITE": "1"
+      },
+      "startedUtc": "2026-08-15T14:50:32.745Z",
+      "endedUtc": "2026-08-15T14:50:44.580Z",
+      "naturalExitCode": 0,
+      "outerExitCode": 0,
+      "testFiles": 1,
+      "passed": 16,
+      "failed": 0,
+      "skipped": 0,
+      "stdoutBytes": 365,
+      "stdoutSha256": "081a6b0541c812231d9bf000fdc34d7f555c22f440bdda7c6db5df67ddae27c1",
+      "stderrBytes": 0,
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "notRunReason": null,
+      "issueIds": [
+        "C-R3-01",
+        "C-R3-02",
+        "C-R3-03",
+        "C-R3-04"
+      ],
+      "attribution": "c_validation"
+    },
+    {
+      "id": "affected",
+      "command": "npm.cmd test -- --run tests/profile-revision-3-activation.test.ts tests/pandas-cleaning-revision-3-diagnostic.test.ts tests/w4-d-recorded-responses.test.ts tests/w4-d-formal-ad-binding.test.ts tests/w4-d-fixed-fallback-integration.test.ts tests/w4-d-live-model-execution-port.test.ts tests/app-bootstrap-facade.test.ts tests/path-runtime.test.ts tests/quiz-activity-runtime.test.ts --maxWorkers=1",
+      "workingDirectory": "pi-study-helper",
+      "environment": {
+        "PYTHONNOUSERSITE": "1"
+      },
+      "startedUtc": "2026-08-15T14:50:44.602Z",
+      "endedUtc": "2026-08-15T14:50:54.895Z",
+      "naturalExitCode": 0,
+      "outerExitCode": 0,
+      "testFiles": 9,
+      "passed": 41,
+      "failed": 0,
+      "skipped": 0,
+      "stdoutBytes": 697,
+      "stdoutSha256": "5a635e3f903f1f6847444a2e54203523a3672782330bd3ab672f45b1e95cd282",
+      "stderrBytes": 0,
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "notRunReason": null,
+      "issueIds": [
+        "C-R3-03",
+        "C-R3-04"
+      ],
+      "attribution": "cross_role_regression"
+    },
+    {
+      "id": "typecheck",
+      "command": "npm.cmd run typecheck",
+      "workingDirectory": "pi-study-helper",
+      "environment": {
+        "PYTHONNOUSERSITE": "1"
+      },
+      "startedUtc": "2026-08-15T14:50:54.898Z",
+      "endedUtc": "2026-08-15T14:51:07.100Z",
+      "naturalExitCode": 0,
+      "outerExitCode": 0,
+      "testFiles": 0,
+      "passed": 0,
+      "failed": 0,
+      "skipped": 0,
+      "stdoutBytes": 108,
+      "stdoutSha256": "657f3a771c3ac9b683e5e8bd2354be0cd82fe12a113b8e0fe5cd25311254bd68",
+      "stderrBytes": 0,
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "notRunReason": null,
+      "issueIds": [
+        "C-R3-01",
+        "C-R3-03"
+      ],
+      "attribution": "c_validation"
+    },
+    {
+      "id": "check-docs",
+      "command": "npm.cmd run check:docs",
+      "workingDirectory": "pi-study-helper",
+      "environment": {
+        "PYTHONNOUSERSITE": "1"
+      },
+      "startedUtc": "2026-08-15T14:51:07.103Z",
+      "endedUtc": "2026-08-15T14:51:07.565Z",
+      "naturalExitCode": 0,
+      "outerExitCode": 0,
+      "testFiles": 0,
+      "passed": 0,
+      "failed": 0,
+      "skipped": 0,
+      "stdoutBytes": 141,
+      "stdoutSha256": "d0c8c224340013a55b04880faa46ef203ab3f2548decb659854092e31fd491d8",
+      "stderrBytes": 0,
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "notRunReason": null,
+      "issueIds": [
+        "C-R3-04"
+      ],
+      "attribution": "documentation_gate"
+    },
+    {
+      "id": "build-web",
+      "command": "npm.cmd run build:web",
+      "workingDirectory": "pi-study-helper",
+      "environment": {
+        "PYTHONNOUSERSITE": "1"
+      },
+      "startedUtc": "2026-08-15T14:51:07.568Z",
+      "endedUtc": "2026-08-15T14:51:09.253Z",
+      "naturalExitCode": 0,
+      "outerExitCode": 0,
+      "testFiles": 0,
+      "passed": 0,
+      "failed": 0,
+      "skipped": 0,
+      "stdoutBytes": 389,
+      "stdoutSha256": "c5349e031321ba88285c2374df79e0ff24552c5ef0dccf372de6447c5c2eeec6",
+      "stderrBytes": 0,
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "notRunReason": null,
+      "issueIds": [
+        "C-R3-04"
+      ],
+      "attribution": "affected_build_gate"
+    },
+    {
+      "id": "full-test",
+      "command": "npm.cmd test -- --maxWorkers=1",
+      "workingDirectory": "pi-study-helper",
+      "environment": {
+        "PYTHONNOUSERSITE": "1"
+      },
+      "startedUtc": "2026-08-15T14:51:09.255Z",
+      "endedUtc": "2026-08-15T14:53:54.785Z",
+      "naturalExitCode": 0,
+      "outerExitCode": 0,
+      "testFiles": 80,
+      "passed": 750,
+      "failed": 0,
+      "skipped": 1,
+      "stdoutBytes": 354,
+      "stdoutSha256": "318d264b4949d5131b62a11f8295f7801b83ae83a5bd6b3a30b423c4ee2aca5b",
+      "stderrBytes": 0,
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "notRunReason": null,
+      "issueIds": [
+        "C-R3-04"
+      ],
+      "attribution": "full_contract_regression"
+    },
+    {
+      "id": "verify",
+      "command": "npm.cmd run verify",
+      "workingDirectory": "pi-study-helper",
+      "environment": {
+        "PYTHONNOUSERSITE": "1"
+      },
+      "startedUtc": "2026-08-15T14:53:54.788Z",
+      "endedUtc": "2026-08-15T14:56:58.669Z",
+      "naturalExitCode": 0,
+      "outerExitCode": 0,
+      "testFiles": 80,
+      "passed": 750,
+      "failed": 0,
+      "skipped": 1,
+      "stdoutBytes": 1045,
+      "stdoutSha256": "5d3a57cfd23ad6251fa2adfef8a56262a68ae46c0258170a26b5b60dbc4916a4",
+      "stderrBytes": 0,
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "notRunReason": null,
+      "issueIds": [
+        "C-R3-04"
+      ],
+      "attribution": "full_contract_gate"
+    },
+    {
+      "id": "diff-check",
+      "command": "git -C .. diff --check",
+      "workingDirectory": "pi-study-helper",
+      "environment": {
+        "PYTHONNOUSERSITE": "1"
+      },
+      "startedUtc": "2026-08-15T14:56:58.673Z",
+      "endedUtc": "2026-08-15T14:56:58.835Z",
+      "naturalExitCode": 0,
+      "outerExitCode": 0,
+      "testFiles": 0,
+      "passed": 0,
+      "failed": 0,
+      "skipped": 0,
+      "stdoutBytes": 0,
+      "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderrBytes": 0,
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "notRunReason": null,
+      "issueIds": [
+        "C-R3-04"
+      ],
+      "attribution": "scope_gate"
+    },
+    {
+      "id": "runtime-smoke",
+      "command": "node .\\scripts\\w4-c-validation\\runtime-smoke.mjs",
+      "workingDirectory": "pi-study-helper",
+      "environment": {
+        "PYTHONNOUSERSITE": "1"
+      },
+      "startedUtc": "2026-08-15T14:56:58.838Z",
+      "endedUtc": "2026-08-15T14:57:14.387Z",
+      "naturalExitCode": 0,
+      "outerExitCode": 0,
+      "testFiles": 0,
+      "passed": 0,
+      "failed": 0,
+      "skipped": 0,
+      "stdoutBytes": 633,
+      "stdoutSha256": "006ea7f3c0c90de98edc91f5bfe683def44e81d5071209d74cab68a6f89f5ea0",
+      "stderrBytes": 0,
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "notRunReason": null,
+      "issueIds": [
+        "C-R3-02",
+        "C-R3-04"
+      ],
+      "attribution": "fixed_port_environment_gate"
+    }
+  ]
+}

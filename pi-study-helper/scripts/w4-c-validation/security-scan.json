@@ -1,0 +1,21 @@
+{
+  "status": "PASS_WITH_EXPECTED_NEGATIVE_ASSERTION_LITERALS",
+  "scope": [
+    "src/demo",
+    "tests/w4-c-d3-http.test.ts",
+    "scripts/w4-c-validation",
+    "handoff-w4-c-d3.md",
+    "src/infrastructure/live-model-execution-port.ts",
+    "tests/w4-d-live-model-execution-port.test.ts"
+  ],
+  "checks": {
+    "developerAbsolutePaths": { "matches": 0, "patterns": ["developer_home_prefix", "developer_temp_prefix", "profile_data_segment", "windows_users_segment"] },
+    "runtimeAnswerLeak": { "matches": 0, "tested": ["/api/bootstrap", "diagnostic", "openActivity", "attempt"] },
+    "runtimePrivateAssetLeak": { "matches": 0, "tested": ["private", "hidden", "rubric", "reference", "key"] },
+    "publicResultDerivedFields": { "rejected": ["evidenceCandidate", "knowledgeStates", "pathCandidate", "activityProgress"] },
+    "negativeAssertionLiterals": { "matches": "expected_only", "location": "w4-c-d3-http.test.ts", "not_runtime_output": true }
+  },
+  "liveModel": "LIVE_NOT_RUN",
+  "liveCredentialStorage": "in_memory_only",
+  "rawLogsIncluded": false
+}

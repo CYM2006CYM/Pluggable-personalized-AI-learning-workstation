@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "contract": "W4-C2/W4-R1",
+  "status": "PASS_PENDING_OWNER_UPLOAD_LOCK",
+  "selfExcluded": [
+    "proposed-files.txt",
+    "manifest.json",
+    "hash-inventory.txt",
+    "*.zip",
+    "*.sha256",
+    "raw-command-logs",
+    "node_modules",
+    ".demo-data",
+    ".demo-build"
+  ],
+  "files": [
+    {"path":"pi-study-helper/package.json","bytes":2740,"sha256":"c98cb1054a043f0ae431aadda13ca04b7bb50a4e51d2808e7905728a7c9c00f4"},
+    {"path":"pi-study-helper/tsconfig.demo.json","bytes":219,"sha256":"c06383a8106b561158873c0761e6858f1f2391d24c4644597269bdcd6943d89e"},
+    {"path":"pi-study-helper/src/demo/composition-root.ts","bytes":8689,"sha256":"0ae78927261fc5904ed79c34753831ee31d7030d13385e7fd1d32c2f5cbd8c93"},
+    {"path":"pi-study-helper/src/demo/http-server.ts","bytes":26256,"sha256":"1b68308d5b804df82e2b663010de1ec2d690738cb7f8c155760f9333103000cc"},
+    {"path":"pi-study-helper/src/demo/launcher.ts","bytes":3465,"sha256":"86a785d354b9f676a2a42d9f4bd2e7f18be71060ec2503d871a7ea2072fb1787"},
+    {"path":"pi-study-helper/tests/w4-c-d3-http.test.ts","bytes":30537,"sha256":"0ea0c77a244afbc093b5499af5ccf7fc53f92711d5179568394062b3bd307270"},
+    {"path":"pi-study-helper/scripts/w4-c-validation/runtime-smoke.mjs","bytes":4357,"sha256":"efc9d752b40fee9d08dbec4ebdaac4c5ac613cded06c21cecc161dadc5db7e82"},
+    {"path":"pi-study-helper/scripts/w4-c-validation/capture-validation.mjs","bytes":5553,"sha256":"0ea1ba1c4bdca96188390cfa7a6368d0a89da86f61362186274ca4be9884d70c"},
+    {"path":"pi-study-helper/scripts/w4-c-validation/refresh-runtime-result.mjs","bytes":1907,"sha256":"ea671e0b5297c5a112dfb863b8c1d8e999f286dddec2840756e9169227a25fab"},
+    {"path":"pi-study-helper/scripts/w4-c-validation/command-results.json","bytes":9512,"sha256":"f9633d7f71517a8d5ad448aead04fcaa75c8796dc584f438e0487b7e0252b91b"},
+    {"path":"pi-study-helper/scripts/w4-c-validation/endpoint-status-matrix.json","bytes":2062,"sha256":"183c8bef60f5aec00256f7296c08ec146e77be8f5ede78f5604cb05408fecdc5"},
+    {"path":"pi-study-helper/scripts/w4-c-validation/issue-test-map.json","bytes":1518,"sha256":"8736558d832b7d1e995a706e5cfb1462296939f40bf0fc6cc43fa43b3704a577"},
+    {"path":"pi-study-helper/scripts/w4-c-validation/security-scan.json","bytes":1062,"sha256":"e829cc9cfbb5319f2cc2cd40018f03a94af770af716fda3d6a9f2cc6645e0fe1"},
+    {"path":"pi-study-helper/scripts/w4-c-validation/upstream-binding.json","bytes":743,"sha256":"b671583d1c51eb90b1bd851129a130ece1778d7c3b4426383fcc4500ffb83a22"},
+    {"path":"pi-study-helper/scripts/w4-c-validation/validation-results.json","bytes":1408,"sha256":"5a77781bab085253f35fa8540a0f8e96122222b1db7b02019f97bff8bf45fd95"},
+    {"path":"pi-study-helper/scripts/w4-c-validation/w4-c-d3-r3-validation-report.md","bytes":2536,"sha256":"9133ac2bed9cd71b96d61c5158dd3e67ac8ab5650f377a9d3aa0aa3f35896649"},
+    {"path":"新版设计文档-重写版/第四周任务/handoff-w4-c-d3.md","bytes":2844,"sha256":"123a6f7ad5e9818db7a39c11c739b619f4105cfe49744fed70d6735a7c609ff7"}
+  ]
+}

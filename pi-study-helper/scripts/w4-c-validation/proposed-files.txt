@@ -1,0 +1,17 @@
+pi-study-helper/package.json
+pi-study-helper/tsconfig.demo.json
+pi-study-helper/src/demo/composition-root.ts
+pi-study-helper/src/demo/http-server.ts
+pi-study-helper/src/demo/launcher.ts
+pi-study-helper/tests/w4-c-d3-http.test.ts
+pi-study-helper/scripts/w4-c-validation/runtime-smoke.mjs
+pi-study-helper/scripts/w4-c-validation/capture-validation.mjs
+pi-study-helper/scripts/w4-c-validation/refresh-runtime-result.mjs
+pi-study-helper/scripts/w4-c-validation/command-results.json
+pi-study-helper/scripts/w4-c-validation/endpoint-status-matrix.json
+pi-study-helper/scripts/w4-c-validation/issue-test-map.json
+pi-study-helper/scripts/w4-c-validation/security-scan.json
+pi-study-helper/scripts/w4-c-validation/upstream-binding.json
+pi-study-helper/scripts/w4-c-validation/validation-results.json
+pi-study-helper/scripts/w4-c-validation/w4-c-d3-r3-validation-report.md
+新版设计文档-重写版/第四周任务/handoff-w4-c-d3.md

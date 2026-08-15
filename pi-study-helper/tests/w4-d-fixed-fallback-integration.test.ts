@@ -21,10 +21,10 @@ describe("W4 D formal upstream integration", () => {
   it("independently recalculates A's revision seal entry count and B's formal tree hash", async () => {
     const calculated = await calculateRevisionSeal(profileRoot);
     expect(calculated.entries).toHaveLength(78);
-    expect(calculated.assetTreeSha256).toBe("e118fd65c4583821f686cba4faab5990a81d2149a8f73cf89af2c376ba15b352");
+    expect(calculated.assetTreeSha256).toBe("d1438022a49f83df20fa865443c36f4c3442856c8b679aac989de9e61a3feb30");
     await expect(validateRevisionSeal(profileRoot, "pandas-cleaning")).resolves.toMatchObject({
       revision: 3,
-      assetTreeSha256: "e118fd65c4583821f686cba4faab5990a81d2149a8f73cf89af2c376ba15b352",
+      assetTreeSha256: "d1438022a49f83df20fa865443c36f4c3442856c8b679aac989de9e61a3feb30",
     });
   });
 

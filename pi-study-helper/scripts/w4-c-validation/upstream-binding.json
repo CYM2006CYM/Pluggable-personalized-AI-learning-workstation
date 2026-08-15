@@ -1,0 +1,19 @@
+{
+  "contract": "W4-C2/W4-R1",
+  "head": "c50e2c1aea19a7cf77aacbaa654f9f298b6c0dbe",
+  "originMain": "c50e2c1aea19a7cf77aacbaa654f9f298b6c0dbe",
+  "w4StartCommit": "ac6e307e17cf84450845dfc5ffa467063dd3ae4c",
+  "upstream": {
+    "a": "c50e2c1aea19a7cf77aacbaa654f9f298b6c0dbe",
+    "b": "6f8b765594cdcb34046c1c2639c973641762b605",
+    "d": "dc1693e5bfcc0bed226ff0f20613fc4b2ec88681"
+  },
+  "revision3": {
+    "entries": 78,
+    "assetTreeSha256": "d1438022a49f83df20fa865443c36f4c3442856c8b679aac989de9e61a3feb30"
+  },
+  "recordedResponsesSha256": "4dc9fae61d7d179947fe24ed661b5a6826484f9c27e79a0b2fc39a55a186061c",
+  "profileStatus": "draft",
+  "ancestorChecks": { "w4Start": true, "b": true, "d": true },
+  "obsoleteBindingsExcluded": true
+}

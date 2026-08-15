@@ -1,0 +1,25 @@
+{
+  "contract": "W4-C2/W4-R1",
+  "requestLimitBytes": 65536,
+  "fixedApiHost": "127.0.0.1",
+  "fixedApiPort": 4310,
+  "routes": [
+    { "method": "GET", "path": "/api/bootstrap", "query": ["recoverSessionId"], "success": 200, "invalid": 400 },
+    { "method": "POST", "path": "/api/sessions", "success": 200, "invalid": 400, "business": 422 },
+    { "method": "POST", "path": "/api/sessions/:id/diagnostic/draft", "success": 200, "invalid": 400, "business": 422, "conflict": 409 },
+    { "method": "POST", "path": "/api/sessions/:id/diagnostic/answers", "success": 200, "invalid": 400, "business": 422, "conflict": 409 },
+    { "method": "POST", "path": "/api/sessions/:id/diagnostic/complete", "success": 200, "invalid": 400, "business": 422, "conflict": 409 },
+    { "method": "POST", "path": "/api/sessions/:id/path", "success": 200, "invalid": 400, "business": 200, "conflict": 409 },
+    { "method": "POST", "path": "/api/sessions/:id/path/confirm", "success": 200, "invalid": 400, "conflict": 409 },
+    { "method": "GET", "path": "/api/sessions/:id/next-step", "query": ["sessionVersion", "profileRevision", "pathVersion"], "success": 200, "invalid": 400, "conflict": 409 },
+    { "method": "POST", "path": "/api/activities/:id/open", "success": 200, "invalid": 400, "business": 200, "conflict": 409 },
+    { "method": "GET", "path": "/api/activities/:id/attempts/:attemptId", "query": ["sessionId", "sessionVersion", "profileRevision"], "success": 200, "invalid": 400, "conflict": 409 },
+    { "method": "POST", "path": "/api/activities/:id/submit", "success": 200, "invalid": 400, "business": 200, "conflict": 409 },
+    { "method": "POST", "path": "/api/sessions/:id/context-questions", "success": 200, "invalid": 400, "business": 422 }
+  ],
+  "notes": [
+    "GET metadata is strict: missing, duplicate, empty, negative, non-decimal, and extra query keys return 400.",
+    "Business path_infeasible, insufficient, fail, partial, and evaluator results remain HTTP 200.",
+    "Evaluator errors are safe envelopes with no score or private payload."
+  ]
+}

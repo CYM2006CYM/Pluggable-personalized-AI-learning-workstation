@@ -1,0 +1,45 @@
+{
+  "candidateStatus": "PASS_PENDING_OWNER_UPLOAD_LOCK",
+  "cIssues": {
+    "C-R3-01": "PASS",
+    "C-R3-02": "PASS",
+    "C-R3-03": "PASS",
+    "C-R3-04": "PASS"
+  },
+  "cHttpTests": "16/16",
+  "affectedCrossRoleTests": "9 files / 41 passed",
+  "fullTests": { "status": "PASS", "files": 80, "passed": 750, "failed": 0, "skipped": 1, "exitCode": 0 },
+  "verify": { "status": "PASS", "files": 80, "passed": 750, "failed": 0, "skipped": 1, "exitCode": 0 },
+  "typecheck": { "exitCode": 0 },
+  "checkDocs": { "exitCode": 0, "markdownFiles": 79 },
+  "buildDemo": { "exitCode": 0 },
+  "buildWeb": { "exitCode": 0 },
+  "diffCheck": { "exitCode": 0 },
+  "extensionSmoke": { "exitCode": 0 },
+  "releaseCheck": { "exitCode": 0 },
+  "runtimeSmoke": {
+    "status": "PASS",
+    "exitCode": 0,
+    "apiBeforeVite": true,
+    "bootstrapStatus": 200,
+    "bootstrapValid": true,
+    "apiClosed": true,
+    "viteClosed": true,
+    "supervisorNaturalExitCode": 1,
+    "supervisorExitReason": "harness_taskkill_after_lifecycle_assertions"
+  },
+  "liveModel": "LIVE_NOT_RUN",
+  "environment": {
+    "node": "v22.23.1",
+    "npm": "10.9.8",
+    "python": "3.13.7",
+    "pandas": "3.0.5",
+    "PYTHONNOUSERSITE": "1",
+    "platform": "Windows-11"
+  },
+  "historical": {
+    "preFixFullTest": "79 files / 746 passed / 1 failed / 1 skipped",
+    "failure": "D stale revision 3 seal assertion",
+    "retainedAsHistory": true
+  }
+}

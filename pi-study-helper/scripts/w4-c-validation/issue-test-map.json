@@ -1,0 +1,28 @@
+{
+  "C-R3-01": [
+    "w4-c-d3-http.test.ts:passes complete query metadata to both GET Facade methods",
+    "w4-c-d3-http.test.ts:rejects missing, duplicate, non-integer, negative, empty, and unexpected GET query fields",
+    "w4-c-d3-http.test.ts:maps stale GET metadata through the existing conflict semantics without a write",
+    "w4-c-d3-http.test.ts:runs and refreshes a real chapter quiz flow without Python",
+    "w4-c-d3-http.test.ts:rejects missing and extra transport fields before Facade invocation"
+  ],
+  "C-R3-02": [
+    "w4-c-d3-http.test.ts:keeps Bootstrap available when no local Python executable is configured",
+    "w4-c-d3-http.test.ts:does not expose private answer vocabulary or host paths",
+    "source and proposed-file scan: zero developer absolute-path matches"
+  ],
+  "C-R3-03": [
+    "w4-c-d3-http.test.ts:completes the recommended questionnaire and path through HTTP",
+    "pandas-cleaning-revision-3-diagnostic.test.ts:formal revision 3 diagnostic binding"
+  ],
+  "C-R3-04": [
+    "command-results.json:upstream binding and current HEAD",
+    "w4-d-formal-ad-binding.test.ts:recorded response integration",
+    "w4-d-fixed-fallback-integration.test.ts:current revision 3 seal recalculation",
+    "full-test and verify: 80 files, 750 passed, 1 skipped"
+  ],
+  "C-R3-05": [
+    "w4-d-live-model-execution-port.test.ts:live ModelExecutionPort uses an isolated SDK host with in-memory credentials",
+    "runtime-smoke.mjs:API readiness, bootstrap identity and paired process shutdown"
+  ]
+}
