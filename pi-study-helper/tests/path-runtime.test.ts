@@ -125,7 +125,8 @@ describe("path runtime collaborator", () => {
     await expect(restarted.confirmPath({ requestId: "cards-confirm", sessionId: view.sessionId, sessionVersion: 2, profileRevision: 3, pathId: "changed-path", pathVersion: 1 }))
       .rejects.toMatchObject({ errorCode: "idempotency_conflict" });
     await expect(restarted.getNextStep({ sessionId: view.sessionId, sessionVersion: 3, profileRevision: 3, pathVersion: 1 })).resolves.toMatchObject({
-      card: { cardId: "dynamic-first", explanation: ["dynamic"] }, contentReadiness: "ready",
+      card: { cardId: "dynamic-first", explanation: ["dynamic"] },
+      activity: { activityId: "first-activity" }, contentReadiness: "ready",
     });
     expect(prepareCalls).toBe(2);
   });

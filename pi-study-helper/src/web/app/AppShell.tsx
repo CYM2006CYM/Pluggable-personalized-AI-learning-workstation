@@ -1,27 +1,19 @@
-import { NavLink, Outlet } from "react-router-dom";
-import { PAGE_VIEW_STATES, useUiStore, type PageViewState } from "../state/ui-store.js";
-
-const sessionId = "session-demo-001";
-const navigation = [
-  { label: "开始", to: "/" },
-  { label: "诊断", to: `/diagnostic/${sessionId}` },
-  { label: "路径", to: `/path/${sessionId}` },
-  { label: "学习", to: `/learn/${sessionId}/node-missing-values` },
-  { label: "活动", to: `/activity/${sessionId}/act-missing` },
-  { label: "总结", to: `/summary/${sessionId}` },
-] as const;
-
-const stateLabels: Record<PageViewState, string> = {
-  ready: "正常",
-  empty: "空",
-  error: "错误",
-  conflict: "冲突",
-  recovery: "恢复",
-};
+import { NavLink, Outlet, useLocation } from "react-router-dom";
 
 export function AppShell() {
-  const pageViewState = useUiStore((state) => state.pageViewState);
-  const setPageViewState = useUiStore((state) => state.setPageViewState);
+  const location = useLocation();
+  const parts = location.pathname.split("/").filter(Boolean);
+  const sessionId = parts.length >= 2 ? parts[1] : undefined;
+  const navigation = [
+    { label: "开始", to: "/" },
+    ...(sessionId === undefined ? [] : [
+      { label: "诊断", to: `/diagnostic/${sessionId}` },
+      { label: "路径", to: `/path/${sessionId}` },
+      ...(parts[0] === "learn" ? [{ label: "学习", to: location.pathname }] : []),
+      ...(parts[0] === "activity" ? [{ label: "活动", to: location.pathname }] : []),
+      { label: "总结", to: `/summary/${sessionId}` },
+    ]),
+  ];
 
   return (
     <div className="app-shell">
@@ -47,33 +39,18 @@ export function AppShell() {
           ))}
         </nav>
         <div className="session-identity">
-          <span>当前会话</span>
-          <code>{sessionId}</code>
-          <span>Profile revision 2</span>
+          <span>{sessionId === undefined ? "尚未选择会话" : "当前会话"}</span>
+          {sessionId === undefined ? null : <code>{sessionId}</code>}
+          <span>服务端快照为权威状态</span>
         </div>
       </aside>
 
       <div className="app-main">
         <header className="topbar">
-          <div>
-            <span className="topbar-label">页面状态</span>
-            <div className="segmented-control" role="group" aria-label="页面状态">
-              {PAGE_VIEW_STATES.map((state) => (
-                <button
-                  key={state}
-                  type="button"
-                  className={state === pageViewState ? "selected" : ""}
-                  aria-pressed={state === pageViewState}
-                  onClick={() => setPageViewState(state)}
-                >
-                  {stateLabels[state]}
-                </button>
-              ))}
-            </div>
-          </div>
+          <div><span className="topbar-label">本地确定性学习闭环</span></div>
           <div className="sync-status" role="status">
             <span className="status-dot" aria-hidden="true" />
-            Mock DTO 已载入
+            真实 API 模式
           </div>
         </header>
         <Outlet />

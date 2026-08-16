@@ -330,20 +330,21 @@ class PathRuntimeCollaborator implements PathMethods {
     if (node === undefined) return { ...meta(snapshot), pathVersion: path.pathVersion, completed: true };
     const progress = snapshot.activityProgress.find((entry) => entry.nodeId === node.nodeId);
     const projectedNode = { ...node, status: projectNodeStatus(node, progress, node.nodeId) };
+    const profile = await this.options.profile.load(snapshot.view.subjectId, snapshot.profileRevision);
+    const activityId = node.activityIds.find((id) => !terminal.has(progress?.activities.find((item) => item.activityId === id)?.status ?? "pending"))
+      ?? node.activityIds[0];
+    const activity = activityView(profile.activities.find((item) => item.activityId === activityId));
     if (progress?.card?.status === "pending") {
       const bindings = await this.options.sessions.getBoundLearningCards(input);
       const binding = bindings.find((item) => item.nodeId === node.nodeId && item.card.cardId === progress.card?.cardId);
       const card = binding?.card;
       return {
         ...meta(snapshot), pathVersion: path.pathVersion, completed: false, node: asSafeNode(projectedNode),
+        ...(activity === undefined ? {} : { activity }),
         ...(card === undefined ? {} : { card, sourceAnchorIds: [...card.sourceAnchorIds] }),
         contentReadiness: card === undefined ? "preparing" : binding?.source === "fixed" ? "fallback" : "ready",
       };
     }
-    const profile = await this.options.profile.load(snapshot.view.subjectId, snapshot.profileRevision);
-    const activityId = node.activityIds.find((id) => !terminal.has(progress?.activities.find((item) => item.activityId === id)?.status ?? "pending"))
-      ?? node.activityIds[0];
-    const activity = activityView(profile.activities.find((item) => item.activityId === activityId));
     return {
       ...meta(snapshot), pathVersion: path.pathVersion, completed: false, node: asSafeNode(projectedNode),
       ...(activity === undefined ? {} : { activity }), contentReadiness: activity === undefined ? "preparing" : "ready",

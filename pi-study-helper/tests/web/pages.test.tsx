@@ -1,205 +1,383 @@
 // @vitest-environment jsdom
-
-import type { ReactElement } from "react";
-import { act } from "react-dom/test-utils";
+import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { createMemoryRouter, MemoryRouter, RouterProvider } from "react-router-dom";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { ActivityPage } from "../../src/web/pages/ActivityPage.js";
-import { DiagnosticPage } from "../../src/web/pages/DiagnosticPage.js";
-import { LearnPage } from "../../src/web/pages/LearnPage.js";
-import { PathPage } from "../../src/web/pages/PathPage.js";
-import { StartPage } from "../../src/web/pages/StartPage.js";
-import { SummaryPage } from "../../src/web/pages/SummaryPage.js";
+import { createMemoryRouter, RouterProvider } from "react-router-dom";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { appRoutes } from "../../src/web/app/routes.js";
-import { activitySubmissionMock } from "../../src/web/mocks/safe-dtos.js";
-import { ACTIVITY_VIEW_MODES, useUiStore, type PageViewState } from "../../src/web/state/ui-store.js";
+import { PageStatePanel } from "../../src/web/components/PageStatePanel.js";
+import { useUiStore } from "../../src/web/state/ui-store.js";
+import {
+  bootstrap,
+  codeSubmission,
+  fail,
+  nextStep,
+  ok,
+  openedCode,
+  openedQuiz,
+  preparedCode,
+  quizSubmission,
+  recovery,
+  replan,
+  savedCode,
+} from "./fixtures/w4-api.js";
 
-const actEnvironment = globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean };
-actEnvironment.IS_REACT_ACT_ENVIRONMENT = true;
+(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+let root: Root | undefined;
 
-const pages: Array<{ name: string; element: ReactElement; marker: string; readyAction: string }> = [
-  { name: "开始", element: <StartPage />, marker: "start", readyAction: "开始学习" },
-  { name: "诊断", element: <DiagnosticPage />, marker: "diagnostic", readyAction: "保存并继续" },
-  { name: "路径", element: <PathPage />, marker: "path", readyAction: "确认这条路径" },
-  { name: "学习", element: <LearnPage />, marker: "learn", readyAction: "进入练习活动" },
-  { name: "活动", element: <ActivityPage />, marker: "activity", readyAction: "提交正式评测" },
-  { name: "总结", element: <SummaryPage />, marker: "summary", readyAction: "继续当前路径" },
-];
+afterEach(() => {
+  act(() => root?.unmount());
+  root = undefined;
+  vi.unstubAllGlobals();
+  useUiStore.setState({ activityDrafts: {} });
+  document.body.innerHTML = "";
+});
 
-const stateMarkers: Array<[Exclude<PageViewState, "ready">, string, string, string]> = [
-  ["empty", "empty", "暂无", "返回开始页"],
-  ["error", "error", "未确认保存", "重试"],
-  ["conflict", "session_version_conflict", "另一窗口已有更新", "加载最新版本"],
-  ["recovery", "recovery", "发现可恢复进度", "从完整检查点恢复"],
-];
+async function settle() {
+  await act(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  });
+}
 
-describe("W3 D2 page components", () => {
-  let container: HTMLDivElement;
-  let root: Root;
+async function renderRoute(pathname: string, fetchImpl: ReturnType<typeof vi.fn>, state?: unknown) {
+  vi.stubGlobal("fetch", fetchImpl);
+  const host = document.createElement("div");
+  document.body.append(host);
+  root = createRoot(host);
+  const router = createMemoryRouter(appRoutes, { initialEntries: [state === undefined ? pathname : { pathname, state }] });
+  await act(async () => { root!.render(<RouterProvider router={router} />); });
+  await settle();
+  return { host, router };
+}
 
-  beforeEach(() => {
-    useUiStore.getState().reset();
-    container = document.createElement("div");
-    document.body.append(container);
-    root = createRoot(container);
+function button(host: HTMLElement, label: string): HTMLButtonElement {
+  const found = [...host.querySelectorAll("button")].find((item) => item.textContent?.includes(label));
+  if (!(found instanceof HTMLButtonElement)) throw new Error(`button_not_found:${label}`);
+  return found;
+}
+
+async function click(target: HTMLElement) {
+  await act(async () => { target.click(); });
+  await settle();
+}
+
+async function editTextarea(target: HTMLTextAreaElement, value: string) {
+  await act(async () => {
+    Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, "value")!.set!.call(target, value);
+    target.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+}
+
+function bodyAt(fetchMock: ReturnType<typeof vi.fn>, index: number): Record<string, unknown> {
+  const init = fetchMock.mock.calls[index]?.[1] as RequestInit | undefined;
+  return JSON.parse(String(init?.body ?? "{}")) as Record<string, unknown>;
+}
+
+describe("W4 real API pages", () => {
+  it("renders the start page from Bootstrap with both entry modes and three questionnaire fields", async () => {
+    const { host } = await renderRoute("/", vi.fn().mockResolvedValue(ok(bootstrap())));
+    expect(host.textContent).toContain("Pandas Cleaning");
+    expect(host.textContent).toContain("系统推荐");
+    expect(host.textContent).toContain("按章节学习");
+    expect(host.querySelectorAll("select")).toHaveLength(5);
+    expect(host.textContent).not.toContain("Mock DTO");
   });
 
-  afterEach(() => {
-    act(() => root.unmount());
-    container.remove();
+  it("renders the recommended diagnostic from the safe envelope", async () => {
+    const session = recovery({ stage: "diagnostic" });
+    const { host } = await renderRoute("/diagnostic/session-w4", vi.fn().mockResolvedValue(ok(bootstrap(session))));
+    expect(host.textContent).toContain("哪个表达式创建列表");
+    expect(host.textContent).toContain("Draft v1");
   });
 
-  function render(element: ReactElement) {
-    act(() => root.render(<MemoryRouter>{element}</MemoryRouter>));
-  }
-
-  function findButton(text: string): HTMLButtonElement {
-    const button = Array.from(container.querySelectorAll("button")).find((candidate) => candidate.textContent?.trim() === text);
-    expect(button, `button ${text}`).not.toBeUndefined();
-    return button as HTMLButtonElement;
-  }
-
-  async function click(element: Element) {
-    await act(async () => {
-      element.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
-    });
-  }
-
-  for (const page of pages) {
-    it(`renders the ${page.name} ready view`, () => {
-      render(page.element);
-      expect(container.querySelector(`[data-page="${page.marker}"]`)).not.toBeNull();
-      const actions = Array.from(container.querySelectorAll("a, button"));
-      expect(actions.some((action) => action.textContent?.includes(page.readyAction))).toBe(true);
-    });
-
-    for (const [state, marker, content, action] of stateMarkers) {
-      it(`renders the ${page.name} ${state} view`, () => {
-        useUiStore.getState().setPageViewState(state);
-        render(page.element);
-        const panel = container.querySelector(`[data-state="${marker}"]`);
-        expect(panel).not.toBeNull();
-        expect(panel?.textContent).toContain(content);
-        const operation = Array.from(panel?.querySelectorAll("button, a") ?? []).find((candidate) => candidate.textContent?.includes(action));
-        expect(operation).not.toBeUndefined();
-        expect((operation as HTMLButtonElement).disabled).toBe(false);
-      });
-    }
-  }
-
-  it.each(ACTIVITY_VIEW_MODES)("renders the activity %s stage", (mode) => {
-    useUiStore.getState().setActivityViewMode(mode);
-    render(<ActivityPage />);
-    expect(container.querySelector(`[data-activity-mode="${mode}"]`)).not.toBeNull();
+  it("renders all W4 path node fields", async () => {
+    const session = recovery({ stage: "path" });
+    const { host } = await renderRoute("/path/session-w4", vi.fn().mockResolvedValue(ok(bootstrap(session))));
+    expect(host.textContent).toContain("S-R");
+    expect(host.textContent).toContain("worked_example");
+    expect(host.textContent).toContain("必需");
+    expect(host.textContent).toContain("位置锁定");
   });
 
-  it("renders the frozen ActivityResult score without percentage conversion", () => {
-    useUiStore.getState().setActivityViewMode("submitted");
-    render(<ActivityPage />);
-    expect(activitySubmissionMock.result.score).toBe(0.78);
-    expect(container.querySelector(".score-block")?.textContent).toBe("0.78 / 1");
-    expect(container.textContent).not.toContain("78 / 100");
+  it("renders the learning card and treats the optional review timeline as not provided", async () => {
+    const fetchMock = vi.fn().mockResolvedValueOnce(ok(bootstrap(recovery()))).mockResolvedValueOnce(ok(nextStep));
+    const { host } = await renderRoute("/learn/session-w4/node-basic", fetchMock);
+    expect(host.textContent).toContain("Python 列表");
+    expect(host.textContent).toContain("NOT_PROVIDED");
+    expect(host.textContent).not.toContain("UPSTREAM_CONTRACT_BLOCKED");
   });
 
-  it("shows safe feedback using only public ActivityResult fields", () => {
-    useUiStore.getState().setActivityViewMode("safe_feedback");
-    render(<ActivityPage />);
-    const stage = container.querySelector('[data-activity-mode="safe_feedback"]');
-    expect(stage?.textContent).toContain("evaluator_timeout");
-    expect(stage?.textContent).toContain("failed");
-    expect(stage?.textContent).toContain("node-pandas-v1");
-    expect(stage?.textContent).not.toContain("草稿版本");
-    expect(stage?.textContent).not.toContain("恢复动作");
+  it("does not send an incomplete learning step to summary", async () => {
+    const fetchMock = vi.fn().mockResolvedValueOnce(ok(bootstrap(recovery()))).mockResolvedValueOnce(ok({ ...nextStep, activity: undefined, completed: false }));
+    const { host } = await renderRoute("/learn/session-w4/node-basic", fetchMock);
+    expect(host.textContent).toContain("重新读取内容");
+    expect(host.textContent).not.toContain("查看总结");
   });
 
-  it("preserves a controlled activity draft through conflict, error, recovery, and route changes", async () => {
-    const router = createMemoryRouter(appRoutes, {
-      initialEntries: ["/activity/session-demo-001/act-missing"],
-    });
-    act(() => root.render(<RouterProvider router={router} />));
-
-    const uniqueDraft = "# unique W3-D46 draft\ndef clean_missing(df):\n    return df.dropna(subset=['order_id'])\n";
-    const textarea = container.querySelector("#code-draft") as HTMLTextAreaElement;
-    const valueSetter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, "value")?.set;
-    act(() => {
-      valueSetter?.call(textarea, uniqueDraft);
-      textarea.dispatchEvent(new Event("input", { bubbles: true }));
-    });
-    expect((container.querySelector("#code-draft") as HTMLTextAreaElement).value).toBe(uniqueDraft);
-
-    for (const [stateLabel, marker] of [
-      ["冲突", "session_version_conflict"],
-      ["错误", "error"],
-      ["恢复", "recovery"],
-    ] as const) {
-      await click(findButton(stateLabel));
-      expect(container.querySelector(`[data-state="${marker}"]`)).not.toBeNull();
-      await click(findButton(stateLabel === "恢复" ? "从完整检查点恢复" : "正常"));
-      if (stateLabel !== "恢复") {
-        expect(useUiStore.getState().pageViewState).toBe("ready");
-      }
-      expect((container.querySelector("#code-draft") as HTMLTextAreaElement).value).toBe(uniqueDraft);
-    }
-
-    const startLink = Array.from(container.querySelectorAll(".primary-nav a")).find((link) => link.textContent?.includes("开始"));
-    await click(startLink as Element);
-    await click(findButton("查看检查点"));
-    expect(container.querySelector('[data-state="recovery"]')).not.toBeNull();
-    await click(findButton("从完整检查点恢复"));
-    expect(container.querySelector('[data-page="start"]')).not.toBeNull();
-
-    const activityLink = Array.from(container.querySelectorAll(".primary-nav a")).find((link) => link.textContent?.includes("活动"));
-    await click(activityLink as Element);
-    expect((container.querySelector("#code-draft") as HTMLTextAreaElement).value).toBe(uniqueDraft);
+  it("renders a four-question quiz without opening-stage answers", async () => {
+    const { host } = await renderRoute("/activity/session-w4/act-basic", vi.fn().mockResolvedValue(ok(bootstrap(recovery({ stage: "activity" })))), { opened: openedQuiz, nodeId: "node-basic" });
+    expect(host.querySelectorAll(".quiz-question")).toHaveLength(4);
+    expect(host.textContent).not.toContain("正确答案：");
+    expect(host.textContent).toContain("0/4 已回答");
   });
 
-  it("uses only the node-aware learning link shape in navigation", () => {
-    const router = createMemoryRouter(appRoutes, { initialEntries: ["/"] });
-    act(() => root.render(<RouterProvider router={router} />));
-    const learningLinks = Array.from(container.querySelectorAll('a[href^="/learn/"]')) as HTMLAnchorElement[];
-    expect(learningLinks.length).toBeGreaterThan(0);
-    expect(learningLinks.every((link) => /^\/learn\/[^/]+\/[^/]+$/.test(link.getAttribute("href") ?? ""))).toBe(true);
+  it("recovers the same quiz Attempt and question IDs from the Bootstrap reference", async () => {
+    const session = recovery({ stage: "activity" });
+    session.currentAttempt = { kind: "quiz", activityId: "act-basic", attemptId: "attempt-1", status: "draft", retryNumber: 0 };
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(ok(bootstrap(session)))
+      .mockResolvedValueOnce(ok(nextStep))
+      .mockResolvedValueOnce(ok(openedQuiz));
+    const { host } = await renderRoute("/activity/session-w4/act-basic", fetchMock);
+    expect(host.textContent).toContain("attempt-1");
+    expect([...host.querySelectorAll(".quiz-question h2")].map((item) => item.textContent)).toEqual([
+      "1. 列表字面量？", "2. 列表有顺序。", "3. 追加方法？", "4. 索引从0开始。",
+    ]);
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(String(fetchMock.mock.calls[2]?.[0])).toContain("/api/activities/act-basic/open");
+  });
+
+  it("advances a submitted refresh through Bootstrap and getNextStep without reopening the old Attempt", async () => {
+    const session = recovery({ stage: "activity" });
+    session.currentAttempt = undefined;
+    session.activityProgress = [{ nodeId: "node-basic", activities: [{ activityId: "act-basic", status: "completed", attemptIds: ["attempt-1"], result: "pass", quizRetryCount: 0, updatedAt: "2026-08-16T00:00:00.000Z" }] }];
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(ok(bootstrap(session)))
+      .mockResolvedValueOnce(ok(bootstrap(session)))
+      .mockResolvedValueOnce(ok(nextStep));
+    const { host, router } = await renderRoute("/activity/session-w4/act-basic", fetchMock);
+    expect(host.textContent).toContain("SUBMITTED_PROGRESS_RECOVERED");
+    await click(button(host, "进入下一活动"));
+    expect(router.state.location.pathname).toBe("/learn/session-w4/node-basic");
+    expect(fetchMock.mock.calls.map((call) => String(call[0])).slice(0, 3)).toEqual([
+      "/api/bootstrap?recoverSessionId=session-w4",
+      "/api/bootstrap?recoverSessionId=session-w4",
+      "/api/sessions/session-w4/next-step?sessionVersion=2&profileRevision=3&pathVersion=1",
+    ]);
+    expect(fetchMock.mock.calls.some((call) => String(call[0]).includes("/activities/act-basic/open"))).toBe(false);
+  });
+
+  it("recovers an insufficient result even when an older snapshot kept the lifecycle in progress", async () => {
+    const session = recovery({ stage: "activity" });
+    session.currentAttempt = undefined;
+    session.activityProgress = [{ nodeId: "node-basic", activities: [{
+      activityId: "act-basic", status: "in_progress", attemptIds: ["attempt-1"],
+      result: "insufficient", quizRetryCount: 1, updatedAt: "2026-08-16T00:00:00.000Z",
+    }] }];
+    const retryQuiz = openedQuiz.kind === "quiz" ? {
+      ...openedQuiz, attemptId: "attempt-2", sessionVersion: 3,
+      activity: { ...openedQuiz.activity, retryNumber: 1 as const },
+    } : openedQuiz;
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(ok(bootstrap(session)))
+      .mockResolvedValueOnce(ok(bootstrap(session)))
+      .mockResolvedValueOnce(ok(nextStep))
+      .mockResolvedValueOnce(ok(retryQuiz));
+    const { host, router } = await renderRoute("/activity/session-w4/act-basic", fetchMock);
+    expect(host.textContent).toContain("SUBMITTED_PROGRESS_RECOVERED");
+    expect(host.textContent).toContain("in_progress/insufficient");
+    await click(button(host, "开始新 Attempt 重试"));
+    expect(router.state.location.pathname).toBe("/activity/session-w4/act-basic");
+    expect(host.textContent).toContain("attempt-2");
+    expect(fetchMock.mock.calls.some((call) => String(call[0]).includes("/activities/act-basic/open"))).toBe(true);
+  });
+
+  it("saves edited code before preview and runs the returned draftVersion", async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(ok(bootstrap(recovery({ stage: "activity" }))))
+      .mockResolvedValueOnce(ok(savedCode))
+      .mockResolvedValueOnce(ok(preparedCode));
+    const { host } = await renderRoute("/activity/session-w4/act-code", fetchMock, { opened: openedCode });
+    await editTextarea(host.querySelector("textarea")!, "print('edited draft')");
+    await click(button(host, "运行公开检查"));
+    expect(String(fetchMock.mock.calls[1]?.[0])).toBe("/api/activities/act-code/draft");
+    expect(bodyAt(fetchMock, 1)).toMatchObject({ draftVersion: 1, userText: "print('edited draft')" });
+    expect(String(fetchMock.mock.calls[2]?.[0])).toBe("/api/activities/act-code/run");
+    expect(bodyAt(fetchMock, 2)).toMatchObject({ draftVersion: 2, attemptId: "attempt-code-1", mode: "preview" });
+    expect(host.textContent).toContain("public-pandas");
+  });
+
+  it("does not run stale code after a draft save failure and keeps the local text", async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(ok(bootstrap(recovery({ stage: "activity" }))))
+      .mockResolvedValueOnce(fail(409, "draft_version_conflict"))
+      .mockResolvedValueOnce(ok(bootstrap(recovery({ stage: "activity" }))));
+    const { host } = await renderRoute("/activity/session-w4/act-code", fetchMock, { opened: openedCode });
+    await editTextarea(host.querySelector("textarea")!, "print('unsaved local')");
+    await click(button(host, "运行公开检查"));
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(fetchMock.mock.calls.some((call) => String(call[0]).endsWith("/run"))).toBe(false);
+    expect(useUiStore.getState().activityDrafts["attempt-code-1"]).toBe("print('unsaved local')");
+    expect(host.textContent).toContain("draft_version_conflict");
+  });
+
+  it("restores a saved code draft from the same server Attempt after refresh", async () => {
+    const session = recovery({ stage: "activity" });
+    session.currentAttempt = { kind: "code", activityId: "act-code", attemptId: "attempt-code-1", status: "draft", draftVersion: 2 };
+    const recovered = {
+      sessionId: "session-w4", sessionVersion: 4, profileRevision: 3,
+      attempt: { kind: "code", activityId: "act-code", attemptId: "attempt-code-1", status: "draft", draftVersion: 2 },
+      draftVersion: 2, userText: "print('edited draft')", recoveryAction: "resume_draft",
+    };
+    const codeNext = { ...nextStep, activity: openedCode.kind === "code" ? openedCode.activity : undefined };
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(ok(bootstrap(session)))
+      .mockResolvedValueOnce(ok(codeNext))
+      .mockResolvedValueOnce(ok(recovered))
+      .mockResolvedValueOnce(ok(savedCode));
+    const { host } = await renderRoute("/activity/session-w4/act-code", fetchMock);
+    expect((host.querySelector("textarea") as HTMLTextAreaElement).value).toBe("print('edited draft')");
+    expect(host.textContent).toContain("attempt-code-1");
+    expect(fetchMock.mock.calls.map((call) => String(call[0]))).toContain("/api/activities/act-code/recover");
+  });
+
+  it("keeps evaluator_error on the same Attempt and supports a successful recovery retry", async () => {
+    const initialSession = recovery({ stage: "activity" });
+    initialSession.currentAttempt = { kind: "code", activityId: "act-code", attemptId: "attempt-code-1", status: "draft", draftVersion: 1 };
+    const errorSession = recovery({ stage: "activity", sessionVersion: 4 });
+    errorSession.sessionVersion = 4;
+    errorSession.currentAttempt = { kind: "code", activityId: "act-code", attemptId: "attempt-code-1", status: "evaluator_error", draftVersion: 1 };
+    const recovered = {
+      sessionId: "session-w4", sessionVersion: 5, profileRevision: 3,
+      attempt: { kind: "code", activityId: "act-code", attemptId: "attempt-code-1", status: "evaluator_error", draftVersion: 1 },
+      draftVersion: 1, userText: "print('server draft')", recoveryAction: "retry_after_evaluator_error",
+    };
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(ok(bootstrap(initialSession)))
+      .mockResolvedValueOnce(ok({ status: "evaluator_error", errorCode: "evaluator_timeout", verdict: "not_graded" }, 202))
+      .mockResolvedValueOnce(ok(bootstrap(errorSession)))
+      .mockResolvedValueOnce(ok(bootstrap(errorSession)))
+      .mockResolvedValueOnce(ok(recovered))
+      .mockResolvedValueOnce(ok(codeSubmission))
+      .mockResolvedValueOnce(ok(bootstrap(recovery({ stage: "learning", sessionVersion: 6 }))));
+    const { host } = await renderRoute("/activity/session-w4/act-code", fetchMock, { opened: openedCode });
+    await click(button(host, "提交正式评测"));
+    expect(host.textContent).toContain("evaluator_timeout");
+    await click(button(host, "重新读取草稿后重试"));
+    expect(host.textContent).toContain("pass");
+    expect(bodyAt(fetchMock, 5)).toMatchObject({ attemptId: "attempt-code-1", draftVersion: 1, userText: "print('server draft')" });
+    expect(fetchMock.mock.calls.map((call) => String(call[0]))).toContain("/api/activities/act-code/recover");
+  });
+
+  it("keeps the recovery action available after a repeated evaluator failure", async () => {
+    const initialSession = recovery({ stage: "activity" });
+    initialSession.currentAttempt = { kind: "code", activityId: "act-code", attemptId: "attempt-code-1", status: "draft", draftVersion: 1 };
+    const errorSession = recovery({ stage: "activity", sessionVersion: 4 });
+    errorSession.sessionVersion = 4;
+    errorSession.currentAttempt = { kind: "code", activityId: "act-code", attemptId: "attempt-code-1", status: "evaluator_error", draftVersion: 1 };
+    const recovered = {
+      sessionId: "session-w4", sessionVersion: 5, profileRevision: 3,
+      attempt: { kind: "code", activityId: "act-code", attemptId: "attempt-code-1", status: "evaluator_error", draftVersion: 1 },
+      draftVersion: 1, userText: "print('server draft')", recoveryAction: "retry_after_evaluator_error",
+    };
+    const evaluatorFailure = { status: "evaluator_error", errorCode: "evaluator_timeout", verdict: "not_graded" };
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(ok(bootstrap(initialSession)))
+      .mockResolvedValueOnce(ok(evaluatorFailure, 202))
+      .mockResolvedValueOnce(ok(bootstrap(errorSession)))
+      .mockResolvedValueOnce(ok(bootstrap(errorSession)))
+      .mockResolvedValueOnce(ok(recovered))
+      .mockResolvedValueOnce(ok(evaluatorFailure, 202))
+      .mockResolvedValueOnce(ok(bootstrap(errorSession)));
+    const { host } = await renderRoute("/activity/session-w4/act-code", fetchMock, { opened: openedCode });
+    await click(button(host, "提交正式评测"));
+    await click(button(host, "重新读取草稿后重试"));
+    expect(host.textContent).toContain("evaluator_timeout");
+    expect(button(host, "重新读取草稿后重试").disabled).toBe(false);
+    expect(bodyAt(fetchMock, 5)).toMatchObject({ attemptId: "attempt-code-1", draftVersion: 1 });
   });
 
   it.each([
-    ["路径", <PathPage />],
-    ["活动", <ActivityPage />],
-    ["总结", <SummaryPage />],
-  ] as const)("uses a node-aware learning entry on the %s page", (_name, page) => {
-    render(page);
-    const learningLink = container.querySelector('a[href^="/learn/"]') as HTMLAnchorElement | null;
-    expect(learningLink).not.toBeNull();
-    expect(learningLink?.getAttribute("href")).toMatch(/^\/learn\/[^/]+\/[^/]+$/);
+    ["changed", replan()],
+    ["unchanged", replan({ changed: false, changeReasons: [] })],
+    ["fallback", replan({ changed: false, fallbackToPrevious: true, changeReasons: ["candidate_infeasible"] })],
+  ])("renders %s replan output and server changeReasons", async (_case, output) => {
+    const fetchMock = vi.fn().mockResolvedValueOnce(ok(bootstrap(recovery({ stage: "path" })))).mockResolvedValueOnce(ok(output));
+    const { host } = await renderRoute("/path/session-w4", fetchMock, { evidenceVersion: 7 });
+    await click(button(host, "重新计算路径"));
+    expect(host.textContent).toContain(output.changed ? "路径变化是" : "路径变化否");
+    expect(host.textContent).toContain(output.fallbackToPrevious ? "沿用旧路径是" : "沿用旧路径否");
+    expect(bodyAt(fetchMock, 1)).toMatchObject({ evidenceVersion: 7, pathVersion: 1, trigger: "user_constraint_changed" });
+    for (const reason of output.changeReasons) expect(host.textContent).toContain(reason);
   });
 
-  it("delivers both route parameters to the learning page", () => {
-    const router = createMemoryRouter(appRoutes, {
-      initialEntries: ["/learn/session-demo-001/node-missing-values"],
-    });
-    act(() => root.render(<RouterProvider router={router} />));
-    const page = container.querySelector('[data-page="learn"]');
-    expect(page?.getAttribute("data-session-id")).toBe("session-demo-001");
-    expect(page?.getAttribute("data-node-id")).toBe("node-missing-values");
+  it("shows replan conflicts and disables replan after a refresh without evidenceVersion", async () => {
+    const conflictFetch = vi.fn().mockResolvedValueOnce(ok(bootstrap(recovery({ stage: "path" })))).mockResolvedValueOnce(fail(409, "path_version_conflict"));
+    const first = await renderRoute("/path/session-w4", conflictFetch, { evidenceVersion: 7 });
+    await click(button(first.host, "重新计算路径"));
+    expect(first.host.textContent).toContain("path_version_conflict");
+    act(() => root?.unmount()); root = undefined; document.body.innerHTML = "";
+    const refreshed = await renderRoute("/path/session-w4", vi.fn().mockResolvedValue(ok(bootstrap(recovery({ stage: "path" })))));
+    expect(button(refreshed.host, "重新计算路径").disabled).toBe(true);
+    expect(refreshed.host.textContent).toContain("安全 DTO 未冻结 evidenceVersion");
   });
 
-  it("binds stable dimensions to stateful DOM surfaces", () => {
-    useUiStore.getState().setPageViewState("empty");
-    render(<StartPage />);
-    expect((container.querySelector(".state-panel") as HTMLElement).style.minHeight).toBe("430px");
-
-    act(() => root.unmount());
-    root = createRoot(container);
-    useUiStore.getState().setPageViewState("ready");
-    render(<ActivityPage />);
-    expect((container.querySelector(".activity-stage") as HTMLElement).style.minHeight).toBe("476px");
-    expect((container.querySelector(".activity-tabs") as HTMLElement).style.height).toBe("44px");
+  it("renders fail, partial, insufficient and unverified from safe progress facts", async () => {
+    const session = recovery({ stage: "activity" });
+    session.activityProgress = [{ nodeId: "node-basic", activities: [
+      { activityId: "act-fail", status: "completed", attemptIds: ["a1"], result: "fail", quizRetryCount: 1, updatedAt: "2026-08-16T00:00:00.000Z" },
+      { activityId: "act-partial", status: "completed", attemptIds: ["a2"], result: "partial", quizRetryCount: 1, updatedAt: "2026-08-16T00:00:00.000Z" },
+      { activityId: "act-insufficient", status: "insufficient", attemptIds: ["a3"], result: "insufficient", quizRetryCount: 0, updatedAt: "2026-08-16T00:00:00.000Z" },
+      { activityId: "act-pending", status: "pending", attemptIds: [], quizRetryCount: 0, updatedAt: "2026-08-16T00:00:00.000Z" },
+    ] }];
+    const completed = { requestId: "complete", sessionId: "session-w4", sessionVersion: 3, profileRevision: 3, completedAt: "2026-08-16T00:00:00.000Z", summary: "Session completed.", nextRecommendation: "Review." };
+    const { host } = await renderRoute("/summary/session-w4", vi.fn().mockResolvedValueOnce(ok(bootstrap(session))).mockResolvedValueOnce(ok(completed)));
+    for (const expected of ["act-fail: fail", "act-partial: partial", "act-insufficient: insufficient", "act-pending: unverified"]) expect(host.textContent).toContain(expected);
   });
 
-  it("does not render sensitive categories in ready pages", () => {
-    render(<ActivityPage />);
-    for (const forbidden of ["hiddenTest", "referenceSolution", "apiKey", "systemPrompt", "C:\\", "/home/"]) {
-      expect(container.innerHTML).not.toContain(forbidden);
+  it("shows completed-session recovery without replaying a frozen historical summary", async () => {
+    const session = recovery({ stage: "completed", status: "completed" });
+    session.activityProgress = [{ nodeId: "node-basic", activities: [{ activityId: "act-pending", status: "pending", attemptIds: [], quizRetryCount: 0, updatedAt: "2026-08-16T00:00:00.000Z" }] }];
+    const fetchMock = vi.fn().mockResolvedValue(ok(bootstrap(session)));
+    const { host } = await renderRoute("/summary/session-w4", fetchMock);
+    expect(host.textContent).toContain("COMPLETED_SUMMARY_NOT_REPLAYABLE");
+    expect(host.textContent).toContain("act-pending: unverified");
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("renders an empty unresolved result without inventing mastery", async () => {
+    const session = recovery({ stage: "activity" });
+    session.activityProgress = [{ nodeId: "node-basic", activities: [{ activityId: "act-pass", status: "completed", attemptIds: ["a1"], result: "pass", quizRetryCount: 0, updatedAt: "2026-08-16T00:00:00.000Z" }] }];
+    const completed = { requestId: "complete", sessionId: "session-w4", sessionVersion: 3, profileRevision: 3, summary: "Done." };
+    const { host } = await renderRoute("/summary/session-w4", vi.fn().mockResolvedValueOnce(ok(bootstrap(session))).mockResolvedValueOnce(ok(completed)));
+    expect(host.textContent).toContain("暂无未解决项");
+    expect(host.textContent).not.toContain("mastery");
+  });
+
+  it("renders submitted quiz safe review and starts a new Attempt only through the next-step API", async () => {
+    const afterSubmit = recovery({ stage: "activity", sessionVersion: 4 });
+    afterSubmit.sessionVersion = 4;
+    const retryNext = { ...nextStep, sessionVersion: 4 };
+    const retryQuiz = openedQuiz.kind === "quiz" ? { ...openedQuiz, requestId: "retry-open", sessionVersion: 5, attemptId: "attempt-2", activity: { ...openedQuiz.activity, retryNumber: 1 as const, questions: openedQuiz.activity.questions.map((question) => ({ ...question, questionId: `retry-${question.questionId}` })) } } : openedQuiz;
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(ok(bootstrap(recovery({ stage: "activity" }))))
+      .mockResolvedValueOnce(ok(quizSubmission))
+      .mockResolvedValueOnce(ok(bootstrap(afterSubmit)))
+      .mockResolvedValueOnce(ok(bootstrap(afterSubmit)))
+      .mockResolvedValueOnce(ok(retryNext))
+      .mockResolvedValueOnce(ok(retryQuiz));
+    const { host } = await renderRoute("/activity/session-w4/act-basic", fetchMock, { opened: openedQuiz });
+    for (const question of host.querySelectorAll(".quiz-question")) await click(question.querySelector("input")!);
+    await click(button(host, "提交完整题组"));
+    expect(host.textContent).toContain("提交后安全复盘");
+    await click(button(host, "开始新 Attempt 重试"));
+    expect(host.textContent).toContain("attempt-2");
+    expect(String(fetchMock.mock.calls[5]?.[0])).toBe("/api/activities/act-basic/open");
+  });
+
+  it("maps loading, empty, error, conflict and recovery to stable accessible panels", () => {
+    const host = document.createElement("div");
+    document.body.append(host);
+    root = createRoot(host);
+    for (const state of ["loading", "empty", "error", "conflict", "recovery"] as const) {
+      act(() => root!.render(<PageStatePanel page="activity" state={state} />));
+      expect(host.querySelector(`[data-state="${state}"]`)).not.toBeNull();
     }
+  });
+
+  it("renders transport errors without leaking server messages", async () => {
+    const { host } = await renderRoute("/", vi.fn().mockResolvedValue(fail(503, "initialization_not_ready")));
+    expect(host.textContent).toContain("initialization_not_ready");
+    expect(host.textContent).not.toContain("safe error");
   });
 });

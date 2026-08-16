@@ -1,83 +1,112 @@
-import { Link } from "react-router-dom";
+import { useEffect, useState, type FormEvent } from "react";
+import { useNavigate } from "react-router-dom";
+import type { BackgroundQuestionnaire, LearningEntryMode } from "../../contracts/index.js";
+import { api, isApiError, newRequestId } from "../api/client.js";
+import { routeForSession } from "../api/navigation.js";
+import { useBootstrap } from "../api/use-bootstrap.js";
 import { PageFrame } from "../components/PageFrame.js";
 import { PageStatePanel } from "../components/PageStatePanel.js";
-import { profileDisplayFixture, startSessionMock } from "../mocks/safe-dtos.js";
-import { useUiStore } from "../state/ui-store.js";
+
+const EXPERIENCE = ["none", "basic", "comfortable", "uncertain"] as const;
+const PREFERENCES = ["concise", "step_by_step", "example_first", "uncertain"] as const;
+const DEFAULT_BACKGROUND: BackgroundQuestionnaire = {
+  python_experience: "uncertain",
+  pandas_experience: "uncertain",
+  explanation_preference: "step_by_step",
+};
 
 export function StartPage() {
-  const pageViewState = useUiStore((state) => state.pageViewState);
-  const setPageViewState = useUiStore((state) => state.setPageViewState);
+  const bootstrap = useBootstrap();
+  const navigate = useNavigate();
+  const [mode, setMode] = useState<LearningEntryMode>("recommended");
+  const [subjectId, setSubjectId] = useState("");
+  const [goalId, setGoalId] = useState("");
+  const [chapterId, setChapterId] = useState("");
+  const [availableMinutes, setAvailableMinutes] = useState(120);
+  const [background, setBackground] = useState(DEFAULT_BACKGROUND);
+  const [busy, setBusy] = useState(false);
+  const [actionError, setActionError] = useState<Error>();
 
+  useEffect(() => {
+    if (bootstrap.data === undefined) return;
+    setSubjectId((value) => value || bootstrap.data!.profiles[0]?.subjectId || "");
+    setGoalId((value) => value || bootstrap.data!.goals[0]?.goalId || "");
+    setChapterId((value) => value || bootstrap.data!.chapters[0]?.chapterId || "");
+  }, [bootstrap.data]);
+
+  const start = async (event: FormEvent) => {
+    event.preventDefault();
+    if (bootstrap.data === undefined) return;
+    setBusy(true);
+    setActionError(undefined);
+    try {
+      const session = await api.startSession({
+        requestId: newRequestId("web-start"), subjectId, mode, goalId, availableMinutes,
+        ...(mode === "chapter" ? { chapterId } : {}),
+      });
+      await api.saveDiagnosticDraft({
+        requestId: newRequestId("web-diagnostic-draft"),
+        sessionId: session.sessionId,
+        sessionVersion: session.sessionVersion,
+        profileRevision: session.profileRevision,
+        diagnosticId: bootstrap.data.diagnostic.diagnosticId,
+        diagnosticVersion: bootstrap.data.diagnostic.diagnosticVersion,
+        background,
+        diagnosticDraftVersion: 0,
+        ...(mode === "recommended" && bootstrap.data.diagnostic.questions[0] !== undefined
+          ? { currentQuestionId: bootstrap.data.diagnostic.questions[0].questionId }
+          : {}),
+      });
+      navigate(`/diagnostic/${session.sessionId}`);
+    } catch (error) {
+      setActionError(error instanceof Error ? error : new Error("start_failed"));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const recover = async (sessionId: string) => {
+    setBusy(true);
+    setActionError(undefined);
+    try {
+      const recovered = await api.getBootstrap(sessionId);
+      if (recovered.session === undefined) throw new Error("session_not_found");
+      navigate(routeForSession(recovered.session));
+    } catch (error) {
+      setActionError(error instanceof Error ? error : new Error("recovery_failed"));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const stateError = actionError ?? bootstrap.error;
   return (
-    <PageFrame
-      eyebrow="学习入口"
-      title="开始一次可追踪的学习会话"
-      summary="选择已启用资料包、目标和时间预算。新会话绑定当前Profile revision。"
-      actions={<span className="header-badge">本地演示</span>}
-    >
-      {pageViewState !== "ready" ? (
-        <PageStatePanel page="start" state={pageViewState} />
-      ) : (
+    <PageFrame eyebrow="学习入口" title="开始一次可追踪的学习会话" summary="选择资料包、入口和问卷。所有正式进度由本地服务保存。" actions={<span className="header-badge">真实 API</span>}>
+      {bootstrap.loading ? <PageStatePanel page="start" state="loading" /> : null}
+      {!bootstrap.loading && stateError ? <PageStatePanel page="start" state={isApiError(stateError) && stateError.status === 409 ? "conflict" : "error"} code={isApiError(stateError) ? stateError.code : stateError.message} onRetry={() => { setActionError(undefined); void bootstrap.reload(); }} /> : null}
+      {!bootstrap.loading && stateError === undefined && (bootstrap.data?.profiles.length === 0 || bootstrap.data?.goals.length === 0) ? <PageStatePanel page="start" state="empty" /> : null}
+      {!bootstrap.loading && stateError === undefined && bootstrap.data !== undefined && bootstrap.data.profiles.length > 0 && bootstrap.data.goals.length > 0 ? (
         <div className="start-layout" data-page="start">
           <section className="work-section profile-section" aria-labelledby="profile-heading">
-            <div className="section-heading">
-              <div>
-                <p className="section-kicker">ACTIVE PROFILE</p>
-                <h2 id="profile-heading">{profileDisplayFixture.name}</h2>
-              </div>
-              <span className="status-tag success">已启用</span>
-            </div>
-            <dl className="metadata-grid">
-              <div><dt>领域</dt><dd>{profileDisplayFixture.subjectId}</dd></div>
-              <div><dt>修订</dt><dd>Revision {profileDisplayFixture.revision}</dd></div>
-              <div><dt>能力</dt><dd>{profileDisplayFixture.modalities.join(" / ")}</dd></div>
-            </dl>
+            <div className="section-heading"><div><p className="section-kicker">ACTIVE PROFILE</p><h2 id="profile-heading">{bootstrap.data.profiles[0]?.name}</h2></div><span className="status-tag success">已启用</span></div>
+            <dl className="metadata-grid"><div><dt>领域</dt><dd>{bootstrap.data.profiles[0]?.subjectId}</dd></div><div><dt>修订</dt><dd>Revision {bootstrap.data.profiles[0]?.revision}</dd></div><div><dt>能力</dt><dd>{bootstrap.data.profiles[0]?.modalities.join(" / ")}</dd></div></dl>
           </section>
-
-          <section className="work-section start-form" aria-labelledby="session-heading">
-            <div className="section-heading">
-              <div>
-                <p className="section-kicker">SESSION</p>
-                <h2 id="session-heading">会话设置</h2>
-              </div>
-              <span className="quiet-label">Revision {startSessionMock.profileRevision}</span>
-            </div>
+          <form className="work-section start-form" aria-labelledby="session-heading" onSubmit={start}>
+            <div className="section-heading"><div><p className="section-kicker">SESSION</p><h2 id="session-heading">会话设置</h2></div><span className="quiet-label">服务端绑定</span></div>
             <div className="form-grid">
-              <fieldset>
-                <legend>学习入口</legend>
-                <label className="choice-row"><input type="radio" name="entry" defaultChecked /> 系统推荐</label>
-                <label className="choice-row"><input type="radio" name="entry" /> 按章节学习</label>
-              </fieldset>
-              <label>
-                学习目标
-                <select defaultValue={startSessionMock.goalId}>
-                  <option value="goal-clean-orders">完成订单数据清洗</option>
-                </select>
-              </label>
-              <label>
-                可用时间
-                <select defaultValue={String(startSessionMock.availableMinutes)}>
-                  <option value="60">60分钟</option>
-                  <option value="90">90分钟</option>
-                  <option value="120">120分钟</option>
-                </select>
-              </label>
+              <fieldset><legend>学习入口</legend><label className="choice-row"><input type="radio" name="entry" checked={mode === "recommended"} onChange={() => setMode("recommended")} /> 系统推荐</label><label className="choice-row"><input type="radio" name="entry" checked={mode === "chapter"} onChange={() => setMode("chapter")} /> 按章节学习</label></fieldset>
+              <label>学习目标<select aria-label="学习目标" value={goalId} onChange={(event) => setGoalId(event.target.value)}>{bootstrap.data.goals.map((goal) => <option key={goal.goalId} value={goal.goalId}>{goal.title}</option>)}</select></label>
+              <label>可用时间<select aria-label="可用时间" value={availableMinutes} onChange={(event) => setAvailableMinutes(Number(event.target.value))}><option value={60}>60分钟</option><option value={120}>120分钟</option><option value={400}>400分钟</option></select></label>
+              {mode === "chapter" ? <label>起始章节<select aria-label="起始章节" value={chapterId} onChange={(event) => setChapterId(event.target.value)}>{bootstrap.data.chapters.map((chapter) => <option key={chapter.chapterId} value={chapter.chapterId}>{chapter.title}</option>)}</select></label> : null}
+              <label>Python经验<select aria-label="Python经验" value={background.python_experience} onChange={(event) => setBackground({ ...background, python_experience: event.target.value as BackgroundQuestionnaire["python_experience"] })}>{EXPERIENCE.map((value) => <option key={value}>{value}</option>)}</select></label>
+              <label>Pandas经验<select aria-label="Pandas经验" value={background.pandas_experience} onChange={(event) => setBackground({ ...background, pandas_experience: event.target.value as BackgroundQuestionnaire["pandas_experience"] })}>{EXPERIENCE.map((value) => <option key={value}>{value}</option>)}</select></label>
+              <label>讲解偏好<select aria-label="讲解偏好" value={background.explanation_preference} onChange={(event) => setBackground({ ...background, explanation_preference: event.target.value as BackgroundQuestionnaire["explanation_preference"] })}>{PREFERENCES.map((value) => <option key={value}>{value}</option>)}</select></label>
             </div>
-            <div className="section-footer">
-              <button type="button" className="button secondary">查看资料包详情</button>
-              <Link className="button primary" to={`/diagnostic/${startSessionMock.sessionId}`}>开始学习</Link>
-            </div>
-          </section>
-
-          <section className="resume-strip" aria-label="恢复会话">
-            <div>
-              <strong>有一项可恢复进度</strong>
-              <span>最后完整阶段：learning · 会话版本 8</span>
-            </div>
-            <button type="button" className="button text-button" data-action="open-checkpoint" onClick={() => setPageViewState("recovery")}>查看检查点</button>
-          </section>
+            <div className="section-footer"><span className="quiet-label">{subjectId}</span><button type="submit" className="button primary" disabled={busy || goalId === "" || (mode === "chapter" && chapterId === "")}>{busy ? "正在创建" : "开始学习"}</button></div>
+          </form>
+          {bootstrap.data.recoverableSessions.map((session) => <section className="resume-strip" aria-label="恢复会话" key={session.sessionId}><div><strong>可恢复会话</strong><span>{session.stage} · Session v{session.sessionVersion}</span></div><button type="button" className="button text-button" disabled={busy} onClick={() => void recover(session.sessionId)}>从服务端恢复</button></section>)}
         </div>
-      )}
+      ) : null}
     </PageFrame>
   );
 }

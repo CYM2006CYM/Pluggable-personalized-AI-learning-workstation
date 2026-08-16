@@ -1,0 +1,47 @@
+{
+  "schemaVersion": "w4-d4-e-v4-summary-r5",
+  "baselineCommit": "a896c4b219cccb0da256fdf7e5d1cb96ba41f7b4",
+  "candidateConclusion": "READY_FOR_OWNER_REVIEW",
+  "gates": {
+    "V4-1_to_V4-4": "PASS_FROM_PRIOR_E2_AND_FULL_VERIFY",
+    "V4-5": "PASS_FIXED_DEMO_AND_EMPTY_DATA_TRAJECTORIES",
+    "V4-6": "PASS_FROM_PRIOR_E2_AND_BUILD",
+    "V4-7": "PASS_RECORDED_RESPONSES_LIVE_NOT_RUN",
+    "V4-8": "PASS_SCOPED_RUNTIME_ASSET"
+  },
+  "directReverification": {
+    "typecheck": { "status": "PASS", "exitCode": 0 },
+    "web": { "status": "PASS", "testFiles": 11, "tests": 71, "exitCode": 0 },
+    "realApiAndSixPoint": { "status": "PASS", "testFiles": 2, "tests": 10, "exitCode": 0 },
+    "checkDocs": { "status": "PASS", "markdownFiles": 91, "exitCode": 0 },
+    "buildWeb": { "status": "PASS", "exitCode": 0 },
+    "smokeExtension": { "status": "PASS", "exitCode": 0 },
+    "gitDiffCheck": { "status": "PASS", "exitCode": 0 },
+    "verify": {
+      "status": "PASS",
+      "exitCode": 0,
+      "testsPassed": 740,
+      "testsFailed": 0,
+      "testsSkipped": 1,
+      "testFiles": 85
+    }
+  },
+  "auditInputStatus": "FORMAL_HEAD_INPUT_NOTE",
+  "browser": {
+    "status": "PASS_FIXED_PORT_RECOMMENDED_TRAJECTORY",
+    "apiPort": 4310,
+    "vitePort": 5173,
+    "recoveries": ["diagnostic_draft", "quiz_attempt", "submitted_progress"]
+  },
+  "contractEnvironment": {
+    "node": "v22.23.1",
+    "npm": "10.9.8",
+    "python": "3.13.7",
+    "pandas": "3.0.5",
+    "pythonNoUserSite": true
+  },
+  "liveModel": "LIVE_NOT_RUN",
+  "notCommitted": true,
+  "notPushed": true,
+  "uploadLock": "NOT_REQUESTED"
+}
