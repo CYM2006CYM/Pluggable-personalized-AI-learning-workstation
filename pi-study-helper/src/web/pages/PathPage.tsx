@@ -24,11 +24,24 @@ export function PathPage() {
   const [actionError, setActionError] = useState<Error>();
   const session = bootstrap.data?.session;
   const candidate = routeState.candidate;
+  const serverPath = session?.path;
+  const serverPathIsAuthoritative = serverPath !== undefined
+    && (serverPath.status === "active" || serverPath.status === "confirmed" || serverPath.status === "completed");
+  const confirmedPath = confirmed === undefined ? undefined : {
+    pathId: confirmed.pathId,
+    pathVersion: confirmed.pathVersion,
+    status: confirmed.status,
+    nodes: serverPath?.nodes ?? candidate?.nodes ?? [],
+  };
+  const candidatePath = candidate?.pathId === undefined ? undefined : {
+    pathId: candidate.pathId,
+    pathVersion: candidate.pathVersion!,
+    status: candidate.status,
+    nodes: candidate.nodes,
+  };
   const path = replanned !== undefined
     ? { pathId: replanned.pathId, pathVersion: replanned.pathVersion, status: "active" as const, nodes: replanned.nodes }
-    : candidate?.pathId !== undefined
-      ? { pathId: candidate.pathId, pathVersion: candidate.pathVersion!, status: confirmed === undefined ? candidate.status : "active" as const, nodes: candidate.nodes }
-      : session?.path;
+    : confirmedPath ?? (serverPathIsAuthoritative ? serverPath : candidatePath ?? serverPath);
   const active = path?.status === "active" || path?.status === "confirmed" || path?.status === "completed";
   const canReplan = active && routeState.evidenceVersion !== undefined;
 

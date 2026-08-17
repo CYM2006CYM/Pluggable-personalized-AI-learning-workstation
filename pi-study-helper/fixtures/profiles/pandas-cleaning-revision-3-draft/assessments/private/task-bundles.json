@@ -17,7 +17,7 @@
       "source": "profile_fixed",
       "activity": {
         "activityId": "act-inspect-dataframe",
-        "profileRevision": 2,
+        "profileRevision": 3,
         "kind": "code_completion",
         "allowedSources": [
           "profile_fixed"
@@ -159,7 +159,7 @@
       "source": "profile_fixed",
       "activity": {
         "activityId": "act-missing",
-        "profileRevision": 2,
+        "profileRevision": 3,
         "kind": "code_completion",
         "allowedSources": [
           "profile_fixed"
@@ -295,7 +295,7 @@
       "source": "profile_fixed",
       "activity": {
         "activityId": "act-duplicates",
-        "profileRevision": 2,
+        "profileRevision": 3,
         "kind": "code_completion",
         "allowedSources": [
           "profile_fixed"
@@ -434,7 +434,7 @@
       "source": "profile_fixed",
       "activity": {
         "activityId": "act-types",
-        "profileRevision": 2,
+        "profileRevision": 3,
         "kind": "code_completion",
         "allowedSources": [
           "profile_fixed"
@@ -579,7 +579,7 @@
       "source": "profile_fixed",
       "activity": {
         "activityId": "act-practical",
-        "profileRevision": 2,
+        "profileRevision": 3,
         "kind": "coding_practical",
         "allowedSources": [
           "profile_fixed"

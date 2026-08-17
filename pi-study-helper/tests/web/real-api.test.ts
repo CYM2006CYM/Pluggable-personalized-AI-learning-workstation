@@ -3,8 +3,10 @@ import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import type { AddressInfo } from "node:net";
 import { afterEach, describe, expect, it } from "vitest";
+import { ProfileFamilyQuizActivityAssetResolver } from "../../src/application/quiz-activity-runtime.js";
 import { createDemoRuntime } from "../../src/demo/composition-root.js";
 import { startHttpServer, type HttpServerHandle } from "../../src/demo/http-server.js";
+import { ProfileFamilyRepository } from "../../src/repositories/profile-family-repository.js";
 
 const fixturesRoot = resolve(import.meta.dirname, "../../fixtures/profiles");
 const cleanups: Array<() => Promise<void>> = [];
@@ -148,6 +150,78 @@ describe("W4 E independent real API trajectories", () => {
     const continuation = await get(url, `/api/sessions/${sessionId}/next-step?sessionVersion=${submittedRefresh.body.data.session.sessionVersion}&profileRevision=${submittedRefresh.body.data.session.profileRevision}&pathVersion=${submittedRefresh.body.data.session.path.pathVersion}`);
     expect(continuation.response.status, JSON.stringify(continuation.body)).toBe(200);
     expect(continuation.body.data.completed || continuation.body.data.activity !== undefined).toBe(true);
+  }, 60_000);
+
+  it("opens a revision 3 code activity after completing the preceding quiz activity", async () => {
+    const url = await server();
+    const initial = (await get(url, "/api/bootstrap")).body.data;
+    const started = await post(url, "/api/sessions", {
+      requestId: "e-code-chain-start", subjectId: "pandas-cleaning", mode: "chapter",
+      goalId: initial.goals[0].goalId, chapterId: initial.chapters[0].chapterId, availableMinutes: 400,
+    });
+    const sessionId = started.body.data.sessionId;
+    const background = { python_experience: "basic", pandas_experience: "basic", explanation_preference: "step_by_step" };
+    const draft = await post(url, `/api/sessions/${sessionId}/diagnostic/draft`, {
+      ...writeMeta(started.body.data, "e-code-chain-draft"), diagnosticId: initial.diagnostic.diagnosticId,
+      diagnosticVersion: initial.diagnostic.diagnosticVersion, diagnosticDraftVersion: 0, background,
+    });
+    const completed = await post(url, `/api/sessions/${sessionId}/diagnostic/complete`, {
+      ...writeMeta(draft.body.data, "e-code-chain-complete"), mode: "background_only", background,
+      diagnosticDraftVersion: draft.body.data.diagnosticDraftVersion,
+    });
+    const built = await post(url, `/api/sessions/${sessionId}/path`, {
+      ...writeMeta(completed.body.data, "e-code-chain-path"), goalId: started.body.data.goalId, mode: "chapter",
+      chapterId: started.body.data.chapterId, availableMinutes: 400, evidenceVersion: completed.body.data.evidenceVersion,
+      selectedKnowledgePointIds: [], lockedNodeIds: [],
+    });
+    const confirmed = await post(url, `/api/sessions/${sessionId}/path/confirm`, {
+      ...writeMeta(built.body.data, "e-code-chain-confirm"), pathId: built.body.data.pathId, pathVersion: built.body.data.pathVersion,
+    });
+
+    const resolverRoot = await mkdtemp(resolve(tmpdir(), "w4-e-code-chain-profile-"));
+    cleanups.push(async () => { await rm(resolverRoot, { recursive: true, force: true }); });
+    const profiles = new ProfileFamilyRepository({ dataRoot: resolverRoot, fixturesRoot });
+    await profiles.activateRevision3Draft("pandas-cleaning");
+    const quizAssets = new ProfileFamilyQuizActivityAssetResolver(profiles);
+    let state = confirmed.body.data;
+    for (let step = 0; step < 8; step += 1) {
+      const next = await get(url, `/api/sessions/${sessionId}/next-step?sessionVersion=${state.sessionVersion}&profileRevision=${state.profileRevision}&pathVersion=${state.pathVersion}`);
+      expect(next.response.status, JSON.stringify(next.body)).toBe(200);
+      expect(next.body.data.completed).toBe(false);
+      const activity = next.body.data.activity;
+      expect(activity).toBeDefined();
+      const opened = await post(url, `/api/activities/${activity.activityId}/open`, {
+        ...writeMeta(next.body.data, `e-code-chain-open-${step}`), sessionId,
+        activityVersion: activity.activityVersion, pathVersion: next.body.data.pathVersion,
+        ...(next.body.data.card === undefined ? {} : { acknowledgedCardId: next.body.data.card.cardId }),
+      });
+      expect(opened.response.status, JSON.stringify(opened.body)).toBe(200);
+      if (opened.body.data.kind === "code") {
+        expect(opened.body.data.activity.activityVersion).toBe(3);
+        expect(opened.body.data.activity.kind).toBe("code_completion");
+        expect(opened.body.data.activity.starterCode).toContain("TODO_BEGIN");
+        return;
+      }
+      const questions = opened.body.data.activity.questions;
+      const assets = await quizAssets.loadAssets("pandas-cleaning", 3, activity.activityId);
+      const privateQuestions = [...assets.fixedQuestions, ...assets.supplementalQuestions,
+        ...(assets.legacyQuestion === undefined ? [] : [assets.legacyQuestion])];
+      const answersById = new Map(privateQuestions.map((question) => [question.questionId, question.correctAnswer]));
+      const answers = questions.map((question: any) => {
+        const answer = answersById.get(question.questionId);
+        if (answer === undefined) throw new Error(`Missing deterministic answer for ${question.questionId}`);
+        return { questionId: question.questionId, answer };
+      });
+      const submitted = await post(url, `/api/activities/${activity.activityId}/submit`, {
+        ...writeMeta(opened.body.data, `e-code-chain-submit-${step}`), sessionId, kind: "quiz",
+        activityVersion: opened.body.data.activity.activityVersion, attemptId: opened.body.data.attemptId, answers,
+      });
+      expect(submitted.response.status, JSON.stringify(submitted.body)).toBe(200);
+      expect(submitted.body.data.result.verdict).toBe("pass");
+      const refreshed = await get(url, `/api/bootstrap?recoverSessionId=${sessionId}`);
+      state = { ...refreshed.body.data.session, pathVersion: refreshed.body.data.session.path.pathVersion };
+    }
+    throw new Error("Revision 3 code activity was not reached within the bounded trajectory");
   }, 60_000);
 });
 

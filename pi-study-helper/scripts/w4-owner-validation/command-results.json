@@ -1,0 +1,84 @@
+{
+  "schemaVersion": "w4-owner-validation-v1",
+  "baselineHead": "d98a55d0da87d9faccf49d21e56bd8b12e6ba456",
+  "candidatePatchSha256": "64FCEF391962B72BC5B61CB0CD9436053747A0F4A13CBB3EC8F3EBF546176CF8",
+  "environment": {
+    "node": "22.23.1",
+    "npm": "10.9.8",
+    "python": "3.13.7",
+    "pandas": "3.0.5",
+    "pythonNoUserSite": "1"
+  },
+  "commands": [
+    {"id":"v4-targeted","exitCode":0,"summary":"13 files / 80 tests passed","stdoutLog":"evidence-v4-targeted.stdout.log","stdoutSha256":"46F7BE48F6DB7C9F86558226E3392B5C5A71F68C5D474974FB78C66CF49465E0"},
+    {"id":"full-test","exitCode":0,"summary":"85 files / 744 passed / 1 skipped / 0 failed","stdoutLog":"evidence-full-test.stdout.log","stdoutSha256":"0BE181A11F54E05C814BE3544626D07ADE6E8D786CD7F9EC97CF40FA7000F172"},
+    {"id":"typecheck","exitCode":0,"stdoutLog":"evidence-typecheck.stdout.log","stdoutSha256":"2A8C77F2B0A9742C62E49CD4BB9873B596E8A5B7FB9C333A3E2E873E18B8692D"},
+    {"id":"check-docs","exitCode":0,"stdoutLog":"evidence-check-docs.stdout.log","stdoutSha256":"9DE6869EABDC15934B71B9AE5EEA0D52500D0CD107181C5B2B37855F9913A87A"},
+    {"id":"build-web","exitCode":0,"stdoutLog":"evidence-build-web.stdout.log","stdoutSha256":"FDF877908F5767520043464E598B1CD30DDA69CF428E2FC02D783B011364873B"},
+    {"id":"build-demo","exitCode":0,"stdoutLog":"evidence-build-demo.stdout.log","stdoutSha256":"354720353DC25E43014304009316E4069E7F1FD29F8FC0C8EB2CE4843F6D7187"},
+    {"id":"check-release","exitCode":0,"stdoutLog":"evidence-check-release.stdout.log","stdoutSha256":"F3C02E10687E282C7573F73AE6F3C342F0B88470C7FC04FB9AB9F2145AD1DC9A"},
+    {"id":"smoke-extension","exitCode":0,"stdoutLog":"evidence-smoke-extension.stdout.log","stdoutSha256":"BF4A287894F32354CCEEA703BCEF87EEDBF9CC4911F90A667175B487450AB81D"},
+    {"id":"verify","exitCode":0,"stdoutLog":"evidence-verify.stdout.log","stdoutSha256":"CF140EA7EB8CD2BFF6534A1C486FA027F4DD421710ED2A9BF4B08ACA83FE1A09"},
+    {"id":"git-diff-check","exitCode":0,"summary":"no output"},
+    {"id":"browser-recommended-refresh","exitCode":1,"summary":"submitted API state exists but refresh shows old draft Attempt","stdoutLog":"evidence-browser-seeded-recommended9.log","stdoutSha256":"EDD47F94A5A8A974B37021D3A3994A7CEA63107431FE4E7920E462037645570C"},
+    {"id":"browser-chapter-refresh","exitCode":1,"summary":"same W4-V4-5-REFRESH-001 reproduced","stdoutLog":"evidence-browser-seeded-chapter.log","stdoutSha256":"FC2F64F7DA296233FAC390AAF1CFF9CCFF3B4042E5CCBB765CBD56D0E6C44EE3"},
+    {"id":"bundle-leak-scan","exitCode":0,"summary":"all sensitive markers 0","stdoutLog":"evidence-leak-scan.txt","stdoutSha256":"CBC3420E32478905F887DBF20291095687C4CA425AD2041920705AE213304EE2"}
+  ],
+  "gates": {
+    "V4-1":"PASS",
+    "V4-2":"PASS",
+    "V4-3":"PASS",
+    "V4-4":"PASS",
+    "V4-5":"NO-GO",
+    "V4-6":"PASS",
+    "V4-7":"PASS",
+    "V4-8":"PASS"
+  },
+  "overall": "NO-GO",
+  "blocker": "W4-V4-5-REFRESH-001",
+  "liveModel": "LIVE_NOT_RUN",
+  "currentOverall": "GO",
+  "remediation": {
+    "issue": "W4-V4-5-REFRESH-001",
+    "previousOverall": "NO-GO",
+    "fixedFiles": [
+      "pi-study-helper/src/web/pages/ActivityPage.tsx",
+      "pi-study-helper/tests/web/pages.test.tsx"
+    ],
+    "fixSummary": "首次 Bootstrap 完成后，若服务端已存在该活动正式结果，则丢弃 React Router 历史 opened 草稿；本次提交结果和草稿/evaluator_error 恢复不受影响。",
+    "regressionEvidence": "C:/Users/win11/AppData/Local/Temp/w4-final-owner-remediation-20260818/command-results.json",
+    "regressionEvidenceSha256": "658E932BE92F664FBCC007CDADF763BF7CC88392083A76FC28B498E749F56984",
+    "postGuardEvidence": "C:/Users/win11/AppData/Local/Temp/w4-final-owner-remediation-20260818/post-guard-results.json",
+    "postGuardEvidenceSha256": "DF1AAF0F626385629D7B8C211276549932D129B2A61DBC540E7B359C45A6FDF2",
+    "commandSummary": "web-targeted 29 passed; full-test 85 files / 744 passed / 1 skipped / 0 failed; verify exit 0; all recorded commands exit 0",
+    "browser": {
+      "environment": "Node 22.23.1 / npm 10.9.8 / Python 3.13.7 / Pandas 3.0.5 / PYTHONNOUSERSITE=1",
+      "ports": ["127.0.0.1:4310", "127.0.0.1:5173"],
+      "dataRoot": "C:/Users/win11/AppData/Local/Temp/w4-final-owner-browser-20260818/.demo-data",
+      "recommended": {
+        "exitCode": 0,
+        "stdoutLog": "C:/Users/win11/AppData/Local/Temp/w4-final-owner-browser-20260818/recommended.stdout.log",
+        "stdoutSha256": "DE4399D38E63BEA0F9D3623C8D3D9B881FD18BD9A31C268C9158CEE57E73C800",
+        "assertions": ["提交返回 SERVER VERDICT", "刷新后 currentAttempt=null", "刷新显示 SUBMITTED_PROGRESS_RECOVERED", "下一步由服务端游标进入 learn", "私有标记 0"]
+      },
+      "chapter": {
+        "exitCode": 0,
+        "stdoutLog": "C:/Users/win11/AppData/Local/Temp/w4-final-owner-browser-20260818/chapter.stdout.log",
+        "stdoutSha256": "8B9B759D333D9069032514F21133EC769D34AA67C752330171419580ADBDDA6E",
+        "assertions": ["提交返回 SERVER VERDICT", "刷新后 currentAttempt=null", "刷新显示 SUBMITTED_PROGRESS_RECOVERED", "下一步由服务端游标进入 learn", "私有标记 0"]
+      }
+    },
+    "gatesAfterRemediation": {
+      "V4-1": "PASS",
+      "V4-2": "PASS",
+      "V4-3": "PASS",
+      "V4-4": "PASS",
+      "V4-5": "PASS",
+      "V4-6": "PASS",
+      "V4-7": "PASS",
+      "V4-8": "PASS"
+    },
+    "overallAfterRemediation": "GO",
+    "liveModelAfterRemediation": "LIVE_NOT_RUN"
+  }
+}

@@ -14,6 +14,7 @@ import {
   ok,
   openedCode,
   openedQuiz,
+  pathNodes,
   preparedCode,
   quizSubmission,
   recovery,
@@ -99,6 +100,33 @@ describe("W4 real API pages", () => {
     expect(host.textContent).toContain("位置锁定");
   });
 
+  it("prefers a server-confirmed path over a stale candidate kept in browser history", async () => {
+    const session = recovery({ stage: "learning", pathVersion: 1 });
+    const staleCandidate = {
+      requestId: "stale-candidate",
+      sessionId: "session-w4",
+      sessionVersion: 1,
+      profileRevision: 3,
+      status: "candidate" as const,
+      pathId: "path-w4",
+      pathVersion: 1,
+      nodes: pathNodes,
+      missingPrerequisiteIds: [],
+      minimumRequiredMinutes: 12,
+    };
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(ok(bootstrap(session)))
+      .mockResolvedValueOnce(ok(nextStep));
+    const { host, router } = await renderRoute("/path/session-w4", fetchMock, { candidate: staleCandidate });
+
+    expect(button(host, "进入学习")).toBeDefined();
+    expect([...host.querySelectorAll("button")].some((item) => item.textContent?.includes("确认路径"))).toBe(false);
+    await click(button(host, "进入学习"));
+    expect(router.state.location.pathname).toBe("/learn/session-w4/node-basic");
+    expect(fetchMock.mock.calls.some((call) => String(call[0]).includes("/confirm"))).toBe(false);
+    expect(fetchMock.mock.calls.some((call) => String(call[0]).includes("/next-step"))).toBe(true);
+  });
+
   it("renders the learning card and treats the optional review timeline as not provided", async () => {
     const fetchMock = vi.fn().mockResolvedValueOnce(ok(bootstrap(recovery()))).mockResolvedValueOnce(ok(nextStep));
     const { host } = await renderRoute("/learn/session-w4/node-basic", fetchMock);
@@ -145,8 +173,9 @@ describe("W4 real API pages", () => {
       .mockResolvedValueOnce(ok(bootstrap(session)))
       .mockResolvedValueOnce(ok(bootstrap(session)))
       .mockResolvedValueOnce(ok(nextStep));
-    const { host, router } = await renderRoute("/activity/session-w4/act-basic", fetchMock);
+    const { host, router } = await renderRoute("/activity/session-w4/act-basic", fetchMock, { opened: openedQuiz, nodeId: "node-basic" });
     expect(host.textContent).toContain("SUBMITTED_PROGRESS_RECOVERED");
+    expect(host.querySelectorAll(".quiz-question")).toHaveLength(0);
     await click(button(host, "进入下一活动"));
     expect(router.state.location.pathname).toBe("/learn/session-w4/node-basic");
     expect(fetchMock.mock.calls.map((call) => String(call[0])).slice(0, 3)).toEqual([

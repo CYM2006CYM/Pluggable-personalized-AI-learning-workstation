@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import type { ActivityDraftOutput, ActivitySubmissionOutput, CodeActivityDraftOutput, QuizAnswerInput } from "../../contracts/index.js";
 import { api, isApiError, isEvaluatorFailure, newRequestId, quizScore, type EvaluatorFailureView } from "../api/client.js";
@@ -23,9 +23,13 @@ export function ActivityPage() {
   const [actionError, setActionError] = useState<Error>();
   const [recovering, setRecovering] = useState(false);
   const [recoveryAttempted, setRecoveryAttempted] = useState(false);
+  const routeStateChecked = useRef<string>();
   const drafts = useUiStore((state) => state.activityDrafts);
   const setDraft = useUiStore((state) => state.setActivityDraft);
   const session = bootstrap.data?.session;
+  const submittedProgress = session?.activityProgress
+    .flatMap((node) => node.activities)
+    .find((activity) => activity.activityId === activityId && activity.result !== undefined);
   const localDraft = opened?.kind === "code" ? drafts[opened.attemptId] ?? opened.userText : "";
 
   const captureActionError = async (error: unknown, fallback: string) => {
@@ -37,6 +41,18 @@ export function ActivityPage() {
   useEffect(() => {
     if (opened?.kind === "code" && drafts[opened.attemptId] === undefined) setDraft(opened.attemptId, opened.userText);
   }, [drafts, opened, setDraft]);
+
+  // React Router keeps navigation state across a browser refresh. A server-side
+  // result is authoritative, so do not replay the stale activity draft in that
+  // case. A locally submitted result remains visible until the user advances.
+  useEffect(() => {
+    if (bootstrap.loading || bootstrap.error !== undefined || session === undefined || routeStateChecked.current === activityId) return;
+    routeStateChecked.current = activityId;
+    if (result !== undefined || opened === undefined || submittedProgress === undefined) return;
+    setOpened(undefined);
+    setAnswers({});
+    setPreparedText(undefined);
+  }, [activityId, bootstrap.error, bootstrap.loading, opened, result, session, submittedProgress]);
 
   useEffect(() => {
     const attempt = session?.currentAttempt;
@@ -175,7 +191,6 @@ export function ActivityPage() {
   };
 
   const error = actionError ?? bootstrap.error;
-  const submittedProgress = session?.activityProgress.flatMap((node) => node.activities).find((activity) => activity.activityId === activityId && activity.result !== undefined);
   const retryPending = submittedProgress?.status === "in_progress" && submittedProgress.quizRetryCount === 1;
   const refreshBlocked = !bootstrap.loading && !recovering && error === undefined && opened === undefined && session?.currentAttempt?.activityId === activityId;
   const title = opened?.activity.title ?? "活动恢复";

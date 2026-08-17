@@ -199,8 +199,11 @@ export class DeterministicQuizRuntime {
       review.push({ questionId: question.questionId, correct, correctAnswer: question.correctAnswer, explanation: question.explanation, sourceAnchorIds: [...question.sourceAnchorIds] });
     }
     const totalCount = expected.size;
-    const requiredCorrectCount = Math.ceil(totalCount * 0.75);
-    const verdict: QuizActivityResult["verdict"] = totalCount < 4 ? "insufficient" : correctCount >= requiredCorrectCount ? "pass" : correctCount === 0 ? "fail" : "partial";
+    const legacySingleQuestion = attempt.legacySubtype !== undefined;
+    const requiredCorrectCount = legacySingleQuestion ? 1 : Math.ceil(totalCount * 0.75);
+    const verdict: QuizActivityResult["verdict"] = legacySingleQuestion
+      ? correctCount === requiredCorrectCount ? "pass" : "fail"
+      : totalCount < 4 ? "insufficient" : correctCount >= requiredCorrectCount ? "pass" : correctCount === 0 ? "fail" : "partial";
     const result: QuizActivityResult = {
       kind: "quiz",
       verdict,
@@ -208,7 +211,9 @@ export class DeterministicQuizRuntime {
       totalCount,
       requiredCorrectCount,
       retryAllowed: verdict !== "pass" && attempt.retryNumber === 0,
-      safeFeedback: verdict === "pass" ? "题组已通过。" : verdict === "insufficient" ? "当前题组不足以形成确定性判定。" : "本次结果已记录，可进行一次重试。",
+      safeFeedback: legacySingleQuestion
+        ? verdict === "pass" ? "题目已通过。" : "本题未通过，可进行一次重试。"
+        : verdict === "pass" ? "题组已通过。" : verdict === "insufficient" ? "当前题组不足以形成确定性判定。" : "本次结果已记录，可进行一次重试。",
       answerReview: review,
     };
     attempt.status = "submitted";

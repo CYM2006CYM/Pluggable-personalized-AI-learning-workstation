@@ -98,6 +98,34 @@ describe("QuizActivityRuntime", () => {
     expect(JSON.stringify(opened)).not.toContain("correctAnswer");
   });
 
+  it("scores a legal legacy single-question helper with single-question semantics", async () => {
+    const legacyQuestion = questions("legacy", 1)[0]!;
+    const legacyAssets: QuizActivityAssets = {
+      ...assets,
+      fixedQuestions: [],
+      supplementalQuestions: [],
+      legacyQuestion,
+      legacySubtype: "single_choice",
+    };
+    const { sessions, view, runtime } = await setup(legacyAssets);
+    const opened = await runtime.openActivity({ requestId: "legacy-score-open", sessionId: view.sessionId, sessionVersion: 3, profileRevision: 3, activityId: "quiz", activityVersion: 1, pathVersion: 1, acknowledgedCardId: "actual-card-kp" });
+    const submitted = await runtime.submitActivity({
+      requestId: "legacy-score-submit",
+      sessionId: view.sessionId,
+      sessionVersion: opened.sessionVersion,
+      profileRevision: 3,
+      kind: "quiz",
+      activityId: "quiz",
+      activityVersion: 1,
+      attemptId: opened.attemptId,
+      answers: [{ questionId: "legacy-0", answer: "A" }],
+    });
+    expect(submitted.result).toMatchObject({ verdict: "pass", correctCount: 1, totalCount: 1, requiredCorrectCount: 1, retryAllowed: false });
+    const snapshot = await sessions.getSnapshot({ sessionId: view.sessionId, sessionVersion: submitted.sessionVersion, profileRevision: 3 });
+    expect(snapshot.evidence).toHaveLength(1);
+    expect(snapshot.activityProgress[0]?.activities[0]).toMatchObject({ status: "completed", result: "pass" });
+  });
+
   it("opens a safe persisted Attempt, commits one Evidence, and advances to the next activity", async () => {
     const { sessions, view, runtime } = await setup();
     const opened = await runtime.openActivity({ requestId: "open", sessionId: view.sessionId, sessionVersion: 3, profileRevision: 3, activityId: "quiz", activityVersion: 1, pathVersion: 1, acknowledgedCardId: "actual-card-kp" });

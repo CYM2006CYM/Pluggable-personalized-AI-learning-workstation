@@ -450,7 +450,9 @@ export class ProfileFamilyCodeActivityAssetResolver implements CodeActivityAsset
     const environment = JSON.parse(environmentRaw) as EvaluationEnvironmentProjection;
     const activity = activities.find((item) => item.activityId === activityId);
     const bundle = bundles.find((item) => item.activity.activityId === activityId);
-    if (activity === undefined || bundle === undefined || !["code_completion", "coding_practical", "debug"].includes(activity.kind)) {
+    const codeKind = activity?.kind;
+    if (activity === undefined || bundle === undefined
+        || (codeKind !== "code_completion" && codeKind !== "coding_practical" && codeKind !== "debug")) {
       throw new ActivityRepositoryError("activity_not_found", "Code Activity is unavailable");
     }
     if (activity.profileRevision !== profileRevision || bundle.activity.profileRevision !== profileRevision || bundle.activity.templateVersion !== activity.templateVersion
@@ -466,7 +468,13 @@ export class ProfileFamilyCodeActivityAssetResolver implements CodeActivityAsset
       Promise.all(publicFixtures.map(async (fixture) => ({ name: basename(fixture.fileRef), content: await this.profiles.readProfileV2RevisionFile(subjectId, profileRevision, fixture.fileRef), hash: normalizedHash(fixture.assetHash) }))),
       Promise.all(bundle.publicTests.map((test) => this.profiles.readProfileV2RevisionFile(subjectId, profileRevision, test.fileRef))),
     ]);
-    const code = activity as CodeActivityAssets["activity"];
+    // Profile assets store the revision binding as `profileRevision`; the public
+    // Activity DTO exposes the same immutable binding as `activityVersion`.
+    const code: CodeActivityAssets["activity"] = {
+      ...activity,
+      kind: codeKind,
+      activityVersion: activity.profileRevision,
+    };
     return {
       activity: code,
       knowledgePoint: { id: point.id, ...(point.requiresCodeEvidence === undefined ? {} : { requiresCodeEvidence: point.requiresCodeEvidence }) },

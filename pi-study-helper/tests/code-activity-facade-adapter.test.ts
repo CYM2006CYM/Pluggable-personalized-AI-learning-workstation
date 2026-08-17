@@ -3,16 +3,18 @@ import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { ActivityRuntimeService } from "../src/application/activity-runtime-service.js";
-import { CodeActivityFacadeAdapter, type CodeActivityAssets } from "../src/application/code-activity-facade-adapter.js";
+import { CodeActivityFacadeAdapter, ProfileFamilyCodeActivityAssetResolver, type CodeActivityAssets } from "../src/application/code-activity-facade-adapter.js";
 import { FixtureCodeEvaluationAdapter } from "../src/infrastructure/code-evaluation-port.js";
 import { FileActivityRepository } from "../src/repositories/file-activity-repository.js";
 import { FileLearningSessionRepository } from "../src/repositories/file-learning-session-repository.js";
+import { ProfileFamilyRepository } from "../src/repositories/profile-family-repository.js";
 import type { ActivityResult } from "../src/domain/v2-types.js";
 
 const roots: string[] = [];
 const now = () => new Date("2026-08-12T01:02:03.000Z");
 const assetBundleHash = `sha256:${"a".repeat(64)}`;
 const environmentHash = `sha256:${"b".repeat(64)}`;
+const fixturesRoot = resolve(import.meta.dirname, "../fixtures/profiles");
 
 afterEach(async () => { await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true }))); });
 
@@ -69,6 +71,19 @@ async function setup(result: ActivityResult) {
 }
 
 describe("CodeActivityFacadeAdapter", () => {
+  it("normalizes every revision 3 code asset to the public activityVersion", async () => {
+    const dataRoot = await mkdtemp(resolve(tmpdir(), "code-asset-resolver-")); roots.push(dataRoot);
+    const profiles = new ProfileFamilyRepository({ dataRoot, fixturesRoot, now });
+    await profiles.activateRevision3Draft("pandas-cleaning");
+    const resolver = new ProfileFamilyCodeActivityAssetResolver(profiles);
+    for (const activityId of ["act-inspect-dataframe", "act-missing", "act-duplicates", "act-types", "act-practical"]) {
+      const assets = await resolver.load("pandas-cleaning", 3, activityId);
+      expect(assets.activity.activityVersion).toBe(3);
+      expect(assets.assignment.activityVersion).toBe(3);
+      expect(assets.evaluationActivity.profileRevision).toBe(3);
+    }
+  });
+
   it("connects all six code Activity methods and derives formal facts internally", async () => {
     const { adapter, sessions, view } = await setup({ executionStatus: "completed", verdict: "pass", score: 1, safeFeedback: "ok", evaluatorVersion: "fixture", environmentHash, assetBundleHash });
     const opened = await adapter.openActivity({ requestId: "open", sessionId: view.sessionId, sessionVersion: 3, profileRevision: 3, activityId: "code", activityVersion: 3, pathVersion: 1, acknowledgedCardId: "card-kp" });

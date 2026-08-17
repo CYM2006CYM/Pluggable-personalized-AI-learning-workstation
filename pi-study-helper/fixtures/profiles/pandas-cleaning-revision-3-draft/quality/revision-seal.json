@@ -60,7 +60,7 @@
     {
       "path": "assessments/private/task-bundles.json",
       "hashMode": "raw-binary",
-      "sha256": "3ca1df592f78366a73bf07c1ea82a9dc8a5eb24ae92da20fbab1d8f7a9894426",
+      "sha256": "a6a16bd378f537106e6d04028cf8941b1ac8055c01d072b609f9bc485e6225c2",
       "byteLength": 32070
     },
     {
@@ -472,5 +472,5 @@
       "byteLength": 455
     }
   ],
-  "assetTreeSha256": "d1438022a49f83df20fa865443c36f4c3442856c8b679aac989de9e61a3feb30"
+  "assetTreeSha256": "e1564481e6b1fa7d264c04912d5e39a8adb8384f2e2716372e70e56dfd57401d"
 }
