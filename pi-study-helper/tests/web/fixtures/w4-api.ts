@@ -99,7 +99,7 @@ export const savedCode: ActivityDraftOutput = {
 
 export const preparedCode: PreparedActivityOutput = {
   requestId: "prepare-code-1", sessionId: "session-w4", sessionVersion: 4, profileRevision: 3,
-  runId: "run-code-1", mode: "preview", environmentId: "public-pandas",
+  runId: "run-code-1", activityId: "code", mode: "preview", environmentId: "public-pandas",
   starterCodeHash: "starter-hash", publicDatasetFiles: [], publicTestSources: ["public/test_read.py"],
   expiresAt: "2026-08-16T01:00:00.000Z", bundleHash: "bundle-hash",
 };

@@ -9,11 +9,13 @@ import { FileActivityRepository } from "../src/repositories/file-activity-reposi
 import { FileLearningSessionRepository } from "../src/repositories/file-learning-session-repository.js";
 import { ProfileFamilyRepository } from "../src/repositories/profile-family-repository.js";
 import type { ActivityResult } from "../src/domain/v2-types.js";
+import { hashPublicExecutionBundle, sha256Text } from "../src/application/public-execution-bundle.js";
 
 const roots: string[] = [];
 const now = () => new Date("2026-08-12T01:02:03.000Z");
 const assetBundleHash = `sha256:${"a".repeat(64)}`;
 const environmentHash = `sha256:${"b".repeat(64)}`;
+const publicDataHash = sha256Text("x\n1\n");
 const fixturesRoot = resolve(import.meta.dirname, "../fixtures/profiles");
 
 afterEach(async () => { await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true }))); });
@@ -40,11 +42,11 @@ const assets: CodeActivityAssets = {
   taskVersion: "3.0.0",
   environment: { environmentId: "env", status: "measured", environmentHash, prototypeEvidenceRef: "evidence" },
   assetBundleHash,
-  publicDatasetFiles: [{ name: "data.csv", content: "x\n1\n", hash: assetBundleHash }],
+  publicDatasetFiles: [{ name: "data.csv", content: "x\n1\n", hash: publicDataHash }],
   publicTestSources: ["def test_public(): pass"],
 };
 
-async function setup(result: ActivityResult) {
+async function setup(result: ActivityResult, resolvedAssets: CodeActivityAssets = assets) {
   const root = await mkdtemp(resolve(tmpdir(), "code-facade-adapter-")); roots.push(root);
   const sessions = new FileLearningSessionRepository({ dataRoot: root, now });
   const activities = new FileActivityRepository({ dataRoot: root, now });
@@ -63,7 +65,7 @@ async function setup(result: ActivityResult) {
     sessions,
     activities,
     runtime,
-    assets: { async load() { return structuredClone(assets); } },
+    assets: { async load() { return structuredClone(resolvedAssets); } },
     pathSuffix: { async replan() { return { changeReasons: [] }; } },
     now,
   });
@@ -81,6 +83,12 @@ describe("CodeActivityFacadeAdapter", () => {
       expect(assets.activity.activityVersion).toBe(3);
       expect(assets.assignment.activityVersion).toBe(3);
       expect(assets.evaluationActivity.profileRevision).toBe(3);
+      expect(assets.publicDatasetFiles).toEqual([
+        expect.objectContaining({ name: "orders-learning.csv", hash: expect.stringMatching(/^sha256:[a-f0-9]{64}$/u) }),
+      ]);
+      expect(assets.publicTestSources).toHaveLength(1);
+      expect(JSON.stringify({ datasets: assets.publicDatasetFiles, tests: assets.publicTestSources }))
+        .not.toMatch(/private|hidden|reference-solutions|rubric|[A-Za-z]:[\\/]/iu);
     }
   });
 
@@ -94,8 +102,12 @@ describe("CodeActivityFacadeAdapter", () => {
     expect(recovered).toMatchObject({ recoveryAction: "resume_draft", draftVersion: 2, userText: "print('starter')" });
     const saved = await adapter.saveActivityDraft({ requestId: "save", sessionId: view.sessionId, sessionVersion: 4, profileRevision: 3, activityId: "code", activityVersion: 3, attemptId: opened.attemptId, draftVersion: 2, userText: "print(1)" });
     expect(saved).toMatchObject({ draftVersion: 3, userText: "print(1)", sessionVersion: 4 });
+    const beforePreview = await sessions.getSnapshot({ sessionId: view.sessionId, sessionVersion: 4, profileRevision: 3 });
     const preview = await adapter.prepareActivityRun({ requestId: "preview", sessionId: view.sessionId, sessionVersion: 4, profileRevision: 3, activityId: "code", activityVersion: 3, attemptId: opened.attemptId, draftVersion: 3, mode: "preview" });
-    expect(preview).toMatchObject({ mode: "preview", environmentId: "env", publicDatasetFiles: [{ name: "data.csv" }], publicTestSources: ["def test_public(): pass"] });
+    expect(preview).toMatchObject({ activityId: "code", mode: "preview", environmentId: "env", publicDatasetFiles: [{ name: "data.csv", hash: publicDataHash }], publicTestSources: ["def test_public(): pass"] });
+    expect(preview.starterCodeHash).toBe(sha256Text("print('starter')"));
+    expect(preview.bundleHash).toBe(hashPublicExecutionBundle(preview));
+    expect(await sessions.getSnapshot({ sessionId: view.sessionId, sessionVersion: 4, profileRevision: 3 })).toEqual(beforePreview);
     const submission = { requestId: "submit", sessionId: view.sessionId, sessionVersion: 4, profileRevision: 3, kind: "code" as const, activityId: "code", activityVersion: 3, attemptId: opened.attemptId, draftVersion: 3, userText: "print(1)" };
     const committedContext = await adapter.submitActivityWithContext(submission);
     const submitted = committedContext.output;
@@ -116,6 +128,28 @@ describe("CodeActivityFacadeAdapter", () => {
     const opened = await adapter.openActivity({ requestId: "open-derived", sessionId: view.sessionId, sessionVersion: 3, profileRevision: 3, activityId: "code", activityVersion: 3, pathVersion: 1, acknowledgedCardId: "card-kp" });
     await expect(adapter.submitActivity({ requestId: "submit-derived", sessionId: view.sessionId, sessionVersion: 4, profileRevision: 3, kind: "code", activityId: "code", activityVersion: 3, attemptId: opened.attemptId, draftVersion: 2, userText: "print(1)", evidenceCandidate: {} } as never))
       .rejects.toMatchObject({ errorCode: "submission_contract_error" });
+  });
+
+  it("rejects preview for a non-current Attempt without changing session facts", async () => {
+    const { adapter, sessions, view } = await setup({ executionStatus: "completed", verdict: "pass", score: 1, safeFeedback: "ok", evaluatorVersion: "fixture", environmentHash, assetBundleHash });
+    const opened = await adapter.openActivity({ requestId: "open-preview-binding", sessionId: view.sessionId, sessionVersion: 3, profileRevision: 3, activityId: "code", activityVersion: 3, pathVersion: 1, acknowledgedCardId: "card-kp" });
+    const before = await sessions.getSnapshot({ sessionId: view.sessionId, sessionVersion: 4, profileRevision: 3 });
+    await expect(adapter.prepareActivityRun({ requestId: "wrong-preview", sessionId: view.sessionId, sessionVersion: 4, profileRevision: 3, activityId: "code", activityVersion: 3, attemptId: `${opened.attemptId}-old`, draftVersion: 2, mode: "preview" }))
+      .rejects.toMatchObject({ errorCode: "activity_lifecycle_conflict" });
+    await expect(adapter.prepareActivityRun({ requestId: "stale-preview", sessionId: view.sessionId, sessionVersion: 3, profileRevision: 3, activityId: "code", activityVersion: 3, attemptId: opened.attemptId, draftVersion: 2, mode: "preview" }))
+      .rejects.toMatchObject({ errorCode: "session_version_conflict" });
+    await expect(adapter.prepareActivityRun({ requestId: "revision-preview", sessionId: view.sessionId, sessionVersion: 4, profileRevision: 2, activityId: "code", activityVersion: 3, attemptId: opened.attemptId, draftVersion: 2, mode: "preview" }))
+      .rejects.toMatchObject({ errorCode: "profile_revision_conflict" });
+    expect(await sessions.getSnapshot({ sessionId: view.sessionId, sessionVersion: 4, profileRevision: 3 })).toEqual(before);
+  });
+
+  it("rejects a mismatched public execution environment", async () => {
+    const mismatched = structuredClone(assets);
+    mismatched.environment.environmentId = "other-env";
+    const { adapter, view } = await setup({ executionStatus: "completed", verdict: "pass", score: 1, safeFeedback: "ok", evaluatorVersion: "fixture", environmentHash, assetBundleHash }, mismatched);
+    const opened = await adapter.openActivity({ requestId: "open-env", sessionId: view.sessionId, sessionVersion: 3, profileRevision: 3, activityId: "code", activityVersion: 3, pathVersion: 1, acknowledgedCardId: "card-kp" });
+    await expect(adapter.prepareActivityRun({ requestId: "preview-env", sessionId: view.sessionId, sessionVersion: 4, profileRevision: 3, activityId: "code", activityVersion: 3, attemptId: opened.attemptId, draftVersion: 2, mode: "preview" }))
+      .rejects.toMatchObject({ errorCode: "environment_mismatch" });
   });
 
   it("keeps evaluator errors recoverable without advancing session facts", async () => {

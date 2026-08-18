@@ -82,7 +82,7 @@ describe("W3 D2 safe DTO mocks", () => {
       "sessionVersion", "userText",
     ].sort());
     expect(keys(preparedActivityMock)).toEqual([
-      "bundleHash", "environmentId", "expiresAt", "mode", "profileRevision", "publicDatasetFiles",
+      "activityId", "bundleHash", "environmentId", "expiresAt", "mode", "profileRevision", "publicDatasetFiles",
       "publicTestSources", "requestId", "runId", "sessionId", "sessionVersion", "starterCodeHash",
     ].sort());
     expect(keys(activitySubmissionMock)).toEqual([

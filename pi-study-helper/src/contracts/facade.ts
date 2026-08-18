@@ -333,16 +333,26 @@ export interface PublicExecutionFile {
   hash: string;
 }
 
-export interface PreparedActivityOutput extends FacadeResponseMeta {
-  requestId: string;
+export interface PublicExecutionBundle {
   runId: string;
-  mode: "preview";
+  sessionId: string;
+  activityId: string;
+  profileRevision: number;
   environmentId: string;
   starterCodeHash: string;
   publicDatasetFiles: PublicExecutionFile[];
   publicTestSources: string[];
   expiresAt: IsoDateTime;
   bundleHash: string;
+}
+
+export interface BrowserCodeRunner {
+  run(bundle: PublicExecutionBundle, code: string, signal: AbortSignal): Promise<ActivityResult>;
+}
+
+export interface PreparedActivityOutput extends FacadeResponseMeta, PublicExecutionBundle {
+  requestId: string;
+  mode: "preview";
 }
 
 export interface CodeSubmitActivityInput extends WriteRequestMeta {

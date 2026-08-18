@@ -34,6 +34,7 @@ import { ActivityRuntimeService } from "./activity-runtime-service.js";
 import type { ActivityPathSuffixReplanner } from "./activity-path-suffix.js";
 import { toPathSafeSnapshot } from "../repositories/internal-path-session-port.js";
 import type { RuntimeCommitContext } from "./runtime-commit-context.js";
+import { projectPublicExecutionBundle, sha256Text } from "./public-execution-bundle.js";
 
 type CodeActivityKind = "code_completion" | "coding_practical" | "debug";
 
@@ -222,7 +223,21 @@ export class CodeActivityFacadeAdapter {
   async prepareActivityRun(input: PrepareActivityRunInput): Promise<PreparedActivityOutput> {
     const snapshot = await this.options.sessions.getSnapshot(input);
     assertSession(snapshot, input);
+    if (snapshot.currentAttempt?.kind !== "code"
+        || snapshot.currentAttempt.activityId !== input.activityId
+        || snapshot.currentAttempt.attemptId !== input.attemptId
+        || snapshot.currentAttempt.status === "submitted") {
+      throw new LearningSessionRepositoryError("activity_lifecycle_conflict", "Public execution requires the current code Activity Attempt");
+    }
     const assets = await this.options.assets.load(snapshot.view.subjectId, input.profileRevision, input.activityId);
+    if (assets.activity.activityVersion !== input.activityVersion) {
+      throw new ActivityRepositoryError("activity_version_conflict", "Activity version is stale");
+    }
+    if (assets.environment.environmentId !== assets.activity.environmentRef
+        || assets.assignment.environmentId !== assets.activity.environmentRef) {
+      throw new ActivityRepositoryError("environment_mismatch", "Public execution environment does not match the Activity binding");
+    }
+    const preparedAt = this.now().toISOString();
     const run = await this.options.activities.prepareRun({
       subjectId: snapshot.view.subjectId,
       sessionId: input.sessionId,
@@ -233,21 +248,21 @@ export class CodeActivityFacadeAdapter {
       profileRevision: input.profileRevision,
       draftVersion: input.draftVersion,
       mode: "preview",
-      now: this.now().toISOString(),
+      now: preparedAt,
+    });
+    const bundle = projectPublicExecutionBundle({
+      run,
+      profileRevision: input.profileRevision,
+      environmentId: assets.environment.environmentId,
+      starterCode: assets.activity.starterCode ?? "",
+      publicDatasetFiles: assets.publicDatasetFiles,
+      publicTestSources: assets.publicTestSources,
     });
     return {
       requestId: input.requestId,
-      sessionId: input.sessionId,
       sessionVersion: input.sessionVersion,
-      profileRevision: input.profileRevision,
-      runId: run.runId,
       mode: "preview",
-      environmentId: assets.environment.environmentId,
-      starterCodeHash: sha256(assets.activity.starterCode ?? ""),
-      publicDatasetFiles: structuredClone(assets.publicDatasetFiles),
-      publicTestSources: [...assets.publicTestSources],
-      expiresAt: new Date(this.now().getTime() + 5 * 60_000).toISOString(),
-      bundleHash: normalizedHash(assets.assetBundleHash),
+      ...bundle,
     };
   }
 
@@ -418,15 +433,52 @@ interface StoredActivity extends CodeActivitySafeView {
   profileRevision: number;
   templateVersion: string;
   environmentRef: string;
+  datasetRefs?: string[];
+  publicTestRefs?: string[];
+}
+
+interface StoredPublicTest {
+  testId: string;
+  visibility: "public";
+  fileRef: string;
+  fixtureRefs: string[];
+  assetHash: string;
 }
 
 interface StoredTaskBundle {
   bundleId: string;
   source: "profile_fixed" | "ai_generated";
-  activity: StoredActivity & { datasetRefs?: string[] };
-  publicTests: Array<{ fileRef: string }>;
+  activity: StoredActivity;
+  publicTests: StoredPublicTest[];
   environmentRef: string;
   assetBundleHash: string;
+}
+
+interface StoredFixture {
+  fixtureId: string;
+  visibility: "public" | "private";
+  fileRef: string;
+  assetHash: string;
+}
+
+function assertPublicAssetPath(fileRef: string, root: string): void {
+  if (fileRef.includes("\\") || fileRef.startsWith("/") || /^[A-Za-z]:/u.test(fileRef)
+      || fileRef.split("/").some((part) => part === "" || part === "." || part === "..")
+      || !fileRef.startsWith(`${root}/`)) {
+    throw new ActivityRepositoryError("test_asset_invalid", "Public execution asset path is outside its public root");
+  }
+}
+
+function assertContentHash(content: string, expectedHash: string): void {
+  if (!/^sha256:[a-f0-9]{64}$/u.test(expectedHash) || sha256Text(content) !== expectedHash) {
+    throw new ActivityRepositoryError("test_asset_invalid", "Public execution asset content hash is invalid");
+  }
+}
+
+function sameStrings(left: readonly string[] | undefined, right: readonly string[] | undefined): boolean {
+  const a = left ?? [];
+  const b = right ?? [];
+  return a.length === b.length && a.every((value, index) => value === b[index]);
 }
 
 /** Strict revision-bound resolver. It reads private bindings but emits only public assets. */
@@ -446,7 +498,7 @@ export class ProfileFamilyCodeActivityAssetResolver implements CodeActivityAsset
     ]);
     const activities = (JSON.parse(activitiesRaw) as { activities: StoredActivity[] }).activities;
     const bundles = (JSON.parse(bundlesRaw) as { bundles: StoredTaskBundle[] }).bundles;
-    const fixtures = (JSON.parse(fixturesRaw) as { fixtures: Array<{ fixtureId: string; fileRef: string; assetHash: string }> }).fixtures;
+    const fixtures = (JSON.parse(fixturesRaw) as { fixtures: StoredFixture[] }).fixtures;
     const environment = JSON.parse(environmentRaw) as EvaluationEnvironmentProjection;
     const activity = activities.find((item) => item.activityId === activityId);
     const bundle = bundles.find((item) => item.activity.activityId === activityId);
@@ -456,18 +508,62 @@ export class ProfileFamilyCodeActivityAssetResolver implements CodeActivityAsset
       throw new ActivityRepositoryError("activity_not_found", "Code Activity is unavailable");
     }
     if (activity.profileRevision !== profileRevision || bundle.activity.profileRevision !== profileRevision || bundle.activity.templateVersion !== activity.templateVersion
-        || bundle.environmentRef !== activity.environmentRef || bundle.activity.kind !== activity.kind) {
+        || bundle.environmentRef !== activity.environmentRef || bundle.activity.environmentRef !== activity.environmentRef
+        || bundle.activity.kind !== activity.kind || bundle.activity.primaryKnowledgePointId !== activity.primaryKnowledgePointId
+        || bundle.activity.starterCode !== activity.starterCode
+        || !sameStrings(bundle.activity.datasetRefs, activity.datasetRefs)
+        || !sameStrings(bundle.activity.publicTestRefs, activity.publicTestRefs)) {
       throw new ActivityRepositoryError("activity_version_conflict", "Code Activity asset bindings differ");
+    }
+    if (environment.environmentId !== activity.environmentRef) {
+      throw new ActivityRepositoryError("environment_mismatch", "Code Activity environment binding differs");
     }
     const pointAsset = JSON.parse(await this.profiles.readProfileV2RevisionFile(subjectId, profileRevision, manifest.paths.knowledge)) as { knowledgePoints: KnowledgePointDefinition[] };
     const point = pointAsset.knowledgePoints.find((item) => item.id === activity.primaryKnowledgePointId);
     if (point === undefined) throw new ActivityRepositoryError("activity_not_found", "Code Activity knowledge point is unavailable");
-    const datasetIds = new Set(bundle.activity.datasetRefs ?? []);
-    const publicFixtures = fixtures.filter((fixture) => datasetIds.has(fixture.fixtureId) && fixture.fileRef.replaceAll("\\", "/").startsWith(`${manifest.paths.datasets}/public/`));
-    const [datasetContents, publicTestSources] = await Promise.all([
-      Promise.all(publicFixtures.map(async (fixture) => ({ name: basename(fixture.fileRef), content: await this.profiles.readProfileV2RevisionFile(subjectId, profileRevision, fixture.fileRef), hash: normalizedHash(fixture.assetHash) }))),
-      Promise.all(bundle.publicTests.map((test) => this.profiles.readProfileV2RevisionFile(subjectId, profileRevision, test.fileRef))),
-    ]);
+    const fixtureIds = fixtures.map((fixture) => fixture.fixtureId);
+    if (new Set(fixtureIds).size !== fixtureIds.length) throw new ActivityRepositoryError("test_asset_invalid", "Dataset fixture identifiers are not unique");
+    const fixturesById = new Map(fixtures.map((fixture) => [fixture.fixtureId, fixture]));
+    const datasetRefs = bundle.activity.datasetRefs ?? [];
+    if (new Set(datasetRefs).size !== datasetRefs.length) throw new ActivityRepositoryError("test_asset_invalid", "Activity dataset references are not unique");
+    const referencedFixtures = datasetRefs.map((fixtureId) => {
+      const fixture = fixturesById.get(fixtureId);
+      if (fixture === undefined) throw new ActivityRepositoryError("test_asset_invalid", "Activity dataset reference is missing");
+      return fixture;
+    });
+    const publicFixtures = referencedFixtures.filter((fixture) => fixture.visibility === "public");
+    for (const fixture of publicFixtures) assertPublicAssetPath(fixture.fileRef, `${manifest.paths.datasets}/public`);
+
+    const expectedPublicTestIds = bundle.activity.publicTestRefs ?? [];
+    const actualPublicTestIds = bundle.publicTests.map((test) => test.testId);
+    if (expectedPublicTestIds.length !== actualPublicTestIds.length
+        || expectedPublicTestIds.some((testId, index) => testId !== actualPublicTestIds[index])
+        || new Set(actualPublicTestIds).size !== actualPublicTestIds.length
+        || new Set(bundle.publicTests.map((test) => test.fileRef)).size !== bundle.publicTests.length) {
+      throw new ActivityRepositoryError("test_asset_invalid", "Public test references do not match the Activity declaration");
+    }
+    for (const test of bundle.publicTests) {
+      if (test.visibility !== "public") throw new ActivityRepositoryError("test_asset_invalid", "Private tests cannot be projected for public execution");
+      assertPublicAssetPath(test.fileRef, `${manifest.paths.assessments}/public`);
+      if (!Array.isArray(test.fixtureRefs) || test.fixtureRefs.some((fixtureId) => fixturesById.get(fixtureId)?.visibility !== "public")) {
+        throw new ActivityRepositoryError("test_asset_invalid", "Public tests may reference only public datasets");
+      }
+    }
+
+    const datasetContents = await Promise.all(publicFixtures.map(async (fixture) => {
+      const content = await this.profiles.readProfileV2RevisionFile(subjectId, profileRevision, fixture.fileRef);
+      const hash = normalizedHash(fixture.assetHash);
+      assertContentHash(content, hash);
+      return { name: basename(fixture.fileRef), content, hash };
+    }));
+    if (new Set(datasetContents.map((file) => file.name)).size !== datasetContents.length) {
+      throw new ActivityRepositoryError("test_asset_invalid", "Public dataset names are not unique");
+    }
+    const publicTestSources = await Promise.all(bundle.publicTests.map(async (test) => {
+      const content = await this.profiles.readProfileV2RevisionFile(subjectId, profileRevision, test.fileRef);
+      assertContentHash(content, normalizedHash(test.assetHash));
+      return content;
+    }));
     // Profile assets store the revision binding as `profileRevision`; the public
     // Activity DTO exposes the same immutable binding as `activityVersion`.
     const code: CodeActivityAssets["activity"] = {

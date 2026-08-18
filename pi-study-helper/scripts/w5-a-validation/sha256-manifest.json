@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "candidateHead": "768f3eae00c50da1c7563a7efd1447e5021f29c8",
+  "selfExcluded": true,
+  "handoffExcluded": false,
+  "files": [
+    {"path":"pi-study-helper/src/application/code-activity-facade-adapter.ts","bytes":34167,"sha256":"1325fbb95d6c57f282fd0f9a91a402a9e79347b8829ca499da4d5a2675a65b81"},
+    {"path":"pi-study-helper/src/application/public-execution-bundle.ts","bytes":6738,"sha256":"1ec353fe97d805460111573201c87c503a32c3a8287d88259cfef6c22208c63e"},
+    {"path":"pi-study-helper/src/contracts/facade.ts","bytes":12595,"sha256":"742dabbbd868b575c50d0ec05b358434a5f3f33dd3301a343f1523c2b922107c"},
+    {"path":"pi-study-helper/src/repositories/activity-repository.ts","bytes":12868,"sha256":"bd5e39c5f70628dcaf53d1bef54dcfe61c4c3d8c9979d8bfe28c01f59cd1abce"},
+    {"path":"pi-study-helper/src/web/mocks/safe-dtos.ts","bytes":12599,"sha256":"ec990c63e83aca972357e945c639e9c9a89b744af95e985b8d068bde2c08c79a"},
+    {"path":"pi-study-helper/tests/code-activity-facade-adapter.test.ts","bytes":16753,"sha256":"7dda6a3efd491849a12e496bbdbf9c2c5177f65b4abff8b71adf90a18848b5aa"},
+    {"path":"pi-study-helper/tests/public-execution-assets.test.ts","bytes":5310,"sha256":"064936ae63e3c0432862605c05b07061eadba34f4ff557579153e708baa978e0"},
+    {"path":"pi-study-helper/tests/public-execution-bundle.test.ts","bytes":4113,"sha256":"1daaff27cdfd7af2e08e681cd2cd6aef8255762f168431354bb19a00adefe941"},
+    {"path":"pi-study-helper/tests/web/dto-contract.test.ts","bytes":6476,"sha256":"ddc5607f6329964b44e061d63f0bda28f34a01e338da8fe82ebee4ef584d5e3e"},
+    {"path":"pi-study-helper/tests/web/fixtures/w4-api.ts","bytes":6992,"sha256":"71a89b3f51886d74316cf5ebdda4ccf2daa09b6847c13a34b5232a56fa67182b"},
+    {"path":"pi-study-helper/scripts/w5-a-validation/command-results.json","bytes":3334,"sha256":"1c19952bfa9bce42debfe209f6b6b64b9bb5e1e91ebc5500d8b8db05cfd79a6e"},
+    {"path":"pi-study-helper/scripts/w5-a-validation/issue-test-map.json","bytes":1426,"sha256":"a5599c29ff853c3753d2ed3208b5051dcb8589c301bf2a52546627b47cc0d8a1"},
+    {"path":"pi-study-helper/scripts/w5-a-validation/owner-review-message.md","bytes":2326,"sha256":"d7443aa102c02df176f95800d406379c0d909403bebddcef6ca4da8c3ad457fa"},
+    {"path":"pi-study-helper/scripts/w5-a-validation/owner-revalidation-w5-d1-r1.json","bytes":9803,"sha256":"a2e656fe86e52999a3257c97570a63738e06e66e519fda6cae0cb394b93461cf"},
+    {"path":"pi-study-helper/scripts/w5-a-validation/proposed-files.txt","bytes":963,"sha256":"5e2455186686f90fe45cdb2af1450056079067b243850c86e61c7a0a27bb23aa"},
+    {"path":"新版设计文档-重写版/第五周任务/handoff-w5-a-d1.md","bytes":4451,"sha256":"f64ee5b7af6f3b58ddf1d18c8edb8e05ee7b99c4ea79584090c8b1d2fe0c19c1"}
+  ]
+}

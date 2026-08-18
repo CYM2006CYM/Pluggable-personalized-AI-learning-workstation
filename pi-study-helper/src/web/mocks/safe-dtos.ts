@@ -295,6 +295,7 @@ export const preparedActivityMock = {
   sessionVersion: 11,
   profileRevision: 2,
   runId: "run-preview-001",
+  activityId: "act-missing",
   mode: "preview",
   environmentId: "env-python-pandas-candidate",
   starterCodeHash: "sha256:starter-code-demo",

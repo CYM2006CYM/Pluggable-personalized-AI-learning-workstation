@@ -161,7 +161,7 @@ export interface ActivityRecoveryReport {
 }
 
 export class ActivityRepositoryError extends Error {
-  constructor(readonly errorCode: "activity_not_found" | "activity_version_conflict" | "attempt_not_found" | "draft_version_conflict" | "idempotency_conflict" | "submission_contract_error" | "environment_mismatch" | "storage_error", message: string) {
+  constructor(readonly errorCode: "activity_not_found" | "activity_version_conflict" | "attempt_not_found" | "draft_version_conflict" | "idempotency_conflict" | "submission_contract_error" | "environment_mismatch" | "test_asset_invalid" | "storage_error", message: string) {
     super(message);
     this.name = "ActivityRepositoryError";
   }

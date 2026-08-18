@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "contract": "W5-C1/W5-R1",
+  "baseHead": "4e316822d343d90bdf295f37b7aaaa0131890501",
+  "candidateHead": "768f3eae00c50da1c7563a7efd1447e5021f29c8",
+  "items": [
+    {
+      "id": "W5-A-D1-01",
+      "requirement": "Exact PublicExecutionBundle fields and BrowserCodeRunner export",
+      "tests": ["tests/public-execution-bundle.test.ts", "tests/w4-contracts.test.ts"]
+    },
+    {
+      "id": "W5-A-D1-02",
+      "requirement": "Canonical JSON bundleHash and sha256 content hashes",
+      "tests": ["tests/public-execution-bundle.test.ts", "tests/public-execution-assets.test.ts"]
+    },
+    {
+      "id": "W5-A-D1-03",
+      "requirement": "Current Attempt/activity/session/revision/environment binding",
+      "tests": ["tests/code-activity-facade-adapter.test.ts", "tests/public-execution-bundle.test.ts"]
+    },
+    {
+      "id": "W5-A-D1-04",
+      "requirement": "Public-only test and dataset projection with path/reference/hash validation",
+      "tests": ["tests/public-execution-assets.test.ts", "tests/profile-v2-revision-resolution.test.ts"]
+    },
+    {
+      "id": "W5-A-D1-05",
+      "requirement": "No formal session facts changed by preview preparation",
+      "tests": ["tests/code-activity-facade-adapter.test.ts"]
+    },
+    {
+      "id": "W5-A-D1-06",
+      "requirement": "Authorized Web DTO fixture exception only",
+      "tests": ["tests/web/dto-contract.test.ts"]
+    }
+  ]
+}

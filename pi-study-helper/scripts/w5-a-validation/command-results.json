@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "contract": "W5-C1/W5-R1",
+  "baseHead": "4e316822d343d90bdf295f37b7aaaa0131890501",
+  "candidateHead": "768f3eae00c50da1c7563a7efd1447e5021f29c8",
+  "runtime": {
+    "node": "v22.23.1",
+    "pythonRequired": "3.13.7",
+    "pandasRequired": "3.0.5",
+    "pythonStatus": "BLOCKED: available interpreters are Python 3.14/Pandas 3.0.2 and Python 3.12/Pandas 3.0.1; the repository-external 3.13.7 environment is damaged"
+  },
+  "commands": [
+    {
+      "id": "targeted-six",
+      "command": "npm.cmd test -- --run tests/public-execution-bundle.test.ts tests/public-execution-assets.test.ts tests/code-activity-facade-adapter.test.ts tests/web/dto-contract.test.ts tests/w4-contracts.test.ts tests/profile-v2-revision-resolution.test.ts --maxWorkers=1",
+      "exitCode": 0,
+      "testFiles": 6,
+      "passed": 41,
+      "failed": 0,
+      "skipped": 0,
+      "stdoutBytes": 1182,
+      "stdoutSha256": "659f7dd69091ee32effb2a18fc4386a0677971dcf9661d8ef0056b1c0966a20d",
+      "status": "PASS"
+    },
+    {
+      "id": "typecheck",
+      "command": "npm.cmd run typecheck",
+      "exitCode": 0,
+      "stdoutBytes": 226,
+      "stdoutSha256": "5f71351942617c69ee3afdd53e10b5b96ef073369624b06ab084e3fd51017566",
+      "status": "PASS"
+    },
+    {
+      "id": "check-docs",
+      "command": "npm.cmd run check:docs",
+      "exitCode": 0,
+      "stdoutBytes": 222,
+      "stdoutSha256": "1c5fc71cf037665804b3a6c5e9d5b556fe3e88bf4e5f593ad80b59a4bcf3f419",
+      "status": "PASS"
+    },
+    {
+      "id": "build-web",
+      "command": "npm.cmd run build:web",
+      "exitCode": 0,
+      "stdoutBytes": 1202,
+      "stdoutSha256": "12860232ba0ffdb2774058d26e4d5d3cf58974e3c239a208bd4e611951759562",
+      "status": "PASS"
+    },
+    {
+      "id": "smoke-extension",
+      "command": "npm.cmd run smoke:extension",
+      "exitCode": 0,
+      "stdoutBytes": 246,
+      "stdoutSha256": "7884fff3ac712e13faad46091d4f3ccf62a3ec118ea092e0d9ead8d1fcd4f61f",
+      "status": "PASS"
+    },
+    {
+      "id": "check-release",
+      "command": "npm.cmd run check:release",
+      "exitCode": 0,
+      "stdoutBytes": 308,
+      "stdoutSha256": "63b849f49a5915fea92713e001fa627098bf17cd56f239d11f725866dd2e08be",
+      "status": "PASS"
+    },
+    {
+      "id": "full-test",
+      "command": "npm.cmd test -- --maxWorkers=1",
+      "exitCode": 1,
+      "testFiles": 79,
+      "passed": 740,
+      "failed": 25,
+      "skipped": 1,
+      "stdoutSha256": "9f145be908d784f13585119893550c874140444b42d8504afca0783d87f7b556",
+      "status": "BLOCKED",
+      "captureStatus": "completed-run",
+      "reason": "Python evaluator tests cannot start under the available interpreter because the required Python 3.13.7/Pandas 3.0.5 environment is unavailable"
+    },
+    {
+      "id": "verify",
+      "command": "npm.cmd run verify",
+      "exitCode": 1,
+      "stdoutSha256": "0a2aa44110f5a646334e0dbabfc56520d7ce42e31ea4f07cf8b40c59e00357f3",
+      "status": "BLOCKED",
+      "captureStatus": "completed-run",
+      "reason": "verify reaches the same Python evaluator dependency failure"
+    },
+    {
+      "id": "git-diff-check",
+      "command": "git diff --check",
+      "exitCode": 0,
+      "stdoutBytes": 0,
+      "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "status": "PASS"
+    }
+  ]
+}
