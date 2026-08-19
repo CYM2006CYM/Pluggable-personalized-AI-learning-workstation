@@ -1,5 +1,6 @@
 import { mkdir } from "node:fs/promises";
-import { resolve } from "node:path";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import type { ExtensionAPI, ExtensionCommandContext } from "@earendil-works/pi-coding-agent";
 import { FileRunStore } from "pi-loop-graph-sdk/replay";
 import { LearningProfileController } from "../application/learning-profile-controller.js";
@@ -10,14 +11,45 @@ import {
   StudySessionController,
 } from "../application/study-session-controller.js";
 import { resolveStudyDataRoot } from "../config/data-paths.js";
+import { createDemoRuntime } from "../demo/composition-root.js";
 import { createIsolatedGraphExecutor } from "../graphs/isolated-graph-executor.js";
 import { createStudyWalkingSkeletonGraphs } from "../graphs/study-walking-skeleton.js";
 import { PrivateMemoryRepository } from "../repositories/private-memory-repository.js";
 import { ProfileBuildJobRepository } from "../repositories/profile-build-job-repository.js";
 import { ProfileFamilyRepository } from "../repositories/profile-family-repository.js";
+import { FilePendingActivityStore } from "../tui/file-pending-activity-store.js";
+import { TuiSharedSessionBridge, TuiSharedSessionEntry } from "../tui/shared-session.js";
+import { StudyTuiGateway } from "../tui/study-tui-gateway.js";
+
+const WEB_BASE_URL = "http://localhost:5173";
 
 export default async function studyHelperExtension(pi: ExtensionAPI): Promise<void> {
   const dataRoot = resolveStudyDataRoot();
+  const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
+  const sharedDataRoot = resolve(process.env.PI_STUDY_DATA ?? resolve(packageRoot, ".demo-data"));
+  const fixturesRoot = resolve(packageRoot, "fixtures/profiles");
+  const pendingStore = new FilePendingActivityStore(sharedDataRoot);
+  let sharedEntryPromise: Promise<TuiSharedSessionEntry> | undefined;
+
+  const sharedEntryFor = async (): Promise<TuiSharedSessionEntry> => {
+    sharedEntryPromise ??= createDemoRuntime({
+      dataRoot: sharedDataRoot,
+      fixturesRoot,
+      ...(process.env.PI_PYTHON_EXECUTABLE === undefined
+        ? {}
+        : { pythonExecutable: resolve(process.env.PI_PYTHON_EXECUTABLE) }),
+    }).then((runtime) => new TuiSharedSessionEntry(
+      new TuiSharedSessionBridge(runtime.facade, runtime.bootstrap, pendingStore),
+      WEB_BASE_URL,
+    ));
+    try {
+      return await sharedEntryPromise;
+    } catch (error) {
+      sharedEntryPromise = undefined;
+      throw error;
+    }
+  };
+
   // 每次 Root Run 通过 recording + RunStore 保存 replay，可用 /replay 子路径导出 HTML。
   const runsDirectory = resolve(dataRoot, "traces", "runs");
   await mkdir(runsDirectory, { recursive: true });
@@ -70,6 +102,32 @@ export default async function studyHelperExtension(pi: ExtensionAPI): Promise<vo
         return;
       }
       await controllerFor(ctx).recoverRunningSession();
+    },
+  });
+
+  pi.registerCommand("study-web", {
+    description: "在本地 Web 中继续同一学习会话的当前活动",
+    handler: async (args, ctx) => {
+      if (!ctx.isIdle()) {
+        ctx.ui.notify("当前 Agent 仍在工作，请稍后再打开 Web 活动。", "warning");
+        return;
+      }
+      const sessionId = args.trim();
+      if (sessionId === "") {
+        ctx.ui.notify("请提供要继续的 sessionId，例如 /study-web session-123。", "warning");
+        return;
+      }
+      try {
+        const result = await new StudyTuiGateway(ctx.ui, await sharedEntryFor())
+          .prepareSharedWebActivity(sessionId);
+        if (result.status === "ready") {
+          ctx.ui.notify(`当前活动已保存为 pending，请打开：${result.deepLink}`, "info");
+          return;
+        }
+        ctx.ui.notify(`当前深链不可继续，请从 Web 开始页恢复：${WEB_BASE_URL}/`, "warning");
+      } catch {
+        ctx.ui.notify(`无法读取共享会话，请从 Web 开始页恢复：${WEB_BASE_URL}/`, "warning");
+      }
     },
   });
 

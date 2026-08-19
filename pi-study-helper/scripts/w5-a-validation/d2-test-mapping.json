@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "candidate": "W5-D2-A-R4",
+  "baseHead": "677f54c609ef3bfbe78ff6d37f6b432e9c68ff4d",
+  "issues": [
+    {
+      "id": "A-R4-01",
+      "status": "PASS",
+      "coverage": [
+        "production extension registers and invokes /study-web",
+        "the handler uses createDemoRuntime, LearningRuntimeFacade and AppBootstrapFacade over the shared data root",
+        "valid current server step creates a safe file-backed pending state and localhost:5173 deep link",
+        "the command remains usable while the Web server is offline",
+        "missing sessions route to the Web start page without creating a replacement session",
+        "the command does not mutate Bootstrap, Attempt, Evidence, KnowledgeState, path or activity facts"
+      ],
+      "tests": ["tests/shared-web-extension-entry.test.ts"]
+    },
+    {
+      "id": "A-R4-02",
+      "status": "PASS",
+      "coverage": [
+        "valid pending recovery through AppBootstrapFacade and getNextStep",
+        "stale sessionVersion and pathVersion re-bootstrap",
+        "profile revision mismatch and missing session resume_from_web",
+        "strict pending and deep-link allowlists",
+        "file persistence rejects unsafe pending payloads before writing",
+        "recovery has no formal learning-fact side effects"
+      ],
+      "tests": ["tests/shared-web-extension-entry.test.ts", "tests/shared-session.test.ts"]
+    },
+    {
+      "id": "A-R4-03",
+      "status": "PASS",
+      "coverage": [
+        "stale draft write returns conflict and reads current Bootstrap",
+        "same formal submit input replays its first result",
+        "different input under the same idempotency key returns idempotency_conflict",
+        "one Attempt, one Evidence and one path version remain after replay/conflict"
+      ],
+      "tests": ["tests/shared-session.test.ts", "tests/code-activity-facade-adapter.test.ts"]
+    },
+    {
+      "id": "A-R4-04",
+      "status": "PASS",
+      "coverage": [
+        "proposed/ZIP exact-set comparison",
+        "manifest bytes and SHA-256 recomputation",
+        "ZIP exclusion and scope audit",
+        "R4 commands with UTC, exit code, byte counts and log SHA-256",
+        "R3 and R4 failure history retained"
+      ],
+      "tests": ["R4 package mechanical audit", "scripts/w5-a-validation/d2-command-results.json"]
+    }
+  ],
+  "state": "NOT_COMMITTED / NOT_PUSHED / uploadLock=NOT_GRANTED"
+}

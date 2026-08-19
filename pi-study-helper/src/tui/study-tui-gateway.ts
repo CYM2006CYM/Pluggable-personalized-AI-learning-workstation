@@ -1,4 +1,5 @@
 import type { DifficultyLevel, ReviewMode } from "../domain/types.js";
+import type { PrepareSharedActivityResult, TuiSharedSessionEntry } from "./shared-session.js";
 
 const QUESTION_WIDGET_KEY = "pi-study-helper.question";
 const MATERIAL_WIDGET_KEY = "pi-study-helper.material";
@@ -207,7 +208,13 @@ export function renderQuestionWidget(view: QuestionViewModel): string[] {
 }
 
 export class StudyTuiGateway {
-  constructor(private readonly ui: StudyUiPort) {}
+  constructor(private readonly ui: StudyUiPort, private readonly sharedSession?: TuiSharedSessionEntry) {}
+
+  /** W5-D2 real TUI entry: server step -> safe pending state -> localhost deep link. */
+  prepareSharedWebActivity(sessionId: string): Promise<PrepareSharedActivityResult> {
+    if (this.sharedSession === undefined) throw new Error("Shared session entry is unavailable");
+    return this.sharedSession.prepareCurrentActivity(sessionId);
+  }
 
   async showRecallPrompt(view: RecallPromptViewModel): Promise<RecallPromptAction> {
     this.ui.setWidget(

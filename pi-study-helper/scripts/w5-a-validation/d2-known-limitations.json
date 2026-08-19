@@ -1,0 +1,20 @@
+{
+  "candidate": "W5-D2-A-R4",
+  "knownLimitations": [
+    "D2 proves the production Extension /study-web entry, pending persistence and interface handoff; it does not claim the D4 formal browser-to-TUI or TUI-to-browser closure.",
+    "The /study-web command resumes an existing LearningRuntimeFacade session by explicit sessionId. It does not convert the legacy /study graph-controller workflow into a shared Web session.",
+    "The command emits a copyable localhost URL and remains deterministic when the Web process is offline; automatic browser opening is intentionally out of scope.",
+    "E still owns page, API-client and Worker integration; no src/web file is changed by R4.",
+    "B seal and environment lock, C formal service integration, service-restart recovery and V5-1/V5-3/V5-4 remain D4 inputs.",
+    "The localhost deep link is a safe identifier handoff, not authentication or production deployment.",
+    "LIVE_NOT_RUN: no real model invocation was performed or required by this deterministic D2 path."
+  ],
+  "unprovenCapabilities": [
+    "formal D4 browser closure",
+    "service restart recovery through the browser",
+    "production sandboxing",
+    "multi-user or cloud persistence",
+    "high-concurrency behavior",
+    "network or memory isolation"
+  ]
+}

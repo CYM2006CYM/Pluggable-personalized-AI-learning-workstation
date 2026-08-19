@@ -114,6 +114,8 @@ describe("CodeActivityFacadeAdapter", () => {
     expect(committedContext).toMatchObject({ replayed: false, snapshot: { sessionVersion: 5, latestCommit: { evidenceVersion: 1 } } });
     expect(submitted).toMatchObject({ committed: true, sessionVersion: 5, evidenceVersion: 1, result: { verdict: "pass" } });
     await expect(adapter.submitActivityWithContext(submission)).resolves.toMatchObject({ output: submitted, replayed: true, snapshot: { sessionVersion: 5 } });
+    await expect(adapter.submitActivityWithContext({ ...submission, userText: "print(2)" }))
+      .rejects.toMatchObject({ errorCode: "idempotency_conflict" });
     expect(await adapter.getActivityAttempt({ sessionId: view.sessionId, sessionVersion: 5, profileRevision: 3, activityId: "code", attemptId: opened.attemptId })).toMatchObject({ status: "submitted", result: { verdict: "pass" } });
     expect(await adapter.recoverActivity({ sessionId: view.sessionId, sessionVersion: 5, profileRevision: 3, activityId: "code", attemptId: opened.attemptId })).toMatchObject({ recoveryAction: "show_submitted" });
     const snapshot = await sessions.getSnapshot({ sessionId: view.sessionId, sessionVersion: 5, profileRevision: 3 });
@@ -121,6 +123,7 @@ describe("CodeActivityFacadeAdapter", () => {
     expect(snapshot).toMatchObject({ activityProgress: [{ activities: [{ status: "completed", result: "pass" }] }] });
     expect(snapshot.evidence).toHaveLength(1);
     expect(snapshot.knowledgeStates).toEqual([expect.objectContaining({ knowledgePointId: "kp", evidenceVersion: 1 })]);
+    expect(snapshot.path?.pathVersion).toBe(1);
   });
 
   it("rejects caller-supplied derived facts on code submission", async () => {

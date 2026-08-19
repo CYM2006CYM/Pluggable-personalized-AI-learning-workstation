@@ -1,0 +1,327 @@
+{
+  "schemaVersion": 3,
+  "candidate": "W5-D2-A-R4",
+  "baseHead": "677f54c609ef3bfbe78ff6d37f6b432e9c68ff4d",
+  "state": "NOT_COMMITTED / NOT_PUSHED / uploadLock=NOT_GRANTED",
+  "environment": {
+    "nodeExecutable": "C:/Users/win11/AppData/Local/Temp/w4-contract-node-v22.23.1/node-v22.23.1-win-x64/node.exe",
+    "nodeVersion": "v22.23.1",
+    "npmExecutable": "C:/Users/win11/AppData/Local/Temp/w4-contract-node-v22.23.1/node-v22.23.1-win-x64/npm.cmd",
+    "npmVersion": "10.9.8",
+    "pythonExecutable": "C:/Users/win11/AppData/Local/Temp/w4-e-contract-python-3.13.7-r5/runtime/python.exe",
+    "pythonVersion": "3.13.7",
+    "pandasVersion": "3.0.5",
+    "PYTHONNOUSERSITE": "1",
+    "note": "All R4 validation commands used the owner contract runtimes. The Python runtime directory was prepended to PATH because evaluator tests resolve Python with where.exe."
+  },
+  "priorEnvironment": {
+    "nodeExecutable": "C:/Users/VIVIAN/AppData/Local/Temp/w5-d2-r3-contract/node-v22.23.1-win-x64/node.exe",
+    "nodeVersion": "v22.23.1",
+    "npmExecutable": "C:/Users/VIVIAN/AppData/Local/Temp/w5-d2-r3-contract/node-v22.23.1-win-x64/npm.cmd",
+    "npmVersion": "10.9.8",
+    "pythonExecutable": "C:/Users/VIVIAN/AppData/Local/Temp/w5-d2-r3-contract/python-3.13.7-embed/python.exe",
+    "pythonVersion": "3.13.7",
+    "pandasVersion": "3.0.5",
+    "PYTHONNOUSERSITE": "1",
+    "note": "The owner-provided C:/Users/win11 paths do not exist on this machine. R3 used a fresh version-equivalent local temporary environment and records its actual paths; it does not impersonate the owner's host."
+  },
+  "priorCommands": [
+    {
+      "id": "a-targeted",
+      "command": "npm.cmd test -- --maxWorkers=1 tests/shared-session.test.ts tests/study-tui-gateway.test.ts",
+      "cwd": "C:/Users/VIVIAN/OneDrive/Desktop/cym云枢智学/Pluggable-personalized-AI-learning-workstation/pi-study-helper",
+      "startedAtUtc": "2026-08-19T14:40:28.1951968Z",
+      "endedAtUtc": "2026-08-19T14:40:30.3898345Z",
+      "exitCode": 0,
+      "status": "PASS",
+      "testSummary": {"files": 2, "passed": 29, "failed": 0, "skipped": 0},
+      "stdout": {"bytes": 846, "sha256": "986e284a097b1d78686fc52f01656d7f5f5afe2515bf11148707fcbaf8b6ef18"},
+      "stderr": {"bytes": 0, "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}
+    },
+    {
+      "id": "affected-regression",
+      "command": "npm.cmd test -- --maxWorkers=1 tests/shared-session.test.ts tests/study-tui-gateway.test.ts tests/code-activity-facade-adapter.test.ts tests/app-bootstrap-facade.test.ts",
+      "cwd": "C:/Users/VIVIAN/OneDrive/Desktop/cym云枢智学/Pluggable-personalized-AI-learning-workstation/pi-study-helper",
+      "startedAtUtc": "2026-08-19T14:40:30.4837438Z",
+      "endedAtUtc": "2026-08-19T14:40:35.9754834Z",
+      "exitCode": 0,
+      "status": "PASS",
+      "testSummary": {"files": 4, "passed": 39, "failed": 0, "skipped": 0},
+      "stdout": {"bytes": 1004, "sha256": "1f499d6ba38b781fdcafc7b23fc9943162ef837be71e43b41fc94b1ba2dd0dab"},
+      "stderr": {"bytes": 0, "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}
+    },
+    {
+      "id": "full-vitest",
+      "command": "npm.cmd test -- --maxWorkers=1",
+      "cwd": "C:/Users/VIVIAN/OneDrive/Desktop/cym云枢智学/Pluggable-personalized-AI-learning-workstation/pi-study-helper",
+      "startedAtUtc": "2026-08-19T14:20:30.6967019Z",
+      "endedAtUtc": "2026-08-19T14:26:06.6331005Z",
+      "exitCode": 0,
+      "status": "PASS",
+      "testSummary": {"files": 89, "passed": 782, "failed": 0, "skipped": 1},
+      "stdout": {"bytes": 774, "sha256": "c38aaafb36eca2a848ba9dddee0c1396a21c42bd0829256b1a6fcf1fa275e2d3"},
+      "stderr": {"bytes": 0, "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}
+    },
+    {
+      "id": "typecheck",
+      "command": "npm.cmd run typecheck",
+      "cwd": "C:/Users/VIVIAN/OneDrive/Desktop/cym云枢智学/Pluggable-personalized-AI-learning-workstation/pi-study-helper",
+      "startedAtUtc": "2026-08-19T14:40:35.9800883Z",
+      "endedAtUtc": "2026-08-19T14:41:03.3135085Z",
+      "exitCode": 0,
+      "status": "PASS",
+      "testSummary": null,
+      "stdout": {"bytes": 226, "sha256": "5f71351942617c69ee3afdd53e10b5b96ef073369624b06ab084e3fd51017566"},
+      "stderr": {"bytes": 0, "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}
+    },
+    {
+      "id": "check-docs",
+      "command": "npm.cmd run check:docs",
+      "cwd": "C:/Users/VIVIAN/OneDrive/Desktop/cym云枢智学/Pluggable-personalized-AI-learning-workstation/pi-study-helper",
+      "startedAtUtc": "2026-08-19T14:41:03.3190494Z",
+      "endedAtUtc": "2026-08-19T14:41:03.9668451Z",
+      "exitCode": 0,
+      "status": "PASS",
+      "testSummary": null,
+      "stdout": {"bytes": 222, "sha256": "ed9b2b0e82b0634ec2b77a477823f54103706fc5f30612182749ded90766f1e2"},
+      "stderr": {"bytes": 0, "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}
+    },
+    {
+      "id": "build-web",
+      "command": "npm.cmd run build:web",
+      "cwd": "C:/Users/VIVIAN/OneDrive/Desktop/cym云枢智学/Pluggable-personalized-AI-learning-workstation/pi-study-helper",
+      "startedAtUtc": "2026-08-19T14:41:03.9723905Z",
+      "endedAtUtc": "2026-08-19T14:41:06.3523439Z",
+      "exitCode": 0,
+      "status": "PASS",
+      "testSummary": null,
+      "stdout": {"bytes": 1202, "sha256": "e0748fbe9652efaef7bc4226c89550f3c7030bea25a068efddba0297a92309c2"},
+      "stderr": {"bytes": 0, "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}
+    },
+    {
+      "id": "smoke-extension",
+      "command": "npm.cmd run smoke:extension",
+      "cwd": "C:/Users/VIVIAN/OneDrive/Desktop/cym云枢智学/Pluggable-personalized-AI-learning-workstation/pi-study-helper",
+      "startedAtUtc": "2026-08-19T14:41:06.3575291Z",
+      "endedAtUtc": "2026-08-19T14:41:10.3180513Z",
+      "exitCode": 0,
+      "status": "PASS",
+      "testSummary": null,
+      "stdout": {"bytes": 246, "sha256": "7884fff3ac712e13faad46091d4f3ccf62a3ec118ea092e0d9ead8d1fcd4f61f"},
+      "stderr": {"bytes": 0, "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}
+    },
+    {
+      "id": "check-release",
+      "command": "npm.cmd run check:release",
+      "cwd": "C:/Users/VIVIAN/OneDrive/Desktop/cym云枢智学/Pluggable-personalized-AI-learning-workstation/pi-study-helper",
+      "startedAtUtc": "2026-08-19T14:41:10.3227759Z",
+      "endedAtUtc": "2026-08-19T14:41:11.1878419Z",
+      "exitCode": 0,
+      "status": "PASS",
+      "testSummary": null,
+      "stdout": {"bytes": 308, "sha256": "d5c6e887791cddb372eac8d53580f6956611b58b8759ec0429df40244ee0c645"},
+      "stderr": {"bytes": 0, "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}
+    },
+    {
+      "id": "verify",
+      "command": "npm.cmd run verify",
+      "cwd": "C:/Users/VIVIAN/OneDrive/Desktop/cym云枢智学/Pluggable-personalized-AI-learning-workstation/pi-study-helper",
+      "startedAtUtc": "2026-08-19T14:32:55.7805948Z",
+      "endedAtUtc": "2026-08-19T14:38:16.3727866Z",
+      "exitCode": 0,
+      "status": "PASS",
+      "testSummary": {"files": 89, "passed": 782, "failed": 0, "skipped": 1},
+      "stdout": {"bytes": 2088, "sha256": "46f47cf8e2493f7ff62ced9d1bbbbae499c1a542f3c3d3b8265043f8b2d656f6"},
+      "stderr": {"bytes": 0, "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}
+    },
+    {
+      "id": "git-diff-check",
+      "command": "git diff --check",
+      "cwd": "C:/Users/VIVIAN/OneDrive/Desktop/cym云枢智学/Pluggable-personalized-AI-learning-workstation",
+      "startedAtUtc": "2026-08-19T14:43:54.8956163Z",
+      "endedAtUtc": "2026-08-19T14:43:55.1446161Z",
+      "exitCode": 0,
+      "status": "PASS_WITH_LINE_ENDING_WARNINGS",
+      "testSummary": null,
+      "stdout": {"bytes": 0, "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"},
+      "stderr": {"bytes": 956, "sha256": "dcca07a652285387745c457a67c1d7c8e30a4ad7df0ab3a89a795f65210cca34"},
+      "note": "Git reported CRLF-to-LF working-copy warnings only; natural exit code was 0 and no whitespace error was reported."
+    }
+  ],
+  "commands": [
+    {
+      "id": "a-targeted",
+      "command": "npm.cmd test -- --maxWorkers=1 tests/shared-web-extension-entry.test.ts tests/shared-session.test.ts tests/study-tui-gateway.test.ts",
+      "cwd": "C:/Users/win11/AppData/Local/Temp/w5-d2-a-r3-gitclone-20260819-2359/pi-study-helper",
+      "startedAtUtc": "2026-08-19T16:31:53.5470498Z",
+      "endedAtUtc": "2026-08-19T16:32:03.1413976Z",
+      "exitCode": 0,
+      "status": "PASS",
+      "testSummary": {"files": 3, "passed": 32, "failed": 0, "skipped": 0},
+      "stdout": {"bytes": 431, "sha256": "3bb924d2b1a127aa03d78d0e4094a6c7c784221ff6d9a6c12e364f2d687efa63"},
+      "stderr": {"bytes": 0, "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}
+    },
+    {
+      "id": "affected-regression",
+      "command": "npm.cmd test -- --maxWorkers=1 tests/shared-web-extension-entry.test.ts tests/shared-session.test.ts tests/study-tui-gateway.test.ts tests/code-activity-facade-adapter.test.ts tests/app-bootstrap-facade.test.ts",
+      "cwd": "C:/Users/win11/AppData/Local/Temp/w5-d2-a-r3-gitclone-20260819-2359/pi-study-helper",
+      "startedAtUtc": "2026-08-19T16:26:12.1152107Z",
+      "endedAtUtc": "2026-08-19T16:26:22.1112551Z",
+      "exitCode": 0,
+      "status": "PASS",
+      "testSummary": {"files": 5, "passed": 42, "failed": 0, "skipped": 0},
+      "stdout": {"bytes": 509, "sha256": "7a7b45d14c8d200ced0b09d537ad2ba8ee9cb8d7d505c044c061d9c747795437"},
+      "stderr": {"bytes": 0, "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}
+    },
+    {
+      "id": "full-vitest",
+      "command": "npm.cmd test -- --maxWorkers=1",
+      "cwd": "C:/Users/win11/AppData/Local/Temp/w5-d2-a-r3-gitclone-20260819-2359/pi-study-helper",
+      "startedAtUtc": "2026-08-19T16:20:14.6118403Z",
+      "endedAtUtc": "2026-08-19T16:24:29.5269200Z",
+      "exitCode": 0,
+      "status": "PASS",
+      "testSummary": {"files": 90, "passed": 785, "failed": 0, "skipped": 1},
+      "stdout": {"bytes": 353, "sha256": "779b8deb9c66a53b2fca91bf4ee92488d919026f4ee015529136a69d1f9b6eb5"},
+      "stderr": {"bytes": 0, "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}
+    },
+    {
+      "id": "typecheck",
+      "command": "npm.cmd run typecheck",
+      "cwd": "C:/Users/win11/AppData/Local/Temp/w5-d2-a-r3-gitclone-20260819-2359/pi-study-helper",
+      "startedAtUtc": "2026-08-19T16:26:22.2081185Z",
+      "endedAtUtc": "2026-08-19T16:26:44.5800848Z",
+      "exitCode": 0,
+      "status": "PASS_AFTER_FIX",
+      "testSummary": null,
+      "stdout": {"bytes": 108, "sha256": "657f3a771c3ac9b683e5e8bd2354be0cd82fe12a113b8e0fe5cd25311254bd68"},
+      "stderr": {"bytes": 0, "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}
+    },
+    {
+      "id": "check-docs",
+      "command": "npm.cmd run check:docs",
+      "cwd": "C:/Users/win11/AppData/Local/Temp/w5-d2-a-r3-gitclone-20260819-2359/pi-study-helper",
+      "startedAtUtc": "2026-08-19T16:26:44.6119884Z",
+      "endedAtUtc": "2026-08-19T16:26:45.2024587Z",
+      "exitCode": 0,
+      "status": "PASS",
+      "testSummary": null,
+      "stdout": {"bytes": 141, "sha256": "d273ce2e353d3a12b491d2617fcd89c0965e966765ede1971232d1896244c498"},
+      "stderr": {"bytes": 0, "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}
+    },
+    {
+      "id": "build-web",
+      "command": "npm.cmd run build:web",
+      "cwd": "C:/Users/win11/AppData/Local/Temp/w5-d2-a-r3-gitclone-20260819-2359/pi-study-helper",
+      "startedAtUtc": "2026-08-19T16:26:45.2096214Z",
+      "endedAtUtc": "2026-08-19T16:26:47.1692920Z",
+      "exitCode": 0,
+      "status": "PASS",
+      "testSummary": null,
+      "stdout": {"bytes": 407, "sha256": "b74bf8d10ebe13989e19d06001788d9195052c74b050cdfb111d420040138436"},
+      "stderr": {"bytes": 0, "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}
+    },
+    {
+      "id": "smoke-extension",
+      "command": "npm.cmd run smoke:extension",
+      "cwd": "C:/Users/win11/AppData/Local/Temp/w5-d2-a-r3-gitclone-20260819-2359/pi-study-helper",
+      "startedAtUtc": "2026-08-19T16:26:47.1895643Z",
+      "endedAtUtc": "2026-08-19T16:26:50.7517958Z",
+      "exitCode": 0,
+      "status": "PASS",
+      "testSummary": null,
+      "stdout": {"bytes": 137, "sha256": "65fd9a6cc0ade27c0f311d0281a9f702b89b28824e1ea5e7244b7849339a4b78"},
+      "stderr": {"bytes": 0, "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}
+    },
+    {
+      "id": "check-release",
+      "command": "npm.cmd run check:release",
+      "cwd": "C:/Users/win11/AppData/Local/Temp/w5-d2-a-r3-gitclone-20260819-2359/pi-study-helper",
+      "startedAtUtc": "2026-08-19T16:26:50.7591076Z",
+      "endedAtUtc": "2026-08-19T16:26:51.5364702Z",
+      "exitCode": 0,
+      "status": "PASS",
+      "testSummary": null,
+      "stdout": {"bytes": 148, "sha256": "a9c034823e5739e8026fe3e034a8abaadb5da25762d03ff8c6b19dda636eccea"},
+      "stderr": {"bytes": 0, "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}
+    },
+    {
+      "id": "verify",
+      "command": "npm.cmd run verify",
+      "cwd": "C:/Users/win11/AppData/Local/Temp/w5-d2-a-r3-gitclone-20260819-2359/pi-study-helper",
+      "startedAtUtc": "2026-08-19T16:27:08.0508941Z",
+      "endedAtUtc": "2026-08-19T16:31:18.7836732Z",
+      "exitCode": 0,
+      "status": "PASS",
+      "testSummary": {"files": 90, "passed": 785, "failed": 0, "skipped": 1},
+      "stdout": {"bytes": 1043, "sha256": "47081a49ffc341dee061404455f987949b48e968e9f80cffc573a97a81353a1c"},
+      "stderr": {"bytes": 0, "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}
+    },
+    {
+      "id": "git-diff-check",
+      "command": "git diff --check",
+      "cwd": "C:/Users/win11/AppData/Local/Temp/w5-d2-a-r3-gitclone-20260819-2359/pi-study-helper",
+      "startedAtUtc": "2026-08-19T16:39:40.5788890Z",
+      "endedAtUtc": "2026-08-19T16:39:40.8341158Z",
+      "exitCode": 0,
+      "status": "PASS_WITH_LINE_ENDING_WARNING",
+      "testSummary": null,
+      "stdout": {"bytes": 0, "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"},
+      "stderr": {"bytes": 138, "sha256": "890785d4ae2e40b3cc22efa5eb85bc86436b2b041b2807dd8063ab0873abdbd8"},
+      "note": "Natural exit code was 0. Stderr contains only the existing CRLF-to-LF working-copy warning for study-tui-gateway.ts; no whitespace error was reported."
+    }
+  ],
+  "packageAudit": {
+    "status": "PASS",
+    "zipFiles": 14,
+    "proposedFiles": 14,
+    "manifestFiles": 13,
+    "selfExcluded": "pi-study-helper/scripts/w5-a-validation/sha256-manifest.json",
+    "forbiddenEntries": 0
+  },
+  "history": [
+    {
+      "event": "R2 original-machine full Vitest",
+      "result": "89 files / 748 passed / 25 failed / 1 skipped",
+      "classification": "HISTORICAL_ENVIRONMENT_FAILURE",
+      "reason": "The original default Python environment had no Pandas; this record is retained and not rewritten as PASS."
+    },
+    {
+      "event": "R3 first targeted run",
+      "result": "2 files / 28 passed / 1 failed",
+      "classification": "FIXED_TEST_FIXTURE_FAILURE",
+      "reason": "The missing-session fixture passed explicit undefined into a helper with a default parameter; the helper was corrected and the final targeted run passed 29/29."
+    },
+    {
+      "event": "R3 aggregate validation launch",
+      "result": "startup failed before tests",
+      "classification": "FIXED_EVIDENCE_SCRIPT_ENCODING_FAILURE",
+      "reason": "Windows PowerShell decoded the hard-coded Unicode workspace path incorrectly; the script was changed to resolve the current working directory."
+    },
+    {
+      "event": "R3 aggregate validation outer timeout",
+      "result": "full Vitest completed PASS; first verify attempt was interrupted without a summary",
+      "classification": "EVIDENCE_ORCHESTRATION_TIMEOUT",
+      "reason": "The 10-minute outer tool limit expired after full Vitest and during verify. Verify was rerun independently to natural exit code 0; the interrupted log remains external and is not represented as PASS."
+    },
+    {
+      "event": "R3 first package mechanical audit",
+      "result": "ZIP/proposed comparison reported a mismatch before hash checks",
+      "classification": "FIXED_AUDIT_SCRIPT_PATH_NORMALIZATION_FAILURE",
+      "reason": "The audit attempted to replace two backslashes while Windows relative paths contained single separators. The audit was corrected to use path.sep and then passed 11/11 ZIP/proposed files, 10 Manifest entries and zero forbidden entries."
+    },
+    {
+      "event": "R3 owner audit",
+      "result": "BLOCKED / REQUIRES_R4",
+      "classification": "PRODUCTION_COMPOSITION_ROOT_MISSING",
+      "reason": "R3 tested a manually constructed StudyTuiGateway but the production extension did not inject or call TuiSharedSessionEntry."
+    },
+    {
+      "event": "R4 first independent typecheck",
+      "result": "TS2353 in tests/shared-web-extension-entry.test.ts: obsolete diagnosticId field",
+      "classification": "FIXED_TYPED_TEST_FIXTURE_FAILURE",
+      "reason": "The real-entry fixture passed two obsolete fields to completeDiagnostic. They were removed; the final typecheck and verify both exited 0."
+    }
+  ],
+  "rawLogs": "R4 logs are stored outside the repository at C:/Users/win11/AppData/Local/Temp/w5-d2-a-r4-validation-20260820; raw logs are intentionally excluded from Git and the review ZIP."
+}
