@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "scope": [
+    "pi-study-helper/src/demo/http-server.ts",
+    "pi-study-helper/tests/w5-c-d1-public-run.test.ts",
+    "pi-study-helper/scripts/w5-c-validation/capture-validation.mjs",
+    "pi-study-helper/scripts/w5-c-validation/candidate-diff-check.mjs",
+    "pi-study-helper/scripts/w5-c-validation/environment-probe.mjs",
+    "pi-study-helper/scripts/w5-c-validation/assemble-candidate.mjs",
+    "pi-study-helper/scripts/w5-c-validation/generate-manifest.mjs",
+    "pi-study-helper/scripts/w5-c-validation/verify-manifest.mjs",
+    "pi-study-helper/scripts/w5-c-validation/command-results.json",
+    "pi-study-helper/scripts/w5-c-validation/endpoint-status-matrix.json",
+    "pi-study-helper/scripts/w5-c-validation/environment-prototype.json",
+    "pi-study-helper/scripts/w5-c-validation/upstream-binding.json",
+    "pi-study-helper/scripts/w5-c-validation/validation-results.json",
+    "pi-study-helper/scripts/w5-c-validation/w5-c-d1-validation-report.md",
+    "pi-study-helper/scripts/w5-c-validation/proposed-files.txt",
+    "新版设计文档-重写版/第五周任务/handoff-w5-c-d1.md",
+    "pi-study-helper/scripts/w5-c-validation/manifest.json",
+    "pi-study-helper/scripts/w5-c-validation/hash-inventory.txt",
+    "pi-study-helper/scripts/w5-c-validation/manifest-verification.json"
+  ],
+  "forbiddenPatterns": [
+    "answer-key\\.json",
+    "reference-solutions",
+    "(?:^|[^A-Za-z])private(?:[\\\\/])",
+    "(?:^|[^A-Za-z])hidden(?:[\\\\/])",
+    "(?:^|[^A-Za-z])(?:sk|rk)-[A-Za-z0-9_-]{20,}",
+    "[A-Z]:[\\\\/]"
+  ],
+  "findings": [],
+  "status": "PASS"
+}

@@ -10,6 +10,7 @@ const NOT_FOUND = new Set(["session_not_found", "activity_not_found", "attempt_n
 const CONFLICT = new Set(["profile_revision_conflict", "session_version_conflict", "idempotency_conflict", "activity_lifecycle_conflict", "activity_version_conflict", "draft_version_conflict", "path_version_conflict"]);
 const UNPROCESSABLE = new Set(["diagnostic_incomplete", "diagnostic_answer_invalid", "diagnostic_answer_conflict", "evidence_invalid", "prerequisite_violation", "submission_contract_error"]);
 const EVALUATOR = new Set(["environment_mismatch", "evaluator_error", "evaluator_start_failed", "evaluator_timeout", "dependency_missing", "test_asset_invalid", "result_protocol_invalid", "runner_crash"]);
+const PUBLIC_RUN_PREPARATION_ERRORS = new Set(["environment_mismatch", "test_asset_invalid"]);
 
 type JsonObject = Record<string, unknown>;
 type RuntimeMethod = (input: any) => Promise<unknown>;
@@ -271,9 +272,10 @@ export function startHttpServer(runtimePromise: Promise<DemoRuntime>, port = 431
   const server = createServer(async (request, response) => {
     const id = requestId(request);
     if (runtime === undefined) { send(response, 503, { requestId: id, error: { code: initializationError ? "initialization_failed" : "initialization_not_ready", message: "Service initialization is not ready." } }); return; }
+    let target: RouteTarget | undefined;
     try {
       const url = new URL(request.url ?? "/", "http://127.0.0.1");
-      const target = route(url, request.method ?? "GET");
+      target = route(url, request.method ?? "GET");
       if (target === undefined) { send(response, 404, { requestId: id, error: { code: "not_found", message: "Resource not found." } }); return; }
       const input = request.method === "GET" ? {} : await body(request);
       const data = await target.call(runtime, input, id);
@@ -283,6 +285,10 @@ export function startHttpServer(runtimePromise: Promise<DemoRuntime>, port = 431
       const transport = error as { transportStatus?: number; transportCode?: string };
       if (transport.transportStatus !== undefined) { send(response, transport.transportStatus, { requestId: id, error: { code: transport.transportCode ?? "invalid_request", message: "Request format is invalid." } }); return; }
       const mapped = safeError(error);
+      if (target?.name === "prepareActivityRun" && PUBLIC_RUN_PREPARATION_ERRORS.has(mapped.code)) {
+        send(response, 500, { requestId: id, error: { code: mapped.code, message: "The public preview could not be prepared." } });
+        return;
+      }
       if (EVALUATOR.has(mapped.code)) {
         send(response, 200, { requestId: id, data: { status: "evaluator_error", errorCode: mapped.code, verdict: "not_graded" } });
         return;

@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "status": "CANDIDATE_READY_FOR_REVIEW",
+  "ownerDecision": "W5-D1-C-OWNER-R1",
+  "scope": "W5-D1 C public execution bundle endpoint, zero-side-effect integration and Node fault evidence",
+  "implementation": {
+    "httpRoute": "POST /api/activities/:id/run",
+    "authoritativeSubmit": "POST /api/activities/:id/submit remains Node/Python",
+    "browserRunner": "owned by E; not implemented or invoked server-side",
+    "formalFactsOnPreview": false
+  },
+  "tests": {
+    "newBoundaryTest": "tests/w5-c-d1-public-run.test.ts (4 tests through createDemoRuntime, ComposedLearningRuntimeFacade, revision 3 Profile, real HTTP and FileLearningSessionRepository)",
+    "existingAffectedTests": [
+      "tests/w4-c-d3-http.test.ts",
+      "tests/public-execution-bundle.test.ts",
+      "tests/public-execution-assets.test.ts",
+      "tests/code-activity-facade-adapter.test.ts",
+      "tests/web/real-api.test.ts"
+    ],
+    "lastObserved": "C/Web focused 6 files / 50 passed / 0 failed / 0 skipped; full test and verify 88 files / 769 passed / 0 failed / 1 skipped"
+  },
+  "evidence": {
+    "queryAndBodyValidation": true,
+    "bundleShapeAndPrivateFieldBoundary": true,
+    "previewHasNoSessionFactWrite": "real HTTP integration compares FileLearningSessionRepository snapshots before and after /run",
+    "runDoesNotEvaluate": true,
+    "runEnvironmentAndAssetFailures": "HTTP 500 safe error envelope without data/verdict/evaluator_error/public bundle and without session fact writes",
+    "submitEvaluatorFailure": "HTTP 200 evaluator_error/not_graded and no session fact writes",
+    "initialization503AndPortFailure": "covered by existing w4-c-d3-http tests",
+    "securityScan": "security-scan.json"
+  },
+  "limitations": [
+    "E BrowserCodeRunner/Pyodide is not a C-owned implementation and is not claimed PASS in D1.",
+    "D3 dual-backend measurements wait for E's candidate and owner PYODIDE decision.",
+    "Pyodide is unavailable and its minimal Pandas task is explicitly NOT_RUN; the native Python/Pandas sanity probe is not attributed to Pyodide.",
+    "Production-only hardening remains deferred under the competition Demo boundary."
+  ],
+  "state": "NOT_COMMITTED / NOT_PUSHED / uploadLock=NOT_GRANTED"
+}

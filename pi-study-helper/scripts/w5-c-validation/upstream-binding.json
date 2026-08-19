@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "contract": "W5-C1/W5-R1",
+  "ownerDecision": "W5-D1-C-OWNER-R1",
+  "w5StartCommit": "4e316822d343d90bdf295f37b7aaaa0131890501",
+  "actualHead": "0fd1f45386682a3859d8d9f6b37904b47ae98c33",
+  "originMain": "0fd1f45386682a3859d8d9f6b37904b47ae98c33",
+  "aFormalInput": {
+    "commit": "0fd1f45386682a3859d8d9f6b37904b47ae98c33",
+    "handoff": "新版设计文档-重写版/第五周任务/handoff-w5-a-d1.md",
+    "publicBundleContract": "src/contracts/facade.ts"
+  },
+  "notes": [
+    "The A handoff text contains a historical candidate commit reference not present in this clone; the actual current formal upstream is recorded above.",
+    "C does not modify committed Profile environment-lock.json or revision seals; failure tests mutate only isolated activated copies under temporary data roots.",
+    "E owns BrowserCodeRunner and the Worker; C only signs the public bundle over the existing HTTP Facade."
+  ]
+}

@@ -1,0 +1,99 @@
+{
+  "schemaVersion": 1,
+  "status": "PYODIDE_CANDIDATE_UNAVAILABLE",
+  "measuredAt": "2026-08-19T07:28:01.167Z",
+  "contract": "W5-C1/W5-R1",
+  "node": {
+    "version": "v22.23.1",
+    "platform": "win32",
+    "arch": "x64"
+  },
+  "nativePython": {
+    "python": "3.13.7",
+    "pandas": "3.0.5",
+    "platform": "win32",
+    "machine": "amd64",
+    "userSiteEnabled": false,
+    "minimalPandasRows": 2
+  },
+  "pythonCommandEvidence": {
+    "startedAt": "2026-08-19T07:28:00.306Z",
+    "endedAt": "2026-08-19T07:28:01.159Z",
+    "exitCode": 0,
+    "stdoutBytes": 132,
+    "stdoutSha256": "2ccbee23383137c2a392bac2faf69a4d6a329c4e5bbdcb922d38543e05ac0816",
+    "stderrBytes": 0,
+    "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "pyodide": {
+    "available": false,
+    "version": null,
+    "loadMode": "unavailable",
+    "errorCode": "module_not_found"
+  },
+  "nativePythonAllowedLibrariesObserved": [
+    {
+      "name": "pandas",
+      "version": "3.0.5"
+    }
+  ],
+  "publicAssets": {
+    "dataset": {
+      "name": "orders-learning.csv",
+      "bytes": 1669,
+      "sha256": "99b2923bfde4a6a824ed69bb410dc9c9f5d10f69e30b9bc5692ae986c6ab09f9"
+    },
+    "tests": [
+      {
+        "name": "test-duplicates-public.py",
+        "bytes": 749,
+        "sha256": "f494513463a02d3168a66d9bd5c312fbc50fcdec89b2a7c20a1cfb4f64bde7f1"
+      },
+      {
+        "name": "test-missing-public.py",
+        "bytes": 285,
+        "sha256": "2dc5a6f931e45fbeeff890cd122aa3a5f52a42251228f1beb5a9f660a77ff1e2"
+      },
+      {
+        "name": "test-practical-public.py",
+        "bytes": 924,
+        "sha256": "acaa0a8141a2d300452dd4bb786376da5b227c339f897325a20e4a359a0b3906"
+      },
+      {
+        "name": "test-structure-public.py",
+        "bytes": 408,
+        "sha256": "eca54fb129f63799fd2290d2ab13f6d1f0258894357fb656ff68c1e1e02c3ef1"
+      },
+      {
+        "name": "test-types-public.py",
+        "bytes": 1120,
+        "sha256": "b995f2e36844821afb1d30ba4d3efae72732072a0a0d3f7985056955e40748e6"
+      }
+    ],
+    "totalTestBytes": 3486
+  },
+  "nativePythonSanityCheck": {
+    "status": "PASS",
+    "expectedRows": 2,
+    "actualRows": 2
+  },
+  "pyodideMinimalPandasTask": {
+    "status": "NOT_RUN",
+    "reason": "PYODIDE_CANDIDATE_UNAVAILABLE"
+  },
+  "formalNodeLockReference": {
+    "environmentId": "env-python-pandas-candidate",
+    "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+    "status": "measured_node_submit"
+  },
+  "capabilityClaims": {
+    "processTreeTermination": "inherited_node_evidence_only",
+    "networkIsolation": false,
+    "reliableMemoryLimit": false
+  },
+  "decisions": {
+    "pyodideEnabled": null,
+    "ownerDecisionRequired": true,
+    "environmentLockModifiedByC": false
+  }
+}

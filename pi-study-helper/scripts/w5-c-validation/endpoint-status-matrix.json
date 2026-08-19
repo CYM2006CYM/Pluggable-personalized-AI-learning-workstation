@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "contract": "W5-C1/W5-R1",
+  "ownerDecision": "W5-D1-C-OWNER-R1",
+  "endpoints": [
+    {
+      "endpoint": "POST /api/activities/:id/run",
+      "purpose": "prepare, validate and sign a public execution bundle; never perform authoritative grading",
+      "requestFields": [
+        "sessionId",
+        "sessionVersion",
+        "profileRevision",
+        "attemptId",
+        "draftVersion",
+        "activityVersion",
+        "mode"
+      ],
+      "acceptedMode": "preview",
+      "responseFields": [
+        "requestId",
+        "sessionId",
+        "sessionVersion",
+        "profileRevision",
+        "mode",
+        "runId",
+        "activityId",
+        "environmentId",
+        "starterCodeHash",
+        "publicDatasetFiles",
+        "publicTestSources",
+        "expiresAt",
+        "bundleHash"
+      ],
+      "statusCases": [
+        { "case": "valid request", "status": 200, "assertion": "public bundle only; no session facts change" },
+        { "case": "malformed JSON/content type/extra/private field", "status": 400, "assertion": "Facade is not called" },
+        { "case": "activity or session missing", "status": 404, "assertion": "safe error envelope" },
+        { "case": "version/lifecycle conflict", "status": 409, "assertion": "existing error code preserved" },
+        { "case": "environment mismatch during preparation", "status": 500, "assertion": "safe error envelope; no data/verdict/evaluator_error/public bundle and no formal fact" },
+        { "case": "test asset invalid during preparation", "status": 500, "assertion": "safe error envelope; no data/verdict/evaluator_error/public bundle or private detail" },
+        { "case": "service initialization unavailable", "status": 503, "assertion": "the only 503 case; service not ready" }
+      ],
+      "evidence": ["tests/w5-c-d1-public-run.test.ts: real repositories, environment mismatch and asset validation cases"]
+    },
+    {
+      "endpoint": "POST /api/activities/:id/submit",
+      "purpose": "execute the authoritative Node/Python evaluator and commit only learner-derived facts",
+      "statusCases": [
+        { "case": "graded learner result", "status": 200, "assertion": "result is returned and normal commit semantics apply" },
+        { "case": "evaluator/environment/asset/protocol failure", "status": 200, "assertion": "evaluator_error/not_graded; no activity progress or negative Evidence" },
+        { "case": "malformed/derived/private fields", "status": 400, "assertion": "Facade is not called" },
+        { "case": "version/lifecycle conflict", "status": 409, "assertion": "existing error code preserved" }
+      ],
+      "evaluator": "authoritative Node/Python path only"
+    }
+  ],
+  "security": {
+    "hiddenTests": false,
+    "referenceSolutions": false,
+    "rubric": false,
+    "privateDatasets": false,
+    "apiKeys": false,
+    "hostPaths": false
+  }
+}
