@@ -29,7 +29,9 @@ export function StartPage() {
 
   useEffect(() => {
     if (bootstrap.data === undefined) return;
-    setSubjectId((value) => value || bootstrap.data!.profiles[0]?.subjectId || "");
+    setSubjectId((value) => bootstrap.data!.profiles.some((profile) => profile.subjectId === value)
+      ? value
+      : bootstrap.data!.profiles[0]?.subjectId ?? "");
     setGoalId((value) => value || bootstrap.data!.goals[0]?.goalId || "");
     setChapterId((value) => value || bootstrap.data!.chapters[0]?.chapterId || "");
   }, [bootstrap.data]);
@@ -80,6 +82,8 @@ export function StartPage() {
   };
 
   const stateError = actionError ?? bootstrap.error;
+  const activeProfile = bootstrap.data?.profiles.find((profile) => profile.subjectId === subjectId)
+    ?? bootstrap.data?.profiles[0];
   return (
     <PageFrame eyebrow="学习入口" title="开始一次可追踪的学习会话" summary="选择资料包、入口和问卷。所有正式进度由本地服务保存。" actions={<span className="header-badge">真实 API</span>}>
       {bootstrap.loading ? <PageStatePanel page="start" state="loading" /> : null}
@@ -88,12 +92,13 @@ export function StartPage() {
       {!bootstrap.loading && stateError === undefined && bootstrap.data !== undefined && bootstrap.data.profiles.length > 0 && bootstrap.data.goals.length > 0 ? (
         <div className="start-layout" data-page="start">
           <section className="work-section profile-section" aria-labelledby="profile-heading">
-            <div className="section-heading"><div><p className="section-kicker">ACTIVE PROFILE</p><h2 id="profile-heading">{bootstrap.data.profiles[0]?.name}</h2></div><span className="status-tag success">已启用</span></div>
-            <dl className="metadata-grid"><div><dt>领域</dt><dd>{bootstrap.data.profiles[0]?.subjectId}</dd></div><div><dt>修订</dt><dd>Revision {bootstrap.data.profiles[0]?.revision}</dd></div><div><dt>能力</dt><dd>{bootstrap.data.profiles[0]?.modalities.join(" / ")}</dd></div></dl>
+            <div className="section-heading"><div><p className="section-kicker">ACTIVE PROFILE</p><h2 id="profile-heading">{activeProfile?.name}</h2></div><span className="status-tag success">已启用</span></div>
+            <dl className="metadata-grid"><div><dt>领域</dt><dd>{activeProfile?.subjectId}</dd></div><div><dt>修订</dt><dd>Revision {activeProfile?.revision}</dd></div><div><dt>能力</dt><dd>{activeProfile?.modalities.join(" / ")}</dd></div></dl>
           </section>
           <form className="work-section start-form" aria-labelledby="session-heading" onSubmit={start}>
             <div className="section-heading"><div><p className="section-kicker">SESSION</p><h2 id="session-heading">会话设置</h2></div><span className="quiet-label">服务端绑定</span></div>
             <div className="form-grid">
+              <label>学习资料包<select aria-label="学习资料包" value={subjectId} onChange={(event) => setSubjectId(event.target.value)}>{bootstrap.data.profiles.map((profile) => <option key={profile.subjectId} value={profile.subjectId}>{profile.name}</option>)}</select></label>
               <fieldset><legend>学习入口</legend><label className="choice-row"><input type="radio" name="entry" checked={mode === "recommended"} onChange={() => setMode("recommended")} /> 系统推荐</label><label className="choice-row"><input type="radio" name="entry" checked={mode === "chapter"} onChange={() => setMode("chapter")} /> 按章节学习</label></fieldset>
               <label>学习目标<select aria-label="学习目标" value={goalId} onChange={(event) => setGoalId(event.target.value)}>{bootstrap.data.goals.map((goal) => <option key={goal.goalId} value={goal.goalId}>{goal.title}</option>)}</select></label>
               <label>可用时间<select aria-label="可用时间" value={availableMinutes} onChange={(event) => setAvailableMinutes(Number(event.target.value))}><option value={60}>60分钟</option><option value={120}>120分钟</option><option value={400}>400分钟</option></select></label>
@@ -102,7 +107,7 @@ export function StartPage() {
               <label>Pandas经验<select aria-label="Pandas经验" value={background.pandas_experience} onChange={(event) => setBackground({ ...background, pandas_experience: event.target.value as BackgroundQuestionnaire["pandas_experience"] })}>{EXPERIENCE.map((value) => <option key={value}>{value}</option>)}</select></label>
               <label>讲解偏好<select aria-label="讲解偏好" value={background.explanation_preference} onChange={(event) => setBackground({ ...background, explanation_preference: event.target.value as BackgroundQuestionnaire["explanation_preference"] })}>{PREFERENCES.map((value) => <option key={value}>{value}</option>)}</select></label>
             </div>
-            <div className="section-footer"><span className="quiet-label">{subjectId}</span><button type="submit" className="button primary" disabled={busy || goalId === "" || (mode === "chapter" && chapterId === "")}>{busy ? "正在创建" : "开始学习"}</button></div>
+            <div className="section-footer"><span className="quiet-label">{subjectId}</span><button type="submit" className="button primary" disabled={busy || subjectId === "" || goalId === "" || (mode === "chapter" && chapterId === "")}>{busy ? "正在创建" : "开始学习"}</button></div>
           </form>
           {bootstrap.data.recoverableSessions.map((session) => <section className="resume-strip" aria-label="恢复会话" key={session.sessionId}><div><strong>可恢复会话</strong><span>{session.stage} · Session v{session.sessionVersion}</span></div><button type="button" className="button text-button" disabled={busy} onClick={() => void recover(session.sessionId)}>从服务端恢复</button></section>)}
         </div>

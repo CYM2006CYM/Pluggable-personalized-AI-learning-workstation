@@ -4,6 +4,7 @@ import { appRoutes } from "../../src/web/app/routes.js";
 
 const routeCases = [
   ["开始", "/", undefined],
+  ["共享深链", "/study?sessionId=session-demo-001&nodeId=node-missing-values&activityId=act-missing", "study"],
   ["诊断", "/diagnostic/session-demo-001", "diagnostic/:sessionId"],
   ["路径", "/path/session-demo-001", "path/:sessionId"],
   ["学习", "/learn/session-demo-001/node-missing-values", "learn/:sessionId/:nodeId"],

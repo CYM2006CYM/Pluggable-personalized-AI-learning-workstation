@@ -53,7 +53,12 @@ export function DiagnosticPage() {
         availableMinutes: session.view.availableMinutes, evidenceVersion: completed.evidenceVersion,
         selectedKnowledgePointIds: [], lockedNodeIds: [],
       });
-      navigate(`/path/${sessionId}`, { state: { candidate, evidenceVersion: completed.evidenceVersion } });
+      navigate(`/path/${sessionId}`, { state: {
+        candidate,
+        evidenceVersion: completed.evidenceVersion,
+        knowledgeStates: completed.knowledgeStates,
+        capabilityProfileRevision: completed.capabilityProfileRevision,
+      } });
     } catch (error) { setActionError(error instanceof Error ? error : new Error("diagnostic_complete_failed")); }
     finally { setBusy(false); }
   };

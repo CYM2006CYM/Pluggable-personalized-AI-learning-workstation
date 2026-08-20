@@ -1,0 +1,217 @@
+{
+  "schemaVersion": 2,
+  "candidate": "W5-D2-E-R2",
+  "generatedAtUtc": "2026-08-20T14:24:07.196Z",
+  "runtimeAssertions": [
+    {
+      "id": "preview-does-not-call-submit",
+      "status": "PASS",
+      "command": "npm.cmd exec vitest -- run tests/web/w5-d2-e-runtime-evidence.test.tsx --maxWorkers=1 --reporter=json --outputFile=<TEMP_RUNTIME_REPORT>/vitest.json",
+      "startedAtUtc": "2026-08-20T14:23:24.769Z",
+      "endedAtUtc": "2026-08-20T14:23:30.023Z",
+      "exitCode": 0,
+      "input": "ActivityPage preview success with mocked Bootstrap/draft/run and instrumented fetch",
+      "evidence": {
+        "path": "scripts/w5-e-validation/d2-runtime-test-results.json",
+        "sha256": "97d24b69285cc8fc5bb6340164db9b648fb253461839174ac8fc822d7af4d641",
+        "assertion": "W5 D2 E runtime evidence preview success calls only draft and run and never uploads the preview result"
+      }
+    },
+    {
+      "id": "preview-result-not-uploaded",
+      "status": "PASS",
+      "command": "npm.cmd exec vitest -- run tests/web/w5-d2-e-runtime-evidence.test.tsx --maxWorkers=1 --reporter=json --outputFile=<TEMP_RUNTIME_REPORT>/vitest.json",
+      "startedAtUtc": "2026-08-20T14:23:24.769Z",
+      "endedAtUtc": "2026-08-20T14:23:30.023Z",
+      "exitCode": 0,
+      "input": "Captured request paths and bodies for successful preview",
+      "evidence": {
+        "path": "scripts/w5-e-validation/d2-runtime-test-results.json",
+        "sha256": "97d24b69285cc8fc5bb6340164db9b648fb253461839174ac8fc822d7af4d641",
+        "assertion": "W5 D2 E runtime evidence preview success calls only draft and run and never uploads the preview result"
+      }
+    },
+    {
+      "id": "preview-output-not-persisted",
+      "status": "PASS",
+      "command": "npm.cmd exec vitest -- run tests/web/w5-d2-e-runtime-evidence.test.tsx --maxWorkers=1 --reporter=json --outputFile=<TEMP_RUNTIME_REPORT>/vitest.json",
+      "startedAtUtc": "2026-08-20T14:23:24.769Z",
+      "endedAtUtc": "2026-08-20T14:23:30.023Z",
+      "exitCode": 0,
+      "input": "Rendered preview result and enumerated sessionStorage record fields",
+      "evidence": {
+        "path": "scripts/w5-e-validation/d2-runtime-test-results.json",
+        "sha256": "97d24b69285cc8fc5bb6340164db9b648fb253461839174ac8fc822d7af4d641",
+        "assertion": "W5 D2 E runtime evidence preview output is displayed but never persisted in sessionStorage"
+      }
+    },
+    {
+      "id": "formal-submit-enabled-when-preview-unavailable",
+      "status": "PASS",
+      "command": "npm.cmd exec vitest -- run tests/web/w5-d2-e-runtime-evidence.test.tsx --maxWorkers=1 --reporter=json --outputFile=<TEMP_RUNTIME_REPORT>/vitest.json",
+      "startedAtUtc": "2026-08-20T14:23:24.769Z",
+      "endedAtUtc": "2026-08-20T14:23:30.023Z",
+      "exitCode": 0,
+      "input": "ActivityPage PREVIEW_UNAVAILABLE state and formal submit button",
+      "evidence": {
+        "path": "scripts/w5-e-validation/d2-runtime-test-results.json",
+        "sha256": "97d24b69285cc8fc5bb6340164db9b648fb253461839174ac8fc822d7af4d641",
+        "assertion": "W5 D2 E runtime evidence preview unavailable does not call submit and leaves formal submission enabled"
+      }
+    },
+    {
+      "id": "worker-has-no-network-requests",
+      "status": "PASS",
+      "command": "node scripts/w5-e-validation/capture-d2-r2-browser.mjs",
+      "startedAtUtc": "2026-08-20T14:23:32.124Z",
+      "endedAtUtc": "2026-08-20T14:23:35.909Z",
+      "exitCode": 0,
+      "input": {
+        "runId": "r2-worker-probe",
+        "activityId": "activity-probe",
+        "code": "print(1)"
+      },
+      "page": "http://127.0.0.1:5174/",
+      "evidence": {
+        "path": "scripts/w5-e-validation/d2-browser-capture.json",
+        "sha256": "1f4118a326700feaa471478ef7cf9aee72f09e66ae841d9e1dc64ec73434681a",
+        "networkRequests": [
+          {
+            "url": "http://127.0.0.1:5174/preview/pyodide-preview.worker.ts",
+            "type": "Script",
+            "method": "GET"
+          }
+        ]
+      }
+    }
+  ],
+  "scans": [
+    {
+      "surface": "production-bundle",
+      "entries": [
+        {
+          "path": "dist-web/assets/index-BbjFPJ_t.js",
+          "bytes": 270057,
+          "sha256": "22a1c66a798df293c112f1bc5e04c678a88203334d638000510365897971fdfe",
+          "findings": []
+        },
+        {
+          "path": "dist-web/assets/index-BPvGnDzN.css",
+          "bytes": 18063,
+          "sha256": "ad21e5f0703e0e4497691a745474690e04cd3fb7df192b9b4db5277701d85b0d",
+          "findings": []
+        },
+        {
+          "path": "dist-web/assets/pyodide-preview.worker-DtAokygp.js",
+          "bytes": 304,
+          "sha256": "228aa7f122b5fe04d44a1753a5fc783047cb48b39c68989a1d0300498250d7d9",
+          "findings": []
+        }
+      ],
+      "status": "PASS"
+    },
+    {
+      "surface": "worker-source-and-message-boundary",
+      "entries": [
+        {
+          "path": "src/web/preview/browser-code-runner.ts",
+          "bytes": 6316,
+          "sha256": "48dea33fd6c6a425cebda656ec781d8263ce35656681a7563814cef2e42b24b9",
+          "findings": []
+        },
+        {
+          "path": "src/web/preview/create-browser-code-runner.ts",
+          "bytes": 518,
+          "sha256": "575957960dd8cc1e52a1b68092bf2ffa2b94cdc42d5285301c40e5401f34e7bc",
+          "findings": []
+        },
+        {
+          "path": "src/web/preview/pyodide-preview.worker.ts",
+          "bytes": 1097,
+          "sha256": "f2ec8bcebc5fb3fa5c07a47a34c5d19836443a89b51ff0b357fc18e7c96cbfb5",
+          "findings": []
+        }
+      ],
+      "status": "PASS"
+    },
+    {
+      "surface": "session-storage-schema",
+      "entries": [
+        {
+          "path": "src/web/state/activity-draft-storage.ts",
+          "bytes": 2723,
+          "sha256": "45d5da57ee64bb3212952e462fd1f08c3041ef9aa40c0301222bc8bc545d88e3",
+          "findings": []
+        }
+      ],
+      "status": "PASS"
+    },
+    {
+      "surface": "public-bundle-fixture",
+      "entries": [
+        {
+          "path": "tests/web/fixtures/w4-api.ts",
+          "bytes": 6996,
+          "sha256": "31e6e6752172ce67e64e29a726657a980a3ba4f00a1e0ecdb0eeb30ad4b37355",
+          "findings": []
+        }
+      ],
+      "status": "PASS"
+    },
+    {
+      "surface": "dom-projections",
+      "entries": [
+        {
+          "path": "scripts/w5-e-validation/evidence/d2-r2/start-desktop.projection.json",
+          "bytes": 1441,
+          "sha256": "e9058dcfcb824cb32e3dffb16b11aaa459907b1dad84e082011c7ba5db81a8ab",
+          "findings": []
+        },
+        {
+          "path": "scripts/w5-e-validation/evidence/d2-r2/start-mobile.projection.json",
+          "bytes": 1336,
+          "sha256": "f8a0ac067d7d41c2d7544bc5ebc42bf8439bf3d3daeeb8504afa3916f07fed73",
+          "findings": []
+        },
+        {
+          "path": "scripts/w5-e-validation/evidence/d2-r2/study-recovery-desktop.projection.json",
+          "bytes": 1210,
+          "sha256": "3c2ebba761b48b5f4c59a6089a455c9c7962269956728e366fc6aa02f2517adb",
+          "findings": []
+        },
+        {
+          "path": "scripts/w5-e-validation/evidence/d2-r2/study-recovery-mobile.projection.json",
+          "bytes": 1105,
+          "sha256": "8688853fd2cc425c09d1328ae5b9cb37da928218a6627c46a6f29883475b203c",
+          "findings": []
+        }
+      ],
+      "status": "PASS"
+    },
+    {
+      "surface": "runtime-evidence-record",
+      "entries": [
+        {
+          "path": "scripts/w5-e-validation/d2-runtime-test-results.json",
+          "bytes": 1536,
+          "sha256": "97d24b69285cc8fc5bb6340164db9b648fb253461839174ac8fc822d7af4d641",
+          "findings": []
+        }
+      ],
+      "status": "PASS"
+    },
+    {
+      "surface": "validation-command-record",
+      "entries": [
+        {
+          "path": "scripts/w5-e-validation/d2-command-results.json",
+          "bytes": 80255,
+          "sha256": "abd0f6563f4c150ee7ebce4bbaa9fc227f77d0d37b0db938a265e75ce7a3706e",
+          "findings": []
+        }
+      ],
+      "status": "PASS"
+    }
+  ],
+  "status": "PASS"
+}

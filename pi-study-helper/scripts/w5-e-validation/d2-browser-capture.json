@@ -1,0 +1,125 @@
+{
+  "schemaVersion": 1,
+  "candidate": "W5-D2-E-R2",
+  "runId": "w5-d2-e-r2-20260820142332124",
+  "command": "node scripts/w5-e-validation/capture-d2-r2-browser.mjs",
+  "startedAtUtc": "2026-08-20T14:23:32.124Z",
+  "endedAtUtc": "2026-08-20T14:23:35.909Z",
+  "exitCode": 0,
+  "environment": {
+    "browser": "Edg/151.0.4129.93",
+    "protocolVersion": "1.3",
+    "apiPort": 4311,
+    "vitePort": 5174,
+    "debugPort": 9233
+  },
+  "captures": [
+    {
+      "id": "start-desktop",
+      "url": "http://127.0.0.1:5174/",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "waitCondition": "document.querySelector('select[aria-label=\"学习资料包\"]') !== null",
+      "projectionFile": "scripts/w5-e-validation/evidence/d2-r2/start-desktop.projection.json",
+      "projectionSha256": "e9058dcfcb824cb32e3dffb16b11aaa459907b1dad84e082011c7ba5db81a8ab",
+      "pngFile": "scripts/w5-e-validation/evidence/d2-r2/start-desktop.png",
+      "pngBytes": 59527,
+      "pngSha256": "86533a06adf06d30d0fcb94ee421fd9e0c3d2be933efefb3949052dd3bc3a995",
+      "assertions": {
+        "rootNonBlank": true,
+        "noHorizontalOverflow": true,
+        "namedControls": true,
+        "waitConditionSatisfied": true
+      }
+    },
+    {
+      "id": "start-mobile",
+      "url": "http://127.0.0.1:5174/",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "waitCondition": "document.querySelector('select[aria-label=\"学习资料包\"]') !== null",
+      "projectionFile": "scripts/w5-e-validation/evidence/d2-r2/start-mobile.projection.json",
+      "projectionSha256": "f8a0ac067d7d41c2d7544bc5ebc42bf8439bf3d3daeeb8504afa3916f07fed73",
+      "pngFile": "scripts/w5-e-validation/evidence/d2-r2/start-mobile.png",
+      "pngBytes": 29897,
+      "pngSha256": "8c2b987757aadd6634aa3846219d7e89bb3f135b96a1312e77b5869f889abfcb",
+      "assertions": {
+        "rootNonBlank": true,
+        "noHorizontalOverflow": true,
+        "namedControls": true,
+        "waitConditionSatisfied": true
+      }
+    },
+    {
+      "id": "study-recovery-desktop",
+      "url": "http://127.0.0.1:5174/study?sessionId=session-missing&nodeId=node-basic&activityId=act-basic",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "waitCondition": "document.body.innerText.includes('DEEP_LINK_SESSION_UNAVAILABLE')",
+      "projectionFile": "scripts/w5-e-validation/evidence/d2-r2/study-recovery-desktop.projection.json",
+      "projectionSha256": "3c2ebba761b48b5f4c59a6089a455c9c7962269956728e366fc6aa02f2517adb",
+      "pngFile": "scripts/w5-e-validation/evidence/d2-r2/study-recovery-desktop.png",
+      "pngBytes": 44397,
+      "pngSha256": "273497658bf50952b7f1d9800f1b96d7b2d096494a92a1884ee81169c0487a71",
+      "assertions": {
+        "rootNonBlank": true,
+        "noHorizontalOverflow": true,
+        "namedControls": true,
+        "waitConditionSatisfied": true
+      }
+    },
+    {
+      "id": "study-recovery-mobile",
+      "url": "http://127.0.0.1:5174/study?sessionId=session-missing&nodeId=node-basic&activityId=act-basic",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "waitCondition": "document.body.innerText.includes('DEEP_LINK_SESSION_UNAVAILABLE')",
+      "projectionFile": "scripts/w5-e-validation/evidence/d2-r2/study-recovery-mobile.projection.json",
+      "projectionSha256": "8688853fd2cc425c09d1328ae5b9cb37da928218a6627c46a6f29883475b203c",
+      "pngFile": "scripts/w5-e-validation/evidence/d2-r2/study-recovery-mobile.png",
+      "pngBytes": 32446,
+      "pngSha256": "3a594f360cde541f0dd04b0b2a80d09cf08d0b79f4eb7da042cc7b067c5ee675",
+      "assertions": {
+        "rootNonBlank": true,
+        "noHorizontalOverflow": true,
+        "namedControls": true,
+        "waitConditionSatisfied": true
+      }
+    }
+  ],
+  "workerNetworkProbe": {
+    "page": "http://127.0.0.1:5174/",
+    "input": {
+      "runId": "r2-worker-probe",
+      "activityId": "activity-probe",
+      "code": "print(1)"
+    },
+    "outcome": {
+      "outcome": "REJECTED",
+      "code": "preview_unavailable",
+      "name": "BrowserCodeRunnerError"
+    },
+    "requests": [
+      {
+        "url": "http://127.0.0.1:5174/preview/pyodide-preview.worker.ts",
+        "type": "Script",
+        "method": "GET"
+      }
+    ],
+    "assertions": {
+      "previewUnavailable": true,
+      "externalRequestCount": 0,
+      "dataRequestCount": 0,
+      "onlySameOriginModuleLoading": true
+    }
+  },
+  "status": "PASS"
+}

@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 2,
+  "candidate": "W5-D2-E-R2",
+  "contract": "W5-C1/W5-R1",
+  "w5StartCommit": "4e316822d343d90bdf295f37b7aaaa0131890501",
+  "baseHead": "127a71cce4a8423327fb5ce75d31294252b92a0b",
+  "originMain": "127a71cce4a8423327fb5ce75d31294252b92a0b",
+  "inputs": [
+    {
+      "role": "A-D1",
+      "commit": "0fd1f45386682a3859d8d9f6b37904b47ae98c33",
+      "consumed": ["PublicExecutionBundle", "BrowserCodeRunner", "PreparedActivityOutput"]
+    },
+    {
+      "role": "C-D1",
+      "commit": "677f54c609ef3bfbe78ff6d37f6b432e9c68ff4d",
+      "consumed": ["POST /api/activities/:id/run", "PYODIDE_CANDIDATE_UNAVAILABLE"]
+    },
+    {
+      "role": "A-D2",
+      "commit": "127a71cce4a8423327fb5ce75d31294252b92a0b",
+      "consumed": ["/study safe deep-link tuple", "shared-session recovery semantics"]
+    }
+  ],
+  "notes": [
+    "HEAD and origin/main were equal to baseHead before E implementation.",
+    "handoff-w5-a-d2.md retains candidate-era state text; committed Git history at 127a71c is the formal consumption fact.",
+    "E-D2-R2 only repairs evidence, packaging and proposed scope; it does not modify A, B, C or D implementation and does not replace the Facade or HTTP protocol.",
+    "Audited R1 ZIP SHA-256: 40ea7e52cef617fe1dc60771ae9d243e03db30e20165bc94e7956ff86f5f04ea."
+  ]
+}

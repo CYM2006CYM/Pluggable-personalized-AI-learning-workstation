@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 2,
+  "candidate": "W5-D2-E-R2",
+  "state": "NOT_COMMITTED / NOT_PUSHED / uploadLock=NOT_GRANTED",
+  "knownLimitations": [
+    "PYODIDE_CANDIDATE_UNAVAILABLE: 仓库及 C-D1 证据没有获批的本地 Pyodide 运行时或资产；未增加 CDN、网络加载器或依赖。",
+    "专用 Worker 是真实离线边界，但在负责人 D3 裁决提供获批运行时候选前返回 preview_unavailable。",
+    "LIVE_MODEL=LIVE_NOT_RUN。",
+    "D3 双后端裁决、D4 Web/TUI 双向闭环、服务重启恢复和三个正式案例均未运行或声明。",
+    "Monaco 保持关闭；未修改 package.json、锁文件、Profile、环境锁、SDK 或 gold。"
+  ],
+  "degradedCapabilities": [
+    "预览不可用时，既有 Node/Python 正式提交仍可操作。",
+    "服务端确认的代码草稿恢复不依赖预览输出。",
+    "非法深链显式返回开始页恢复，且不会创建会话。"
+  ]
+}

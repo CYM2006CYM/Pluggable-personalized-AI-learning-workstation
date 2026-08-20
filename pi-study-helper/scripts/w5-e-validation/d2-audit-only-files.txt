@@ -1,0 +1,4 @@
+pi-study-helper/scripts/w5-e-validation/evidence/d2-r2/start-desktop.png
+pi-study-helper/scripts/w5-e-validation/evidence/d2-r2/start-mobile.png
+pi-study-helper/scripts/w5-e-validation/evidence/d2-r2/study-recovery-desktop.png
+pi-study-helper/scripts/w5-e-validation/evidence/d2-r2/study-recovery-mobile.png

@@ -5,6 +5,7 @@ import { createMemoryRouter, RouterProvider } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { appRoutes } from "../../src/web/app/routes.js";
 import { PageStatePanel } from "../../src/web/components/PageStatePanel.js";
+import { writeActivityDraft } from "../../src/web/state/activity-draft-storage.js";
 import { useUiStore } from "../../src/web/state/ui-store.js";
 import {
   bootstrap,
@@ -30,6 +31,7 @@ afterEach(() => {
   root = undefined;
   vi.unstubAllGlobals();
   useUiStore.setState({ activityDrafts: {} });
+  sessionStorage.clear();
   document.body.innerHTML = "";
 });
 
@@ -69,6 +71,14 @@ async function editTextarea(target: HTMLTextAreaElement, value: string) {
   });
 }
 
+async function selectValue(target: HTMLSelectElement, value: string) {
+  await act(async () => {
+    Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, "value")!.set!.call(target, value);
+    target.dispatchEvent(new Event("change", { bubbles: true }));
+  });
+  await settle();
+}
+
 function bodyAt(fetchMock: ReturnType<typeof vi.fn>, index: number): Record<string, unknown> {
   const init = fetchMock.mock.calls[index]?.[1] as RequestInit | undefined;
   return JSON.parse(String(init?.body ?? "{}")) as Record<string, unknown>;
@@ -80,8 +90,23 @@ describe("W4 real API pages", () => {
     expect(host.textContent).toContain("Pandas Cleaning");
     expect(host.textContent).toContain("系统推荐");
     expect(host.textContent).toContain("按章节学习");
-    expect(host.querySelectorAll("select")).toHaveLength(5);
+    expect(host.querySelectorAll("select")).toHaveLength(6);
     expect(host.textContent).not.toContain("Mock DTO");
+  });
+
+  it("selects a safe Profile and binds its subjectId to the new session", async () => {
+    const available = bootstrap();
+    available.profiles.push({ subjectId: "python-core", name: "Python Core", revision: 8, modalities: ["reading", "quiz"] });
+    const started = { requestId: "start", sessionId: "session-new", sessionVersion: 1, profileRevision: 8, subjectId: "python-core", mode: "recommended", goalId: "goal-clean-orders", availableMinutes: 120, status: "active", stage: "diagnostic", diagnosticRequired: true };
+    const saved = { requestId: "draft", sessionId: "session-new", sessionVersion: 2, profileRevision: 8, diagnosticId: "diagnostic-pandas-cleaning", diagnosticVersion: 1, savedAt: "2026-08-20T00:00:00.000Z", diagnosticDraftVersion: 1 };
+    const fetchMock = vi.fn().mockResolvedValueOnce(ok(available)).mockResolvedValueOnce(ok(started)).mockResolvedValueOnce(ok(saved));
+    const { host } = await renderRoute("/", fetchMock);
+    await selectValue(host.querySelector('select[aria-label="学习资料包"]')!, "python-core");
+    expect(host.textContent).toContain("Python Core");
+    expect(host.textContent).toContain("Revision 8");
+    expect(host.textContent).toContain("reading / quiz");
+    await click(button(host, "开始学习"));
+    expect(bodyAt(fetchMock, 1)).toMatchObject({ subjectId: "python-core" });
   });
 
   it("renders the recommended diagnostic from the safe envelope", async () => {
@@ -212,6 +237,23 @@ describe("W4 real API pages", () => {
   });
 
   it("saves edited code before preview and runs the returned draftVersion", async () => {
+    const posted: unknown[] = [];
+    class SuccessfulWorker {
+      private messageListener?: (event: MessageEvent) => void;
+      postMessage(message: unknown) {
+        posted.push(message);
+        queueMicrotask(() => this.messageListener?.(new MessageEvent("message", { data: {
+          type: "result", runId: "run-code-1", result: {
+            executionStatus: "completed", verdict: "pass", score: 1, safeFeedback: "公开检查通过",
+            evaluatorVersion: "browser-public-v1", environmentHash: "public-env", assetBundleHash: "public-assets",
+          },
+        } })));
+      }
+      addEventListener(type: string, listener: (event: MessageEvent) => void) { if (type === "message") this.messageListener = listener; }
+      removeEventListener() { /* no-op test worker */ }
+      terminate() { /* no-op test worker */ }
+    }
+    vi.stubGlobal("Worker", SuccessfulWorker);
     const fetchMock = vi.fn()
       .mockResolvedValueOnce(ok(bootstrap(recovery({ stage: "activity" }))))
       .mockResolvedValueOnce(ok(savedCode))
@@ -223,7 +265,73 @@ describe("W4 real API pages", () => {
     expect(bodyAt(fetchMock, 1)).toMatchObject({ draftVersion: 1, userText: "print('edited draft')" });
     expect(String(fetchMock.mock.calls[2]?.[0])).toBe("/api/activities/act-code/run");
     expect(bodyAt(fetchMock, 2)).toMatchObject({ draftVersion: 2, attemptId: "attempt-code-1", mode: "preview" });
-    expect(host.textContent).toContain("public-pandas");
+    expect(posted).toHaveLength(1);
+    expect(posted[0]).toMatchObject({ type: "run", runId: "run-code-1", bundle: preparedCode, code: "print('edited draft')" });
+    expect(host.textContent).toContain("PUBLIC PREVIEW");
+    expect(host.textContent).toContain("公开检查通过");
+  });
+
+  it("shows the unavailable Pyodide candidate without disabling formal submission", async () => {
+    const { host } = await renderRoute("/activity/session-w4/act-code", vi.fn().mockResolvedValue(ok(bootstrap(recovery({ stage: "activity" })))), { opened: openedCode });
+    expect(host.textContent).toContain("PYODIDE_CANDIDATE_UNAVAILABLE");
+    expect(button(host, "提交正式评测").disabled).toBe(false);
+  });
+
+  it("cancels a running public preview and destroys its dedicated Worker", async () => {
+    let terminated = false;
+    class HangingWorker {
+      postMessage() { /* public run intentionally remains pending */ }
+      addEventListener() { /* no message */ }
+      removeEventListener() { /* no-op */ }
+      terminate() { terminated = true; }
+    }
+    vi.stubGlobal("Worker", HangingWorker);
+    const fetchMock = vi.fn().mockResolvedValueOnce(ok(bootstrap(recovery({ stage: "activity" })))).mockResolvedValueOnce(ok(savedCode)).mockResolvedValueOnce(ok(preparedCode));
+    const { host } = await renderRoute("/activity/session-w4/act-code", fetchMock, { opened: openedCode });
+    await click(button(host, "运行公开检查"));
+    expect(host.textContent).toContain("PREVIEW_RUNNING");
+    await click(button(host, "取消预览"));
+    expect(host.textContent).toContain("PREVIEW_CANCELLED");
+    expect(terminated).toBe(true);
+  });
+
+  it("restores sessionStorage text only after Bootstrap confirms the same Attempt and version", async () => {
+    const session = recovery({ stage: "activity" });
+    session.currentAttempt = { kind: "code", activityId: "act-code", attemptId: "attempt-code-1", status: "draft", draftVersion: 2 };
+    writeActivityDraft(sessionStorage, { sessionId: "session-w4", activityId: "act-code", attemptId: "attempt-code-1", profileRevision: 3, draftVersion: 2 }, "print('browser recovery')");
+    const recovered = { sessionId: "session-w4", sessionVersion: 4, profileRevision: 3, attempt: session.currentAttempt, draftVersion: 2, userText: "print('server recovery')", recoveryAction: "resume_draft" };
+    const codeNext = { ...nextStep, activity: openedCode.kind === "code" ? openedCode.activity : undefined };
+    const opened = { ...savedCode, userText: "print('server recovery')" };
+    const fetchMock = vi.fn().mockResolvedValueOnce(ok(bootstrap(session))).mockResolvedValueOnce(ok(codeNext)).mockResolvedValueOnce(ok(recovered)).mockResolvedValueOnce(ok(opened));
+    const { host } = await renderRoute("/activity/session-w4/act-code", fetchMock);
+    expect((host.querySelector("textarea") as HTMLTextAreaElement).value).toBe("print('browser recovery')");
+  });
+
+  it("clears the browser draft only after a committed formal code result", async () => {
+    writeActivityDraft(sessionStorage, { sessionId: "session-w4", activityId: "act-code", attemptId: "attempt-code-1", profileRevision: 3, draftVersion: 1 }, openedCode.kind === "code" ? openedCode.userText : "");
+    const fetchMock = vi.fn().mockResolvedValueOnce(ok(bootstrap(recovery({ stage: "activity" })))).mockResolvedValueOnce(ok(codeSubmission)).mockResolvedValueOnce(ok(bootstrap(recovery({ stage: "learning" }))));
+    const { host } = await renderRoute("/activity/session-w4/act-code", fetchMock, { opened: openedCode });
+    await click(button(host, "提交正式评测"));
+    expect(sessionStorage.length).toBe(0);
+    expect(useUiStore.getState().activityDrafts["attempt-code-1"]).toBeUndefined();
+  });
+
+  it("renders safe diagnostic knowledge state projection without converting null mastery to zero", async () => {
+    const state = {
+      evidenceVersion: 7,
+      capabilityProfileRevision: 4,
+      knowledgeStates: [{
+        knowledgePointId: "basic-python", profileRevision: 3, evidenceVersion: 7,
+        aggregationVersion: "knowledge-state-v1" as const, mastery: null, confidence: 0,
+        status: "unverified" as const, validEvidenceCount: 0, evidenceFormCount: 0,
+        evidenceIds: [], consideredEvidenceIds: [], asOf: "2026-08-20T00:00:00.000Z",
+        skipEligible: false, lastUpdatedAt: "2026-08-20T00:00:00.000Z",
+      }],
+    };
+    const { host } = await renderRoute("/path/session-w4", vi.fn().mockResolvedValue(ok(bootstrap(recovery({ stage: "path" })))), state);
+    expect(host.textContent).toContain("能力画像修订4");
+    expect(host.textContent).toContain("basic-pythonunverified · unverified");
+    expect(host.textContent).not.toContain("basic-python0.00");
   });
 
   it("does not run stale code after a draft save failure and keeps the local text", async () => {

@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 2,
+  "candidate": "W5-D2-E-R2",
+  "items": [
+    {
+      "id": "E-D2-R2-01",
+      "requirement": "命令证据包含实测测试文件与 passed/failed/skipped 统计，并与退出码及报告一致",
+      "evidence": ["scripts/w5-e-validation/d2-command-results.json", "scripts/w5-e-validation/verify-d2-r2-evidence.mjs"]
+    },
+    {
+      "id": "E-D2-R2-02-runtime",
+      "requirement": "预览成功和失败均不调用正式 submit、不上传或持久化预览结果；预览不可用不禁用正式提交",
+      "evidence": ["tests/web/w5-d2-e-runtime-evidence.test.tsx", "scripts/w5-e-validation/d2-runtime-test-results.json", "scripts/w5-e-validation/d2-security-scan.json"]
+    },
+    {
+      "id": "E-D2-R2-02-browser",
+      "requirement": "Edge/CDP 可复现截图、DOM 投影、PNG 哈希及 Worker 零网络请求",
+      "evidence": ["scripts/w5-e-validation/capture-d2-r2-browser.mjs", "scripts/w5-e-validation/d2-browser-capture.json", "scripts/w5-e-validation/d2-screenshot-index.json"]
+    },
+    {
+      "id": "E-D2-R2-03",
+      "requirement": "R2 ZIP、sidecar、文件名、文件数、大小、哈希及包内 Manifest 闭合",
+      "evidence": ["scripts/w5-e-validation/package-d2-r2.mjs", "scripts/w5-e-validation/verify-d2-r2-evidence.mjs", "scripts/w5-e-validation/d2-zip-files.txt"]
+    },
+    {
+      "id": "E-D2-R2-04",
+      "requirement": "正式 Git、AUDIT_ONLY 和 ZIP 范围分离，正式范围拒绝 D1 材料、PNG 和范围外文件",
+      "evidence": ["scripts/w5-e-validation/generate-d2-manifest.mjs", "scripts/w5-e-validation/d2-proposed-files.txt", "scripts/w5-e-validation/d2-audit-only-files.txt", "scripts/w5-e-validation/d2-sha256-manifest.json"]
+    },
+    {
+      "id": "D3-D4-boundary",
+      "requirement": "D3 双后端裁决、D4 跨端闭环和 LIVE_MODEL 不在本轮执行",
+      "status": "NOT_RUN",
+      "evidence": []
+    }
+  ]
+}

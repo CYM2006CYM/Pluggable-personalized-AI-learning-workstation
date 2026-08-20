@@ -1,0 +1,197 @@
+{
+  "schemaVersion": 2,
+  "candidate": "W5-D2-E-R2",
+  "kind": "FORMAL_GIT_PROPOSED_SCOPE",
+  "baseHead": "127a71cce4a8423327fb5ce75d31294252b92a0b",
+  "generatedAtUtc": "2026-08-20T14:31:28.479Z",
+  "selfExcluded": [
+    "pi-study-helper/scripts/w5-e-validation/d2-sha256-manifest.json"
+  ],
+  "files": [
+    {
+      "path": "pi-study-helper/scripts/w5-e-validation/capture-d2-r2-browser.mjs",
+      "bytes": 12647,
+      "sha256": "f14b5f5994602e80fa8963f63904b0dfa8e775d0c2cd20112b8273c8f9d79af4"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-e-validation/d2-audit-only-files.txt",
+      "bytes": 308,
+      "sha256": "0bf1a54f97631ae8ea54e46cf70d9da3bb72557bb244e55ee2c4df1b6103aa8e"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-e-validation/d2-browser-capture.json",
+      "bytes": 4496,
+      "sha256": "1f4118a326700feaa471478ef7cf9aee72f09e66ae841d9e1dc64ec73434681a"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-e-validation/d2-command-results.json",
+      "bytes": 80255,
+      "sha256": "abd0f6563f4c150ee7ebce4bbaa9fc227f77d0d37b0db938a265e75ce7a3706e"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-e-validation/d2-known-limitations.json",
+      "bytes": 937,
+      "sha256": "9669a4082a09fee7fdd3135f1d94f30821fb8b277bb49601c8b8f86d81031bf8"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-e-validation/d2-proposed-files.txt",
+      "bytes": 2198,
+      "sha256": "0033ac7e655b7430ebc813bbc3fecfb7e1883a711271853647687567fa86e2e0"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-e-validation/d2-runtime-test-results.json",
+      "bytes": 1536,
+      "sha256": "97d24b69285cc8fc5bb6340164db9b648fb253461839174ac8fc822d7af4d641"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-e-validation/d2-screenshot-index.json",
+      "bytes": 8614,
+      "sha256": "f60b04a09298747177d16f7082e19d7e5ad5e6d7e0be0e4ba60e39c99cf3dc68"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-e-validation/d2-security-scan.json",
+      "bytes": 8044,
+      "sha256": "e9c14506f04c2972c919fabb3efd2eb12364ba140831afab27fee34e0e3134d7"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-e-validation/d2-test-mapping.json",
+      "bytes": 1925,
+      "sha256": "1cdbcbadb6b6dcd4aeb712b46aebd4f8aa5fa1af535335b506ad30f88083f9ea"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-e-validation/d2-upstream-binding.json",
+      "bytes": 1309,
+      "sha256": "c5eceff2d396456866be91e3a5a88812ebed12632f51ac170d708c1698dbb2f1"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-e-validation/d2-zip-files.txt",
+      "bytes": 2524,
+      "sha256": "a8a4132c16906a78d7be0848ab22738712b62ee90c1389abf84afb928d99e6f0"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-e-validation/generate-d2-manifest.mjs",
+      "bytes": 4523,
+      "sha256": "e03ed64ad0ac789a5581462aa125fdae32a71d2f8c2d14f21779bc21eea566a4"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-e-validation/generate-d2-security-and-screenshots.mjs",
+      "bytes": 7565,
+      "sha256": "56273ec04eb7aed7d0c588c9bbca67ea5e1bd8ad2e8481f9278887a144b80a35"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-e-validation/package-d2-r2.mjs",
+      "bytes": 6883,
+      "sha256": "93a213a27ee80cbb6ad90f8d263940fabca8d99d6b7dbc890c42ed5b2dfc74be"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-e-validation/run-d2-runtime-tests.mjs",
+      "bytes": 3015,
+      "sha256": "eab6994ae9bfd66d2b85fc174abe593a12333237e47f3699f5b5b733429d0597"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-e-validation/run-d2-validation.mjs",
+      "bytes": 11068,
+      "sha256": "fc71ca9ac3dc270143cd5277389c61be1a8e0fa9c59a5c1d4147eb69f326178e"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-e-validation/verify-d2-r2-evidence.mjs",
+      "bytes": 9317,
+      "sha256": "a9648cc63a96622064db67fb368834a95c2efd95645596a693919b70a5485fc4"
+    },
+    {
+      "path": "pi-study-helper/src/web/app/routes.tsx",
+      "bytes": 1203,
+      "sha256": "588c1d75627b29a08d9c0f1b8f506d0237a5a57a5dd2acb48bba978c46d1990d"
+    },
+    {
+      "path": "pi-study-helper/src/web/pages/ActivityPage.tsx",
+      "bytes": 25731,
+      "sha256": "f190dfaecf6aea4e9c11ce30b5a538ca6a322ca0e4561cffe9568f910cf39d88"
+    },
+    {
+      "path": "pi-study-helper/src/web/pages/DiagnosticPage.tsx",
+      "bytes": 8080,
+      "sha256": "7a8651c8b4023253bde143edee9f5c7bcb8174cdf01cd615ad0c97235b349237"
+    },
+    {
+      "path": "pi-study-helper/src/web/pages/PathPage.tsx",
+      "bytes": 9137,
+      "sha256": "b71b878a67ce8c6ad9d920b104c498e1b05933f174187725bb295ad7c52f8be3"
+    },
+    {
+      "path": "pi-study-helper/src/web/pages/StartPage.tsx",
+      "bytes": 8957,
+      "sha256": "5db91968e28b1dcbd55c0c87e56843d65e94cde5003a9cec98c7241ac47c27e4"
+    },
+    {
+      "path": "pi-study-helper/src/web/pages/StudyDeepLinkPage.tsx",
+      "bytes": 5156,
+      "sha256": "34e2f52f3a7c26143986dc359eb781061d396cf11e8bcc8fddb316ce4d2df152"
+    },
+    {
+      "path": "pi-study-helper/src/web/preview/browser-code-runner.ts",
+      "bytes": 6316,
+      "sha256": "48dea33fd6c6a425cebda656ec781d8263ce35656681a7563814cef2e42b24b9"
+    },
+    {
+      "path": "pi-study-helper/src/web/preview/create-browser-code-runner.ts",
+      "bytes": 518,
+      "sha256": "575957960dd8cc1e52a1b68092bf2ffa2b94cdc42d5285301c40e5401f34e7bc"
+    },
+    {
+      "path": "pi-study-helper/src/web/preview/pyodide-preview.worker.ts",
+      "bytes": 1097,
+      "sha256": "f2ec8bcebc5fb3fa5c07a47a34c5d19836443a89b51ff0b357fc18e7c96cbfb5"
+    },
+    {
+      "path": "pi-study-helper/src/web/state/activity-draft-storage.ts",
+      "bytes": 2723,
+      "sha256": "45d5da57ee64bb3212952e462fd1f08c3041ef9aa40c0301222bc8bc545d88e3"
+    },
+    {
+      "path": "pi-study-helper/tests/web/activity-draft-storage.test.ts",
+      "bytes": 2650,
+      "sha256": "cecfe9a46049ad913e4f0d4d63b92211db740625b3f736027db3f6ae021f2a08"
+    },
+    {
+      "path": "pi-study-helper/tests/web/boundary-contract.test.mjs",
+      "bytes": 2411,
+      "sha256": "373b7a498945640d8ae47027ed014547c15fb6738a5f6604c4d2a30994effc30"
+    },
+    {
+      "path": "pi-study-helper/tests/web/browser-code-runner.test.ts",
+      "bytes": 7531,
+      "sha256": "2e45af39b5cb17e165b0901e9901f8ab84b1c76cb29a2753e956682fbc5f3c17"
+    },
+    {
+      "path": "pi-study-helper/tests/web/fixtures/w4-api.ts",
+      "bytes": 6996,
+      "sha256": "31e6e6752172ce67e64e29a726657a980a3ba4f00a1e0ecdb0eeb30ad4b37355"
+    },
+    {
+      "path": "pi-study-helper/tests/web/pages.test.tsx",
+      "bytes": 31888,
+      "sha256": "3fc3e4a5940b1e8cf80633aab0884ef00d844732240097ca531251a7b4e0a0d8"
+    },
+    {
+      "path": "pi-study-helper/tests/web/routes.test.tsx",
+      "bytes": 1488,
+      "sha256": "408924b02ebf6e56379990dbe175bd83f6dec308821f86255b71ffc425710f37"
+    },
+    {
+      "path": "pi-study-helper/tests/web/study-deep-link.test.tsx",
+      "bytes": 5199,
+      "sha256": "7cb4f0fb2c86d3fc152cb482ecaf6966666b8349e290173e649923f31149f7d0"
+    },
+    {
+      "path": "pi-study-helper/tests/web/w5-d2-e-runtime-evidence.test.tsx",
+      "bytes": 6312,
+      "sha256": "ba32987b8051849dd5cc019c9541c85ada8e2423efeba0b49dff428be5ca35e4"
+    },
+    {
+      "path": "新版设计文档-重写版/第五周任务/handoff-w5-e-d2.md",
+      "bytes": 2726,
+      "sha256": "0310e3c758cc917c42049bd3d209f2f08be5e579495eebab87c1684ba9870ca2"
+    }
+  ]
+}

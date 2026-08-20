@@ -5,6 +5,7 @@ import { DiagnosticPage } from "../pages/DiagnosticPage.js";
 import { LearnPage } from "../pages/LearnPage.js";
 import { PathPage } from "../pages/PathPage.js";
 import { StartPage } from "../pages/StartPage.js";
+import { StudyDeepLinkPage } from "../pages/StudyDeepLinkPage.js";
 import { SummaryPage } from "../pages/SummaryPage.js";
 
 export const appRoutes: RouteObject[] = [
@@ -12,6 +13,7 @@ export const appRoutes: RouteObject[] = [
     element: <AppShell />,
     children: [
       { index: true, element: <StartPage /> },
+      { path: "study", element: <StudyDeepLinkPage /> },
       { path: "diagnostic/:sessionId", element: <DiagnosticPage /> },
       { path: "path/:sessionId", element: <PathPage /> },
       { path: "learn/:sessionId/:nodeId", element: <LearnPage /> },

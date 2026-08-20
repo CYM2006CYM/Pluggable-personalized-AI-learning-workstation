@@ -1,0 +1,2436 @@
+{
+  "schemaVersion": 2,
+  "candidate": "W5-D2-E-R2",
+  "baseHead": "127a71cce4a8423327fb5ce75d31294252b92a0b",
+  "state": "NOT_COMMITTED / NOT_PUSHED / uploadLock=NOT_GRANTED",
+  "generatedAtUtc": "2026-08-20T14:23:41.012Z",
+  "environment": {
+    "node": "v22.23.1",
+    "npm": "10.9.8",
+    "pythonExecutable": "<CONTRACT_PYTHON_EXECUTABLE>",
+    "python": "Python 3.13.7",
+    "pandas": "3.0.5",
+    "pythonNoUserSite": "1"
+  },
+  "rawLogs": "AUDIT_ONLY_TEMPORARY_NOT_IN_ZIP_OR_GIT",
+  "outputNormalization": "ANSI removed; repository path replaced by <REPOSITORY_ROOT>; separators normalized before byte count and SHA-256.",
+  "commands": [
+    {
+      "id": "typecheck",
+      "command": "npm.cmd run typecheck",
+      "cwd": "pi-study-helper",
+      "startedAtUtc": "2026-08-20T14:13:43.275Z",
+      "endedAtUtc": "2026-08-20T14:14:10.449Z",
+      "exitCode": 0,
+      "status": "PASS",
+      "stdout": {
+        "bytes": 108,
+        "sha256": "657f3a771c3ac9b683e5e8bd2354be0cd82fe12a113b8e0fe5cd25311254bd68"
+      },
+      "stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "statistics": {
+        "applicability": "NOT_APPLICABLE",
+        "testFiles": "NOT_APPLICABLE",
+        "tests": "NOT_APPLICABLE"
+      },
+      "resultEvidence": "NOT_APPLICABLE",
+      "evidenceConsistent": true,
+      "logSafetyFindings": []
+    },
+    {
+      "id": "test-web",
+      "command": "npm.cmd run test:web -- --maxWorkers=1",
+      "cwd": "pi-study-helper",
+      "startedAtUtc": "2026-08-20T14:14:10.456Z",
+      "endedAtUtc": "2026-08-20T14:14:36.910Z",
+      "exitCode": 0,
+      "status": "PASS",
+      "stdout": {
+        "bytes": 301,
+        "sha256": "65648ee1cb8944370a84bed4511fda52f0422d2c3a5cb10919a24e296c963cc8"
+      },
+      "stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "statistics": {
+        "applicability": "APPLICABLE",
+        "testFiles": {
+          "passed": 15,
+          "failed": 0,
+          "skipped": 0,
+          "total": 15
+        },
+        "tests": {
+          "passed": 100,
+          "failed": 0,
+          "skipped": 0,
+          "total": 100
+        }
+      },
+      "resultEvidence": "NOT_APPLICABLE",
+      "evidenceConsistent": true,
+      "logSafetyFindings": []
+    },
+    {
+      "id": "affected-regression",
+      "command": "npm.cmd test -- --run tests/w5-c-d1-public-run.test.ts tests/shared-session.test.ts tests/shared-web-extension-entry.test.ts --maxWorkers=1",
+      "cwd": "pi-study-helper",
+      "startedAtUtc": "2026-08-20T14:14:36.916Z",
+      "endedAtUtc": "2026-08-20T14:15:00.776Z",
+      "exitCode": 0,
+      "status": "PASS",
+      "stdout": {
+        "bytes": 390,
+        "sha256": "77b4c70bbf5a828aed9a5c2046739833917aca2afa0c62b870ddbf49f9999ecb"
+      },
+      "stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "statistics": {
+        "applicability": "APPLICABLE",
+        "testFiles": {
+          "passed": 3,
+          "failed": 0,
+          "skipped": 0,
+          "total": 3
+        },
+        "tests": {
+          "passed": 20,
+          "failed": 0,
+          "skipped": 0,
+          "total": 20
+        }
+      },
+      "resultEvidence": "NOT_APPLICABLE",
+      "evidenceConsistent": true,
+      "logSafetyFindings": []
+    },
+    {
+      "id": "full-test",
+      "command": "npm.cmd test -- --maxWorkers=1",
+      "cwd": "pi-study-helper",
+      "startedAtUtc": "2026-08-20T14:15:00.778Z",
+      "endedAtUtc": "2026-08-20T14:18:50.014Z",
+      "exitCode": 0,
+      "status": "PASS",
+      "stdout": {
+        "bytes": 302,
+        "sha256": "b8aa133789c2b88d50f1bd6df75cc7ea357aa8430e6856fa77f5e81cf730c7b8"
+      },
+      "stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "statistics": {
+        "applicability": "APPLICABLE",
+        "testFiles": {
+          "passed": 94,
+          "failed": 0,
+          "skipped": 0,
+          "total": 94
+        },
+        "tests": {
+          "passed": 812,
+          "failed": 0,
+          "skipped": 1,
+          "total": 813
+        }
+      },
+      "resultEvidence": "NOT_APPLICABLE",
+      "evidenceConsistent": true,
+      "logSafetyFindings": []
+    },
+    {
+      "id": "check-docs",
+      "command": "npm.cmd run check:docs",
+      "cwd": "pi-study-helper",
+      "startedAtUtc": "2026-08-20T14:18:50.017Z",
+      "endedAtUtc": "2026-08-20T14:18:50.950Z",
+      "exitCode": 0,
+      "status": "PASS",
+      "stdout": {
+        "bytes": 141,
+        "sha256": "d273ce2e353d3a12b491d2617fcd89c0965e966765ede1971232d1896244c498"
+      },
+      "stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "statistics": {
+        "applicability": "NOT_APPLICABLE",
+        "testFiles": "NOT_APPLICABLE",
+        "tests": "NOT_APPLICABLE"
+      },
+      "resultEvidence": "NOT_APPLICABLE",
+      "evidenceConsistent": true,
+      "logSafetyFindings": []
+    },
+    {
+      "id": "build-web",
+      "command": "npm.cmd run build:web",
+      "cwd": "pi-study-helper",
+      "startedAtUtc": "2026-08-20T14:18:50.953Z",
+      "endedAtUtc": "2026-08-20T14:18:53.059Z",
+      "exitCode": 0,
+      "status": "PASS",
+      "stdout": {
+        "bytes": 523,
+        "sha256": "65d63dcba7e30281a16a4cc88fd2e93ec9b481370b944e00c81f602f5ffb186f"
+      },
+      "stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "statistics": {
+        "applicability": "NOT_APPLICABLE",
+        "testFiles": "NOT_APPLICABLE",
+        "tests": "NOT_APPLICABLE"
+      },
+      "resultEvidence": "NOT_APPLICABLE",
+      "evidenceConsistent": true,
+      "logSafetyFindings": []
+    },
+    {
+      "id": "build-demo",
+      "command": "npm.cmd run build:demo",
+      "cwd": "pi-study-helper",
+      "startedAtUtc": "2026-08-20T14:18:53.062Z",
+      "endedAtUtc": "2026-08-20T14:18:59.980Z",
+      "exitCode": 0,
+      "status": "PASS",
+      "stdout": {
+        "bytes": 65,
+        "sha256": "75625f75f1623ad0de0a349b2d354f9f3bcdc80e58c8acd327316f6f47a23ca5"
+      },
+      "stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "statistics": {
+        "applicability": "NOT_APPLICABLE",
+        "testFiles": "NOT_APPLICABLE",
+        "tests": "NOT_APPLICABLE"
+      },
+      "resultEvidence": "NOT_APPLICABLE",
+      "evidenceConsistent": true,
+      "logSafetyFindings": []
+    },
+    {
+      "id": "smoke-extension",
+      "command": "npm.cmd run smoke:extension",
+      "cwd": "pi-study-helper",
+      "startedAtUtc": "2026-08-20T14:18:59.983Z",
+      "endedAtUtc": "2026-08-20T14:19:05.353Z",
+      "exitCode": 0,
+      "status": "PASS",
+      "stdout": {
+        "bytes": 137,
+        "sha256": "65fd9a6cc0ade27c0f311d0281a9f702b89b28824e1ea5e7244b7849339a4b78"
+      },
+      "stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "statistics": {
+        "applicability": "NOT_APPLICABLE",
+        "testFiles": "NOT_APPLICABLE",
+        "tests": "NOT_APPLICABLE"
+      },
+      "resultEvidence": "NOT_APPLICABLE",
+      "evidenceConsistent": true,
+      "logSafetyFindings": []
+    },
+    {
+      "id": "check-release",
+      "command": "npm.cmd run check:release",
+      "cwd": "pi-study-helper",
+      "startedAtUtc": "2026-08-20T14:19:05.356Z",
+      "endedAtUtc": "2026-08-20T14:19:06.964Z",
+      "exitCode": 0,
+      "status": "PASS",
+      "stdout": {
+        "bytes": 148,
+        "sha256": "6440028d4e235dc7bad403f04d81d8313ec523f2e447e9693841be8076690008"
+      },
+      "stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "statistics": {
+        "applicability": "NOT_APPLICABLE",
+        "testFiles": "NOT_APPLICABLE",
+        "tests": "NOT_APPLICABLE"
+      },
+      "resultEvidence": "NOT_APPLICABLE",
+      "evidenceConsistent": true,
+      "logSafetyFindings": []
+    },
+    {
+      "id": "verify",
+      "command": "npm.cmd run verify",
+      "cwd": "pi-study-helper",
+      "startedAtUtc": "2026-08-20T14:19:07.029Z",
+      "endedAtUtc": "2026-08-20T14:23:24.277Z",
+      "exitCode": 0,
+      "status": "PASS",
+      "stdout": {
+        "bytes": 993,
+        "sha256": "971d0f917fac8e63c2617f2502e865e67a0c5253daaaba218f556636c82f6d00"
+      },
+      "stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "statistics": {
+        "applicability": "APPLICABLE",
+        "testFiles": {
+          "passed": 94,
+          "failed": 0,
+          "skipped": 0,
+          "total": 94
+        },
+        "tests": {
+          "passed": 812,
+          "failed": 0,
+          "skipped": 1,
+          "total": 813
+        }
+      },
+      "resultEvidence": "NOT_APPLICABLE",
+      "evidenceConsistent": true,
+      "logSafetyFindings": []
+    },
+    {
+      "id": "git-diff-check",
+      "command": "git diff --check",
+      "cwd": ".",
+      "startedAtUtc": "2026-08-20T14:23:24.280Z",
+      "endedAtUtc": "2026-08-20T14:23:24.659Z",
+      "exitCode": 0,
+      "status": "PASS",
+      "stdout": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "statistics": {
+        "applicability": "NOT_APPLICABLE",
+        "testFiles": "NOT_APPLICABLE",
+        "tests": "NOT_APPLICABLE"
+      },
+      "resultEvidence": "NOT_APPLICABLE",
+      "evidenceConsistent": true,
+      "logSafetyFindings": []
+    },
+    {
+      "id": "runtime-evidence-tests",
+      "command": "node scripts/w5-e-validation/run-d2-runtime-tests.mjs",
+      "cwd": "pi-study-helper",
+      "startedAtUtc": "2026-08-20T14:23:24.662Z",
+      "endedAtUtc": "2026-08-20T14:23:30.063Z",
+      "exitCode": 0,
+      "status": "PASS",
+      "stdout": {
+        "bytes": 297,
+        "sha256": "0f66c9096ad31aee8ce521b872a1a7b3127d703aaeb88a38b6c70ebb0f343d4d"
+      },
+      "stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "statistics": {
+        "applicability": "APPLICABLE",
+        "testFiles": {
+          "passed": 1,
+          "failed": 0,
+          "skipped": 0,
+          "total": 1
+        },
+        "tests": {
+          "passed": 3,
+          "failed": 0,
+          "skipped": 0,
+          "total": 3
+        }
+      },
+      "resultEvidence": {
+        "path": "scripts/w5-e-validation/d2-runtime-test-results.json",
+        "sha256": "97d24b69285cc8fc5bb6340164db9b648fb253461839174ac8fc822d7af4d641",
+        "status": "PASS"
+      },
+      "evidenceConsistent": true,
+      "logSafetyFindings": []
+    },
+    {
+      "id": "browser-capture",
+      "command": "node scripts/w5-e-validation/capture-d2-r2-browser.mjs",
+      "cwd": "pi-study-helper",
+      "startedAtUtc": "2026-08-20T14:23:30.081Z",
+      "endedAtUtc": "2026-08-20T14:23:40.971Z",
+      "exitCode": 0,
+      "status": "PASS",
+      "stdout": {
+        "bytes": 244,
+        "sha256": "83783b4d90f9440df911ff95250f2a4a88965e51a94a4509d324514fb6c7ab76"
+      },
+      "stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "statistics": {
+        "applicability": "NOT_APPLICABLE",
+        "testFiles": "NOT_APPLICABLE",
+        "tests": "NOT_APPLICABLE"
+      },
+      "resultEvidence": {
+        "path": "scripts/w5-e-validation/d2-browser-capture.json",
+        "sha256": "1f4118a326700feaa471478ef7cf9aee72f09e66ae841d9e1dc64ec73434681a",
+        "status": "PASS"
+      },
+      "evidenceConsistent": true,
+      "logSafetyFindings": []
+    }
+  ],
+  "history": [
+    {
+      "event": "first D2 typecheck",
+      "result": "DedicatedWorkerGlobalScope was absent from the configured Web lib",
+      "status": "FIXED_LOCAL_WORKER_TYPE",
+      "resolution": "The Worker uses a narrow local message/postMessage scope; final typecheck passes."
+    },
+    {
+      "event": "first D2 Web regression",
+      "result": "2 expected assertion failures after Profile selection and real Worker preview replaced D1 display-only behavior",
+      "status": "FIXED_EXPECTATION_UPGRADE",
+      "resolution": "Assertions now verify six selects and the exact public bundle delivered to the Worker; final Web suite passes."
+    },
+    {
+      "event": "first new deep-link test typecheck",
+      "result": "quiz Attempt fixture omitted retryNumber",
+      "status": "FIXED_TYPED_TEST_FIXTURE",
+      "resolution": "The fixture now conforms to CurrentAttemptSafeReference; final typecheck passes."
+    }
+  ],
+  "priorRuns": [
+    {
+      "generatedAtUtc": "2026-08-20T04:10:19.057Z",
+      "overallStatus": "FAIL",
+      "environment": {
+        "pythonExecutable": "UNSET"
+      },
+      "commands": [
+        {
+          "id": "typecheck",
+          "command": "npm.cmd run typecheck",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T04:04:06.020Z",
+          "endedAtUtc": "2026-08-20T04:04:37.317Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 108,
+            "sha256": "657f3a771c3ac9b683e5e8bd2354be0cd82fe12a113b8e0fe5cd25311254bd68"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "logSafetyFindings": [],
+          "statistics": {
+            "applicability": "NOT_APPLICABLE",
+            "testFiles": "NOT_APPLICABLE",
+            "tests": "NOT_APPLICABLE"
+          }
+        },
+        {
+          "id": "test-web",
+          "command": "npm.cmd run test:web -- --maxWorkers=1",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T04:04:37.320Z",
+          "endedAtUtc": "2026-08-20T04:04:57.998Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 299,
+            "sha256": "54dbed05ce6f86e2ac6e2313199bd15985d66b665d5009b771f3a0babdeccfba"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "logSafetyFindings": [],
+          "statistics": {
+            "applicability": "APPLICABLE",
+            "testFiles": {
+              "passed": 14,
+              "failed": 0,
+              "skipped": 0,
+              "total": 14
+            },
+            "tests": {
+              "passed": 97,
+              "failed": 0,
+              "skipped": 0,
+              "total": 97
+            }
+          }
+        },
+        {
+          "id": "affected-regression",
+          "command": "npm.cmd test -- --run tests/w5-c-d1-public-run.test.ts tests/shared-session.test.ts tests/shared-web-extension-entry.test.ts --maxWorkers=1",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T04:04:58.000Z",
+          "endedAtUtc": "2026-08-20T04:05:21.294Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 390,
+            "sha256": "2bb359fe447b509a92b4dfa8d08c4cc725f2a4348380ebaa4748e67e108eb7aa"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "logSafetyFindings": [],
+          "statistics": {
+            "applicability": "APPLICABLE",
+            "testFiles": {
+              "passed": 3,
+              "failed": 0,
+              "skipped": 0,
+              "total": 3
+            },
+            "tests": {
+              "passed": 20,
+              "failed": 0,
+              "skipped": 0,
+              "total": 20
+            }
+          }
+        },
+        {
+          "id": "full-test",
+          "command": "npm.cmd test -- --maxWorkers=1",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T04:05:21.296Z",
+          "endedAtUtc": "2026-08-20T04:07:31.051Z",
+          "exitCode": 1,
+          "status": "FAIL",
+          "stdout": {
+            "bytes": 2549,
+            "sha256": "c9e1906f8079866c19a3dabbdac6755ef2fe2ff687dd5223620071fbc22bdda6"
+          },
+          "stderr": {
+            "bytes": 17521,
+            "sha256": "2fe5bd1d7bae5fd96bcd27f9bf5780f9936f61269cef2785ed05dbacc8626c8a"
+          },
+          "logSafetyFindings": [],
+          "statistics": {
+            "applicability": "APPLICABLE",
+            "testFiles": {
+              "passed": 90,
+              "failed": 3,
+              "skipped": 0,
+              "total": 93
+            },
+            "tests": {
+              "passed": 783,
+              "failed": 26,
+              "skipped": 1,
+              "total": 810
+            }
+          }
+        },
+        {
+          "id": "check-docs",
+          "command": "npm.cmd run check:docs",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T04:07:31.054Z",
+          "endedAtUtc": "2026-08-20T04:07:31.635Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 141,
+            "sha256": "a90b18c9bab4410b65c2420fd4c80fda35428d8e558ff6e71830150df541a439"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "logSafetyFindings": [],
+          "statistics": {
+            "applicability": "NOT_APPLICABLE",
+            "testFiles": "NOT_APPLICABLE",
+            "tests": "NOT_APPLICABLE"
+          }
+        },
+        {
+          "id": "build-web",
+          "command": "npm.cmd run build:web",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T04:07:31.637Z",
+          "endedAtUtc": "2026-08-20T04:07:33.463Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 523,
+            "sha256": "88cc26f64a71b8e78ab6f74abec480f22374a649657efae1cb57ed619970e1f3"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "logSafetyFindings": [],
+          "statistics": {
+            "applicability": "NOT_APPLICABLE",
+            "testFiles": "NOT_APPLICABLE",
+            "tests": "NOT_APPLICABLE"
+          }
+        },
+        {
+          "id": "build-demo",
+          "command": "npm.cmd run build:demo",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T04:07:33.465Z",
+          "endedAtUtc": "2026-08-20T04:07:41.591Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 65,
+            "sha256": "75625f75f1623ad0de0a349b2d354f9f3bcdc80e58c8acd327316f6f47a23ca5"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "logSafetyFindings": [],
+          "statistics": {
+            "applicability": "NOT_APPLICABLE",
+            "testFiles": "NOT_APPLICABLE",
+            "tests": "NOT_APPLICABLE"
+          }
+        },
+        {
+          "id": "smoke-extension",
+          "command": "npm.cmd run smoke:extension",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T04:07:41.592Z",
+          "endedAtUtc": "2026-08-20T04:07:46.895Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 137,
+            "sha256": "65fd9a6cc0ade27c0f311d0281a9f702b89b28824e1ea5e7244b7849339a4b78"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "logSafetyFindings": [],
+          "statistics": {
+            "applicability": "NOT_APPLICABLE",
+            "testFiles": "NOT_APPLICABLE",
+            "tests": "NOT_APPLICABLE"
+          }
+        },
+        {
+          "id": "check-release",
+          "command": "npm.cmd run check:release",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T04:07:46.896Z",
+          "endedAtUtc": "2026-08-20T04:07:47.652Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 148,
+            "sha256": "6440028d4e235dc7bad403f04d81d8313ec523f2e447e9693841be8076690008"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "logSafetyFindings": [],
+          "statistics": {
+            "applicability": "NOT_APPLICABLE",
+            "testFiles": "NOT_APPLICABLE",
+            "tests": "NOT_APPLICABLE"
+          }
+        },
+        {
+          "id": "verify",
+          "command": "npm.cmd run verify",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T04:07:47.654Z",
+          "endedAtUtc": "2026-08-20T04:10:18.968Z",
+          "exitCode": 1,
+          "status": "FAIL",
+          "stdout": {
+            "bytes": 2813,
+            "sha256": "0dcf21dea5990c0dbca69443706e4f32abd70f0c091c34011315596f48386f6a"
+          },
+          "stderr": {
+            "bytes": 17521,
+            "sha256": "e5816f054f96eba2941e6ada2591b78874e27d966a9943f344b385676476d7bb"
+          },
+          "logSafetyFindings": [],
+          "statistics": {
+            "applicability": "APPLICABLE",
+            "testFiles": {
+              "passed": 90,
+              "failed": 3,
+              "skipped": 0,
+              "total": 93
+            },
+            "tests": {
+              "passed": 783,
+              "failed": 26,
+              "skipped": 1,
+              "total": 810
+            }
+          }
+        },
+        {
+          "id": "git-diff-check",
+          "command": "git diff --check",
+          "cwd": ".",
+          "startedAtUtc": "2026-08-20T04:10:18.970Z",
+          "endedAtUtc": "2026-08-20T04:10:19.055Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "stderr": {
+            "bytes": 352,
+            "sha256": "7a7c1c46cc3c6bc1757053b576a2db49aefd79415616bafbdc25c39ca3617d99"
+          },
+          "logSafetyFindings": [],
+          "statistics": {
+            "applicability": "NOT_APPLICABLE",
+            "testFiles": "NOT_APPLICABLE",
+            "tests": "NOT_APPLICABLE"
+          }
+        }
+      ]
+    },
+    {
+      "generatedAtUtc": "2026-08-20T04:20:04.260Z",
+      "overallStatus": "FAIL",
+      "environment": {
+        "nodeVersion": "v24.18.0",
+        "pythonExecutable": "<CONTRACT_PYTHON_EXECUTABLE>",
+        "pythonNoUserSite": "1"
+      },
+      "commands": [
+        {
+          "id": "typecheck",
+          "command": "npm.cmd run typecheck",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T04:13:53.082Z",
+          "endedAtUtc": "2026-08-20T04:14:20.167Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 108,
+            "sha256": "657f3a771c3ac9b683e5e8bd2354be0cd82fe12a113b8e0fe5cd25311254bd68"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "logSafetyFindings": [],
+          "statistics": {
+            "applicability": "NOT_APPLICABLE",
+            "testFiles": "NOT_APPLICABLE",
+            "tests": "NOT_APPLICABLE"
+          }
+        },
+        {
+          "id": "test-web",
+          "command": "npm.cmd run test:web -- --maxWorkers=1",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T04:14:20.170Z",
+          "endedAtUtc": "2026-08-20T04:14:40.078Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 299,
+            "sha256": "62ef49e1a918f7e7a455ecfbd3f0d0c5e9c3a269199d14ae0b94ca8bfeed9ee2"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "logSafetyFindings": [],
+          "statistics": {
+            "applicability": "APPLICABLE",
+            "testFiles": {
+              "passed": 14,
+              "failed": 0,
+              "skipped": 0,
+              "total": 14
+            },
+            "tests": {
+              "passed": 97,
+              "failed": 0,
+              "skipped": 0,
+              "total": 97
+            }
+          }
+        },
+        {
+          "id": "affected-regression",
+          "command": "npm.cmd test -- --run tests/w5-c-d1-public-run.test.ts tests/shared-session.test.ts tests/shared-web-extension-entry.test.ts --maxWorkers=1",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T04:14:40.080Z",
+          "endedAtUtc": "2026-08-20T04:15:00.591Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 390,
+            "sha256": "3bb076564d5143222d0118a8382628396e933597d6cb4fcfd47956156a3245a4"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "logSafetyFindings": [],
+          "statistics": {
+            "applicability": "APPLICABLE",
+            "testFiles": {
+              "passed": 3,
+              "failed": 0,
+              "skipped": 0,
+              "total": 3
+            },
+            "tests": {
+              "passed": 20,
+              "failed": 0,
+              "skipped": 0,
+              "total": 20
+            }
+          }
+        },
+        {
+          "id": "full-test",
+          "command": "npm.cmd test -- --maxWorkers=1",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T04:15:00.592Z",
+          "endedAtUtc": "2026-08-20T04:17:09.131Z",
+          "exitCode": 1,
+          "status": "FAIL",
+          "stdout": {
+            "bytes": 1995,
+            "sha256": "8ba9d85a4a896fcfeb54f4cd3e7a8b40e3d435c734a41fff6ab8720146cf9000"
+          },
+          "stderr": {
+            "bytes": 14028,
+            "sha256": "cfaaf189b436cadc2c970a38689d88ef17f66d87956cf310ba43298edfaebf09"
+          },
+          "logSafetyFindings": [],
+          "statistics": {
+            "applicability": "APPLICABLE",
+            "testFiles": {
+              "passed": 91,
+              "failed": 2,
+              "skipped": 0,
+              "total": 93
+            },
+            "tests": {
+              "passed": 789,
+              "failed": 20,
+              "skipped": 1,
+              "total": 810
+            }
+          }
+        },
+        {
+          "id": "check-docs",
+          "command": "npm.cmd run check:docs",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T04:17:09.134Z",
+          "endedAtUtc": "2026-08-20T04:17:09.703Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 141,
+            "sha256": "a90b18c9bab4410b65c2420fd4c80fda35428d8e558ff6e71830150df541a439"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "logSafetyFindings": [],
+          "statistics": {
+            "applicability": "NOT_APPLICABLE",
+            "testFiles": "NOT_APPLICABLE",
+            "tests": "NOT_APPLICABLE"
+          }
+        },
+        {
+          "id": "build-web",
+          "command": "npm.cmd run build:web",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T04:17:09.705Z",
+          "endedAtUtc": "2026-08-20T04:17:11.529Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 523,
+            "sha256": "a8df2886351b7a84d6a265c97f0a1018652b32a8d498445b3f1a7d0de293e67d"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "logSafetyFindings": [],
+          "statistics": {
+            "applicability": "NOT_APPLICABLE",
+            "testFiles": "NOT_APPLICABLE",
+            "tests": "NOT_APPLICABLE"
+          }
+        },
+        {
+          "id": "build-demo",
+          "command": "npm.cmd run build:demo",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T04:17:11.530Z",
+          "endedAtUtc": "2026-08-20T04:17:19.698Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 65,
+            "sha256": "75625f75f1623ad0de0a349b2d354f9f3bcdc80e58c8acd327316f6f47a23ca5"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "logSafetyFindings": [],
+          "statistics": {
+            "applicability": "NOT_APPLICABLE",
+            "testFiles": "NOT_APPLICABLE",
+            "tests": "NOT_APPLICABLE"
+          }
+        },
+        {
+          "id": "smoke-extension",
+          "command": "npm.cmd run smoke:extension",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T04:17:19.700Z",
+          "endedAtUtc": "2026-08-20T04:17:24.399Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 137,
+            "sha256": "65fd9a6cc0ade27c0f311d0281a9f702b89b28824e1ea5e7244b7849339a4b78"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "logSafetyFindings": [],
+          "statistics": {
+            "applicability": "NOT_APPLICABLE",
+            "testFiles": "NOT_APPLICABLE",
+            "tests": "NOT_APPLICABLE"
+          }
+        },
+        {
+          "id": "check-release",
+          "command": "npm.cmd run check:release",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T04:17:24.401Z",
+          "endedAtUtc": "2026-08-20T04:17:25.178Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 148,
+            "sha256": "6440028d4e235dc7bad403f04d81d8313ec523f2e447e9693841be8076690008"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "logSafetyFindings": [],
+          "statistics": {
+            "applicability": "NOT_APPLICABLE",
+            "testFiles": "NOT_APPLICABLE",
+            "tests": "NOT_APPLICABLE"
+          }
+        },
+        {
+          "id": "verify",
+          "command": "npm.cmd run verify",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T04:17:25.180Z",
+          "endedAtUtc": "2026-08-20T04:20:04.181Z",
+          "exitCode": 1,
+          "status": "FAIL",
+          "stdout": {
+            "bytes": 2260,
+            "sha256": "013d74f447b0cf597dd67ae5b4fe849d82832063eeec1f448d28408e36626422"
+          },
+          "stderr": {
+            "bytes": 14028,
+            "sha256": "cfaaf189b436cadc2c970a38689d88ef17f66d87956cf310ba43298edfaebf09"
+          },
+          "logSafetyFindings": [],
+          "statistics": {
+            "applicability": "APPLICABLE",
+            "testFiles": {
+              "passed": 91,
+              "failed": 2,
+              "skipped": 0,
+              "total": 93
+            },
+            "tests": {
+              "passed": 789,
+              "failed": 20,
+              "skipped": 1,
+              "total": 810
+            }
+          }
+        },
+        {
+          "id": "git-diff-check",
+          "command": "git diff --check",
+          "cwd": ".",
+          "startedAtUtc": "2026-08-20T04:20:04.183Z",
+          "endedAtUtc": "2026-08-20T04:20:04.258Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "stderr": {
+            "bytes": 352,
+            "sha256": "7a7c1c46cc3c6bc1757053b576a2db49aefd79415616bafbdc25c39ca3617d99"
+          },
+          "logSafetyFindings": [],
+          "statistics": {
+            "applicability": "NOT_APPLICABLE",
+            "testFiles": "NOT_APPLICABLE",
+            "tests": "NOT_APPLICABLE"
+          }
+        }
+      ]
+    },
+    {
+      "generatedAtUtc": "2026-08-20T04:29:54.324Z",
+      "overallStatus": "PASS",
+      "environment": {
+        "nodeVersion": "v22.23.1",
+        "pythonExecutable": "<CONTRACT_PYTHON_EXECUTABLE>",
+        "pythonNoUserSite": "1"
+      },
+      "commands": [
+        {
+          "id": "typecheck",
+          "command": "npm.cmd run typecheck",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T04:20:58.264Z",
+          "endedAtUtc": "2026-08-20T04:21:51.881Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 108,
+            "sha256": "657f3a771c3ac9b683e5e8bd2354be0cd82fe12a113b8e0fe5cd25311254bd68"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "logSafetyFindings": [],
+          "statistics": {
+            "applicability": "NOT_APPLICABLE",
+            "testFiles": "NOT_APPLICABLE",
+            "tests": "NOT_APPLICABLE"
+          }
+        },
+        {
+          "id": "test-web",
+          "command": "npm.cmd run test:web -- --maxWorkers=1",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T04:21:51.888Z",
+          "endedAtUtc": "2026-08-20T04:22:34.898Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 300,
+            "sha256": "917c24b36ec79116803145586c18f077dd2ca461ab62c7a8bc83b2d0bbf7b211"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "logSafetyFindings": [],
+          "statistics": {
+            "applicability": "APPLICABLE",
+            "testFiles": {
+              "passed": 14,
+              "failed": 0,
+              "skipped": 0,
+              "total": 14
+            },
+            "tests": {
+              "passed": 97,
+              "failed": 0,
+              "skipped": 0,
+              "total": 97
+            }
+          }
+        },
+        {
+          "id": "affected-regression",
+          "command": "npm.cmd test -- --run tests/w5-c-d1-public-run.test.ts tests/shared-session.test.ts tests/shared-web-extension-entry.test.ts --maxWorkers=1",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T04:22:34.900Z",
+          "endedAtUtc": "2026-08-20T04:22:55.562Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 390,
+            "sha256": "8bb092d6df544778bb0e29e1ca4fa41ded1763b81c860643108ac6b2e1e943c3"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "logSafetyFindings": [],
+          "statistics": {
+            "applicability": "APPLICABLE",
+            "testFiles": {
+              "passed": 3,
+              "failed": 0,
+              "skipped": 0,
+              "total": 3
+            },
+            "tests": {
+              "passed": 20,
+              "failed": 0,
+              "skipped": 0,
+              "total": 20
+            }
+          }
+        },
+        {
+          "id": "full-test",
+          "command": "npm.cmd test -- --maxWorkers=1",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T04:22:55.565Z",
+          "endedAtUtc": "2026-08-20T04:26:04.547Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 302,
+            "sha256": "26bcc1db6e0738e2c075daa466c252243a66d91578dba3739093122d7f247030"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "logSafetyFindings": [],
+          "statistics": {
+            "applicability": "APPLICABLE",
+            "testFiles": {
+              "passed": 93,
+              "failed": 0,
+              "skipped": 0,
+              "total": 93
+            },
+            "tests": {
+              "passed": 809,
+              "failed": 0,
+              "skipped": 1,
+              "total": 810
+            }
+          }
+        },
+        {
+          "id": "check-docs",
+          "command": "npm.cmd run check:docs",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T04:26:04.549Z",
+          "endedAtUtc": "2026-08-20T04:26:05.377Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 141,
+            "sha256": "a90b18c9bab4410b65c2420fd4c80fda35428d8e558ff6e71830150df541a439"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "logSafetyFindings": [],
+          "statistics": {
+            "applicability": "NOT_APPLICABLE",
+            "testFiles": "NOT_APPLICABLE",
+            "tests": "NOT_APPLICABLE"
+          }
+        },
+        {
+          "id": "build-web",
+          "command": "npm.cmd run build:web",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T04:26:05.379Z",
+          "endedAtUtc": "2026-08-20T04:26:07.517Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 523,
+            "sha256": "9ad1775bfc4bd92426cd2bd37cb4a4a357d4802a7b1beb2b11714f0ff3eb65e1"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "logSafetyFindings": [],
+          "statistics": {
+            "applicability": "NOT_APPLICABLE",
+            "testFiles": "NOT_APPLICABLE",
+            "tests": "NOT_APPLICABLE"
+          }
+        },
+        {
+          "id": "build-demo",
+          "command": "npm.cmd run build:demo",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T04:26:07.519Z",
+          "endedAtUtc": "2026-08-20T04:26:15.769Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 65,
+            "sha256": "75625f75f1623ad0de0a349b2d354f9f3bcdc80e58c8acd327316f6f47a23ca5"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "logSafetyFindings": [],
+          "statistics": {
+            "applicability": "NOT_APPLICABLE",
+            "testFiles": "NOT_APPLICABLE",
+            "tests": "NOT_APPLICABLE"
+          }
+        },
+        {
+          "id": "smoke-extension",
+          "command": "npm.cmd run smoke:extension",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T04:26:15.771Z",
+          "endedAtUtc": "2026-08-20T04:26:21.749Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 137,
+            "sha256": "65fd9a6cc0ade27c0f311d0281a9f702b89b28824e1ea5e7244b7849339a4b78"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "logSafetyFindings": [],
+          "statistics": {
+            "applicability": "NOT_APPLICABLE",
+            "testFiles": "NOT_APPLICABLE",
+            "tests": "NOT_APPLICABLE"
+          }
+        },
+        {
+          "id": "check-release",
+          "command": "npm.cmd run check:release",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T04:26:21.751Z",
+          "endedAtUtc": "2026-08-20T04:26:22.491Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 148,
+            "sha256": "6440028d4e235dc7bad403f04d81d8313ec523f2e447e9693841be8076690008"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "logSafetyFindings": [],
+          "statistics": {
+            "applicability": "NOT_APPLICABLE",
+            "testFiles": "NOT_APPLICABLE",
+            "tests": "NOT_APPLICABLE"
+          }
+        },
+        {
+          "id": "verify",
+          "command": "npm.cmd run verify",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T04:26:22.493Z",
+          "endedAtUtc": "2026-08-20T04:29:54.246Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 993,
+            "sha256": "14e3a8fd3004865d22b8325b753949975db8947622f988373fc8b0bd9219fe29"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "logSafetyFindings": [],
+          "statistics": {
+            "applicability": "APPLICABLE",
+            "testFiles": {
+              "passed": 93,
+              "failed": 0,
+              "skipped": 0,
+              "total": 93
+            },
+            "tests": {
+              "passed": 809,
+              "failed": 0,
+              "skipped": 1,
+              "total": 810
+            }
+          }
+        },
+        {
+          "id": "git-diff-check",
+          "command": "git diff --check",
+          "cwd": ".",
+          "startedAtUtc": "2026-08-20T04:29:54.248Z",
+          "endedAtUtc": "2026-08-20T04:29:54.322Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "stderr": {
+            "bytes": 352,
+            "sha256": "7a7c1c46cc3c6bc1757053b576a2db49aefd79415616bafbdc25c39ca3617d99"
+          },
+          "logSafetyFindings": [],
+          "statistics": {
+            "applicability": "NOT_APPLICABLE",
+            "testFiles": "NOT_APPLICABLE",
+            "tests": "NOT_APPLICABLE"
+          }
+        }
+      ]
+    },
+    {
+      "generatedAtUtc": "2026-08-20T04:41:43.132Z",
+      "overallStatus": "PASS",
+      "environment": {
+        "nodeVersion": "v22.23.1",
+        "pythonExecutable": "<CONTRACT_PYTHON_EXECUTABLE>",
+        "pythonNoUserSite": "1"
+      },
+      "commands": [
+        {
+          "id": "typecheck",
+          "command": "npm.cmd run typecheck",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T04:36:28.743Z",
+          "endedAtUtc": "2026-08-20T04:36:40.877Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 108,
+            "sha256": "657f3a771c3ac9b683e5e8bd2354be0cd82fe12a113b8e0fe5cd25311254bd68"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "logSafetyFindings": [],
+          "statistics": {
+            "applicability": "NOT_APPLICABLE",
+            "testFiles": "NOT_APPLICABLE",
+            "tests": "NOT_APPLICABLE"
+          }
+        },
+        {
+          "id": "test-web",
+          "command": "npm.cmd run test:web -- --maxWorkers=1",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T04:36:40.880Z",
+          "endedAtUtc": "2026-08-20T04:36:56.000Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 298,
+            "sha256": "a4ebc302774e0e95761d88772d4d8e6242ab4f8d2891bbc79876b3a248b661e6"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "logSafetyFindings": [],
+          "statistics": {
+            "applicability": "APPLICABLE",
+            "testFiles": {
+              "passed": 14,
+              "failed": 0,
+              "skipped": 0,
+              "total": 14
+            },
+            "tests": {
+              "passed": 97,
+              "failed": 0,
+              "skipped": 0,
+              "total": 97
+            }
+          }
+        },
+        {
+          "id": "affected-regression",
+          "command": "npm.cmd test -- --run tests/w5-c-d1-public-run.test.ts tests/shared-session.test.ts tests/shared-web-extension-entry.test.ts --maxWorkers=1",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T04:36:56.002Z",
+          "endedAtUtc": "2026-08-20T04:37:09.631Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 389,
+            "sha256": "d15ee606d8a6eba81bc91cf489484e832a18bbd274e1cf16c7bf4a398648391f"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "logSafetyFindings": [],
+          "statistics": {
+            "applicability": "APPLICABLE",
+            "testFiles": {
+              "passed": 3,
+              "failed": 0,
+              "skipped": 0,
+              "total": 3
+            },
+            "tests": {
+              "passed": 20,
+              "failed": 0,
+              "skipped": 0,
+              "total": 20
+            }
+          }
+        },
+        {
+          "id": "full-test",
+          "command": "npm.cmd test -- --maxWorkers=1",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T04:37:09.632Z",
+          "endedAtUtc": "2026-08-20T04:39:16.326Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 301,
+            "sha256": "83a227114e3714ef696d1f9cfea89994e883efec0805923ba4bcccd2077da53d"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "logSafetyFindings": [],
+          "statistics": {
+            "applicability": "APPLICABLE",
+            "testFiles": {
+              "passed": 93,
+              "failed": 0,
+              "skipped": 0,
+              "total": 93
+            },
+            "tests": {
+              "passed": 809,
+              "failed": 0,
+              "skipped": 1,
+              "total": 810
+            }
+          }
+        },
+        {
+          "id": "check-docs",
+          "command": "npm.cmd run check:docs",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T04:39:16.328Z",
+          "endedAtUtc": "2026-08-20T04:39:16.596Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 141,
+            "sha256": "a90b18c9bab4410b65c2420fd4c80fda35428d8e558ff6e71830150df541a439"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "logSafetyFindings": [],
+          "statistics": {
+            "applicability": "NOT_APPLICABLE",
+            "testFiles": "NOT_APPLICABLE",
+            "tests": "NOT_APPLICABLE"
+          }
+        },
+        {
+          "id": "build-web",
+          "command": "npm.cmd run build:web",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T04:39:16.598Z",
+          "endedAtUtc": "2026-08-20T04:39:17.566Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 523,
+            "sha256": "7131603a450f09e5b133466a6ef39cfde8055d445841c4dfd9fbbd64a56cee65"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "logSafetyFindings": [],
+          "statistics": {
+            "applicability": "NOT_APPLICABLE",
+            "testFiles": "NOT_APPLICABLE",
+            "tests": "NOT_APPLICABLE"
+          }
+        },
+        {
+          "id": "build-demo",
+          "command": "npm.cmd run build:demo",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T04:39:17.567Z",
+          "endedAtUtc": "2026-08-20T04:39:20.833Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 65,
+            "sha256": "75625f75f1623ad0de0a349b2d354f9f3bcdc80e58c8acd327316f6f47a23ca5"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "logSafetyFindings": [],
+          "statistics": {
+            "applicability": "NOT_APPLICABLE",
+            "testFiles": "NOT_APPLICABLE",
+            "tests": "NOT_APPLICABLE"
+          }
+        },
+        {
+          "id": "smoke-extension",
+          "command": "npm.cmd run smoke:extension",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T04:39:20.834Z",
+          "endedAtUtc": "2026-08-20T04:39:22.472Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 137,
+            "sha256": "65fd9a6cc0ade27c0f311d0281a9f702b89b28824e1ea5e7244b7849339a4b78"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "logSafetyFindings": [],
+          "statistics": {
+            "applicability": "NOT_APPLICABLE",
+            "testFiles": "NOT_APPLICABLE",
+            "tests": "NOT_APPLICABLE"
+          }
+        },
+        {
+          "id": "check-release",
+          "command": "npm.cmd run check:release",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T04:39:22.473Z",
+          "endedAtUtc": "2026-08-20T04:39:22.790Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 148,
+            "sha256": "6440028d4e235dc7bad403f04d81d8313ec523f2e447e9693841be8076690008"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "logSafetyFindings": [],
+          "statistics": {
+            "applicability": "NOT_APPLICABLE",
+            "testFiles": "NOT_APPLICABLE",
+            "tests": "NOT_APPLICABLE"
+          }
+        },
+        {
+          "id": "verify",
+          "command": "npm.cmd run verify",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T04:39:22.791Z",
+          "endedAtUtc": "2026-08-20T04:41:43.090Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 992,
+            "sha256": "b39d8b6ed276153e2365353e4e1c29df69e1d1ed7326fbc983b90ca4c2d84f03"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "logSafetyFindings": [],
+          "statistics": {
+            "applicability": "APPLICABLE",
+            "testFiles": {
+              "passed": 93,
+              "failed": 0,
+              "skipped": 0,
+              "total": 93
+            },
+            "tests": {
+              "passed": 809,
+              "failed": 0,
+              "skipped": 1,
+              "total": 810
+            }
+          }
+        },
+        {
+          "id": "git-diff-check",
+          "command": "git diff --check",
+          "cwd": ".",
+          "startedAtUtc": "2026-08-20T04:41:43.091Z",
+          "endedAtUtc": "2026-08-20T04:41:43.131Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "stderr": {
+            "bytes": 352,
+            "sha256": "7a7c1c46cc3c6bc1757053b576a2db49aefd79415616bafbdc25c39ca3617d99"
+          },
+          "logSafetyFindings": [],
+          "statistics": {
+            "applicability": "NOT_APPLICABLE",
+            "testFiles": "NOT_APPLICABLE",
+            "tests": "NOT_APPLICABLE"
+          }
+        }
+      ],
+      "retentionNote": "Pre-R2 evidence retained byte-for-byte as historical command metadata; R2 statistics are authoritative only in currentRun."
+    },
+    {
+      "generatedAtUtc": "2026-08-20T11:30:27.607Z",
+      "overallStatus": "FAIL",
+      "environment": {
+        "node": "v22.23.1",
+        "npm": "10.9.8",
+        "pythonExecutable": "<CONTRACT_PYTHON_EXECUTABLE>",
+        "python": "Python 3.13.7",
+        "pandas": "3.0.5",
+        "pythonNoUserSite": "1"
+      },
+      "commands": [
+        {
+          "id": "typecheck",
+          "command": "npm.cmd run typecheck",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T11:21:51.558Z",
+          "endedAtUtc": "2026-08-20T11:22:36.335Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 108,
+            "sha256": "657f3a771c3ac9b683e5e8bd2354be0cd82fe12a113b8e0fe5cd25311254bd68"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "statistics": {
+            "applicability": "NOT_APPLICABLE",
+            "testFiles": "NOT_APPLICABLE",
+            "tests": "NOT_APPLICABLE"
+          },
+          "resultEvidence": "NOT_APPLICABLE",
+          "evidenceConsistent": true,
+          "logSafetyFindings": []
+        },
+        {
+          "id": "test-web",
+          "command": "npm.cmd run test:web -- --maxWorkers=1",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T11:22:36.346Z",
+          "endedAtUtc": "2026-08-20T11:23:01.434Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 301,
+            "sha256": "e0a48a6c4eaee3d1eb5a097a897ffce12a20f4cebeaa722e0cbc0d59968d000f"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "statistics": {
+            "applicability": "APPLICABLE",
+            "testFiles": {
+              "passed": 15,
+              "failed": 0,
+              "skipped": 0,
+              "total": 15
+            },
+            "tests": {
+              "passed": 100,
+              "failed": 0,
+              "skipped": 0,
+              "total": 100
+            }
+          },
+          "resultEvidence": "NOT_APPLICABLE",
+          "evidenceConsistent": true,
+          "logSafetyFindings": []
+        },
+        {
+          "id": "affected-regression",
+          "command": "npm.cmd test -- --run tests/w5-c-d1-public-run.test.ts tests/shared-session.test.ts tests/shared-web-extension-entry.test.ts --maxWorkers=1",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T11:23:01.437Z",
+          "endedAtUtc": "2026-08-20T11:23:22.873Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 390,
+            "sha256": "1b3e7360f443e4568858123b1ccad761563458ba3a13a36a180ecf6b0edba0e2"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "statistics": {
+            "applicability": "APPLICABLE",
+            "testFiles": {
+              "passed": 3,
+              "failed": 0,
+              "skipped": 0,
+              "total": 3
+            },
+            "tests": {
+              "passed": 20,
+              "failed": 0,
+              "skipped": 0,
+              "total": 20
+            }
+          },
+          "resultEvidence": "NOT_APPLICABLE",
+          "evidenceConsistent": true,
+          "logSafetyFindings": []
+        },
+        {
+          "id": "full-test",
+          "command": "npm.cmd test -- --maxWorkers=1",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T11:23:22.876Z",
+          "endedAtUtc": "2026-08-20T11:26:13.966Z",
+          "exitCode": 1,
+          "status": "FAIL",
+          "stdout": {
+            "bytes": 2587,
+            "sha256": "370f90e1be1ab425ecf14400361f67b7deadfb25376a85aade52aaad589e098c"
+          },
+          "stderr": {
+            "bytes": 17521,
+            "sha256": "b0ec6d88f6d0df4ed07ebed7ff0584cd755185e51c6a91eee3588691f23160e8"
+          },
+          "statistics": {
+            "applicability": "APPLICABLE",
+            "testFiles": {
+              "passed": 91,
+              "failed": 3,
+              "skipped": 0,
+              "total": 94
+            },
+            "tests": {
+              "passed": 786,
+              "failed": 26,
+              "skipped": 1,
+              "total": 813
+            }
+          },
+          "resultEvidence": "NOT_APPLICABLE",
+          "evidenceConsistent": false,
+          "logSafetyFindings": []
+        },
+        {
+          "id": "check-docs",
+          "command": "npm.cmd run check:docs",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T11:26:13.970Z",
+          "endedAtUtc": "2026-08-20T11:26:14.752Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 141,
+            "sha256": "a90b18c9bab4410b65c2420fd4c80fda35428d8e558ff6e71830150df541a439"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "statistics": {
+            "applicability": "NOT_APPLICABLE",
+            "testFiles": "NOT_APPLICABLE",
+            "tests": "NOT_APPLICABLE"
+          },
+          "resultEvidence": "NOT_APPLICABLE",
+          "evidenceConsistent": true,
+          "logSafetyFindings": []
+        },
+        {
+          "id": "build-web",
+          "command": "npm.cmd run build:web",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T11:26:14.755Z",
+          "endedAtUtc": "2026-08-20T11:26:17.983Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 523,
+            "sha256": "25e91fd8ab5467042263920a5a702214f716ccb409f5e74f2ada3333dfbfa0b3"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "statistics": {
+            "applicability": "NOT_APPLICABLE",
+            "testFiles": "NOT_APPLICABLE",
+            "tests": "NOT_APPLICABLE"
+          },
+          "resultEvidence": "NOT_APPLICABLE",
+          "evidenceConsistent": true,
+          "logSafetyFindings": []
+        },
+        {
+          "id": "build-demo",
+          "command": "npm.cmd run build:demo",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T11:26:17.985Z",
+          "endedAtUtc": "2026-08-20T11:26:28.240Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 65,
+            "sha256": "75625f75f1623ad0de0a349b2d354f9f3bcdc80e58c8acd327316f6f47a23ca5"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "statistics": {
+            "applicability": "NOT_APPLICABLE",
+            "testFiles": "NOT_APPLICABLE",
+            "tests": "NOT_APPLICABLE"
+          },
+          "resultEvidence": "NOT_APPLICABLE",
+          "evidenceConsistent": true,
+          "logSafetyFindings": []
+        },
+        {
+          "id": "smoke-extension",
+          "command": "npm.cmd run smoke:extension",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T11:26:28.243Z",
+          "endedAtUtc": "2026-08-20T11:26:35.800Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 137,
+            "sha256": "65fd9a6cc0ade27c0f311d0281a9f702b89b28824e1ea5e7244b7849339a4b78"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "statistics": {
+            "applicability": "NOT_APPLICABLE",
+            "testFiles": "NOT_APPLICABLE",
+            "tests": "NOT_APPLICABLE"
+          },
+          "resultEvidence": "NOT_APPLICABLE",
+          "evidenceConsistent": true,
+          "logSafetyFindings": []
+        },
+        {
+          "id": "check-release",
+          "command": "npm.cmd run check:release",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T11:26:35.802Z",
+          "endedAtUtc": "2026-08-20T11:26:36.999Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 148,
+            "sha256": "6440028d4e235dc7bad403f04d81d8313ec523f2e447e9693841be8076690008"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "statistics": {
+            "applicability": "NOT_APPLICABLE",
+            "testFiles": "NOT_APPLICABLE",
+            "tests": "NOT_APPLICABLE"
+          },
+          "resultEvidence": "NOT_APPLICABLE",
+          "evidenceConsistent": true,
+          "logSafetyFindings": []
+        },
+        {
+          "id": "verify",
+          "command": "npm.cmd run verify",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T11:26:37.001Z",
+          "endedAtUtc": "2026-08-20T11:30:04.598Z",
+          "exitCode": 1,
+          "status": "FAIL",
+          "stdout": {
+            "bytes": 2852,
+            "sha256": "14a23c5c2db94155d2082b1615241912cb208779cd98e6d2b5eeeeaf44612006"
+          },
+          "stderr": {
+            "bytes": 17521,
+            "sha256": "6b0d67ee78142d2ba7db2674ebc77f0c163103b81f96d7bcad6a248b961c6dea"
+          },
+          "statistics": {
+            "applicability": "APPLICABLE",
+            "testFiles": {
+              "passed": 91,
+              "failed": 3,
+              "skipped": 0,
+              "total": 94
+            },
+            "tests": {
+              "passed": 786,
+              "failed": 26,
+              "skipped": 1,
+              "total": 813
+            }
+          },
+          "resultEvidence": "NOT_APPLICABLE",
+          "evidenceConsistent": false,
+          "logSafetyFindings": []
+        },
+        {
+          "id": "git-diff-check",
+          "command": "git diff --check",
+          "cwd": ".",
+          "startedAtUtc": "2026-08-20T11:30:04.601Z",
+          "endedAtUtc": "2026-08-20T11:30:04.780Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "stderr": {
+            "bytes": 352,
+            "sha256": "7a7c1c46cc3c6bc1757053b576a2db49aefd79415616bafbdc25c39ca3617d99"
+          },
+          "statistics": {
+            "applicability": "NOT_APPLICABLE",
+            "testFiles": "NOT_APPLICABLE",
+            "tests": "NOT_APPLICABLE"
+          },
+          "resultEvidence": "NOT_APPLICABLE",
+          "evidenceConsistent": true,
+          "logSafetyFindings": []
+        },
+        {
+          "id": "runtime-evidence-tests",
+          "command": "node scripts/w5-e-validation/run-d2-runtime-tests.mjs",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T11:30:04.782Z",
+          "endedAtUtc": "2026-08-20T11:30:15.055Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 297,
+            "sha256": "0f66c9096ad31aee8ce521b872a1a7b3127d703aaeb88a38b6c70ebb0f343d4d"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "statistics": {
+            "applicability": "APPLICABLE",
+            "testFiles": {
+              "passed": 1,
+              "failed": 0,
+              "skipped": 0,
+              "total": 1
+            },
+            "tests": {
+              "passed": 3,
+              "failed": 0,
+              "skipped": 0,
+              "total": 3
+            }
+          },
+          "resultEvidence": {
+            "path": "scripts/w5-e-validation/d2-runtime-test-results.json",
+            "sha256": "596da1103573bebde4d17303fd08ef7278b2d7dfd7d60dd0190aa7330fca8dd0",
+            "status": "PASS"
+          },
+          "evidenceConsistent": true,
+          "logSafetyFindings": []
+        },
+        {
+          "id": "browser-capture",
+          "command": "node scripts/w5-e-validation/capture-d2-r2-browser.mjs",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T11:30:15.059Z",
+          "endedAtUtc": "2026-08-20T11:30:27.604Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 244,
+            "sha256": "f9586104807e0fbba00ff281bcf987e8d9db5cf2f2f37357fe8198b0932a6320"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "statistics": {
+            "applicability": "NOT_APPLICABLE",
+            "testFiles": "NOT_APPLICABLE",
+            "tests": "NOT_APPLICABLE"
+          },
+          "resultEvidence": {
+            "path": "scripts/w5-e-validation/d2-browser-capture.json",
+            "sha256": "30401acd58b8f11d642bb60288c4422908061598f11e79bee2356791370ce777",
+            "status": "PASS"
+          },
+          "evidenceConsistent": true,
+          "logSafetyFindings": []
+        }
+      ],
+      "retentionNote": "Pre-R2 evidence retained byte-for-byte as historical command metadata; R2 statistics are authoritative only in currentRun."
+    },
+    {
+      "generatedAtUtc": "2026-08-20T11:43:13.429Z",
+      "overallStatus": "PASS",
+      "environment": {
+        "node": "v22.23.1",
+        "npm": "10.9.8",
+        "pythonExecutable": "<CONTRACT_PYTHON_EXECUTABLE>",
+        "python": "Python 3.13.7",
+        "pandas": "3.0.5",
+        "pythonNoUserSite": "1"
+      },
+      "commands": [
+        {
+          "id": "typecheck",
+          "command": "npm.cmd run typecheck",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T11:34:19.779Z",
+          "endedAtUtc": "2026-08-20T11:34:45.483Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 108,
+            "sha256": "657f3a771c3ac9b683e5e8bd2354be0cd82fe12a113b8e0fe5cd25311254bd68"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "statistics": {
+            "applicability": "NOT_APPLICABLE",
+            "testFiles": "NOT_APPLICABLE",
+            "tests": "NOT_APPLICABLE"
+          },
+          "resultEvidence": "NOT_APPLICABLE",
+          "evidenceConsistent": true,
+          "logSafetyFindings": []
+        },
+        {
+          "id": "test-web",
+          "command": "npm.cmd run test:web -- --maxWorkers=1",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T11:34:45.489Z",
+          "endedAtUtc": "2026-08-20T11:35:06.395Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 301,
+            "sha256": "c0a882b88d04c70f164e06118d45465b50afe82a63ed895c11c1cd1c37f655f7"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "statistics": {
+            "applicability": "APPLICABLE",
+            "testFiles": {
+              "passed": 15,
+              "failed": 0,
+              "skipped": 0,
+              "total": 15
+            },
+            "tests": {
+              "passed": 100,
+              "failed": 0,
+              "skipped": 0,
+              "total": 100
+            }
+          },
+          "resultEvidence": "NOT_APPLICABLE",
+          "evidenceConsistent": true,
+          "logSafetyFindings": []
+        },
+        {
+          "id": "affected-regression",
+          "command": "npm.cmd test -- --run tests/w5-c-d1-public-run.test.ts tests/shared-session.test.ts tests/shared-web-extension-entry.test.ts --maxWorkers=1",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T11:35:06.399Z",
+          "endedAtUtc": "2026-08-20T11:35:25.477Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 390,
+            "sha256": "4a93d9dc5d6ac7b5ba5dca1e3f891d39d5a560b6663b5f21bb02e56079d96280"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "statistics": {
+            "applicability": "APPLICABLE",
+            "testFiles": {
+              "passed": 3,
+              "failed": 0,
+              "skipped": 0,
+              "total": 3
+            },
+            "tests": {
+              "passed": 20,
+              "failed": 0,
+              "skipped": 0,
+              "total": 20
+            }
+          },
+          "resultEvidence": "NOT_APPLICABLE",
+          "evidenceConsistent": true,
+          "logSafetyFindings": []
+        },
+        {
+          "id": "full-test",
+          "command": "npm.cmd test -- --maxWorkers=1",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T11:35:25.479Z",
+          "endedAtUtc": "2026-08-20T11:38:22.487Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 302,
+            "sha256": "3c4a188378e7d003290544c471c0e369e8130f41172011efed2fc883f5f13be3"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "statistics": {
+            "applicability": "APPLICABLE",
+            "testFiles": {
+              "passed": 94,
+              "failed": 0,
+              "skipped": 0,
+              "total": 94
+            },
+            "tests": {
+              "passed": 812,
+              "failed": 0,
+              "skipped": 1,
+              "total": 813
+            }
+          },
+          "resultEvidence": "NOT_APPLICABLE",
+          "evidenceConsistent": true,
+          "logSafetyFindings": []
+        },
+        {
+          "id": "check-docs",
+          "command": "npm.cmd run check:docs",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T11:38:22.489Z",
+          "endedAtUtc": "2026-08-20T11:38:22.918Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 141,
+            "sha256": "a90b18c9bab4410b65c2420fd4c80fda35428d8e558ff6e71830150df541a439"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "statistics": {
+            "applicability": "NOT_APPLICABLE",
+            "testFiles": "NOT_APPLICABLE",
+            "tests": "NOT_APPLICABLE"
+          },
+          "resultEvidence": "NOT_APPLICABLE",
+          "evidenceConsistent": true,
+          "logSafetyFindings": []
+        },
+        {
+          "id": "build-web",
+          "command": "npm.cmd run build:web",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T11:38:22.920Z",
+          "endedAtUtc": "2026-08-20T11:38:24.510Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 523,
+            "sha256": "db5293c7ab55213d202cb151ad7521f053433af8d4d374bd2f5c312694b8d4b2"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "statistics": {
+            "applicability": "NOT_APPLICABLE",
+            "testFiles": "NOT_APPLICABLE",
+            "tests": "NOT_APPLICABLE"
+          },
+          "resultEvidence": "NOT_APPLICABLE",
+          "evidenceConsistent": true,
+          "logSafetyFindings": []
+        },
+        {
+          "id": "build-demo",
+          "command": "npm.cmd run build:demo",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T11:38:24.512Z",
+          "endedAtUtc": "2026-08-20T11:38:32.720Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 65,
+            "sha256": "75625f75f1623ad0de0a349b2d354f9f3bcdc80e58c8acd327316f6f47a23ca5"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "statistics": {
+            "applicability": "NOT_APPLICABLE",
+            "testFiles": "NOT_APPLICABLE",
+            "tests": "NOT_APPLICABLE"
+          },
+          "resultEvidence": "NOT_APPLICABLE",
+          "evidenceConsistent": true,
+          "logSafetyFindings": []
+        },
+        {
+          "id": "smoke-extension",
+          "command": "npm.cmd run smoke:extension",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T11:38:32.723Z",
+          "endedAtUtc": "2026-08-20T11:38:36.574Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 137,
+            "sha256": "65fd9a6cc0ade27c0f311d0281a9f702b89b28824e1ea5e7244b7849339a4b78"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "statistics": {
+            "applicability": "NOT_APPLICABLE",
+            "testFiles": "NOT_APPLICABLE",
+            "tests": "NOT_APPLICABLE"
+          },
+          "resultEvidence": "NOT_APPLICABLE",
+          "evidenceConsistent": true,
+          "logSafetyFindings": []
+        },
+        {
+          "id": "check-release",
+          "command": "npm.cmd run check:release",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T11:38:36.577Z",
+          "endedAtUtc": "2026-08-20T11:38:37.169Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 148,
+            "sha256": "6440028d4e235dc7bad403f04d81d8313ec523f2e447e9693841be8076690008"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "statistics": {
+            "applicability": "NOT_APPLICABLE",
+            "testFiles": "NOT_APPLICABLE",
+            "tests": "NOT_APPLICABLE"
+          },
+          "resultEvidence": "NOT_APPLICABLE",
+          "evidenceConsistent": true,
+          "logSafetyFindings": []
+        },
+        {
+          "id": "verify",
+          "command": "npm.cmd run verify",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T11:38:37.171Z",
+          "endedAtUtc": "2026-08-20T11:42:57.192Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 993,
+            "sha256": "87befd136939e8b8ba674c064dbbd613491e4b1b8e33f720cf096b5b672b1dd1"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "statistics": {
+            "applicability": "APPLICABLE",
+            "testFiles": {
+              "passed": 94,
+              "failed": 0,
+              "skipped": 0,
+              "total": 94
+            },
+            "tests": {
+              "passed": 812,
+              "failed": 0,
+              "skipped": 1,
+              "total": 813
+            }
+          },
+          "resultEvidence": "NOT_APPLICABLE",
+          "evidenceConsistent": true,
+          "logSafetyFindings": []
+        },
+        {
+          "id": "git-diff-check",
+          "command": "git diff --check",
+          "cwd": ".",
+          "startedAtUtc": "2026-08-20T11:42:57.195Z",
+          "endedAtUtc": "2026-08-20T11:42:57.312Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "stderr": {
+            "bytes": 352,
+            "sha256": "7a7c1c46cc3c6bc1757053b576a2db49aefd79415616bafbdc25c39ca3617d99"
+          },
+          "statistics": {
+            "applicability": "NOT_APPLICABLE",
+            "testFiles": "NOT_APPLICABLE",
+            "tests": "NOT_APPLICABLE"
+          },
+          "resultEvidence": "NOT_APPLICABLE",
+          "evidenceConsistent": true,
+          "logSafetyFindings": []
+        },
+        {
+          "id": "runtime-evidence-tests",
+          "command": "node scripts/w5-e-validation/run-d2-runtime-tests.mjs",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T11:42:57.314Z",
+          "endedAtUtc": "2026-08-20T11:43:01.246Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 297,
+            "sha256": "0f66c9096ad31aee8ce521b872a1a7b3127d703aaeb88a38b6c70ebb0f343d4d"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "statistics": {
+            "applicability": "APPLICABLE",
+            "testFiles": {
+              "passed": 1,
+              "failed": 0,
+              "skipped": 0,
+              "total": 1
+            },
+            "tests": {
+              "passed": 3,
+              "failed": 0,
+              "skipped": 0,
+              "total": 3
+            }
+          },
+          "resultEvidence": {
+            "path": "scripts/w5-e-validation/d2-runtime-test-results.json",
+            "sha256": "82e1981fa6e201c81ce2cdec21de496b965489838e75a211b21058927c30afd6",
+            "status": "PASS"
+          },
+          "evidenceConsistent": true,
+          "logSafetyFindings": []
+        },
+        {
+          "id": "browser-capture",
+          "command": "node scripts/w5-e-validation/capture-d2-r2-browser.mjs",
+          "cwd": "pi-study-helper",
+          "startedAtUtc": "2026-08-20T11:43:01.249Z",
+          "endedAtUtc": "2026-08-20T11:43:13.251Z",
+          "exitCode": 0,
+          "status": "PASS",
+          "stdout": {
+            "bytes": 244,
+            "sha256": "f16dce33d52c5336c0d3647fcaed9c4679594c958e9180053fdb05b07e56d7a9"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "statistics": {
+            "applicability": "NOT_APPLICABLE",
+            "testFiles": "NOT_APPLICABLE",
+            "tests": "NOT_APPLICABLE"
+          },
+          "resultEvidence": {
+            "path": "scripts/w5-e-validation/d2-browser-capture.json",
+            "sha256": "4630bdb03afd6eaf1c258762998ad463168546f3a73b7cdfdb52d234e0c4ab43",
+            "status": "PASS"
+          },
+          "evidenceConsistent": true,
+          "logSafetyFindings": []
+        }
+      ],
+      "retentionNote": "Pre-R2 evidence retained byte-for-byte as historical command metadata; R2 statistics are authoritative only in currentRun."
+    }
+  ],
+  "overallStatus": "PASS"
+}

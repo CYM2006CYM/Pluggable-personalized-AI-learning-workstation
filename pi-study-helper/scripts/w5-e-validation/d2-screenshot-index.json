@@ -1,0 +1,181 @@
+{
+  "schemaVersion": 2,
+  "candidate": "W5-D2-E-R2",
+  "captureRecord": {
+    "path": "scripts/w5-e-validation/d2-browser-capture.json",
+    "sha256": "1f4118a326700feaa471478ef7cf9aee72f09e66ae841d9e1dc64ec73434681a"
+  },
+  "browser": "Edg/151.0.4129.93",
+  "ports": {
+    "api": 4311,
+    "vite": 5174,
+    "cdp": 9233
+  },
+  "screenshots": [
+    {
+      "id": "start-desktop",
+      "url": "http://127.0.0.1:5174/",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "waitCondition": "document.querySelector('select[aria-label=\"学习资料包\"]') !== null",
+      "capturedAtUtc": "2026-08-20T14:23:34.711Z",
+      "command": "node scripts/w5-e-validation/capture-d2-r2-browser.mjs",
+      "commandExitCode": 0,
+      "png": {
+        "path": "scripts/w5-e-validation/evidence/d2-r2/start-desktop.png",
+        "bytes": 59527,
+        "sha256": "86533a06adf06d30d0fcb94ee421fd9e0c3d2be933efefb3949052dd3bc3a995"
+      },
+      "projection": {
+        "path": "scripts/w5-e-validation/evidence/d2-r2/start-desktop.projection.json",
+        "sha256": "e9058dcfcb824cb32e3dffb16b11aaa459907b1dad84e082011c7ba5db81a8ab",
+        "value": {
+          "url": "http://127.0.0.1:5174/",
+          "title": "Pi Study Helper",
+          "text": "P\nPi Study Helper\n本地演示模式\n01\n开始\n尚未选择会话\n服务端快照为权威状态\n本地确定性学习闭环\n真实 API 模式\n\n学习入口\n\n开始一次可追踪的学习会话\n\n选择资料包、入口和问卷。所有正式进度由本地服务保存。\n\n真实 API\n\nACTIVE PROFILE\n\nPandas 数据清洗\n已启用\n领域\npandas-cleaning\n修订\nRevision 3\n能力\nreading / quiz / code / practice\n\nSESSION\n\n会话设置\n服务端绑定\n学习资料包\nPandas 数据清洗\n学习入口\n系统推荐\n按章节学习\n学习目标\n按冻结业务契约清洗订单数据\n可用时间\n60分钟\n120分钟\n400分钟\nPython经验\nnone\nbasic\ncomfortable\nuncertain\nPandas经验\nnone\nbasic\ncomfortable\nuncertain\n讲解偏好\nconcise\nstep_by_step\nexample_first\nuncertain\npandas-cleaning\n开始学习",
+          "rootChildren": 1,
+          "scrollWidth": 1440,
+          "clientWidth": 1440,
+          "landmarks": {
+            "main": 1,
+            "nav": 1
+          },
+          "controlsWithoutName": 0
+        }
+      },
+      "assertions": {
+        "rootNonBlank": true,
+        "noHorizontalOverflow": true,
+        "namedControls": true,
+        "waitConditionSatisfied": true
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "start-mobile",
+      "url": "http://127.0.0.1:5174/",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "waitCondition": "document.querySelector('select[aria-label=\"学习资料包\"]') !== null",
+      "capturedAtUtc": "2026-08-20T14:23:34.958Z",
+      "command": "node scripts/w5-e-validation/capture-d2-r2-browser.mjs",
+      "commandExitCode": 0,
+      "png": {
+        "path": "scripts/w5-e-validation/evidence/d2-r2/start-mobile.png",
+        "bytes": 29897,
+        "sha256": "8c2b987757aadd6634aa3846219d7e89bb3f135b96a1312e77b5869f889abfcb"
+      },
+      "projection": {
+        "path": "scripts/w5-e-validation/evidence/d2-r2/start-mobile.projection.json",
+        "sha256": "f8a0ac067d7d41c2d7544bc5ebc42bf8439bf3d3daeeb8504afa3916f07fed73",
+        "value": {
+          "url": "http://127.0.0.1:5174/",
+          "title": "Pi Study Helper",
+          "text": "P\nPi Study Helper\n本地演示模式\n01\n开始\n\n学习入口\n\n开始一次可追踪的学习会话\n\n选择资料包、入口和问卷。所有正式进度由本地服务保存。\n\n真实 API\n\nACTIVE PROFILE\n\nPandas 数据清洗\n已启用\n领域\npandas-cleaning\n修订\nRevision 3\n能力\nreading / quiz / code / practice\n\nSESSION\n\n会话设置\n服务端绑定\n学习资料包\nPandas 数据清洗\n学习入口\n系统推荐\n按章节学习\n学习目标\n按冻结业务契约清洗订单数据\n可用时间\n60分钟\n120分钟\n400分钟\nPython经验\nnone\nbasic\ncomfortable\nuncertain\nPandas经验\nnone\nbasic\ncomfortable\nuncertain\n讲解偏好\nconcise\nstep_by_step\nexample_first\nuncertain\npandas-cleaning\n开始学习",
+          "rootChildren": 1,
+          "scrollWidth": 390,
+          "clientWidth": 390,
+          "landmarks": {
+            "main": 1,
+            "nav": 1
+          },
+          "controlsWithoutName": 0
+        }
+      },
+      "assertions": {
+        "rootNonBlank": true,
+        "noHorizontalOverflow": true,
+        "namedControls": true,
+        "waitConditionSatisfied": true
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "study-recovery-desktop",
+      "url": "http://127.0.0.1:5174/study?sessionId=session-missing&nodeId=node-basic&activityId=act-basic",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "waitCondition": "document.body.innerText.includes('DEEP_LINK_SESSION_UNAVAILABLE')",
+      "capturedAtUtc": "2026-08-20T14:23:35.236Z",
+      "command": "node scripts/w5-e-validation/capture-d2-r2-browser.mjs",
+      "commandExitCode": 0,
+      "png": {
+        "path": "scripts/w5-e-validation/evidence/d2-r2/study-recovery-desktop.png",
+        "bytes": 44397,
+        "sha256": "273497658bf50952b7f1d9800f1b96d7b2d096494a92a1884ee81169c0487a71"
+      },
+      "projection": {
+        "path": "scripts/w5-e-validation/evidence/d2-r2/study-recovery-desktop.projection.json",
+        "sha256": "3c2ebba761b48b5f4c59a6089a455c9c7962269956728e366fc6aa02f2517adb",
+        "value": {
+          "url": "http://127.0.0.1:5174/study?sessionId=session-missing&nodeId=node-basic&activityId=act-basic",
+          "title": "Pi Study Helper",
+          "text": "P\nPi Study Helper\n本地演示模式\n01\n开始\n尚未选择会话\n服务端快照为权威状态\n本地确定性学习闭环\n真实 API 模式\n\n共享会话\n\n正在核对服务端学习步骤\n\n深链只提供安全标识，页面始终以服务端 Bootstrap 为准。\n\nTUI → Web\n\nDEEP_LINK_SESSION_UNAVAILABLE\n\n服务端保留了进度，但当前安全投影不足\n\n该深链不能继续当前服务端活动。不会自动创建替代会话，请从开始页恢复。",
+          "rootChildren": 1,
+          "scrollWidth": 1440,
+          "clientWidth": 1440,
+          "landmarks": {
+            "main": 1,
+            "nav": 1
+          },
+          "controlsWithoutName": 0
+        }
+      },
+      "assertions": {
+        "rootNonBlank": true,
+        "noHorizontalOverflow": true,
+        "namedControls": true,
+        "waitConditionSatisfied": true
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "study-recovery-mobile",
+      "url": "http://127.0.0.1:5174/study?sessionId=session-missing&nodeId=node-basic&activityId=act-basic",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "waitCondition": "document.body.innerText.includes('DEEP_LINK_SESSION_UNAVAILABLE')",
+      "capturedAtUtc": "2026-08-20T14:23:35.458Z",
+      "command": "node scripts/w5-e-validation/capture-d2-r2-browser.mjs",
+      "commandExitCode": 0,
+      "png": {
+        "path": "scripts/w5-e-validation/evidence/d2-r2/study-recovery-mobile.png",
+        "bytes": 32446,
+        "sha256": "3a594f360cde541f0dd04b0b2a80d09cf08d0b79f4eb7da042cc7b067c5ee675"
+      },
+      "projection": {
+        "path": "scripts/w5-e-validation/evidence/d2-r2/study-recovery-mobile.projection.json",
+        "sha256": "8688853fd2cc425c09d1328ae5b9cb37da928218a6627c46a6f29883475b203c",
+        "value": {
+          "url": "http://127.0.0.1:5174/study?sessionId=session-missing&nodeId=node-basic&activityId=act-basic",
+          "title": "Pi Study Helper",
+          "text": "P\nPi Study Helper\n本地演示模式\n01\n开始\n\n共享会话\n\n正在核对服务端学习步骤\n\n深链只提供安全标识，页面始终以服务端 Bootstrap 为准。\n\nTUI → Web\n\nDEEP_LINK_SESSION_UNAVAILABLE\n\n服务端保留了进度，但当前安全投影不足\n\n该深链不能继续当前服务端活动。不会自动创建替代会话，请从开始页恢复。",
+          "rootChildren": 1,
+          "scrollWidth": 390,
+          "clientWidth": 390,
+          "landmarks": {
+            "main": 1,
+            "nav": 1
+          },
+          "controlsWithoutName": 0
+        }
+      },
+      "assertions": {
+        "rootNonBlank": true,
+        "noHorizontalOverflow": true,
+        "namedControls": true,
+        "waitConditionSatisfied": true
+      },
+      "status": "PASS"
+    }
+  ],
+  "status": "PASS"
+}

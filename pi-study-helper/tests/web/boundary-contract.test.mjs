@@ -37,4 +37,10 @@ describe("W4 Web boundary contract", () => {
     const source = sourceFiles(webRoot).map((path) => readFileSync(path, "utf8")).join("\n");
     expect(source).not.toMatch(/repositories|src\/demo|fixtures\/profiles|answer-key|hiddenTests|referenceSolution/iu);
   });
+
+  it("keeps the dedicated preview Worker offline and free of private evaluator material", () => {
+    const worker = readFileSync(join(webRoot, "preview", "pyodide-preview.worker.ts"), "utf8");
+    expect(worker).not.toMatch(/fetch\s*\(|XMLHttpRequest|WebSocket|importScripts|https?:\/\//u);
+    expect(worker).not.toMatch(/hiddenTest|rubric|referenceSolution|apiKey|systemPrompt/iu);
+  });
 });

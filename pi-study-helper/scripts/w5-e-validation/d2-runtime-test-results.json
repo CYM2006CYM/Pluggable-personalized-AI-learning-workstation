@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "command": "npm.cmd exec vitest -- run tests/web/w5-d2-e-runtime-evidence.test.tsx --maxWorkers=1 --reporter=json --outputFile=<TEMP_RUNTIME_REPORT>/vitest.json",
+  "cwd": "pi-study-helper",
+  "startedAtUtc": "2026-08-20T14:23:24.769Z",
+  "endedAtUtc": "2026-08-20T14:23:30.023Z",
+  "exitCode": 0,
+  "stdout": {
+    "bytes": 98,
+    "sha256": "7455a6620cb2516daeda9aa55d0c65f529c028648f582cd782095f5477a070c4"
+  },
+  "stderr": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "statistics": {
+    "applicability": "APPLICABLE",
+    "testFiles": {
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "total": 1
+    },
+    "tests": {
+      "passed": 3,
+      "failed": 0,
+      "skipped": 0,
+      "total": 3
+    }
+  },
+  "assertions": [
+    {
+      "fullName": "W5 D2 E runtime evidence preview success calls only draft and run and never uploads the preview result",
+      "status": "passed",
+      "evidenceFile": "tests/web/w5-d2-e-runtime-evidence.test.tsx"
+    },
+    {
+      "fullName": "W5 D2 E runtime evidence preview output is displayed but never persisted in sessionStorage",
+      "status": "passed",
+      "evidenceFile": "tests/web/w5-d2-e-runtime-evidence.test.tsx"
+    },
+    {
+      "fullName": "W5 D2 E runtime evidence preview unavailable does not call submit and leaves formal submission enabled",
+      "status": "passed",
+      "evidenceFile": "tests/web/w5-d2-e-runtime-evidence.test.tsx"
+    }
+  ],
+  "status": "PASS"
+}
