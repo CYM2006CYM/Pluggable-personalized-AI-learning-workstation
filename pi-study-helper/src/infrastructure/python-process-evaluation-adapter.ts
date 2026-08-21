@@ -127,7 +127,13 @@ type StageOutcome =
   | { kind: "learner"; errorCode: LearningRuntimeErrorCode; feedback: string }
   | { kind: "evaluator"; errorCode: LearningRuntimeErrorCode; feedback: string };
 
-const FORMAL_ACTIVITY_IDS = new Set(["act-inspect-dataframe", "act-practical"]);
+// W3-C1.3 scoped W3 formal evaluation to two activities. Revision 3 declares a
+// code activity on five knowledge points and 41号 requires the W5 V5-1 trajectory
+// to walk all of them, so every revision 3 code activity carries an approved
+// digest below. Revision 2 keeps exactly its two historically frozen activities.
+const FORMAL_ACTIVITY_IDS = new Set([
+  "act-inspect-dataframe", "act-missing", "act-duplicates", "act-types", "act-practical",
+]);
 const HASH_PATTERN = /^(?:sha256:)?[a-f0-9]{64}$/u;
 const ENVIRONMENT_HASH_PATTERN = /^sha256:[a-f0-9]{64}$/u;
 const PREPARED_ID_PATTERN = /^prepared-[a-f0-9]{64}$/u;
@@ -138,10 +144,26 @@ const FORMAL_PANDAS_VERSION = "3.0.5";
 const FORMAL_PLATFORM = "win32-10.0.26100-x64";
 const FORMAL_EVALUATOR_VERSION = "node-python-evaluator-w3-c1";
 const FORMAL_CREATED_AT = "2026-08-08T01:30:21+08:00";
-const FORMAL_ASSET_BUNDLE_HASHES: Readonly<Record<string, string>> = {
-  "act-inspect-dataframe": "bcc38620bdacede9d690ee62efbedaf8f0aee8dabaa55e9b7ca5b2452d29905c",
-  "act-practical": "3273308c4c9829b263a550c2d69eb40e5098b4e0802399c2334053afb3d6815c",
+// The formal bundle digest covers activity.profileRevision, so each approved
+// revision has its own expected value. The formal evaluation scope stays the two
+// activities frozen by W3-C1.3; only the revision binding is added here.
+const FORMAL_ASSET_BUNDLE_HASHES: Readonly<Record<number, Readonly<Record<string, string>>>> = {
+  2: {
+    "act-inspect-dataframe": "bcc38620bdacede9d690ee62efbedaf8f0aee8dabaa55e9b7ca5b2452d29905c",
+    "act-practical": "3273308c4c9829b263a550c2d69eb40e5098b4e0802399c2334053afb3d6815c",
+  },
+  3: {
+    "act-inspect-dataframe": "737b0d6ae618f98b5c3e7bd5b67c2f5342559decd7436dbed57a046ef4c97be6",
+    "act-missing": "1a42dfe66391ea56d11b7c8b525ac2da19146c3fc7d4401a3439e6b7b793125b",
+    "act-duplicates": "dd88d60ef3320f7eba10fbba7cddc76ee96859e3f7fd7f7a9139fe9ed96d4886",
+    "act-types": "cfa703b189cb49cfa2e56ce3b0790a0412e58c996c82aa93ca459596d71c1880",
+    "act-practical": "7731912ed0f6ec7596cbfbf3b7d029a3d354503c4b28a6ddcf623493df9c74a9",
+  },
 };
+
+function formalAssetBundleHash(profileRevision: number, activityId: string): string | undefined {
+  return FORMAL_ASSET_BUNDLE_HASHES[profileRevision]?.[activityId];
+}
 const LEARNER_ERROR_CODES = new Set([
   "syntax_error", "runtime_error", "test_failed", "timeout", "output_limit",
   "disallowed_import", "submission_contract_error",
@@ -457,7 +479,7 @@ export class PythonProcessCodeEvaluationAdapter implements CodeEvaluationPort {
         .update(canonicalize({ ...bundleWithoutHash, resolvedFixtures }), "utf8")
         .digest("hex");
       if (selfReportedHash !== recomputedHash
-        || recomputedHash !== FORMAL_ASSET_BUNDLE_HASHES[input.activity.activityId]
+        || recomputedHash !== formalAssetBundleHash(input.profileRevision, input.activity.activityId)
         || normalizeHash(bundle.assetBundleHash) !== normalizeHash(input.assetBundleHash)) throw new Error("asset bundle hash differs");
       if (bundle.activity.profileRevision !== input.profileRevision
         || bundle.activity.templateVersion !== input.taskVersion

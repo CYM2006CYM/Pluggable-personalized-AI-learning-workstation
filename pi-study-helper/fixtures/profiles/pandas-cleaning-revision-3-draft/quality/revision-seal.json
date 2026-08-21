@@ -60,8 +60,8 @@
     {
       "path": "assessments/private/task-bundles.json",
       "hashMode": "raw-binary",
-      "sha256": "a6a16bd378f537106e6d04028cf8941b1ac8055c01d072b609f9bc485e6225c2",
-      "byteLength": 32070
+      "sha256": "32127112141efd833c96f82d6955ddd6060bdad51bb2ba8f38ea258e2728c30d",
+      "byteLength": 32508
     },
     {
       "path": "assessments/private/test-cases.json",
@@ -426,14 +426,14 @@
     {
       "path": "rubrics/rubric-duplicates.json",
       "hashMode": "raw-binary",
-      "sha256": "195bc12f1d4a10fd10a70b1769264314bbe7afe89d9d4ac955bb0565dd645672",
-      "byteLength": 290
+      "sha256": "9a3beaecd50dbe4b228917aea1acf2d4c5ffb19fd20cb21fdadaf434539de253",
+      "byteLength": 376
     },
     {
       "path": "rubrics/rubric-missing.json",
       "hashMode": "raw-binary",
-      "sha256": "d06b36adbb306acf5217492d5ac207c21c82b3351a717bf98aca5658d321dcec",
-      "byteLength": 264
+      "sha256": "9b4b76e66d9f55e080d7f6779410503fc15b8fa62b856af79de6ad669641d639",
+      "byteLength": 341
     },
     {
       "path": "rubrics/rubric-practical.json",
@@ -450,8 +450,8 @@
     {
       "path": "rubrics/rubric-types.json",
       "hashMode": "raw-binary",
-      "sha256": "54e559842706662bfb83f63f083e92e3d1d7640c63afdb37da5389b02dd6e03e",
-      "byteLength": 299
+      "sha256": "2373dd185a17acea9e817284edfe8f42900675d66093aefaa307aca265762cdf",
+      "byteLength": 370
     },
     {
       "path": "sources/conflicts.json",
@@ -472,5 +472,5 @@
       "byteLength": 455
     }
   ],
-  "assetTreeSha256": "e1564481e6b1fa7d264c04912d5e39a8adb8384f2e2716372e70e56dfd57401d"
+  "assetTreeSha256": "ccff2e2afdabaad262baeaa498b527438fcadeec1ddf5e198289f8404071e85d"
 }

@@ -100,7 +100,11 @@ def run_tests(args, candidate, result_path: Path, state_path: Path | None) -> in
         passed = True
         for fixture_path in test["fixturePaths"]:
             try:
-                frame = pd.read_csv(fixture_path)
+                # Fixtures are raw dirty input: every column must reach the
+                # candidate as text so that missing keys stay pd.NA instead of
+                # becoming float NaN. Type conversion is the learner's job under
+                # the frozen seven-column contract, never the loader's.
+                frame = pd.read_csv(fixture_path, dtype="string")
                 run_case(candidate_proxy, frame)
             except BaseException as error:
                 if traceback_has_submission(error, Path(args.submission)):

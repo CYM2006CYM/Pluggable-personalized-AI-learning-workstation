@@ -152,7 +152,7 @@
         }
       },
       "environmentRef": "env-python-pandas-candidate",
-      "assetBundleHash": "bcc38620bdacede9d690ee62efbedaf8f0aee8dabaa55e9b7ca5b2452d29905c"
+      "assetBundleHash": "737b0d6ae618f98b5c3e7bd5b67c2f5342559decd7436dbed57a046ef4c97be6"
     },
     {
       "bundleId": "bundle-act-missing-v2",
@@ -285,10 +285,16 @@
               "column_missing_policy_invalid"
             ]
           }
-        ]
+        ],
+        "dimensionTestMap": {
+          "missing": [
+            "test-missing-public",
+            "test-missing-hidden"
+          ]
+        }
       },
       "environmentRef": "env-python-pandas-candidate",
-      "assetBundleHash": "ae22167b89402d4efb9541cf21745d5db71f6b5ce0d336df19b5aec1eaf51356"
+      "assetBundleHash": "1a42dfe66391ea56d11b7c8b525ac2da19146c3fc7d4401a3439e6b7b793125b"
     },
     {
       "bundleId": "bundle-act-duplicates-v2",
@@ -424,10 +430,16 @@
               "row_order_invalid"
             ]
           }
-        ]
+        ],
+        "dimensionTestMap": {
+          "duplicates": [
+            "test-duplicates-public",
+            "test-duplicates-hidden"
+          ]
+        }
       },
       "environmentRef": "env-python-pandas-candidate",
-      "assetBundleHash": "51d185bff1a5c7c0180f1df98f8e65cabe8661e5ceb6f18100a859931ae8d990"
+      "assetBundleHash": "dd88d60ef3320f7eba10fbba7cddc76ee96859e3f7fd7f7a9139fe9ed96d4886"
     },
     {
       "bundleId": "bundle-act-types-v2",
@@ -569,10 +581,16 @@
               "string_dtype_invalid"
             ]
           }
-        ]
+        ],
+        "dimensionTestMap": {
+          "types": [
+            "test-types-public",
+            "test-types-hidden"
+          ]
+        }
       },
       "environmentRef": "env-python-pandas-candidate",
-      "assetBundleHash": "ea8565b66ad4afb4927714a8937379343d3382e9cd84c3635d1b5553f48ae968"
+      "assetBundleHash": "cfa703b189cb49cfa2e56ce3b0790a0412e58c996c82aa93ca459596d71c1880"
     },
     {
       "bundleId": "bundle-act-practical-v2",
@@ -886,7 +904,7 @@
         }
       },
       "environmentRef": "env-python-pandas-candidate",
-      "assetBundleHash": "3273308c4c9829b263a550c2d69eb40e5098b4e0802399c2334053afb3d6815c"
+      "assetBundleHash": "7731912ed0f6ec7596cbfbf3b7d029a3d354503c4b28a6ddcf623493df9c74a9"
     }
   ]
 }
