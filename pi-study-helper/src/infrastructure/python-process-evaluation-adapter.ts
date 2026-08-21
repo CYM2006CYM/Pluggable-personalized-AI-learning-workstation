@@ -127,11 +127,9 @@ type StageOutcome =
   | { kind: "learner"; errorCode: LearningRuntimeErrorCode; feedback: string }
   | { kind: "evaluator"; errorCode: LearningRuntimeErrorCode; feedback: string };
 
-// W3-C1.3 scoped W3 formal evaluation to two activities. Revision 3 declares a
-// code activity on five knowledge points and 41号 requires the W5 V5-1 trajectory
-// to walk all of them, so every revision 3 code activity carries an approved
-// digest below. Revision 2 keeps exactly its two historically frozen activities.
-const FORMAL_ACTIVITY_IDS = new Set([
+// The parser recognizes every fixed code activity, while the revision-specific
+// digest table below is the single source of truth for formal evaluation scope.
+const KNOWN_CODE_ACTIVITY_IDS = new Set([
   "act-inspect-dataframe", "act-missing", "act-duplicates", "act-types", "act-practical",
 ]);
 const HASH_PATTERN = /^(?:sha256:)?[a-f0-9]{64}$/u;
@@ -144,9 +142,9 @@ const FORMAL_PANDAS_VERSION = "3.0.5";
 const FORMAL_PLATFORM = "win32-10.0.26100-x64";
 const FORMAL_EVALUATOR_VERSION = "node-python-evaluator-w3-c1";
 const FORMAL_CREATED_AT = "2026-08-08T01:30:21+08:00";
-// The formal bundle digest covers activity.profileRevision, so each approved
-// revision has its own expected value. The formal evaluation scope stays the two
-// activities frozen by W3-C1.3; only the revision binding is added here.
+// The digest covers activity.profileRevision. Revision 2 retains the two
+// activities frozen by W3-C1.3; revision 3 approves all five activities needed
+// by the W5 V5-1 trajectory.
 const FORMAL_ASSET_BUNDLE_HASHES: Readonly<Record<number, Readonly<Record<string, string>>>> = {
   2: {
     "act-inspect-dataframe": "bcc38620bdacede9d690ee62efbedaf8f0aee8dabaa55e9b7ca5b2452d29905c",
@@ -283,7 +281,7 @@ function parseTaskBundle(value: unknown): TaskBundle | null {
   if (publicTests.some((test) => test === null) || hiddenTests.some((test) => test === null)
     || !validateRubricDefinition(value.rubric, tests.filter((test): test is TaskTest => test !== null))) return null;
   if (typeof activity.activityId !== "string"
-    || !FORMAL_ACTIVITY_IDS.has(activity.activityId)
+    || !KNOWN_CODE_ACTIVITY_IDS.has(activity.activityId)
     || (activity.kind !== "code_completion" && activity.kind !== "coding_practical")
     || !Number.isSafeInteger(activity.profileRevision)
     || typeof activity.templateVersion !== "string"
@@ -448,10 +446,10 @@ export class PythonProcessCodeEvaluationAdapter implements CodeEvaluationPort {
       || input.environment.prototypeEvidenceRef !== environment.prototypeEvidenceRef) {
       throw new EvaluationPreparationError("environment_mismatch", "The measured Node submit environment is unavailable or does not match the approved lock.");
     }
-    if (!FORMAL_ACTIVITY_IDS.has(input.activity.activityId)
+    if (formalAssetBundleHash(input.profileRevision, input.activity.activityId) === undefined
       || input.activity.kind === "debug"
       || input.profileRevision !== input.activity.profileRevision) {
-      throw new EvaluationPreparationError("profile_revision_conflict", "The activity is outside the W3 formal evaluation scope or revision.");
+      throw new EvaluationPreparationError("profile_revision_conflict", "The activity is outside the formal evaluation scope for this Profile revision.");
     }
     if (input.taskVersion !== input.activity.templateVersion) {
       throw new EvaluationPreparationError("activity_version_conflict", "The activity task version changed before preparation.");

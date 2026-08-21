@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
@@ -19,6 +20,19 @@ const REVISIONS = [
   { revision: 2, root: resolve("fixtures/profiles/pandas-cleaning-v2-draft") },
   { revision: 3, root: resolve("fixtures/profiles/pandas-cleaning-revision-3-draft") },
 ] as const;
+
+const REVISION_3_FORMAL_ACTIVITIES = [
+  ["act-inspect-dataframe", "solution-structure.py"],
+  ["act-missing", "solution-missing.py"],
+  ["act-duplicates", "solution-duplicates.py"],
+  ["act-types", "solution-types.py"],
+  ["act-practical", "solution-practical.py"],
+] as const;
+
+function findPython(): string {
+  const command = process.platform === "win32" ? "where.exe" : "which";
+  return execFileSync(command, ["python"], { encoding: "utf8" }).split(/\r?\n/u).find(Boolean) ?? "python";
+}
 
 /** Same canonical form the evaluator adapter uses: sorted keys, preserved arrays, no whitespace. */
 function canonicalize(value: unknown): string {
@@ -76,7 +90,7 @@ describe("W5 formal task bundle revision binding", () => {
     }
   });
 
-  it("prepares the formal activities of the active revision 3 Profile", async () => {
+  it("runs every formal revision 3 activity three times with the approved Python environment", async () => {
     const root = REVISIONS[1].root;
     const environment = JSON.parse(await readFile(resolve(root, "environments/environment-lock.json"), "utf8")) as {
       environmentHash: string;
@@ -86,39 +100,84 @@ describe("W5 formal task bundle revision binding", () => {
       bundles: Array<Record<string, unknown>>;
     };
 
-    for (const activityId of ["act-inspect-dataframe", "act-practical"]) {
+    const adapter = new PythonProcessCodeEvaluationAdapter({
+      profileRoot: root,
+      pythonExecutable: findPython(),
+    });
+
+    for (const [activityId, solutionName] of REVISION_3_FORMAL_ACTIVITIES) {
       const bundle = bundleDocument.bundles.find((item) => (item.activity as { activityId: string }).activityId === activityId);
       expect(bundle, `${activityId} bundle is missing`).toBeDefined();
       const activity = bundle!.activity as { kind: string; templateVersion: string; profileRevision: number };
-      const adapter = new PythonProcessCodeEvaluationAdapter({
-        profileRoot: root,
-        // The digest and binding checks run before any Python process is spawned,
-        // so this stays a deterministic assertion with no interpreter dependency.
-        pythonExecutable: resolve(root, ".python-not-used-by-this-assertion"),
-      });
-      const prepare = adapter.prepare({
+      const code = await readFile(resolve(root, "reference-solutions", solutionName), "utf8");
+      const results = [];
+      for (let repeat = 1; repeat <= 3; repeat += 1) {
+        const prepared = await adapter.prepare({
+          activity: {
+            activityId,
+            kind: activity.kind,
+            profileRevision: activity.profileRevision,
+            templateVersion: activity.templateVersion,
+            environmentRef: String(bundle!.environmentRef),
+          },
+          profileRevision: activity.profileRevision,
+          taskVersion: activity.templateVersion,
+          mode: "submit",
+          environment: {
+            environmentId: String(bundle!.environmentRef),
+            status: "measured_node_submit",
+            environmentHash: environment.environmentHash,
+            prototypeEvidenceRef: "scripts/w3-code-evaluation/environment-prototype-evidence.json",
+          },
+          assetBundleHash: digests.get(activityId)!.selfReported,
+        } as never);
+        results.push(await adapter.run({
+          requestId: `w5-revision-3-${activityId}-${repeat}`,
+          attemptId: `w5-revision-3-${activityId}-${repeat}`,
+          prepared,
+          code,
+        }, new AbortController().signal));
+      }
+      expect(results[0]).toMatchObject({ executionStatus: "completed", verdict: "pass", score: 1 });
+      expect(results[1]).toEqual(results[0]);
+      expect(results[2]).toEqual(results[0]);
+      expect(JSON.stringify(results)).not.toMatch(/private|hidden|reference-solutions|[A-Za-z]:[\\/]|AppData/u);
+    }
+  }, 120_000);
+
+  it("keeps revision 2 formal evaluation restricted to its two frozen activities", async () => {
+    const root = REVISIONS[0].root;
+    const environment = JSON.parse(await readFile(resolve(root, "environments/environment-lock.json"), "utf8")) as {
+      environmentHash: string;
+    };
+    const digests = await bundleDigests(root);
+    const bundleDocument = JSON.parse(await readFile(resolve(root, "assessments/private/task-bundles.json"), "utf8")) as {
+      bundles: Array<Record<string, unknown>>;
+    };
+    const adapter = new PythonProcessCodeEvaluationAdapter({ profileRoot: root, pythonExecutable: findPython() });
+
+    for (const activityId of ["act-missing", "act-duplicates", "act-types"]) {
+      const bundle = bundleDocument.bundles.find((item) => (item.activity as { activityId: string }).activityId === activityId)!;
+      const activity = bundle.activity as { kind: string; templateVersion: string; profileRevision: number };
+      await expect(adapter.prepare({
         activity: {
           activityId,
           kind: activity.kind,
           profileRevision: activity.profileRevision,
           templateVersion: activity.templateVersion,
-          environmentRef: String(bundle!.environmentRef),
+          environmentRef: String(bundle.environmentRef),
         },
         profileRevision: activity.profileRevision,
         taskVersion: activity.templateVersion,
         mode: "submit",
         environment: {
-          environmentId: String(bundle!.environmentRef),
+          environmentId: String(bundle.environmentRef),
           status: "measured_node_submit",
           environmentHash: environment.environmentHash,
           prototypeEvidenceRef: "scripts/w3-code-evaluation/environment-prototype-evidence.json",
         },
         assetBundleHash: digests.get(activityId)!.selfReported,
-      } as never);
-
-      // A missing interpreter must surface as an environment fault, never as
-      // `test_asset_invalid`: the asset bindings themselves are valid.
-      await expect(prepare).rejects.toMatchObject({ errorCode: "environment_mismatch" });
+      } as never)).rejects.toMatchObject({ errorCode: "profile_revision_conflict" });
     }
-  });
+  }, 30_000);
 });

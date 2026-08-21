@@ -36,7 +36,8 @@ LIVE_MODEL       = LIVE_NOT_RUN
 | C的D1环境原型证据 | `pi-study-helper/scripts/w5-c-validation/environment-prototype.json` |
 | revision 3环境锁 SHA-256 | `59917d1528d031f46a1e76359d99628e810f2dfa78a92d66e03386c860fbaf43` |
 | revision 3 `environmentHash` | `sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76` |
-| revision 3 seal `assetTreeSha256` | `e1564481e6b1fa7d264c04912d5e39a8adb8384f2e2716372e70e56dfd57401d` |
+| 裁决输入时revision 3 seal `assetTreeSha256`（代码判分修复前历史值） | `e1564481e6b1fa7d264c04912d5e39a8adb8384f2e2716372e70e56dfd57401d` |
+| D3后续执行唯一现行revision 3 seal `assetTreeSha256` | `ccff2e2afdabaad262baeaa498b527438fcadeec1ddf5e198289f8404071e85d` |
 
 负责人独立复算结论：
 
@@ -50,7 +51,7 @@ LIVE_MODEL       = LIVE_NOT_RUN
 1. 不批准`PYODIDE_ENABLED`，不批准`measured_dual_backend`。
 2. `pyodideVersion`保持`null`；`networkIsolation`、`reliableMemoryLimit`保持`false`；`processTreeTermination`保持既有实测值。
 3. 不批准安装Pyodide、Monaco或任何新依赖；[52号第12节](./52-第五周公共合同总册.md) Monaco条件项保持关闭。
-4. 不修改SDK、依赖、锁文件、revision 2、60例正式gold、hidden tests、Rubric或reference solution。
+4. Pyodide裁决本身不授权修改SDK、依赖、锁文件、revision 2、60例正式gold、hidden tests、Rubric或reference solution；同提交中经负责人另行登记的代码判分阻塞修复修改了revision 3三个Rubric的`dimensionTestMap`，范围和依据以第7节及专项阻塞记录为准。
 5. 不改变`POST /api/activities/:id/submit`的Node/Python权威语义。
 6. `POST /api/activities/:id/run`与`BrowserCodeRunner`公共合同保留，仅关闭页面可点击入口；不删除[52号第2—3节](./52-第五周公共合同总册.md)已冻结的类型。
 
@@ -86,7 +87,7 @@ LIVE_MODEL       = LIVE_NOT_RUN
 
 结论：若C的D3测量结果与上表批准值完全一致，B在环境锁上的正确动作是**不改变任何字段值**，只完成证据映射、seal复算与差异说明；若C测出与批准值不同的数值，B必须停止写入并提交阻塞，由负责人另行裁决，不得为通过测试自行改锁或改源码常量。
 
-补充（本提交同步生效）：负责人已按`W5-D3-CODE-GRADING-001`修复revision 3的五个`assetBundleHash`、三个Rubric的`dimensionTestMap`并重算seal。因此B在D3拉取到的revision 3 `assetTreeSha256`为`ccff2e2afdabaad262baeaa498b527438fcadeec1ddf5e198289f8404071e85d`（78条目），不再是`e1564481…`。B必须以该新值为基线，重算后若与之不符即为自身改动引入，须停止并报告。`environment-lock.json`本身未变，其SHA-256仍为`59917d15…`。
+补充（本提交同步生效）：负责人已按`W5-D3-CODE-GRADING-001`修复revision 3的五个`assetBundleHash`、三个Rubric的`dimensionTestMap`并重算seal。因此B在D3拉取到的revision 3 `assetTreeSha256`唯一现行值为`ccff2e2afdabaad262baeaa498b527438fcadeec1ddf5e198289f8404071e85d`（78条目）；`e1564481…`只作为修复前历史输入保留，不得用于后续复算。B必须以该新值为基线，重算后若与之不符即为自身改动引入，须停止并报告。`environment-lock.json`本身未变，其SHA-256仍为`59917d15…`。
 
 ## 7. 已登记的阻塞与本裁决的适用边界
 
@@ -101,10 +102,10 @@ LIVE_MODEL       = LIVE_NOT_RUN
 | DOM、网络、Worker、日志和构建产物零敏感泄漏 | 由D4验收 |
 | 环境版本、阈值及能力标志均有C实测证据 | 由D3 C→B验收 |
 | B的seal可复算、revision 2不变 | 由D3 B验收 |
-| Node同一提交连续3次结论一致 | 负责人侧已具备证据（原阻塞已关闭） |
+| Node同一提交连续3次结论一致 | 负责人侧已具备正式回归测试证据（原阻塞已关闭） |
 | 最终独立实操能够正式判分、重试和恢复 | 判分与连续一致性已具备证据；重试与恢复仍由D4验收 |
 
-`W5-D3-CODE-GRADING-001`已于同日经用户授权修复并由负责人独立复验关闭：revision 3五个代码活动在真实HTTP轨迹上全部`verdict=pass`，会话可走到`SESSION COMPLETED`，且每个活动连续3次结论一致。修复未启用Pyodide，也未改动环境锁任何字段，因此本裁决的Pyodide结论不变。
+`W5-D3-CODE-GRADING-001`已于同日经用户授权修复并由负责人独立复验关闭：revision 3五个代码活动在历史真实HTTP轨迹上全部`verdict=pass`，会话可走到`SESSION COMPLETED`；正式回归测试进一步使用合同Python对五个活动各运行3次并断言结果字段一致，同时守护revision 2仅保留两个历史正式活动。修复未启用Pyodide，也未改动环境锁任何字段，因此本裁决的Pyodide结论不变。
 
 上述两项在E完成独立验证、负责人在D6复核前仍不得写成V5正式PASS；本裁决只登记负责人侧证据已存在。
 
