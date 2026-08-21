@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 2,
+  "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+  "measurementRef": "environment-measurement.json",
+  "limits": {
+    "wallClockMs": { "value": 4000, "evidence": ["fault-matrix.json#learner_timeout", "process-tree-evidence.json"] },
+    "stdoutBytes": { "value": 8192, "evidence": ["fault-matrix.json#output_flood_and_cropping"] },
+    "stderrBytes": { "value": 8192, "evidence": ["python-process-evaluation.test.ts"] },
+    "sourceBytes": { "value": 8000, "evidence": ["python-process-evaluation.test.ts#source-limit"] },
+    "datasetBytes": { "value": 65536, "evidence": ["environment-measurement.json#limits", "adapter asset validation regression"] }
+  },
+  "capabilities": {
+    "processTreeTermination": { "value": true, "evidence": "process-tree-evidence.json: PID observed and not alive after timeout" },
+    "networkIsolation": { "value": false, "evidence": "not proved" },
+    "reliableMemoryLimit": { "value": false, "evidence": "not proved" }
+  }
+}

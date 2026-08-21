@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 2,
+  "classification": "C_TO_B_STRUCTURED_RECOMMENDATION_ONLY",
+  "contract": "W5-C1/W5-R1",
+  "decisionId": "W5-D64-PYODIDE-1",
+  "profileLockModificationAuthorized": false,
+  "measurementRef": "pi-study-helper/scripts/w5-c-d3/environment-measurement.json",
+  "fields": {
+    "nodeVersion": { "value": "v22.23.1", "measurementId": "nodeVersion", "basis": "natural exit 0" },
+    "pythonVersion": { "value": "3.13.7", "measurementId": "pythonVersion", "basis": "first PATH Python; path redacted" },
+    "pandasVersion": { "value": "3.0.5", "measurementId": "pandasVersion", "basis": "contract Python import" },
+    "platform": { "value": "win32-10.0.26100-x64", "measurementId": "runtimePlatform", "basis": "frozen lock; actual build separately recorded" },
+    "allowedLibraries": { "value": [{ "name": "pandas", "version": "3.0.5" }], "measurementId": "allowedLibraries", "basis": "import and two-row DataFrame sanity" },
+    "evaluatorVersion": { "value": "node-python-evaluator-w3-c1", "measurementId": "evaluatorVersion", "basis": "formal lock" },
+    "environmentHash": { "value": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76", "measurementId": "environmentHash", "basis": "canonical recomputation matched" },
+    "prototypeEvidenceRef": { "value": "scripts/w3-code-evaluation/environment-prototype-evidence.json", "measurementId": "prototypeEvidenceRef", "basis": "formal lock" },
+    "pyodideVersion": { "value": null, "measurementId": null, "basis": "W5-D64-PYODIDE-1; NOT_RUN" },
+    "capabilityFlags": {
+      "value": { "processTreeTermination": true, "networkIsolation": false, "reliableMemoryLimit": false },
+      "measurementIds": ["processTreeTermination", "networkIsolation", "reliableMemoryLimit"],
+      "basis": "PID-level child termination proved; unproved capabilities remain false"
+    },
+    "limits": {
+      "value": { "wallClockMs": 4000, "stdoutBytes": 8192, "stderrBytes": 8192, "sourceBytes": 8000, "datasetBytes": 65536 },
+      "measurementId": "limits",
+      "basis": "formal lock plus fault and evaluator boundary tests"
+    }
+  },
+  "prohibitedClaim": "measured_dual_backend",
+  "profileLockModifiedByC": false
+}

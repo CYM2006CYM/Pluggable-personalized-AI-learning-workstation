@@ -1,0 +1,185 @@
+{
+  "schemaVersion": 2,
+  "contract": "W5-C1/W5-R1",
+  "generatedAt": "2026-08-21T17:27:11.733Z",
+  "entries": [
+    {
+      "id": "learner_timeout",
+      "status": "observed",
+      "startedAt": "2026-08-21T17:26:47.237Z",
+      "endedAt": "2026-08-21T17:26:52.698Z",
+      "result": {
+        "executionStatus": "completed",
+        "verdict": "fail",
+        "errorKind": "learner",
+        "errorCode": "timeout",
+        "score": 0,
+        "safeFeedback": "Program execution exceeded the approved time limit.",
+        "evaluatorVersion": "node-python-evaluator-w3-c1",
+        "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+        "assetBundleHash": "sha256:7731912ed0f6ec7596cbfbf3b7d029a3d354503c4b28a6ddcf623493df9c74a9"
+      },
+      "formalFactCheck": "adapter_boundary_without_repository_write_port",
+      "sensitiveFieldMatch": false
+    },
+    {
+      "id": "output_flood_and_cropping",
+      "status": "observed",
+      "startedAt": "2026-08-21T17:26:52.699Z",
+      "endedAt": "2026-08-21T17:26:54.401Z",
+      "result": {
+        "executionStatus": "completed",
+        "verdict": "fail",
+        "errorKind": "learner",
+        "errorCode": "output_limit",
+        "score": 0,
+        "safeFeedback": "Program output exceeded the approved limit.",
+        "evaluatorVersion": "node-python-evaluator-w3-c1",
+        "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+        "assetBundleHash": "sha256:7731912ed0f6ec7596cbfbf3b7d029a3d354503c4b28a6ddcf623493df9c74a9"
+      },
+      "formalFactCheck": "adapter_boundary_without_repository_write_port",
+      "sensitiveFieldMatch": false
+    },
+    {
+      "id": "evaluator_runner_crash",
+      "status": "observed",
+      "startedAt": "2026-08-21T17:26:54.401Z",
+      "endedAt": "2026-08-21T17:26:55.285Z",
+      "result": {
+        "executionStatus": "failed",
+        "verdict": "not_graded",
+        "errorKind": "evaluator",
+        "errorCode": "runner_crash",
+        "safeFeedback": "The evaluator process ended unexpectedly.",
+        "evaluatorVersion": "node-python-evaluator-w3-c1",
+        "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+        "assetBundleHash": "sha256:7731912ed0f6ec7596cbfbf3b7d029a3d354503c4b28a6ddcf623493df9c74a9"
+      },
+      "formalFactCheck": "adapter_boundary_without_repository_write_port",
+      "sensitiveFieldMatch": false
+    },
+    {
+      "id": "windows_process_tree_termination",
+      "status": "observed",
+      "startedAt": "2026-08-21T17:26:55.285Z",
+      "endedAt": "2026-08-21T17:27:00.691Z",
+      "result": {
+        "errorCode": "timeout",
+        "verdict": "fail",
+        "terminationPath": "taskkill /T /F"
+      },
+      "formalFactCheck": "adapter_boundary_without_repository_write_port",
+      "sensitiveFieldMatch": false
+    },
+    {
+      "id": "temporary_directory_cleanup",
+      "status": "observed",
+      "startedAt": "2026-08-21T17:27:00.691Z",
+      "endedAt": "2026-08-21T17:27:03.223Z",
+      "result": {
+        "beforeCount": 1,
+        "afterCount": 1,
+        "unchanged": true
+      },
+      "formalFactCheck": "adapter_boundary_without_repository_write_port",
+      "sensitiveFieldMatch": false
+    },
+    {
+      "id": "disk_write_failure_boundary",
+      "status": "observed",
+      "startedAt": "2026-08-21T17:27:03.223Z",
+      "endedAt": "2026-08-21T17:27:03.258Z",
+      "result": {
+        "errorCode": "storage_unavailable",
+        "injectedStage": "draft_publication",
+        "formalResultAbsent": true
+      },
+      "formalFactCheck": "repository_attempt_read_after_injected_failure",
+      "sensitiveFieldMatch": false
+    },
+    {
+      "id": "environment_mismatch",
+      "status": "observed_error",
+      "startedAt": "2026-08-21T17:27:03.258Z",
+      "endedAt": "2026-08-21T17:27:04.050Z",
+      "result": {
+        "errorCode": "environment_mismatch",
+        "safeMessage": "The measured Node submit environment is unavailable or does not match the approved lock."
+      },
+      "formalFactCheck": "prepare_rejected_before_repository_write_port",
+      "sensitiveFieldMatch": false
+    },
+    {
+      "id": "version_conflict",
+      "status": "observed_error",
+      "startedAt": "2026-08-21T17:27:04.050Z",
+      "endedAt": "2026-08-21T17:27:04.829Z",
+      "result": {
+        "errorCode": "activity_version_conflict",
+        "safeMessage": "The activity task version changed before preparation."
+      },
+      "formalFactCheck": "prepare_rejected_before_repository_write_port",
+      "sensitiveFieldMatch": false
+    },
+    {
+      "id": "duplicate_idempotent_replay",
+      "status": "observed",
+      "startedAt": "2026-08-21T17:27:04.829Z",
+      "endedAt": "2026-08-21T17:27:07.411Z",
+      "result": {
+        "replayEqual": true,
+        "verdict": "partial"
+      },
+      "formalFactCheck": "adapter_boundary_without_repository_write_port",
+      "sensitiveFieldMatch": false
+    },
+    {
+      "id": "service_restart_prepared_state_rebuild",
+      "status": "observed",
+      "startedAt": "2026-08-21T17:27:07.411Z",
+      "endedAt": "2026-08-21T17:27:10.911Z",
+      "result": {
+        "staleErrorCode": "test_asset_invalid",
+        "staleVerdict": "not_graded",
+        "rebuiltVerdict": "partial",
+        "rebuildRequired": true
+      },
+      "formalFactCheck": "adapter_boundary_without_repository_write_port",
+      "sensitiveFieldMatch": false
+    },
+    {
+      "id": "preparation_failure_no_formal_state",
+      "status": "observed_error",
+      "startedAt": "2026-08-21T17:27:10.911Z",
+      "endedAt": "2026-08-21T17:27:11.733Z",
+      "result": {
+        "errorCode": "test_asset_invalid",
+        "safeMessage": "The formal task bundle or its bound assets are invalid."
+      },
+      "formalFactCheck": "prepare_rejected_before_repository_write_port",
+      "sensitiveFieldMatch": false
+    },
+    {
+      "id": "public_run_vs_formal_submit_boundary",
+      "status": "verified_by_real_composition_test",
+      "startedAt": null,
+      "endedAt": null,
+      "result": {
+        "evidenceTest": "tests/w5-c-d1-public-run.test.ts",
+        "runSemantics": "prepare_and_public_bundle_only",
+        "submitSemantics": "authoritative_node_python_evaluator",
+        "runCreatesFormalFacts": false,
+        "evaluatorFailureCreatesFormalFacts": false
+      },
+      "formalFactCheck": "real_composition_test_compares_bound_session_snapshot_before_and_after",
+      "sensitiveFieldMatch": false
+    }
+  ],
+  "summary": {
+    "itemCount": 12,
+    "observed": 11,
+    "sensitiveFieldMatches": 0,
+    "formalFactEvidenceRecorded": true
+  }
+}

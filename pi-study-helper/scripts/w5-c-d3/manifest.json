@@ -1,0 +1,135 @@
+{
+  "schemaVersion": 1,
+  "contract": "W5-C1/W5-R1",
+  "candidateHead": "383690831a8b3de42dad58795e71f218678f6fbc",
+  "selfExcluded": [
+    "pi-study-helper/scripts/w5-c-d3/manifest.json"
+  ],
+  "files": [
+    {
+      "path": "pi-study-helper/tests/w5-c-d1-public-run.test.ts",
+      "bytes": 14033,
+      "sha256": "9553509c061ea8ce08d0d698263d22dc64640fc5321b69208ec346076fa0ce7a"
+    },
+    {
+      "path": "pi-study-helper/tests/w5-c-d3-public-package.test.ts",
+      "bytes": 12100,
+      "sha256": "aa05d7036322e79a0a60fd25950d899aa6adb335faffc5ea712d554f2fe8294d"
+    },
+    {
+      "path": "pi-study-helper/tests/w5-c-d3-process-tree.test.ts",
+      "bytes": 5034,
+      "sha256": "95a89cac5c561c00bdc9f6422cf9dc0468aefe98cd4c96cb4b110d318ff7c1db"
+    },
+    {
+      "path": "pi-study-helper/tests/w5-c-d3-fault-matrix.test.ts",
+      "bytes": 12969,
+      "sha256": "97ebda145013796d95eb90f0af9db878f91ac72b2877cac0c64f9b52be2df07d"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-c-d3/public-package-runs.json",
+      "bytes": 58213,
+      "sha256": "245285606296260d80ccf1023adc6b00dd711291c2b22ea29da09c405209925d"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-c-d3/process-tree-evidence.json",
+      "bytes": 536,
+      "sha256": "3bc1d3ebd1a4ac3359b70e6948aebb417370ac9013efc2f3d9a7051afcbc4a6a"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-c-d3/fault-matrix.json",
+      "bytes": 6681,
+      "sha256": "2add209c1ba96b3f85567cf007a6b3cebe5658cbefa54cb68a250eadaef143fe"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-c-d3/environment-measurement.json",
+      "bytes": 11354,
+      "sha256": "b2405e785e8cebca55f54c95a96e21283e05b380075ded6ef5061389b0feb78c"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-c-d3/environment-field-mapping.json",
+      "bytes": 2199,
+      "sha256": "a8b04513b2d0b14be5d3393f36aa2280dcb2a60e1a8f41aa5c3ee4a498ed90b3"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-c-d3/resource-limits-evidence.json",
+      "bytes": 1032,
+      "sha256": "0e57d15cd9affd1fc312c73327a07f3051068f11c8b2e8df471f5ff93e1e3073"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-c-d3/issue-test-map.json",
+      "bytes": 941,
+      "sha256": "eba897c701a571ec18c460f06ee06cd1edbe1820bcc382551c9ff71c7a2db7f9"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-c-d3/measure-environment.mjs",
+      "bytes": 8243,
+      "sha256": "3bd2bbc0a41099a88aeb80f3e357544b11b4eb1aa48703e6c0a8ab4148ac0f49"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-c-d3/capture-d3-validation.mjs",
+      "bytes": 6896,
+      "sha256": "22bde9cb0103b5a255f13267b91973b6f30f19361c9ddc2d43e58f36eae8764d"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-c-d3/candidate-diff-check.mjs",
+      "bytes": 2443,
+      "sha256": "74d6989ee9e5813b72a12728bef2424677b437bb6e0fbf637c5fb1a3ee0d00e8"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-c-d3/diff-check.json",
+      "bytes": 2052,
+      "sha256": "7d02da8a86b49cd2a9dc4fd562cc09a3eccb064515ed5a2b04ca04f896ff8b5e"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-c-d3/security-scan.mjs",
+      "bytes": 2341,
+      "sha256": "d1f7e48931ad172b2af520967dc3b246d73d60e041e54c5c0280fb4643a250de"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-c-d3/security-scan.json",
+      "bytes": 239,
+      "sha256": "e1a2c21d5c6866b3e349d4ac2ee8061adff00fbd922052543b87d289b701fc17"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-c-d3/upstream-binding.json",
+      "bytes": 721,
+      "sha256": "df9e16ec7ac8199b65646577f5aed35f46ea3696a554ed966b4bcb0e484dd30f"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-c-d3/generate-manifest.mjs",
+      "bytes": 1086,
+      "sha256": "35c294f435c0ef89fea08e46460851618b8424611f457b5a011acbdb1534de04"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-c-d3/verify-manifest.mjs",
+      "bytes": 1478,
+      "sha256": "7e733550e12eb0ba0dbfb56a83902fb11f4774506ede8b2edbeb15d2369e3676"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-c-d3/assemble-candidate.mjs",
+      "bytes": 2015,
+      "sha256": "d7dcc18e87246cc53b608b44520cb9f8af375d968144236ca991a78da83b1459"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-c-d3/command-results.json",
+      "bytes": 11725,
+      "sha256": "db8939d32c5712acfc999acf50fbfc569765bf0576a6c9b4416f7a51733888d0"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-c-d3/proposed-files.txt",
+      "bytes": 1418,
+      "sha256": "97fd2c0ccbc565e5c0bb81479966bcb24f16cc3e88bb40e011705c2d9e411672"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-c-d3/w5-c-d3-validation-report.md",
+      "bytes": 2524,
+      "sha256": "0aeea11096edbcd1e51327bd4b5093f00a21a8db54d01053c7cdc068d7705aac"
+    },
+    {
+      "path": "新版设计文档-重写版/第五周任务/handoff-w5-c-d3.md",
+      "bytes": 3328,
+      "sha256": "46b195700c6ee9ecc16969a27790dce3ad5ac8ffce1bbbbf49639b8f2d026933"
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-21T17:38:11.218Z",
+  "scopes": {
+    "gitProposed": 24,
+    "auditLogs": 30,
+    "deliveryReports": 1
+  },
+  "scannedFiles": 55,
+  "findingCount": 0,
+  "findings": [],
+  "status": "PASS"
+}

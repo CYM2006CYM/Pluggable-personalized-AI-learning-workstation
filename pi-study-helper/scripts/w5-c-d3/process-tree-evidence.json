@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "contract": "W5-C1/W5-R1",
+  "startedAt": "2026-08-21T17:26:40.461Z",
+  "endedAt": "2026-08-21T17:26:45.302Z",
+  "platform": "win32",
+  "pidObserved": true,
+  "childPid": 14592,
+  "terminationMethod": "taskkill.exe /pid <PARENT_PID> /T /F",
+  "timeoutResult": {
+    "executionStatus": "completed",
+    "verdict": "fail",
+    "errorKind": "learner",
+    "errorCode": "timeout"
+  },
+  "descendantAliveAfterTermination": false,
+  "processTreeTerminationProved": true,
+  "temporaryControlDirectoryRemoved": true
+}

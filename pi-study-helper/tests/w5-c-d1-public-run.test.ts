@@ -36,7 +36,7 @@ afterEach(async () => {
   while (cleanups.length > 0) await cleanups.pop()!();
 });
 
-async function post(url: string, path: string, body: Record<string, unknown>) {
+export async function post(url: string, path: string, body: Record<string, unknown>) {
   const requestId = typeof body.requestId === "string" ? body.requestId : "w5-c-http";
   const response = await fetch(`${url}${path}`, {
     method: "POST",
@@ -46,12 +46,12 @@ async function post(url: string, path: string, body: Record<string, unknown>) {
   return { response, body: await response.json() as any };
 }
 
-async function get(url: string, path: string) {
+export async function get(url: string, path: string) {
   const response = await fetch(`${url}${path}`);
   return { response, body: await response.json() as any };
 }
 
-function writeMeta(data: any, requestId: string) {
+export function writeMeta(data: any, requestId: string) {
   return {
     requestId,
     sessionId: data.sessionId,
@@ -60,9 +60,9 @@ function writeMeta(data: any, requestId: string) {
   };
 }
 
-async function createRealServer(): Promise<RealServer> {
+export async function createRealServer(pythonExecutable?: string): Promise<RealServer> {
   const dataRoot = await mkdtemp(resolve(tmpdir(), "w5-c-real-root-"));
-  const runtime = await createDemoRuntime({ dataRoot, fixturesRoot });
+  const runtime = await createDemoRuntime({ dataRoot, fixturesRoot, ...(pythonExecutable === undefined ? {} : { pythonExecutable }) });
   const handle: HttpServerHandle = startHttpServer(Promise.resolve(runtime), 0);
   await handle.ready;
   const address = handle.server.address() as AddressInfo;
@@ -78,7 +78,7 @@ async function createRealServer(): Promise<RealServer> {
   };
 }
 
-async function openRevision3CodeActivity(server: RealServer): Promise<OpenCodeActivity> {
+export async function openRevision3CodeActivity(server: RealServer): Promise<OpenCodeActivity> {
   const initial = (await get(server.url, "/api/bootstrap")).body.data;
   const started = await post(server.url, "/api/sessions", {
     requestId: "w5-c-start",

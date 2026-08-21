@@ -1,0 +1,342 @@
+{
+  "schemaVersion": 1,
+  "contract": "W5-C1/W5-R1",
+  "generatedAt": "2026-08-21T17:28:31.642Z",
+  "status": "PASS",
+  "values": {
+    "nodeVersion": "v22.23.1",
+    "npmVersion": "10.9.8",
+    "pythonVersion": "3.13.7",
+    "pandasVersion": "3.0.5",
+    "platform": "win32",
+    "arch": "x64",
+    "actualWindowsBuild": "10.0.26200",
+    "frozenPlatform": "win32-10.0.26100-x64",
+    "allowedLibraries": [
+      {
+        "name": "pandas",
+        "version": "3.0.5"
+      }
+    ],
+    "allowedLibrariesSanity": {
+      "pandas": "3.0.5",
+      "sanityRows": 2
+    },
+    "evaluatorVersion": "node-python-evaluator-w3-c1",
+    "environmentLockSha256": "59917d1528d031f46a1e76359d99628e810f2dfa78a92d66e03386c860fbaf43",
+    "environmentHash": {
+      "recorded": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+      "recalculated": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76"
+    },
+    "prototypeEvidenceRef": "scripts/w3-code-evaluation/environment-prototype-evidence.json",
+    "pyodideVersion": null,
+    "capabilityFlags": {
+      "processTreeTermination": true,
+      "networkIsolation": false,
+      "reliableMemoryLimit": false
+    },
+    "limits": {
+      "wallClockMs": 4000,
+      "stdoutBytes": 8192,
+      "stderrBytes": 8192,
+      "sourceBytes": 8000,
+      "datasetBytes": 65536
+    }
+  },
+  "expected": {
+    "nodeVersion": "v22.23.1",
+    "npmVersion": "10.9.8",
+    "pythonVersion": "3.13.7",
+    "pandasVersion": "3.0.5",
+    "environmentLockSha256": "59917d1528d031f46a1e76359d99628e810f2dfa78a92d66e03386c860fbaf43",
+    "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76"
+  },
+  "measurements": [
+    {
+      "id": "python-discovery",
+      "command": "where.exe python",
+      "startedAt": "2026-08-21T17:28:29.341Z",
+      "endedAt": "2026-08-21T17:28:29.430Z",
+      "exitCode": 0,
+      "stdout": {
+        "bytes": 185,
+        "sha256": "2089e70ca6a34651c856ca48919ac6429ceb4725ca9427bb61629827c8ee344e",
+        "summary": "<CONTRACT_PYTHON_EXECUTABLE> and alternate PATH entries (redacted)"
+      },
+      "stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "summary": ""
+      }
+    },
+    {
+      "id": "nodeVersion",
+      "command": "node --version",
+      "startedAt": "2026-08-21T17:28:29.513Z",
+      "endedAt": "2026-08-21T17:28:29.595Z",
+      "exitCode": 0,
+      "stdout": {
+        "bytes": 10,
+        "sha256": "e0e2d0f152e51ce057f65c0a3497fece49245608cd2cdffaa3437d6ec835c0cb",
+        "summary": "v22.23.1"
+      },
+      "stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "summary": ""
+      }
+    },
+    {
+      "id": "npmVersion",
+      "command": "npm.cmd --version",
+      "startedAt": "2026-08-21T17:28:29.596Z",
+      "endedAt": "2026-08-21T17:28:29.977Z",
+      "exitCode": 0,
+      "stdout": {
+        "bytes": 7,
+        "sha256": "7eeb2f42ee0d10d4e00355252af2e7468bbff992af43b511355feb76da5c7cfb",
+        "summary": "10.9.8"
+      },
+      "stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "summary": ""
+      }
+    },
+    {
+      "id": "pythonVersion",
+      "command": "<CONTRACT_PYTHON_EXECUTABLE> --version",
+      "startedAt": "2026-08-21T17:28:29.977Z",
+      "endedAt": "2026-08-21T17:28:30.020Z",
+      "exitCode": 0,
+      "stdout": {
+        "bytes": 15,
+        "sha256": "f5472f7961ebcf2d6e0c1b66763a502fecc39672e3cdf4faa3fb74a423a642ff",
+        "summary": "Python 3.13.7"
+      },
+      "stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "summary": ""
+      }
+    },
+    {
+      "id": "pandasVersion",
+      "command": "<CONTRACT_PYTHON_EXECUTABLE> -c <PANDAS_VERSION_PROBE>",
+      "startedAt": "2026-08-21T17:28:30.020Z",
+      "endedAt": "2026-08-21T17:28:30.786Z",
+      "exitCode": 0,
+      "stdout": {
+        "bytes": 7,
+        "sha256": "b0821ada0ce4d545c0f4f2da21be7ac41b135933d43a00310f42f896dc34ffa4",
+        "summary": "3.0.5"
+      },
+      "stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "summary": ""
+      }
+    },
+    {
+      "id": "allowedLibraries",
+      "command": "<CONTRACT_PYTHON_EXECUTABLE> -c <ALLOWED_LIBRARY_SANITY>",
+      "startedAt": "2026-08-21T17:28:30.786Z",
+      "endedAt": "2026-08-21T17:28:31.530Z",
+      "exitCode": 0,
+      "stdout": {
+        "bytes": 38,
+        "sha256": "aa101b9eeb4528fb281ee453371b212ebcd06da5d6f89cd614411c155bf6facb",
+        "summary": "{\"pandas\": \"3.0.5\", \"sanityRows\": 2}"
+      },
+      "stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "summary": ""
+      }
+    },
+    {
+      "id": "runtimePlatform",
+      "command": "node -e <PLATFORM_PROBE>",
+      "startedAt": "2026-08-21T17:28:31.530Z",
+      "endedAt": "2026-08-21T17:28:31.625Z",
+      "exitCode": 0,
+      "stdout": {
+        "bytes": 62,
+        "sha256": "393e82ac173aaf3a7f207f9122b9921a95372c03e7f72b3619b3f50efaf6a061",
+        "summary": "{\"platform\":\"win32\",\"arch\":\"x64\",\"windowsBuild\":\"10.0.26200\"}"
+      },
+      "stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "summary": ""
+      }
+    },
+    {
+      "id": "environmentLockSha256",
+      "command": "sha256 environments/environment-lock.json",
+      "startedAt": "2026-08-21T17:28:31.642Z",
+      "endedAt": "2026-08-21T17:28:31.642Z",
+      "exitCode": 0,
+      "stdout": {
+        "bytes": 891,
+        "sha256": "59917d1528d031f46a1e76359d99628e810f2dfa78a92d66e03386c860fbaf43",
+        "summary": "structured local file read"
+      },
+      "stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "summary": ""
+      },
+      "result": "59917d1528d031f46a1e76359d99628e810f2dfa78a92d66e03386c860fbaf43",
+      "basis": "raw lock bytes"
+    },
+    {
+      "id": "environmentHash",
+      "command": "canonical JSON SHA-256 excluding environmentHash",
+      "startedAt": "2026-08-21T17:28:31.642Z",
+      "endedAt": "2026-08-21T17:28:31.642Z",
+      "exitCode": 0,
+      "stdout": {
+        "bytes": 891,
+        "sha256": "59917d1528d031f46a1e76359d99628e810f2dfa78a92d66e03386c860fbaf43",
+        "summary": "structured local file read"
+      },
+      "stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "summary": ""
+      },
+      "result": {
+        "recorded": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+        "recalculated": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+        "match": true
+      },
+      "basis": "same canonicalization as formal adapter"
+    },
+    {
+      "id": "evaluatorVersion",
+      "command": "read environment-lock.json#/evaluatorVersion",
+      "startedAt": "2026-08-21T17:28:31.642Z",
+      "endedAt": "2026-08-21T17:28:31.642Z",
+      "exitCode": 0,
+      "stdout": {
+        "bytes": 891,
+        "sha256": "59917d1528d031f46a1e76359d99628e810f2dfa78a92d66e03386c860fbaf43",
+        "summary": "structured local file read"
+      },
+      "stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "summary": ""
+      },
+      "result": "node-python-evaluator-w3-c1",
+      "basis": "formal lock field"
+    },
+    {
+      "id": "prototypeEvidenceRef",
+      "command": "read environment-lock.json#/prototypeEvidenceRef",
+      "startedAt": "2026-08-21T17:28:31.642Z",
+      "endedAt": "2026-08-21T17:28:31.642Z",
+      "exitCode": 0,
+      "stdout": {
+        "bytes": 891,
+        "sha256": "59917d1528d031f46a1e76359d99628e810f2dfa78a92d66e03386c860fbaf43",
+        "summary": "structured local file read"
+      },
+      "stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "summary": ""
+      },
+      "result": "scripts/w3-code-evaluation/environment-prototype-evidence.json",
+      "basis": "formal lock field"
+    },
+    {
+      "id": "limits",
+      "command": "read environment-lock.json#/limits",
+      "startedAt": "2026-08-21T17:28:31.642Z",
+      "endedAt": "2026-08-21T17:28:31.642Z",
+      "exitCode": 0,
+      "stdout": {
+        "bytes": 891,
+        "sha256": "59917d1528d031f46a1e76359d99628e810f2dfa78a92d66e03386c860fbaf43",
+        "summary": "structured local file read"
+      },
+      "stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "summary": ""
+      },
+      "result": {
+        "wallClockMs": 4000,
+        "stdoutBytes": 8192,
+        "stderrBytes": 8192,
+        "sourceBytes": 8000,
+        "datasetBytes": 65536
+      },
+      "basis": "formal lock fields; boundary tests are separate evidence"
+    },
+    {
+      "id": "processTreeTermination",
+      "command": "read process-tree-evidence.json#/processTreeTerminationProved",
+      "startedAt": "2026-08-21T17:28:31.642Z",
+      "endedAt": "2026-08-21T17:28:31.642Z",
+      "exitCode": 0,
+      "stdout": {
+        "bytes": 536,
+        "sha256": "3bc1d3ebd1a4ac3359b70e6948aebb417370ac9013efc2f3d9a7051afcbc4a6a",
+        "summary": "structured local file read"
+      },
+      "stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "summary": ""
+      },
+      "result": true,
+      "basis": "PID observed and descendant absent after timeout"
+    },
+    {
+      "id": "networkIsolation",
+      "command": "D3 capability review: no isolation proof",
+      "startedAt": "2026-08-21T17:28:31.642Z",
+      "endedAt": "2026-08-21T17:28:31.642Z",
+      "exitCode": 0,
+      "stdout": {
+        "bytes": 10,
+        "sha256": "b4840a38b862c05a0f3defd1de654e8cfb19d24cc873bc9f8cfe464e603f509e",
+        "summary": "structured local file read"
+      },
+      "stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "summary": ""
+      },
+      "result": false,
+      "basis": "unproved capability must remain false"
+    },
+    {
+      "id": "reliableMemoryLimit",
+      "command": "D3 capability review: no reliable memory-limit proof",
+      "startedAt": "2026-08-21T17:28:31.642Z",
+      "endedAt": "2026-08-21T17:28:31.642Z",
+      "exitCode": 0,
+      "stdout": {
+        "bytes": 10,
+        "sha256": "b4840a38b862c05a0f3defd1de654e8cfb19d24cc873bc9f8cfe464e603f509e",
+        "summary": "structured local file read"
+      },
+      "stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "summary": ""
+      },
+      "result": false,
+      "basis": "unproved capability must remain false"
+    }
+  ],
+  "notes": {
+    "windowsBuild": "record-only; frozen platform is not modified",
+    "pyodide": "NOT_RUN / PYODIDE_CANDIDATE_UNAVAILABLE",
+    "measuredDualBackend": false
+  }
+}

@@ -1,0 +1,349 @@
+{
+  "schemaVersion": 2,
+  "candidate": "W5-D3-C-R3",
+  "generatedAt": "2026-08-21T17:35:37.136Z",
+  "environment": {
+    "node": "v22.23.1",
+    "npm": "10.9.8",
+    "python": "3.13.7",
+    "pandas": "3.0.5",
+    "platform": "win32",
+    "arch": "x64",
+    "actualWindowsBuild": "10.0.26200",
+    "pythonNoUserSite": true
+  },
+  "historicalFailures": [
+    {
+      "command": "npm.cmd test -- --run tests/w5-c-d3-node-measurement.test.ts --maxWorkers=1",
+      "exitCode": 1,
+      "attribution": "dependency_installation_missing",
+      "errorCode": "vitest_not_found",
+      "resolution": "R1 history retained; superseded by tests/w5-c-d3-public-package.test.ts and omitted from the R3 candidate"
+    },
+    {
+      "command": "npm.cmd run typecheck",
+      "exitCode": 1,
+      "attribution": "test_implementation",
+      "errorCode": "d3_test_type_narrowing",
+      "resolution": "R1 test-only type widening; later rerun passed"
+    },
+    {
+      "command": "evaluator timeout fixture",
+      "exitCode": 0,
+      "attribution": "fault_fixture",
+      "errorCode": "runner_crash",
+      "resolution": "R1 history retained as runner_crash, never relabeled evaluator_timeout"
+    },
+    {
+      "command": "node scripts/w5-c-d3/capture-d3-validation.mjs",
+      "exitCode": 1,
+      "orchestrationExitCode": 124,
+      "attribution": "external_process_timeout",
+      "errorCode": "smoke_extension_get_state_timeout",
+      "resolution": "R1 history retained; isolated and complete reruns later exited naturally"
+    },
+    {
+      "command": "R2 public-package author test",
+      "exitCode": 1,
+      "attribution": "test_implementation",
+      "errorCode": "public_package_assertion_or_draft_version_conflict",
+      "resolution": "R2 history retained; corrected real HTTP package test rerun passed"
+    },
+    {
+      "command": "R2 final extracted validation capture",
+      "exitCode": 1,
+      "attribution": "candidate_packaging",
+      "errorCode": "missing_w5_c_d3_node_measurement_test",
+      "resolution": "Removed the stale command and regenerated R3 evidence from the exact proposed set"
+    },
+    {
+      "command": "R2 full test in alternate checkout",
+      "exitCode": 1,
+      "attribution": "checkout_line_ending_mismatch",
+      "errorCode": "raw_binary_seal_sha256_mismatch",
+      "resolution": "Not attributed to B; exact R3 candidate rerun in the owner contract environment passed"
+    }
+  ],
+  "results": [
+    {
+      "id": "d3-real-public-package",
+      "command": "npm.cmd test -- --run tests/w5-c-d3-public-package.test.ts --maxWorkers=1",
+      "workdir": "<package-root>",
+      "startedAt": "2026-08-21T17:25:12.626Z",
+      "endedAt": "2026-08-21T17:26:37.865Z",
+      "exitCode": 0,
+      "orchestrationExitCode": 0,
+      "stdoutBytes": 303,
+      "stdoutSha256": "9a07bdedd44191cabfee2f8b61ac75b71388b21eaf97ac09b8f4f853253ef55b",
+      "stderrBytes": 0,
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "counts": {
+        "testFiles": 1,
+        "passed": 5,
+        "failed": 0,
+        "skipped": 0
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "d3-process-tree",
+      "command": "npm.cmd test -- --run tests/w5-c-d3-process-tree.test.ts --maxWorkers=1",
+      "workdir": "<package-root>",
+      "startedAt": "2026-08-21T17:26:37.869Z",
+      "endedAt": "2026-08-21T17:26:45.697Z",
+      "exitCode": 0,
+      "orchestrationExitCode": 0,
+      "stdoutBytes": 299,
+      "stdoutSha256": "a4a77d64ad0cf6f1d82a7d1fd75ecca117cf67041721dbf32f8a8752a5f64cc7",
+      "stderrBytes": 0,
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "counts": {
+        "testFiles": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "d3-fault-matrix",
+      "command": "npm.cmd test -- --run tests/w5-c-d3-fault-matrix.test.ts --maxWorkers=1",
+      "workdir": "<package-root>",
+      "startedAt": "2026-08-21T17:26:45.699Z",
+      "endedAt": "2026-08-21T17:27:11.798Z",
+      "exitCode": 0,
+      "orchestrationExitCode": 0,
+      "stdoutBytes": 301,
+      "stdoutSha256": "6b8341455746e7b23a3dac7f4e45f0dc98a432924da7652be53c776ca74512b8",
+      "stderrBytes": 0,
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "counts": {
+        "testFiles": 1,
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "public-run-regression",
+      "command": "npm.cmd test -- --run tests/w5-c-d1-public-run.test.ts tests/python-process-evaluation.test.ts tests/python-process-evaluation-r2.test.ts --maxWorkers=1",
+      "workdir": "<package-root>",
+      "startedAt": "2026-08-21T17:27:11.799Z",
+      "endedAt": "2026-08-21T17:28:29.140Z",
+      "exitCode": 0,
+      "orchestrationExitCode": 0,
+      "stdoutBytes": 384,
+      "stdoutSha256": "d7e2ae88e81337e2fee1131549ed55b3860663c888d671befbe8c76b24b15cde",
+      "stderrBytes": 0,
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "counts": {
+        "testFiles": 3,
+        "passed": 30,
+        "failed": 0,
+        "skipped": 0
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "environment-measurement",
+      "command": "node scripts/w5-c-d3/measure-environment.mjs",
+      "workdir": "<package-root>",
+      "startedAt": "2026-08-21T17:28:29.142Z",
+      "endedAt": "2026-08-21T17:28:31.652Z",
+      "exitCode": 0,
+      "orchestrationExitCode": 0,
+      "stdoutBytes": 0,
+      "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderrBytes": 0,
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "counts": {
+        "testFiles": null,
+        "passed": null,
+        "failed": 0,
+        "skipped": 0
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "typecheck",
+      "command": "npm.cmd run typecheck",
+      "workdir": "<package-root>",
+      "startedAt": "2026-08-21T17:28:31.654Z",
+      "endedAt": "2026-08-21T17:29:17.882Z",
+      "exitCode": 0,
+      "orchestrationExitCode": 0,
+      "stdoutBytes": 108,
+      "stdoutSha256": "657f3a771c3ac9b683e5e8bd2354be0cd82fe12a113b8e0fe5cd25311254bd68",
+      "stderrBytes": 0,
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "counts": {
+        "testFiles": null,
+        "passed": null,
+        "failed": 0,
+        "skipped": 0
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "build-demo",
+      "command": "npm.cmd run build:demo",
+      "workdir": "<package-root>",
+      "startedAt": "2026-08-21T17:29:17.883Z",
+      "endedAt": "2026-08-21T17:29:24.137Z",
+      "exitCode": 0,
+      "orchestrationExitCode": 0,
+      "stdoutBytes": 65,
+      "stdoutSha256": "75625f75f1623ad0de0a349b2d354f9f3bcdc80e58c8acd327316f6f47a23ca5",
+      "stderrBytes": 0,
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "counts": {
+        "testFiles": null,
+        "passed": null,
+        "failed": 0,
+        "skipped": 0
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "build-web",
+      "command": "npm.cmd run build:web",
+      "workdir": "<package-root>",
+      "startedAt": "2026-08-21T17:29:24.138Z",
+      "endedAt": "2026-08-21T17:29:26.090Z",
+      "exitCode": 0,
+      "orchestrationExitCode": 0,
+      "stdoutBytes": 523,
+      "stdoutSha256": "9cabf44169b1a003e21d8508c3fe704106e2e340fb4f8f76169faf4b9766bb8f",
+      "stderrBytes": 0,
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "counts": {
+        "testFiles": null,
+        "passed": null,
+        "failed": 0,
+        "skipped": 0
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "check-docs",
+      "command": "npm.cmd run check:docs",
+      "workdir": "<package-root>",
+      "startedAt": "2026-08-21T17:29:26.091Z",
+      "endedAt": "2026-08-21T17:29:27.224Z",
+      "exitCode": 0,
+      "orchestrationExitCode": 0,
+      "stdoutBytes": 141,
+      "stdoutSha256": "a90b18c9bab4410b65c2420fd4c80fda35428d8e558ff6e71830150df541a439",
+      "stderrBytes": 0,
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "counts": {
+        "testFiles": null,
+        "passed": null,
+        "failed": 0,
+        "skipped": 0
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "smoke-extension",
+      "command": "npm.cmd run smoke:extension",
+      "workdir": "<package-root>",
+      "startedAt": "2026-08-21T17:29:27.225Z",
+      "endedAt": "2026-08-21T17:29:32.198Z",
+      "exitCode": 0,
+      "orchestrationExitCode": 0,
+      "stdoutBytes": 137,
+      "stdoutSha256": "65fd9a6cc0ade27c0f311d0281a9f702b89b28824e1ea5e7244b7849339a4b78",
+      "stderrBytes": 0,
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "counts": {
+        "testFiles": null,
+        "passed": null,
+        "failed": 0,
+        "skipped": 0
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "check-release",
+      "command": "npm.cmd run check:release",
+      "workdir": "<package-root>",
+      "startedAt": "2026-08-21T17:29:32.200Z",
+      "endedAt": "2026-08-21T17:29:35.205Z",
+      "exitCode": 0,
+      "orchestrationExitCode": 0,
+      "stdoutBytes": 148,
+      "stdoutSha256": "13559b8967a87a6dc4863fbffa7fc1aae75d2561f6a2ce3b731958a532764308",
+      "stderrBytes": 0,
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "counts": {
+        "testFiles": null,
+        "passed": null,
+        "failed": 0,
+        "skipped": 0
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "full-test",
+      "command": "npm.cmd test -- --maxWorkers=1",
+      "workdir": "<package-root>",
+      "startedAt": "2026-08-21T17:29:35.206Z",
+      "endedAt": "2026-08-21T17:35:36.274Z",
+      "exitCode": 0,
+      "orchestrationExitCode": 0,
+      "stdoutBytes": 283,
+      "stdoutSha256": "bfe5a2461e232164e7fa777f0078127677f28730652a5afe328de4face3130d7",
+      "stderrBytes": 0,
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "counts": {
+        "testFiles": 98,
+        "passed": 824,
+        "failed": 0,
+        "skipped": 1
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "candidate-diff-check",
+      "command": "node scripts/w5-c-d3/candidate-diff-check.mjs",
+      "workdir": "<package-root>",
+      "startedAt": "2026-08-21T17:35:36.275Z",
+      "endedAt": "2026-08-21T17:35:36.788Z",
+      "exitCode": 0,
+      "orchestrationExitCode": 0,
+      "stdoutBytes": 0,
+      "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderrBytes": 0,
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "counts": {
+        "testFiles": null,
+        "passed": null,
+        "failed": 0,
+        "skipped": 0
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "git-diff-check",
+      "command": "git diff --check",
+      "workdir": "<package-root>",
+      "startedAt": "2026-08-21T17:35:36.789Z",
+      "endedAt": "2026-08-21T17:35:37.117Z",
+      "exitCode": 0,
+      "orchestrationExitCode": 0,
+      "stdoutBytes": 0,
+      "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderrBytes": 0,
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "counts": {
+        "testFiles": null,
+        "passed": null,
+        "failed": 0,
+        "skipped": 0
+      },
+      "status": "PASS"
+    }
+  ]
+}

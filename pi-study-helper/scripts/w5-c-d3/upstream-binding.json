@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "contract": "W5-C1/W5-R1",
+  "candidateBase": "383690831a8b3de42dad58795e71f218678f6fbc",
+  "ownerDecision": "W5-D64-PYODIDE-1",
+  "pyodideDecision": "PYODIDE_DISABLED_WITH_NODE_FALLBACK",
+  "pyodideEnabled": false,
+  "liveModel": "LIVE_NOT_RUN",
+  "eD2Commit": "590985af616861e503ee30f2bf56c6392b0055f7",
+  "eD2DeliverySha256": "b88d3c9c0eab9d7c4e783180c33e0cc6790b352a17fbc6beb5e3c5e2e84462d0",
+  "revision3EnvironmentLockSha256": "59917d1528d031f46a1e76359d99628e810f2dfa78a92d66e03386c860fbaf43",
+  "revision3AssetTreeSha256": "ccff2e2afdabaad262baeaa498b527438fcadeec1ddf5e198289f8404071e85d",
+  "revision2Modified": false,
+  "profileLockModified": false,
+  "revisionSealModified": false
+}

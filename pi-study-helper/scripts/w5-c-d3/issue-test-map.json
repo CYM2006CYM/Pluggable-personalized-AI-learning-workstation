@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "items": [
+    { "requirement": "10 real public packages x 3 Node runs", "tests": ["tests/w5-c-d3-public-package.test.ts"] },
+    { "requirement": "Pyodide disabled per group", "tests": ["tests/w5-c-d3-public-package.test.ts"] },
+    { "requirement": "timeout/output/temp cleanup", "tests": ["tests/w5-c-d3-fault-matrix.test.ts"] },
+    { "requirement": "PID-level Windows process-tree termination", "tests": ["tests/w5-c-d3-process-tree.test.ts"] },
+    { "requirement": "disk/version/environment/idempotency/restart", "tests": ["tests/w5-c-d3-fault-matrix.test.ts", "tests/file-activity-repository.test.ts"] },
+    { "requirement": "public /run versus formal /submit", "tests": ["tests/w5-c-d1-public-run.test.ts", "tests/w4-c-d3-http.test.ts"] },
+    { "requirement": "Node submit remains authoritative", "tests": ["tests/python-process-evaluation.test.ts", "tests/python-process-evaluation-r2.test.ts"] }
+  ]
+}

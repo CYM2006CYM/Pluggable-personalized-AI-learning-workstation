@@ -1,0 +1,876 @@
+{
+  "schemaVersion": 2,
+  "contract": "W5-C1/W5-R1",
+  "source": "real-composition-root-http-run",
+  "groups": [
+    {
+      "source": "HTTP POST /api/activities/:id/run",
+      "inputSha256": "f3c95980eecfcd895c70490ae68acfaf9e61544b00da5b763961bcce0446f8a4",
+      "publicPackageSha256": "2eac9123994880dd72c9dc8465fef224e2d286d33ab2d8fe46dd9646b91b39d6",
+      "runId": "run-95739491-534f-4816-953f-4aeeb4d0c2d4",
+      "activityId": "act-inspect-dataframe",
+      "profileRevision": 3,
+      "environmentId": "env-python-pandas-candidate",
+      "starterCodeHash": "sha256:f3c95980eecfcd895c70490ae68acfaf9e61544b00da5b763961bcce0446f8a4",
+      "publicDatasetFiles": [
+        {
+          "name": "orders-learning.csv",
+          "content": "order_id,customer_id,amount,city,order_date,status,note\n O001 , C001 ,\"¥1,200.50\",上海市,2026-01-03, Completed ,首单\nO002,C002,88,沪,2026-01-04,pending,\nO003,C003,\"￥2,000\",北京市,2026-01-05,CANCELLED,退款\nO004,C004,N/A,京,2026/01/06,completed,异常金额\nO005,,35.5,广州市,2026-01-07,pending,客户缺失\n,C006,66,穗,2026-01-08,completed,主键缺失\nO007,C007, 77 ,深圳,2026-01-09,shipped,未知状态\nO008,C008,Infinity,上海市,2026-01-10,completed,无穷金额\nO009,C009,,北京市,2026-01-11,pending,空金额\nO010,C010,45,京,01-11-2026,cancelled,日期格式错误\nO011,C011,50,上海市,2026-01-12,pending,旧记录\nO011,C011,55,沪,2026-01-13,completed,新记录\nO012,C012,60,北京市,2026-01-14,pending,可解析日期优先\nO012,C012,61,京,2026/01/14,completed,不可解析日期\nO013,C013,70,广州市,not-a-date,pending,首条平局\nO013,C013,71,穗,also-bad,cancelled,第二条平局\nO014,C014,\"1,234\",未知城,2026-01-15,completed,未知城市保留\nO015,C015,12.345,上海,2026-01-16,pending,保留精度\nO016,C016,0,北京市,2026-01-17,completed,零金额\nO017,C017,-5,广州市,2026-02-30,pending,非法日期\nO018,C018,100,京,2026-01-18,CANCELLED,大小写\nO019,C019,NaN,深圳,2026-01-19,completed,文本金额\nO020,C020,\"¥2,500\",上海,2026-01-20,pending,货币符号\nO021,C021,33,穗,2026-01-21, ,空状态\nO022,C022,44,北京市,2026-01-22, completed ,首尾空格\nO023,C023,55,广州,2026-01-23,pending,\nO024,C024,66,未知城,2026-01-24,cancelled,保留未知城市\nO025,C025,77,沪,2026-01-25,pending,映射城市\nO026,C026,88,上海市,2026-01-26,completed,稳定记录\nO027,C027,99,京,2026-01-27,pending,末行\n",
+          "hash": "sha256:99b2923bfde4a6a824ed69bb410dc9c9f5d10f69e30b9bc5692ae986c6ab09f9"
+        }
+      ],
+      "publicTestSources": [
+        "\"\"\"Public executable contract for act-inspect-dataframe.\"\"\"\nEXPECTED_COLUMNS = [\"order_id\", \"customer_id\", \"amount\", \"city\", \"order_date\", \"status\", \"note\"]\n\ndef run_case(inspect_orders, df):\n    probe = df.assign(_unexpected=1)\n    before = list(probe.columns)\n    result = inspect_orders(probe)\n    assert list(result.columns) == EXPECTED_COLUMNS\n    assert list(probe.columns) == before\n    return result\n"
+      ],
+      "bundleHash": "sha256:cd205296d74a683263154a1c8773edaa721e1651349760a2ccfe65a042da559f",
+      "nodeRuns": [
+        {
+          "repeat": 1,
+          "startedAt": "2026-08-21T17:25:35.114Z",
+          "endedAt": "2026-08-21T17:25:36.812Z",
+          "elapsed_ms": 1697.894,
+          "result": {
+            "executionStatus": "completed",
+            "verdict": "partial",
+            "score": 0.5,
+            "errorKind": "learner",
+            "errorCode": "test_failed",
+            "evaluatorVersion": "node-python-evaluator-w3-c1",
+            "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+            "assetBundleHash": "sha256:737b0d6ae618f98b5c3e7bd5b67c2f5342559decd7436dbed57a046ef4c97be6",
+            "dimensionResults": {
+              "structure": 0.5
+            }
+          }
+        },
+        {
+          "repeat": 2,
+          "startedAt": "2026-08-21T17:25:36.812Z",
+          "endedAt": "2026-08-21T17:25:38.599Z",
+          "elapsed_ms": 1786.552,
+          "result": {
+            "executionStatus": "completed",
+            "verdict": "partial",
+            "score": 0.5,
+            "errorKind": "learner",
+            "errorCode": "test_failed",
+            "evaluatorVersion": "node-python-evaluator-w3-c1",
+            "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+            "assetBundleHash": "sha256:737b0d6ae618f98b5c3e7bd5b67c2f5342559decd7436dbed57a046ef4c97be6",
+            "dimensionResults": {
+              "structure": 0.5
+            }
+          }
+        },
+        {
+          "repeat": 3,
+          "startedAt": "2026-08-21T17:25:38.599Z",
+          "endedAt": "2026-08-21T17:25:40.389Z",
+          "elapsed_ms": 1790.656,
+          "result": {
+            "executionStatus": "completed",
+            "verdict": "partial",
+            "score": 0.5,
+            "errorKind": "learner",
+            "errorCode": "test_failed",
+            "evaluatorVersion": "node-python-evaluator-w3-c1",
+            "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+            "assetBundleHash": "sha256:737b0d6ae618f98b5c3e7bd5b67c2f5342559decd7436dbed57a046ef4c97be6",
+            "dimensionResults": {
+              "structure": 0.5
+            }
+          }
+        }
+      ],
+      "nodeFieldsIdentical": true,
+      "pyodide": {
+        "status": "NOT_RUN",
+        "errorCode": "PYODIDE_CANDIDATE_UNAVAILABLE",
+        "elapsed_ms": null
+      },
+      "sensitiveFieldMatch": false,
+      "inputId": "w5-d3-r2-01"
+    },
+    {
+      "source": "HTTP POST /api/activities/:id/run",
+      "inputSha256": "88e99e8d6ca6b5cbe1cd47498ece50b3fc8fbb54e0fc4e9c9f802e7411ed6188",
+      "publicPackageSha256": "f9a3c1cb08b1cf416b10f49f7f04ac2130156a024b1707084ab0b186f079c695",
+      "runId": "run-ccec66cc-7245-4416-b999-1035ad0d631d",
+      "activityId": "act-inspect-dataframe",
+      "profileRevision": 3,
+      "environmentId": "env-python-pandas-candidate",
+      "starterCodeHash": "sha256:f3c95980eecfcd895c70490ae68acfaf9e61544b00da5b763961bcce0446f8a4",
+      "publicDatasetFiles": [
+        {
+          "name": "orders-learning.csv",
+          "content": "order_id,customer_id,amount,city,order_date,status,note\n O001 , C001 ,\"¥1,200.50\",上海市,2026-01-03, Completed ,首单\nO002,C002,88,沪,2026-01-04,pending,\nO003,C003,\"￥2,000\",北京市,2026-01-05,CANCELLED,退款\nO004,C004,N/A,京,2026/01/06,completed,异常金额\nO005,,35.5,广州市,2026-01-07,pending,客户缺失\n,C006,66,穗,2026-01-08,completed,主键缺失\nO007,C007, 77 ,深圳,2026-01-09,shipped,未知状态\nO008,C008,Infinity,上海市,2026-01-10,completed,无穷金额\nO009,C009,,北京市,2026-01-11,pending,空金额\nO010,C010,45,京,01-11-2026,cancelled,日期格式错误\nO011,C011,50,上海市,2026-01-12,pending,旧记录\nO011,C011,55,沪,2026-01-13,completed,新记录\nO012,C012,60,北京市,2026-01-14,pending,可解析日期优先\nO012,C012,61,京,2026/01/14,completed,不可解析日期\nO013,C013,70,广州市,not-a-date,pending,首条平局\nO013,C013,71,穗,also-bad,cancelled,第二条平局\nO014,C014,\"1,234\",未知城,2026-01-15,completed,未知城市保留\nO015,C015,12.345,上海,2026-01-16,pending,保留精度\nO016,C016,0,北京市,2026-01-17,completed,零金额\nO017,C017,-5,广州市,2026-02-30,pending,非法日期\nO018,C018,100,京,2026-01-18,CANCELLED,大小写\nO019,C019,NaN,深圳,2026-01-19,completed,文本金额\nO020,C020,\"¥2,500\",上海,2026-01-20,pending,货币符号\nO021,C021,33,穗,2026-01-21, ,空状态\nO022,C022,44,北京市,2026-01-22, completed ,首尾空格\nO023,C023,55,广州,2026-01-23,pending,\nO024,C024,66,未知城,2026-01-24,cancelled,保留未知城市\nO025,C025,77,沪,2026-01-25,pending,映射城市\nO026,C026,88,上海市,2026-01-26,completed,稳定记录\nO027,C027,99,京,2026-01-27,pending,末行\n",
+          "hash": "sha256:99b2923bfde4a6a824ed69bb410dc9c9f5d10f69e30b9bc5692ae986c6ab09f9"
+        }
+      ],
+      "publicTestSources": [
+        "\"\"\"Public executable contract for act-inspect-dataframe.\"\"\"\nEXPECTED_COLUMNS = [\"order_id\", \"customer_id\", \"amount\", \"city\", \"order_date\", \"status\", \"note\"]\n\ndef run_case(inspect_orders, df):\n    probe = df.assign(_unexpected=1)\n    before = list(probe.columns)\n    result = inspect_orders(probe)\n    assert list(result.columns) == EXPECTED_COLUMNS\n    assert list(probe.columns) == before\n    return result\n"
+      ],
+      "bundleHash": "sha256:f2f55ca0dfdd6a511fabfd89896e1b5aee820c4b439da4906100fa82f8486017",
+      "nodeRuns": [
+        {
+          "repeat": 1,
+          "startedAt": "2026-08-21T17:25:40.621Z",
+          "endedAt": "2026-08-21T17:25:42.363Z",
+          "elapsed_ms": 1742.356,
+          "result": {
+            "executionStatus": "completed",
+            "verdict": "partial",
+            "score": 0.5,
+            "errorKind": "learner",
+            "errorCode": "test_failed",
+            "evaluatorVersion": "node-python-evaluator-w3-c1",
+            "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+            "assetBundleHash": "sha256:737b0d6ae618f98b5c3e7bd5b67c2f5342559decd7436dbed57a046ef4c97be6",
+            "dimensionResults": {
+              "structure": 0.5
+            }
+          }
+        },
+        {
+          "repeat": 2,
+          "startedAt": "2026-08-21T17:25:42.364Z",
+          "endedAt": "2026-08-21T17:25:44.146Z",
+          "elapsed_ms": 1782.065,
+          "result": {
+            "executionStatus": "completed",
+            "verdict": "partial",
+            "score": 0.5,
+            "errorKind": "learner",
+            "errorCode": "test_failed",
+            "evaluatorVersion": "node-python-evaluator-w3-c1",
+            "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+            "assetBundleHash": "sha256:737b0d6ae618f98b5c3e7bd5b67c2f5342559decd7436dbed57a046ef4c97be6",
+            "dimensionResults": {
+              "structure": 0.5
+            }
+          }
+        },
+        {
+          "repeat": 3,
+          "startedAt": "2026-08-21T17:25:44.146Z",
+          "endedAt": "2026-08-21T17:25:45.973Z",
+          "elapsed_ms": 1827.011,
+          "result": {
+            "executionStatus": "completed",
+            "verdict": "partial",
+            "score": 0.5,
+            "errorKind": "learner",
+            "errorCode": "test_failed",
+            "evaluatorVersion": "node-python-evaluator-w3-c1",
+            "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+            "assetBundleHash": "sha256:737b0d6ae618f98b5c3e7bd5b67c2f5342559decd7436dbed57a046ef4c97be6",
+            "dimensionResults": {
+              "structure": 0.5
+            }
+          }
+        }
+      ],
+      "nodeFieldsIdentical": true,
+      "pyodide": {
+        "status": "NOT_RUN",
+        "errorCode": "PYODIDE_CANDIDATE_UNAVAILABLE",
+        "elapsed_ms": null
+      },
+      "sensitiveFieldMatch": false,
+      "inputId": "w5-d3-r2-02"
+    },
+    {
+      "source": "HTTP POST /api/activities/:id/run",
+      "inputSha256": "a81db8c7ddb6fc50fb8450fe4b954593179ed6e0db43545b535a99bebaa35e91",
+      "publicPackageSha256": "cf93265ae9cf631f48c6a27db726a0dd018b2fff401fb0ea5f23c857d0f56034",
+      "runId": "run-4dc930f2-a450-4202-ab7d-c194d32597e8",
+      "activityId": "act-missing",
+      "profileRevision": 3,
+      "environmentId": "env-python-pandas-candidate",
+      "starterCodeHash": "sha256:a81db8c7ddb6fc50fb8450fe4b954593179ed6e0db43545b535a99bebaa35e91",
+      "publicDatasetFiles": [
+        {
+          "name": "orders-learning.csv",
+          "content": "order_id,customer_id,amount,city,order_date,status,note\n O001 , C001 ,\"¥1,200.50\",上海市,2026-01-03, Completed ,首单\nO002,C002,88,沪,2026-01-04,pending,\nO003,C003,\"￥2,000\",北京市,2026-01-05,CANCELLED,退款\nO004,C004,N/A,京,2026/01/06,completed,异常金额\nO005,,35.5,广州市,2026-01-07,pending,客户缺失\n,C006,66,穗,2026-01-08,completed,主键缺失\nO007,C007, 77 ,深圳,2026-01-09,shipped,未知状态\nO008,C008,Infinity,上海市,2026-01-10,completed,无穷金额\nO009,C009,,北京市,2026-01-11,pending,空金额\nO010,C010,45,京,01-11-2026,cancelled,日期格式错误\nO011,C011,50,上海市,2026-01-12,pending,旧记录\nO011,C011,55,沪,2026-01-13,completed,新记录\nO012,C012,60,北京市,2026-01-14,pending,可解析日期优先\nO012,C012,61,京,2026/01/14,completed,不可解析日期\nO013,C013,70,广州市,not-a-date,pending,首条平局\nO013,C013,71,穗,also-bad,cancelled,第二条平局\nO014,C014,\"1,234\",未知城,2026-01-15,completed,未知城市保留\nO015,C015,12.345,上海,2026-01-16,pending,保留精度\nO016,C016,0,北京市,2026-01-17,completed,零金额\nO017,C017,-5,广州市,2026-02-30,pending,非法日期\nO018,C018,100,京,2026-01-18,CANCELLED,大小写\nO019,C019,NaN,深圳,2026-01-19,completed,文本金额\nO020,C020,\"¥2,500\",上海,2026-01-20,pending,货币符号\nO021,C021,33,穗,2026-01-21, ,空状态\nO022,C022,44,北京市,2026-01-22, completed ,首尾空格\nO023,C023,55,广州,2026-01-23,pending,\nO024,C024,66,未知城,2026-01-24,cancelled,保留未知城市\nO025,C025,77,沪,2026-01-25,pending,映射城市\nO026,C026,88,上海市,2026-01-26,completed,稳定记录\nO027,C027,99,京,2026-01-27,pending,末行\n",
+          "hash": "sha256:99b2923bfde4a6a824ed69bb410dc9c9f5d10f69e30b9bc5692ae986c6ab09f9"
+        }
+      ],
+      "publicTestSources": [
+        "\"\"\"Public executable contract for act-missing.\"\"\"\ndef run_case(clean_missing, df):\n    result = clean_missing(df)\n    assert result[\"order_id\"].notna().all()\n    assert result[\"customer_id\"].isna().any()\n    assert (result[\"note\"].fillna(\"\") == result[\"note\"]).all()\n    return result\n"
+      ],
+      "bundleHash": "sha256:81c31b4d8a2fff64a2f746ccd72e0464b771c5b9b77517bfd5243ec843f96910",
+      "nodeRuns": [
+        {
+          "repeat": 1,
+          "startedAt": "2026-08-21T17:25:49.909Z",
+          "endedAt": "2026-08-21T17:25:51.646Z",
+          "elapsed_ms": 1737.584,
+          "result": {
+            "executionStatus": "completed",
+            "verdict": "fail",
+            "score": 0,
+            "errorKind": "learner",
+            "errorCode": "test_failed",
+            "evaluatorVersion": "node-python-evaluator-w3-c1",
+            "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+            "assetBundleHash": "sha256:1a42dfe66391ea56d11b7c8b525ac2da19146c3fc7d4401a3439e6b7b793125b",
+            "dimensionResults": {
+              "missing": 0
+            }
+          }
+        },
+        {
+          "repeat": 2,
+          "startedAt": "2026-08-21T17:25:51.646Z",
+          "endedAt": "2026-08-21T17:25:53.438Z",
+          "elapsed_ms": 1792.144,
+          "result": {
+            "executionStatus": "completed",
+            "verdict": "fail",
+            "score": 0,
+            "errorKind": "learner",
+            "errorCode": "test_failed",
+            "evaluatorVersion": "node-python-evaluator-w3-c1",
+            "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+            "assetBundleHash": "sha256:1a42dfe66391ea56d11b7c8b525ac2da19146c3fc7d4401a3439e6b7b793125b",
+            "dimensionResults": {
+              "missing": 0
+            }
+          }
+        },
+        {
+          "repeat": 3,
+          "startedAt": "2026-08-21T17:25:53.439Z",
+          "endedAt": "2026-08-21T17:25:55.111Z",
+          "elapsed_ms": 1672.182,
+          "result": {
+            "executionStatus": "completed",
+            "verdict": "fail",
+            "score": 0,
+            "errorKind": "learner",
+            "errorCode": "test_failed",
+            "evaluatorVersion": "node-python-evaluator-w3-c1",
+            "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+            "assetBundleHash": "sha256:1a42dfe66391ea56d11b7c8b525ac2da19146c3fc7d4401a3439e6b7b793125b",
+            "dimensionResults": {
+              "missing": 0
+            }
+          }
+        }
+      ],
+      "nodeFieldsIdentical": true,
+      "pyodide": {
+        "status": "NOT_RUN",
+        "errorCode": "PYODIDE_CANDIDATE_UNAVAILABLE",
+        "elapsed_ms": null
+      },
+      "sensitiveFieldMatch": false,
+      "inputId": "w5-d3-r2-03"
+    },
+    {
+      "source": "HTTP POST /api/activities/:id/run",
+      "inputSha256": "40cd12423d6a74670a0205599280839c20a1d951bef8e2f7a2f057c5b8453c4b",
+      "publicPackageSha256": "6be1d7316f49496069ddc1f55b614a47fa2946ebf360aa3198ec88125fb97ec6",
+      "runId": "run-18c2c84b-7632-495a-aa65-bf2a08fc4898",
+      "activityId": "act-missing",
+      "profileRevision": 3,
+      "environmentId": "env-python-pandas-candidate",
+      "starterCodeHash": "sha256:a81db8c7ddb6fc50fb8450fe4b954593179ed6e0db43545b535a99bebaa35e91",
+      "publicDatasetFiles": [
+        {
+          "name": "orders-learning.csv",
+          "content": "order_id,customer_id,amount,city,order_date,status,note\n O001 , C001 ,\"¥1,200.50\",上海市,2026-01-03, Completed ,首单\nO002,C002,88,沪,2026-01-04,pending,\nO003,C003,\"￥2,000\",北京市,2026-01-05,CANCELLED,退款\nO004,C004,N/A,京,2026/01/06,completed,异常金额\nO005,,35.5,广州市,2026-01-07,pending,客户缺失\n,C006,66,穗,2026-01-08,completed,主键缺失\nO007,C007, 77 ,深圳,2026-01-09,shipped,未知状态\nO008,C008,Infinity,上海市,2026-01-10,completed,无穷金额\nO009,C009,,北京市,2026-01-11,pending,空金额\nO010,C010,45,京,01-11-2026,cancelled,日期格式错误\nO011,C011,50,上海市,2026-01-12,pending,旧记录\nO011,C011,55,沪,2026-01-13,completed,新记录\nO012,C012,60,北京市,2026-01-14,pending,可解析日期优先\nO012,C012,61,京,2026/01/14,completed,不可解析日期\nO013,C013,70,广州市,not-a-date,pending,首条平局\nO013,C013,71,穗,also-bad,cancelled,第二条平局\nO014,C014,\"1,234\",未知城,2026-01-15,completed,未知城市保留\nO015,C015,12.345,上海,2026-01-16,pending,保留精度\nO016,C016,0,北京市,2026-01-17,completed,零金额\nO017,C017,-5,广州市,2026-02-30,pending,非法日期\nO018,C018,100,京,2026-01-18,CANCELLED,大小写\nO019,C019,NaN,深圳,2026-01-19,completed,文本金额\nO020,C020,\"¥2,500\",上海,2026-01-20,pending,货币符号\nO021,C021,33,穗,2026-01-21, ,空状态\nO022,C022,44,北京市,2026-01-22, completed ,首尾空格\nO023,C023,55,广州,2026-01-23,pending,\nO024,C024,66,未知城,2026-01-24,cancelled,保留未知城市\nO025,C025,77,沪,2026-01-25,pending,映射城市\nO026,C026,88,上海市,2026-01-26,completed,稳定记录\nO027,C027,99,京,2026-01-27,pending,末行\n",
+          "hash": "sha256:99b2923bfde4a6a824ed69bb410dc9c9f5d10f69e30b9bc5692ae986c6ab09f9"
+        }
+      ],
+      "publicTestSources": [
+        "\"\"\"Public executable contract for act-missing.\"\"\"\ndef run_case(clean_missing, df):\n    result = clean_missing(df)\n    assert result[\"order_id\"].notna().all()\n    assert result[\"customer_id\"].isna().any()\n    assert (result[\"note\"].fillna(\"\") == result[\"note\"]).all()\n    return result\n"
+      ],
+      "bundleHash": "sha256:6d3fad7197b6ea293e670a5f1c7119384e3b34cbb1bfd4b072f65bbe9ad81b14",
+      "nodeRuns": [
+        {
+          "repeat": 1,
+          "startedAt": "2026-08-21T17:25:55.307Z",
+          "endedAt": "2026-08-21T17:25:57.066Z",
+          "elapsed_ms": 1758.705,
+          "result": {
+            "executionStatus": "completed",
+            "verdict": "fail",
+            "score": 0,
+            "errorKind": "learner",
+            "errorCode": "test_failed",
+            "evaluatorVersion": "node-python-evaluator-w3-c1",
+            "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+            "assetBundleHash": "sha256:1a42dfe66391ea56d11b7c8b525ac2da19146c3fc7d4401a3439e6b7b793125b",
+            "dimensionResults": {
+              "missing": 0
+            }
+          }
+        },
+        {
+          "repeat": 2,
+          "startedAt": "2026-08-21T17:25:57.066Z",
+          "endedAt": "2026-08-21T17:25:58.742Z",
+          "elapsed_ms": 1676.296,
+          "result": {
+            "executionStatus": "completed",
+            "verdict": "fail",
+            "score": 0,
+            "errorKind": "learner",
+            "errorCode": "test_failed",
+            "evaluatorVersion": "node-python-evaluator-w3-c1",
+            "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+            "assetBundleHash": "sha256:1a42dfe66391ea56d11b7c8b525ac2da19146c3fc7d4401a3439e6b7b793125b",
+            "dimensionResults": {
+              "missing": 0
+            }
+          }
+        },
+        {
+          "repeat": 3,
+          "startedAt": "2026-08-21T17:25:58.742Z",
+          "endedAt": "2026-08-21T17:26:00.547Z",
+          "elapsed_ms": 1804.514,
+          "result": {
+            "executionStatus": "completed",
+            "verdict": "fail",
+            "score": 0,
+            "errorKind": "learner",
+            "errorCode": "test_failed",
+            "evaluatorVersion": "node-python-evaluator-w3-c1",
+            "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+            "assetBundleHash": "sha256:1a42dfe66391ea56d11b7c8b525ac2da19146c3fc7d4401a3439e6b7b793125b",
+            "dimensionResults": {
+              "missing": 0
+            }
+          }
+        }
+      ],
+      "nodeFieldsIdentical": true,
+      "pyodide": {
+        "status": "NOT_RUN",
+        "errorCode": "PYODIDE_CANDIDATE_UNAVAILABLE",
+        "elapsed_ms": null
+      },
+      "sensitiveFieldMatch": false,
+      "inputId": "w5-d3-r2-04"
+    },
+    {
+      "source": "HTTP POST /api/activities/:id/run",
+      "inputSha256": "521179a94fec521d3f6f480aac59d7bee772d67f68fe59dd4c5c342c9627e2f8",
+      "publicPackageSha256": "72374fe7c2fbee137ae943eba54997ce02a8732172bc130d4fcc2ef8914a36d6",
+      "runId": "run-81aae1e0-2f33-4463-99db-68bffe02229b",
+      "activityId": "act-duplicates",
+      "profileRevision": 3,
+      "environmentId": "env-python-pandas-candidate",
+      "starterCodeHash": "sha256:521179a94fec521d3f6f480aac59d7bee772d67f68fe59dd4c5c342c9627e2f8",
+      "publicDatasetFiles": [
+        {
+          "name": "orders-learning.csv",
+          "content": "order_id,customer_id,amount,city,order_date,status,note\n O001 , C001 ,\"¥1,200.50\",上海市,2026-01-03, Completed ,首单\nO002,C002,88,沪,2026-01-04,pending,\nO003,C003,\"￥2,000\",北京市,2026-01-05,CANCELLED,退款\nO004,C004,N/A,京,2026/01/06,completed,异常金额\nO005,,35.5,广州市,2026-01-07,pending,客户缺失\n,C006,66,穗,2026-01-08,completed,主键缺失\nO007,C007, 77 ,深圳,2026-01-09,shipped,未知状态\nO008,C008,Infinity,上海市,2026-01-10,completed,无穷金额\nO009,C009,,北京市,2026-01-11,pending,空金额\nO010,C010,45,京,01-11-2026,cancelled,日期格式错误\nO011,C011,50,上海市,2026-01-12,pending,旧记录\nO011,C011,55,沪,2026-01-13,completed,新记录\nO012,C012,60,北京市,2026-01-14,pending,可解析日期优先\nO012,C012,61,京,2026/01/14,completed,不可解析日期\nO013,C013,70,广州市,not-a-date,pending,首条平局\nO013,C013,71,穗,also-bad,cancelled,第二条平局\nO014,C014,\"1,234\",未知城,2026-01-15,completed,未知城市保留\nO015,C015,12.345,上海,2026-01-16,pending,保留精度\nO016,C016,0,北京市,2026-01-17,completed,零金额\nO017,C017,-5,广州市,2026-02-30,pending,非法日期\nO018,C018,100,京,2026-01-18,CANCELLED,大小写\nO019,C019,NaN,深圳,2026-01-19,completed,文本金额\nO020,C020,\"¥2,500\",上海,2026-01-20,pending,货币符号\nO021,C021,33,穗,2026-01-21, ,空状态\nO022,C022,44,北京市,2026-01-22, completed ,首尾空格\nO023,C023,55,广州,2026-01-23,pending,\nO024,C024,66,未知城,2026-01-24,cancelled,保留未知城市\nO025,C025,77,沪,2026-01-25,pending,映射城市\nO026,C026,88,上海市,2026-01-26,completed,稳定记录\nO027,C027,99,京,2026-01-27,pending,末行\n",
+          "hash": "sha256:99b2923bfde4a6a824ed69bb410dc9c9f5d10f69e30b9bc5692ae986c6ab09f9"
+        }
+      ],
+      "publicTestSources": [
+        "\"\"\"Public executable contract for act-duplicates.\"\"\"\ndef run_case(deduplicate_orders, df):\n    before = df.copy(deep=True)\n    result = deduplicate_orders(df)\n    assert df.equals(before)\n    assert result[\"order_id\"].is_unique\n    by_id = result.assign(_id=result[\"order_id\"].astype(\"string\").str.strip()).set_index(\"_id\")\n    assert str(by_id.loc[\"O011\", \"amount\"]).strip() == \"55\"\n    assert str(by_id.loc[\"O012\", \"amount\"]).strip() == \"60\"\n    assert str(by_id.loc[\"O013\", \"amount\"]).strip() == \"70\"\n    selected_positions = [int(df.index[df[\"order_id\"].astype(\"string\").str.strip() == str(value).strip()][0]) for value in result[\"order_id\"] if str(value) != \"<NA>\"]\n    assert selected_positions == sorted(selected_positions)\n    return result\n"
+      ],
+      "bundleHash": "sha256:879350d2ceffe380632ec98bc6dddabf4e07fa9a3c980e400da19ae815c89fa9",
+      "nodeRuns": [
+        {
+          "repeat": 1,
+          "startedAt": "2026-08-21T17:26:03.780Z",
+          "endedAt": "2026-08-21T17:26:05.560Z",
+          "elapsed_ms": 1780.414,
+          "result": {
+            "executionStatus": "completed",
+            "verdict": "fail",
+            "score": 0,
+            "errorKind": "learner",
+            "errorCode": "test_failed",
+            "evaluatorVersion": "node-python-evaluator-w3-c1",
+            "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+            "assetBundleHash": "sha256:dd88d60ef3320f7eba10fbba7cddc76ee96859e3f7fd7f7a9139fe9ed96d4886",
+            "dimensionResults": {
+              "duplicates": 0
+            }
+          }
+        },
+        {
+          "repeat": 2,
+          "startedAt": "2026-08-21T17:26:05.560Z",
+          "endedAt": "2026-08-21T17:26:07.362Z",
+          "elapsed_ms": 1802.245,
+          "result": {
+            "executionStatus": "completed",
+            "verdict": "fail",
+            "score": 0,
+            "errorKind": "learner",
+            "errorCode": "test_failed",
+            "evaluatorVersion": "node-python-evaluator-w3-c1",
+            "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+            "assetBundleHash": "sha256:dd88d60ef3320f7eba10fbba7cddc76ee96859e3f7fd7f7a9139fe9ed96d4886",
+            "dimensionResults": {
+              "duplicates": 0
+            }
+          }
+        },
+        {
+          "repeat": 3,
+          "startedAt": "2026-08-21T17:26:07.362Z",
+          "endedAt": "2026-08-21T17:26:09.198Z",
+          "elapsed_ms": 1835.841,
+          "result": {
+            "executionStatus": "completed",
+            "verdict": "fail",
+            "score": 0,
+            "errorKind": "learner",
+            "errorCode": "test_failed",
+            "evaluatorVersion": "node-python-evaluator-w3-c1",
+            "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+            "assetBundleHash": "sha256:dd88d60ef3320f7eba10fbba7cddc76ee96859e3f7fd7f7a9139fe9ed96d4886",
+            "dimensionResults": {
+              "duplicates": 0
+            }
+          }
+        }
+      ],
+      "nodeFieldsIdentical": true,
+      "pyodide": {
+        "status": "NOT_RUN",
+        "errorCode": "PYODIDE_CANDIDATE_UNAVAILABLE",
+        "elapsed_ms": null
+      },
+      "sensitiveFieldMatch": false,
+      "inputId": "w5-d3-r2-05"
+    },
+    {
+      "source": "HTTP POST /api/activities/:id/run",
+      "inputSha256": "29d22d9a24e18009461f0530c98ac011de003ae7ecdef70939ff1bba485fe362",
+      "publicPackageSha256": "2d306c816654c6565d84b4f1ecbbf819b1cdbe481a4d7ced4fea7a965752b68f",
+      "runId": "run-f898a81a-ee19-47cc-977b-6e94e8900ecc",
+      "activityId": "act-duplicates",
+      "profileRevision": 3,
+      "environmentId": "env-python-pandas-candidate",
+      "starterCodeHash": "sha256:521179a94fec521d3f6f480aac59d7bee772d67f68fe59dd4c5c342c9627e2f8",
+      "publicDatasetFiles": [
+        {
+          "name": "orders-learning.csv",
+          "content": "order_id,customer_id,amount,city,order_date,status,note\n O001 , C001 ,\"¥1,200.50\",上海市,2026-01-03, Completed ,首单\nO002,C002,88,沪,2026-01-04,pending,\nO003,C003,\"￥2,000\",北京市,2026-01-05,CANCELLED,退款\nO004,C004,N/A,京,2026/01/06,completed,异常金额\nO005,,35.5,广州市,2026-01-07,pending,客户缺失\n,C006,66,穗,2026-01-08,completed,主键缺失\nO007,C007, 77 ,深圳,2026-01-09,shipped,未知状态\nO008,C008,Infinity,上海市,2026-01-10,completed,无穷金额\nO009,C009,,北京市,2026-01-11,pending,空金额\nO010,C010,45,京,01-11-2026,cancelled,日期格式错误\nO011,C011,50,上海市,2026-01-12,pending,旧记录\nO011,C011,55,沪,2026-01-13,completed,新记录\nO012,C012,60,北京市,2026-01-14,pending,可解析日期优先\nO012,C012,61,京,2026/01/14,completed,不可解析日期\nO013,C013,70,广州市,not-a-date,pending,首条平局\nO013,C013,71,穗,also-bad,cancelled,第二条平局\nO014,C014,\"1,234\",未知城,2026-01-15,completed,未知城市保留\nO015,C015,12.345,上海,2026-01-16,pending,保留精度\nO016,C016,0,北京市,2026-01-17,completed,零金额\nO017,C017,-5,广州市,2026-02-30,pending,非法日期\nO018,C018,100,京,2026-01-18,CANCELLED,大小写\nO019,C019,NaN,深圳,2026-01-19,completed,文本金额\nO020,C020,\"¥2,500\",上海,2026-01-20,pending,货币符号\nO021,C021,33,穗,2026-01-21, ,空状态\nO022,C022,44,北京市,2026-01-22, completed ,首尾空格\nO023,C023,55,广州,2026-01-23,pending,\nO024,C024,66,未知城,2026-01-24,cancelled,保留未知城市\nO025,C025,77,沪,2026-01-25,pending,映射城市\nO026,C026,88,上海市,2026-01-26,completed,稳定记录\nO027,C027,99,京,2026-01-27,pending,末行\n",
+          "hash": "sha256:99b2923bfde4a6a824ed69bb410dc9c9f5d10f69e30b9bc5692ae986c6ab09f9"
+        }
+      ],
+      "publicTestSources": [
+        "\"\"\"Public executable contract for act-duplicates.\"\"\"\ndef run_case(deduplicate_orders, df):\n    before = df.copy(deep=True)\n    result = deduplicate_orders(df)\n    assert df.equals(before)\n    assert result[\"order_id\"].is_unique\n    by_id = result.assign(_id=result[\"order_id\"].astype(\"string\").str.strip()).set_index(\"_id\")\n    assert str(by_id.loc[\"O011\", \"amount\"]).strip() == \"55\"\n    assert str(by_id.loc[\"O012\", \"amount\"]).strip() == \"60\"\n    assert str(by_id.loc[\"O013\", \"amount\"]).strip() == \"70\"\n    selected_positions = [int(df.index[df[\"order_id\"].astype(\"string\").str.strip() == str(value).strip()][0]) for value in result[\"order_id\"] if str(value) != \"<NA>\"]\n    assert selected_positions == sorted(selected_positions)\n    return result\n"
+      ],
+      "bundleHash": "sha256:62b0ae2619345a8c042277ece7b3180ed44ecdbe4eac493c37c8dc874367438c",
+      "nodeRuns": [
+        {
+          "repeat": 1,
+          "startedAt": "2026-08-21T17:26:09.366Z",
+          "endedAt": "2026-08-21T17:26:11.107Z",
+          "elapsed_ms": 1741.237,
+          "result": {
+            "executionStatus": "completed",
+            "verdict": "fail",
+            "score": 0,
+            "errorKind": "learner",
+            "errorCode": "test_failed",
+            "evaluatorVersion": "node-python-evaluator-w3-c1",
+            "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+            "assetBundleHash": "sha256:dd88d60ef3320f7eba10fbba7cddc76ee96859e3f7fd7f7a9139fe9ed96d4886",
+            "dimensionResults": {
+              "duplicates": 0
+            }
+          }
+        },
+        {
+          "repeat": 2,
+          "startedAt": "2026-08-21T17:26:11.107Z",
+          "endedAt": "2026-08-21T17:26:12.988Z",
+          "elapsed_ms": 1880.912,
+          "result": {
+            "executionStatus": "completed",
+            "verdict": "fail",
+            "score": 0,
+            "errorKind": "learner",
+            "errorCode": "test_failed",
+            "evaluatorVersion": "node-python-evaluator-w3-c1",
+            "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+            "assetBundleHash": "sha256:dd88d60ef3320f7eba10fbba7cddc76ee96859e3f7fd7f7a9139fe9ed96d4886",
+            "dimensionResults": {
+              "duplicates": 0
+            }
+          }
+        },
+        {
+          "repeat": 3,
+          "startedAt": "2026-08-21T17:26:12.988Z",
+          "endedAt": "2026-08-21T17:26:14.699Z",
+          "elapsed_ms": 1710.411,
+          "result": {
+            "executionStatus": "completed",
+            "verdict": "fail",
+            "score": 0,
+            "errorKind": "learner",
+            "errorCode": "test_failed",
+            "evaluatorVersion": "node-python-evaluator-w3-c1",
+            "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+            "assetBundleHash": "sha256:dd88d60ef3320f7eba10fbba7cddc76ee96859e3f7fd7f7a9139fe9ed96d4886",
+            "dimensionResults": {
+              "duplicates": 0
+            }
+          }
+        }
+      ],
+      "nodeFieldsIdentical": true,
+      "pyodide": {
+        "status": "NOT_RUN",
+        "errorCode": "PYODIDE_CANDIDATE_UNAVAILABLE",
+        "elapsed_ms": null
+      },
+      "sensitiveFieldMatch": false,
+      "inputId": "w5-d3-r2-06"
+    },
+    {
+      "source": "HTTP POST /api/activities/:id/run",
+      "inputSha256": "7ec8410d2f2221f7d7380c280f9911fea5480206ee8c0d34bbd1ee75afbd82c6",
+      "publicPackageSha256": "ad4a2ea3a11b0bb9c936d769d76629c5cc035282a1f2878e3b9ba93b578bd9d6",
+      "runId": "run-4da83dfb-54e8-4cdd-ae53-a2b41b78d2b6",
+      "activityId": "act-types",
+      "profileRevision": 3,
+      "environmentId": "env-python-pandas-candidate",
+      "starterCodeHash": "sha256:7ec8410d2f2221f7d7380c280f9911fea5480206ee8c0d34bbd1ee75afbd82c6",
+      "publicDatasetFiles": [
+        {
+          "name": "orders-learning.csv",
+          "content": "order_id,customer_id,amount,city,order_date,status,note\n O001 , C001 ,\"¥1,200.50\",上海市,2026-01-03, Completed ,首单\nO002,C002,88,沪,2026-01-04,pending,\nO003,C003,\"￥2,000\",北京市,2026-01-05,CANCELLED,退款\nO004,C004,N/A,京,2026/01/06,completed,异常金额\nO005,,35.5,广州市,2026-01-07,pending,客户缺失\n,C006,66,穗,2026-01-08,completed,主键缺失\nO007,C007, 77 ,深圳,2026-01-09,shipped,未知状态\nO008,C008,Infinity,上海市,2026-01-10,completed,无穷金额\nO009,C009,,北京市,2026-01-11,pending,空金额\nO010,C010,45,京,01-11-2026,cancelled,日期格式错误\nO011,C011,50,上海市,2026-01-12,pending,旧记录\nO011,C011,55,沪,2026-01-13,completed,新记录\nO012,C012,60,北京市,2026-01-14,pending,可解析日期优先\nO012,C012,61,京,2026/01/14,completed,不可解析日期\nO013,C013,70,广州市,not-a-date,pending,首条平局\nO013,C013,71,穗,also-bad,cancelled,第二条平局\nO014,C014,\"1,234\",未知城,2026-01-15,completed,未知城市保留\nO015,C015,12.345,上海,2026-01-16,pending,保留精度\nO016,C016,0,北京市,2026-01-17,completed,零金额\nO017,C017,-5,广州市,2026-02-30,pending,非法日期\nO018,C018,100,京,2026-01-18,CANCELLED,大小写\nO019,C019,NaN,深圳,2026-01-19,completed,文本金额\nO020,C020,\"¥2,500\",上海,2026-01-20,pending,货币符号\nO021,C021,33,穗,2026-01-21, ,空状态\nO022,C022,44,北京市,2026-01-22, completed ,首尾空格\nO023,C023,55,广州,2026-01-23,pending,\nO024,C024,66,未知城,2026-01-24,cancelled,保留未知城市\nO025,C025,77,沪,2026-01-25,pending,映射城市\nO026,C026,88,上海市,2026-01-26,completed,稳定记录\nO027,C027,99,京,2026-01-27,pending,末行\n",
+          "hash": "sha256:99b2923bfde4a6a824ed69bb410dc9c9f5d10f69e30b9bc5692ae986c6ab09f9"
+        }
+      ],
+      "publicTestSources": [
+        "\"\"\"Public executable contract for act-types.\"\"\"\ndef run_case(normalize_types, df):\n    before = df.copy(deep=True)\n    result = normalize_types(df)\n    assert df.equals(before)\n    assert result[\"amount\"].dtype.kind in \"fiu\"\n    assert getattr(result[\"order_date\"].dtype, \"tz\", None) is None\n    assert set(result[\"status\"].dropna().astype(str)).issubset({\"completed\", \"pending\", \"cancelled\"})\n    by_id = result.assign(_id=result[\"order_id\"].astype(\"string\").str.strip()).set_index(\"_id\")\n    for order_id in [\"O004\", \"O008\", \"O009\", \"O019\"]:\n        assert bool(__import__(\"pandas\").isna(by_id.loc[order_id, \"amount\"]))\n    for order_id in [\"O004\", \"O010\", \"O017\"]:\n        assert __import__(\"pandas\").isna(by_id.loc[order_id, \"order_date\"])\n    expected_cities = {\"O001\":\"上海\", \"O002\":\"上海\", \"O003\":\"北京\", \"O004\":\"北京\", \"O005\":\"广州\", \"O007\":\"深圳\"}\n    for order_id, city in expected_cities.items():\n        assert str(by_id.loc[order_id, \"city\"]) == city\n    for column in [\"order_id\", \"customer_id\", \"city\", \"status\", \"note\"]:\n        assert str(result[column].dtype) == \"string\"\n    return result\n"
+      ],
+      "bundleHash": "sha256:a5936ca704af7f8e9127d00914f61aeed346f78d75a08fc9fbde90c66ec4785b",
+      "nodeRuns": [
+        {
+          "repeat": 1,
+          "startedAt": "2026-08-21T17:26:17.627Z",
+          "endedAt": "2026-08-21T17:26:19.430Z",
+          "elapsed_ms": 1802.581,
+          "result": {
+            "executionStatus": "completed",
+            "verdict": "fail",
+            "score": 0,
+            "errorKind": "learner",
+            "errorCode": "test_failed",
+            "evaluatorVersion": "node-python-evaluator-w3-c1",
+            "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+            "assetBundleHash": "sha256:cfa703b189cb49cfa2e56ce3b0790a0412e58c996c82aa93ca459596d71c1880",
+            "dimensionResults": {
+              "types": 0
+            }
+          }
+        },
+        {
+          "repeat": 2,
+          "startedAt": "2026-08-21T17:26:19.430Z",
+          "endedAt": "2026-08-21T17:26:21.143Z",
+          "elapsed_ms": 1712.94,
+          "result": {
+            "executionStatus": "completed",
+            "verdict": "fail",
+            "score": 0,
+            "errorKind": "learner",
+            "errorCode": "test_failed",
+            "evaluatorVersion": "node-python-evaluator-w3-c1",
+            "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+            "assetBundleHash": "sha256:cfa703b189cb49cfa2e56ce3b0790a0412e58c996c82aa93ca459596d71c1880",
+            "dimensionResults": {
+              "types": 0
+            }
+          }
+        },
+        {
+          "repeat": 3,
+          "startedAt": "2026-08-21T17:26:21.143Z",
+          "endedAt": "2026-08-21T17:26:22.889Z",
+          "elapsed_ms": 1746.048,
+          "result": {
+            "executionStatus": "completed",
+            "verdict": "fail",
+            "score": 0,
+            "errorKind": "learner",
+            "errorCode": "test_failed",
+            "evaluatorVersion": "node-python-evaluator-w3-c1",
+            "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+            "assetBundleHash": "sha256:cfa703b189cb49cfa2e56ce3b0790a0412e58c996c82aa93ca459596d71c1880",
+            "dimensionResults": {
+              "types": 0
+            }
+          }
+        }
+      ],
+      "nodeFieldsIdentical": true,
+      "pyodide": {
+        "status": "NOT_RUN",
+        "errorCode": "PYODIDE_CANDIDATE_UNAVAILABLE",
+        "elapsed_ms": null
+      },
+      "sensitiveFieldMatch": false,
+      "inputId": "w5-d3-r2-07"
+    },
+    {
+      "source": "HTTP POST /api/activities/:id/run",
+      "inputSha256": "4d8fed9e16aaf42fdbc882d06d5495c71249b4e27ca9f21b31a2f4b910df73b9",
+      "publicPackageSha256": "8398c16ed63ede85d709beefdfc454d3c5337df39091802ebdb774ce1b86e788",
+      "runId": "run-495569c8-af10-45cb-a138-41e5c93bc18a",
+      "activityId": "act-types",
+      "profileRevision": 3,
+      "environmentId": "env-python-pandas-candidate",
+      "starterCodeHash": "sha256:7ec8410d2f2221f7d7380c280f9911fea5480206ee8c0d34bbd1ee75afbd82c6",
+      "publicDatasetFiles": [
+        {
+          "name": "orders-learning.csv",
+          "content": "order_id,customer_id,amount,city,order_date,status,note\n O001 , C001 ,\"¥1,200.50\",上海市,2026-01-03, Completed ,首单\nO002,C002,88,沪,2026-01-04,pending,\nO003,C003,\"￥2,000\",北京市,2026-01-05,CANCELLED,退款\nO004,C004,N/A,京,2026/01/06,completed,异常金额\nO005,,35.5,广州市,2026-01-07,pending,客户缺失\n,C006,66,穗,2026-01-08,completed,主键缺失\nO007,C007, 77 ,深圳,2026-01-09,shipped,未知状态\nO008,C008,Infinity,上海市,2026-01-10,completed,无穷金额\nO009,C009,,北京市,2026-01-11,pending,空金额\nO010,C010,45,京,01-11-2026,cancelled,日期格式错误\nO011,C011,50,上海市,2026-01-12,pending,旧记录\nO011,C011,55,沪,2026-01-13,completed,新记录\nO012,C012,60,北京市,2026-01-14,pending,可解析日期优先\nO012,C012,61,京,2026/01/14,completed,不可解析日期\nO013,C013,70,广州市,not-a-date,pending,首条平局\nO013,C013,71,穗,also-bad,cancelled,第二条平局\nO014,C014,\"1,234\",未知城,2026-01-15,completed,未知城市保留\nO015,C015,12.345,上海,2026-01-16,pending,保留精度\nO016,C016,0,北京市,2026-01-17,completed,零金额\nO017,C017,-5,广州市,2026-02-30,pending,非法日期\nO018,C018,100,京,2026-01-18,CANCELLED,大小写\nO019,C019,NaN,深圳,2026-01-19,completed,文本金额\nO020,C020,\"¥2,500\",上海,2026-01-20,pending,货币符号\nO021,C021,33,穗,2026-01-21, ,空状态\nO022,C022,44,北京市,2026-01-22, completed ,首尾空格\nO023,C023,55,广州,2026-01-23,pending,\nO024,C024,66,未知城,2026-01-24,cancelled,保留未知城市\nO025,C025,77,沪,2026-01-25,pending,映射城市\nO026,C026,88,上海市,2026-01-26,completed,稳定记录\nO027,C027,99,京,2026-01-27,pending,末行\n",
+          "hash": "sha256:99b2923bfde4a6a824ed69bb410dc9c9f5d10f69e30b9bc5692ae986c6ab09f9"
+        }
+      ],
+      "publicTestSources": [
+        "\"\"\"Public executable contract for act-types.\"\"\"\ndef run_case(normalize_types, df):\n    before = df.copy(deep=True)\n    result = normalize_types(df)\n    assert df.equals(before)\n    assert result[\"amount\"].dtype.kind in \"fiu\"\n    assert getattr(result[\"order_date\"].dtype, \"tz\", None) is None\n    assert set(result[\"status\"].dropna().astype(str)).issubset({\"completed\", \"pending\", \"cancelled\"})\n    by_id = result.assign(_id=result[\"order_id\"].astype(\"string\").str.strip()).set_index(\"_id\")\n    for order_id in [\"O004\", \"O008\", \"O009\", \"O019\"]:\n        assert bool(__import__(\"pandas\").isna(by_id.loc[order_id, \"amount\"]))\n    for order_id in [\"O004\", \"O010\", \"O017\"]:\n        assert __import__(\"pandas\").isna(by_id.loc[order_id, \"order_date\"])\n    expected_cities = {\"O001\":\"上海\", \"O002\":\"上海\", \"O003\":\"北京\", \"O004\":\"北京\", \"O005\":\"广州\", \"O007\":\"深圳\"}\n    for order_id, city in expected_cities.items():\n        assert str(by_id.loc[order_id, \"city\"]) == city\n    for column in [\"order_id\", \"customer_id\", \"city\", \"status\", \"note\"]:\n        assert str(result[column].dtype) == \"string\"\n    return result\n"
+      ],
+      "bundleHash": "sha256:251351f1f3e652b01a9d55dbf9b0a840a3741c4446048d660181cafbb366c1d7",
+      "nodeRuns": [
+        {
+          "repeat": 1,
+          "startedAt": "2026-08-21T17:26:23.062Z",
+          "endedAt": "2026-08-21T17:26:24.795Z",
+          "elapsed_ms": 1732.679,
+          "result": {
+            "executionStatus": "completed",
+            "verdict": "fail",
+            "score": 0,
+            "errorKind": "learner",
+            "errorCode": "test_failed",
+            "evaluatorVersion": "node-python-evaluator-w3-c1",
+            "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+            "assetBundleHash": "sha256:cfa703b189cb49cfa2e56ce3b0790a0412e58c996c82aa93ca459596d71c1880",
+            "dimensionResults": {
+              "types": 0
+            }
+          }
+        },
+        {
+          "repeat": 2,
+          "startedAt": "2026-08-21T17:26:24.795Z",
+          "endedAt": "2026-08-21T17:26:26.517Z",
+          "elapsed_ms": 1722.408,
+          "result": {
+            "executionStatus": "completed",
+            "verdict": "fail",
+            "score": 0,
+            "errorKind": "learner",
+            "errorCode": "test_failed",
+            "evaluatorVersion": "node-python-evaluator-w3-c1",
+            "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+            "assetBundleHash": "sha256:cfa703b189cb49cfa2e56ce3b0790a0412e58c996c82aa93ca459596d71c1880",
+            "dimensionResults": {
+              "types": 0
+            }
+          }
+        },
+        {
+          "repeat": 3,
+          "startedAt": "2026-08-21T17:26:26.517Z",
+          "endedAt": "2026-08-21T17:26:28.249Z",
+          "elapsed_ms": 1731.808,
+          "result": {
+            "executionStatus": "completed",
+            "verdict": "fail",
+            "score": 0,
+            "errorKind": "learner",
+            "errorCode": "test_failed",
+            "evaluatorVersion": "node-python-evaluator-w3-c1",
+            "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+            "assetBundleHash": "sha256:cfa703b189cb49cfa2e56ce3b0790a0412e58c996c82aa93ca459596d71c1880",
+            "dimensionResults": {
+              "types": 0
+            }
+          }
+        }
+      ],
+      "nodeFieldsIdentical": true,
+      "pyodide": {
+        "status": "NOT_RUN",
+        "errorCode": "PYODIDE_CANDIDATE_UNAVAILABLE",
+        "elapsed_ms": null
+      },
+      "sensitiveFieldMatch": false,
+      "inputId": "w5-d3-r2-08"
+    },
+    {
+      "source": "HTTP POST /api/activities/:id/run",
+      "inputSha256": "ceb0fd12de5f0772764af7c10863f15b9d27d4d97c4102eafc9c10b2419677ef",
+      "publicPackageSha256": "61b56a07dc1308f4efa5eed9e3c57724e796105b93244642bc0d3dbe10d3651b",
+      "runId": "run-4d54553b-f691-477f-b28b-d79b80adc20f",
+      "activityId": "act-practical",
+      "profileRevision": 3,
+      "environmentId": "env-python-pandas-candidate",
+      "starterCodeHash": "sha256:ceb0fd12de5f0772764af7c10863f15b9d27d4d97c4102eafc9c10b2419677ef",
+      "publicDatasetFiles": [
+        {
+          "name": "orders-learning.csv",
+          "content": "order_id,customer_id,amount,city,order_date,status,note\n O001 , C001 ,\"¥1,200.50\",上海市,2026-01-03, Completed ,首单\nO002,C002,88,沪,2026-01-04,pending,\nO003,C003,\"￥2,000\",北京市,2026-01-05,CANCELLED,退款\nO004,C004,N/A,京,2026/01/06,completed,异常金额\nO005,,35.5,广州市,2026-01-07,pending,客户缺失\n,C006,66,穗,2026-01-08,completed,主键缺失\nO007,C007, 77 ,深圳,2026-01-09,shipped,未知状态\nO008,C008,Infinity,上海市,2026-01-10,completed,无穷金额\nO009,C009,,北京市,2026-01-11,pending,空金额\nO010,C010,45,京,01-11-2026,cancelled,日期格式错误\nO011,C011,50,上海市,2026-01-12,pending,旧记录\nO011,C011,55,沪,2026-01-13,completed,新记录\nO012,C012,60,北京市,2026-01-14,pending,可解析日期优先\nO012,C012,61,京,2026/01/14,completed,不可解析日期\nO013,C013,70,广州市,not-a-date,pending,首条平局\nO013,C013,71,穗,also-bad,cancelled,第二条平局\nO014,C014,\"1,234\",未知城,2026-01-15,completed,未知城市保留\nO015,C015,12.345,上海,2026-01-16,pending,保留精度\nO016,C016,0,北京市,2026-01-17,completed,零金额\nO017,C017,-5,广州市,2026-02-30,pending,非法日期\nO018,C018,100,京,2026-01-18,CANCELLED,大小写\nO019,C019,NaN,深圳,2026-01-19,completed,文本金额\nO020,C020,\"¥2,500\",上海,2026-01-20,pending,货币符号\nO021,C021,33,穗,2026-01-21, ,空状态\nO022,C022,44,北京市,2026-01-22, completed ,首尾空格\nO023,C023,55,广州,2026-01-23,pending,\nO024,C024,66,未知城,2026-01-24,cancelled,保留未知城市\nO025,C025,77,沪,2026-01-25,pending,映射城市\nO026,C026,88,上海市,2026-01-26,completed,稳定记录\nO027,C027,99,京,2026-01-27,pending,末行\n",
+          "hash": "sha256:99b2923bfde4a6a824ed69bb410dc9c9f5d10f69e30b9bc5692ae986c6ab09f9"
+        }
+      ],
+      "publicTestSources": [
+        "\"\"\"Public executable contract for act-practical.\"\"\"\nEXPECTED_COLUMNS = [\"order_id\", \"customer_id\", \"amount\", \"city\", \"order_date\", \"status\", \"note\"]\n\ndef run_case(clean_orders, df):\n    before = df.copy(deep=True)\n    result = clean_orders(df)\n    assert df.equals(before)\n    assert list(result.columns) == EXPECTED_COLUMNS\n    assert result[\"order_id\"].notna().all()\n    assert result[\"order_id\"].is_unique\n    assert len(result) == 26\n    by_id = result.set_index(result[\"order_id\"].astype(\"string\").str.strip())\n    assert float(by_id.loc[\"O011\", \"amount\"]) == 55.0\n    assert float(by_id.loc[\"O012\", \"amount\"]) == 60.0\n    assert float(by_id.loc[\"O013\", \"amount\"]) == 70.0\n    assert set(result[\"status\"].dropna().astype(str)).issubset({\"completed\", \"pending\", \"cancelled\"})\n    for column in [\"order_id\", \"customer_id\", \"city\", \"status\", \"note\"]:\n        assert str(result[column].dtype) == \"string\"\n    return result\n"
+      ],
+      "bundleHash": "sha256:ea13107db8e4a46053c069614eb4d0273ae1037523e8a47eb6a7e0167cc2bb80",
+      "nodeRuns": [
+        {
+          "repeat": 1,
+          "startedAt": "2026-08-21T17:26:30.926Z",
+          "endedAt": "2026-08-21T17:26:31.815Z",
+          "elapsed_ms": 888.966,
+          "result": {
+            "executionStatus": "completed",
+            "verdict": "fail",
+            "score": 0,
+            "errorKind": "learner",
+            "errorCode": "runtime_error",
+            "evaluatorVersion": "node-python-evaluator-w3-c1",
+            "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+            "assetBundleHash": "sha256:7731912ed0f6ec7596cbfbf3b7d029a3d354503c4b28a6ddcf623493df9c74a9"
+          }
+        },
+        {
+          "repeat": 2,
+          "startedAt": "2026-08-21T17:26:31.815Z",
+          "endedAt": "2026-08-21T17:26:32.704Z",
+          "elapsed_ms": 889.372,
+          "result": {
+            "executionStatus": "completed",
+            "verdict": "fail",
+            "score": 0,
+            "errorKind": "learner",
+            "errorCode": "runtime_error",
+            "evaluatorVersion": "node-python-evaluator-w3-c1",
+            "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+            "assetBundleHash": "sha256:7731912ed0f6ec7596cbfbf3b7d029a3d354503c4b28a6ddcf623493df9c74a9"
+          }
+        },
+        {
+          "repeat": 3,
+          "startedAt": "2026-08-21T17:26:32.704Z",
+          "endedAt": "2026-08-21T17:26:33.493Z",
+          "elapsed_ms": 788.908,
+          "result": {
+            "executionStatus": "completed",
+            "verdict": "fail",
+            "score": 0,
+            "errorKind": "learner",
+            "errorCode": "runtime_error",
+            "evaluatorVersion": "node-python-evaluator-w3-c1",
+            "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+            "assetBundleHash": "sha256:7731912ed0f6ec7596cbfbf3b7d029a3d354503c4b28a6ddcf623493df9c74a9"
+          }
+        }
+      ],
+      "nodeFieldsIdentical": true,
+      "pyodide": {
+        "status": "NOT_RUN",
+        "errorCode": "PYODIDE_CANDIDATE_UNAVAILABLE",
+        "elapsed_ms": null
+      },
+      "sensitiveFieldMatch": false,
+      "inputId": "w5-d3-r2-09"
+    },
+    {
+      "source": "HTTP POST /api/activities/:id/run",
+      "inputSha256": "903f7fdf100fc7c7fdee0d41d27a44264b1aad58dfe104343d7850c179fefa9c",
+      "publicPackageSha256": "629af360b4d5d7f7a7e523a0720a7095a3125bb36567827c7a2d45ab1754a00a",
+      "runId": "run-35ad88e9-65f4-4df7-9414-afe024845de6",
+      "activityId": "act-practical",
+      "profileRevision": 3,
+      "environmentId": "env-python-pandas-candidate",
+      "starterCodeHash": "sha256:ceb0fd12de5f0772764af7c10863f15b9d27d4d97c4102eafc9c10b2419677ef",
+      "publicDatasetFiles": [
+        {
+          "name": "orders-learning.csv",
+          "content": "order_id,customer_id,amount,city,order_date,status,note\n O001 , C001 ,\"¥1,200.50\",上海市,2026-01-03, Completed ,首单\nO002,C002,88,沪,2026-01-04,pending,\nO003,C003,\"￥2,000\",北京市,2026-01-05,CANCELLED,退款\nO004,C004,N/A,京,2026/01/06,completed,异常金额\nO005,,35.5,广州市,2026-01-07,pending,客户缺失\n,C006,66,穗,2026-01-08,completed,主键缺失\nO007,C007, 77 ,深圳,2026-01-09,shipped,未知状态\nO008,C008,Infinity,上海市,2026-01-10,completed,无穷金额\nO009,C009,,北京市,2026-01-11,pending,空金额\nO010,C010,45,京,01-11-2026,cancelled,日期格式错误\nO011,C011,50,上海市,2026-01-12,pending,旧记录\nO011,C011,55,沪,2026-01-13,completed,新记录\nO012,C012,60,北京市,2026-01-14,pending,可解析日期优先\nO012,C012,61,京,2026/01/14,completed,不可解析日期\nO013,C013,70,广州市,not-a-date,pending,首条平局\nO013,C013,71,穗,also-bad,cancelled,第二条平局\nO014,C014,\"1,234\",未知城,2026-01-15,completed,未知城市保留\nO015,C015,12.345,上海,2026-01-16,pending,保留精度\nO016,C016,0,北京市,2026-01-17,completed,零金额\nO017,C017,-5,广州市,2026-02-30,pending,非法日期\nO018,C018,100,京,2026-01-18,CANCELLED,大小写\nO019,C019,NaN,深圳,2026-01-19,completed,文本金额\nO020,C020,\"¥2,500\",上海,2026-01-20,pending,货币符号\nO021,C021,33,穗,2026-01-21, ,空状态\nO022,C022,44,北京市,2026-01-22, completed ,首尾空格\nO023,C023,55,广州,2026-01-23,pending,\nO024,C024,66,未知城,2026-01-24,cancelled,保留未知城市\nO025,C025,77,沪,2026-01-25,pending,映射城市\nO026,C026,88,上海市,2026-01-26,completed,稳定记录\nO027,C027,99,京,2026-01-27,pending,末行\n",
+          "hash": "sha256:99b2923bfde4a6a824ed69bb410dc9c9f5d10f69e30b9bc5692ae986c6ab09f9"
+        }
+      ],
+      "publicTestSources": [
+        "\"\"\"Public executable contract for act-practical.\"\"\"\nEXPECTED_COLUMNS = [\"order_id\", \"customer_id\", \"amount\", \"city\", \"order_date\", \"status\", \"note\"]\n\ndef run_case(clean_orders, df):\n    before = df.copy(deep=True)\n    result = clean_orders(df)\n    assert df.equals(before)\n    assert list(result.columns) == EXPECTED_COLUMNS\n    assert result[\"order_id\"].notna().all()\n    assert result[\"order_id\"].is_unique\n    assert len(result) == 26\n    by_id = result.set_index(result[\"order_id\"].astype(\"string\").str.strip())\n    assert float(by_id.loc[\"O011\", \"amount\"]) == 55.0\n    assert float(by_id.loc[\"O012\", \"amount\"]) == 60.0\n    assert float(by_id.loc[\"O013\", \"amount\"]) == 70.0\n    assert set(result[\"status\"].dropna().astype(str)).issubset({\"completed\", \"pending\", \"cancelled\"})\n    for column in [\"order_id\", \"customer_id\", \"city\", \"status\", \"note\"]:\n        assert str(result[column].dtype) == \"string\"\n    return result\n"
+      ],
+      "bundleHash": "sha256:11238a37ab594edb2cdec55f287a2cb475ffd821b563e143898fe5919e1ed764",
+      "nodeRuns": [
+        {
+          "repeat": 1,
+          "startedAt": "2026-08-21T17:26:33.761Z",
+          "endedAt": "2026-08-21T17:26:34.667Z",
+          "elapsed_ms": 906.032,
+          "result": {
+            "executionStatus": "completed",
+            "verdict": "fail",
+            "score": 0,
+            "errorKind": "learner",
+            "errorCode": "runtime_error",
+            "evaluatorVersion": "node-python-evaluator-w3-c1",
+            "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+            "assetBundleHash": "sha256:7731912ed0f6ec7596cbfbf3b7d029a3d354503c4b28a6ddcf623493df9c74a9"
+          }
+        },
+        {
+          "repeat": 2,
+          "startedAt": "2026-08-21T17:26:34.667Z",
+          "endedAt": "2026-08-21T17:26:35.522Z",
+          "elapsed_ms": 854.375,
+          "result": {
+            "executionStatus": "completed",
+            "verdict": "fail",
+            "score": 0,
+            "errorKind": "learner",
+            "errorCode": "runtime_error",
+            "evaluatorVersion": "node-python-evaluator-w3-c1",
+            "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+            "assetBundleHash": "sha256:7731912ed0f6ec7596cbfbf3b7d029a3d354503c4b28a6ddcf623493df9c74a9"
+          }
+        },
+        {
+          "repeat": 3,
+          "startedAt": "2026-08-21T17:26:35.522Z",
+          "endedAt": "2026-08-21T17:26:36.461Z",
+          "elapsed_ms": 939.576,
+          "result": {
+            "executionStatus": "completed",
+            "verdict": "fail",
+            "score": 0,
+            "errorKind": "learner",
+            "errorCode": "runtime_error",
+            "evaluatorVersion": "node-python-evaluator-w3-c1",
+            "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+            "assetBundleHash": "sha256:7731912ed0f6ec7596cbfbf3b7d029a3d354503c4b28a6ddcf623493df9c74a9"
+          }
+        }
+      ],
+      "nodeFieldsIdentical": true,
+      "pyodide": {
+        "status": "NOT_RUN",
+        "errorCode": "PYODIDE_CANDIDATE_UNAVAILABLE",
+        "elapsed_ms": null
+      },
+      "sensitiveFieldMatch": false,
+      "inputId": "w5-d3-r2-10"
+    }
+  ],
+  "summary": {
+    "inputGroups": 10,
+    "nodeRuns": 30,
+    "activityCount": 5,
+    "pyodideNotRunGroups": 10,
+    "sensitiveMatches": 0
+  }
+}
