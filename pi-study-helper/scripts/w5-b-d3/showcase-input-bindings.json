@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "status": "INPUTS_ONLY",
+  "profileRevision": 3,
+  "assetTreeSha256": "ccff2e2afdabaad262baeaa498b527438fcadeec1ddf5e198289f8404071e85d",
+  "entries": [
+    {
+      "caseId": "showcase-high-foundation",
+      "path": "evaluation/showcases/computer-background/input.json",
+      "sha256": "29492ef83c3620f1bea6f92052c0126c61dcb44d82c079d7040a639d755028eb",
+      "byteLength": 1323
+    },
+    {
+      "caseId": "showcase-non-computer-beginner",
+      "path": "evaluation/showcases/beginner-background/input.json",
+      "sha256": "43a8b7067adf0266e852d968f188532f9db465bec7d8c3c55119e80440367bb3",
+      "byteLength": 1278
+    },
+    {
+      "caseId": "showcase-practice-oriented",
+      "path": "evaluation/showcases/task-oriented/input.json",
+      "sha256": "4bd6d22aefc4bac82d156ae517111b786af973f3706d24add7afc4c361f39ef2",
+      "byteLength": 1287
+    }
+  ],
+  "aPathEngineStatus": "PENDING",
+  "eIndependentReviewStatus": "PENDING"
+}

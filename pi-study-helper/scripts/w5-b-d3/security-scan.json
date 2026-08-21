@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "status": "PASS",
+  "scannedFiles": 27,
+  "ruleIds": [
+    "host-absolute-path",
+    "openai-api-key",
+    "github-token",
+    "private-key",
+    "bearer-secret"
+  ],
+  "findings": [],
+  "boundary": "Scans B's formal candidate only; conceptual references to hidden tests or Rubric are allowed, secret values and host paths are not."
+}

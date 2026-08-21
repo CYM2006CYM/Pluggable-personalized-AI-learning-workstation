@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "status": "PASS",
+  "proposedCount": 28,
+  "stagedInIsolatedIndexCount": 28,
+  "missing": [],
+  "unexpected": [],
+  "diffCheckExitCode": 0,
+  "diffCheckOutput": "",
+  "historicalFailures": [
+    {
+      "status": "FAIL",
+      "diffCheckExitCode": 2,
+      "diffCheckOutput": "新版设计文档-重写版/第五周任务/W5-D3-B-PPT大纲.md:3: trailing whitespace.\n+状态：`候选大纲；待D4实际案例输出、D5彩排指标和负责人发布冻结后补证据`  \n新版设计文档-重写版/第五周任务/W5-D3-B-PPT大纲.md:4: trailing whitespace.\n+合同：`W5-C1/W5-R1`"
+    }
+  ]
+}

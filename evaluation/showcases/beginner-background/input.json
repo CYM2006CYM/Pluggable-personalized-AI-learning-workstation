@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "caseId": "showcase-non-computer-beginner",
+  "personaType": "non_computer_beginner",
+  "contract": "W5-C1/W5-R1",
+  "profileBinding": {
+    "subjectId": "pandas-cleaning",
+    "profileRevision": 3,
+    "assetTreeSha256": "ccff2e2afdabaad262baeaa498b527438fcadeec1ddf5e198289f8404071e85d"
+  },
+  "entry": {
+    "mode": "recommended",
+    "goalId": "goal-clean-orders",
+    "availableMinutes": 400
+  },
+  "background": {
+    "python_experience": "none",
+    "pandas_experience": "none",
+    "explanation_preference": "step_by_step"
+  },
+  "diagnostic": {
+    "blueprintId": "diagnostic-pandas-cleaning-v2-draft",
+    "answers": [
+      { "questionId": "diag-01", "action": "answer", "answer": "df.rows" },
+      { "questionId": "diag-02", "action": "answer", "answer": "字典" },
+      { "questionId": "diag-03", "action": "answer", "answer": false },
+      { "questionId": "diag-04", "action": "answer", "answer": "将 order_id 填为 0" },
+      { "questionId": "diag-05", "action": "answer", "answer": "原始最后一条" },
+      { "questionId": "diag-06", "action": "answer", "answer": "宽松猜测日期" },
+      { "questionId": "diag-07", "action": "answer", "answer": false },
+      { "questionId": "diag-08", "action": "skip" }
+    ]
+  }
+}

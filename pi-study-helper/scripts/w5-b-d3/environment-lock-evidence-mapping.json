@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "classification": "B_PROFILE_LOCK_DECISION_FROM_C_FORMAL_EVIDENCE",
+  "contract": "W5-C1/W5-R1",
+  "decisionId": "W5-D64-PYODIDE-1",
+  "upstreamCommit": "6acc56fa03986797be54156af639a905c2e74a64",
+  "inputs": {
+    "measurement": "pi-study-helper/scripts/w5-c-d3/environment-measurement.json",
+    "cFieldMapping": "pi-study-helper/scripts/w5-c-d3/environment-field-mapping.json",
+    "resourceLimits": "pi-study-helper/scripts/w5-c-d3/resource-limits-evidence.json",
+    "processTree": "pi-study-helper/scripts/w5-c-d3/process-tree-evidence.json",
+    "ownerDecision": "新版设计文档-重写版/第五周任务/W5-D3-负责人Pyodide裁决.md"
+  },
+  "profileTarget": "pi-study-helper/fixtures/profiles/pandas-cleaning-revision-3-draft/environments/environment-lock.json",
+  "decision": "NO_PROFILE_BYTE_CHANGE_REQUIRED",
+  "reason": "C的正式测量值与负责人批准值及现行锁逐字段一致；Windows实际构建号仅记录，Pyodide保持null，未证明能力保持false。",
+  "fields": [
+    { "field": "status", "lockValue": "measured_node_submit", "evidenceValue": "measured_node_submit", "action": "KEEP", "basis": "负责人裁决禁止measured_dual_backend" },
+    { "field": "nodeVersion", "lockValue": "v22.23.1", "evidenceValue": "v22.23.1", "action": "KEEP", "measurementId": "nodeVersion" },
+    { "field": "pythonVersion", "lockValue": "3.13.7", "evidenceValue": "3.13.7", "action": "KEEP", "measurementId": "pythonVersion" },
+    { "field": "pandasVersion", "lockValue": "3.0.5", "evidenceValue": "3.0.5", "action": "KEEP", "measurementId": "pandasVersion" },
+    { "field": "pyodideVersion", "lockValue": null, "evidenceValue": null, "action": "KEEP", "basis": "NOT_RUN / PYODIDE_CANDIDATE_UNAVAILABLE" },
+    { "field": "allowedLibraries", "lockValue": [{ "name": "pandas", "version": "3.0.5" }], "evidenceValue": [{ "name": "pandas", "version": "3.0.5" }], "action": "KEEP", "measurementId": "allowedLibraries" },
+    { "field": "platform", "lockValue": "win32-10.0.26100-x64", "evidenceValue": "win32-10.0.26100-x64", "action": "KEEP", "measurementId": "runtimePlatform", "note": "10.0.26200仅作实测记录，不改冻结值" },
+    { "field": "evaluatorVersion", "lockValue": "node-python-evaluator-w3-c1", "evidenceValue": "node-python-evaluator-w3-c1", "action": "KEEP", "measurementId": "evaluatorVersion" },
+    { "field": "limits.wallClockMs", "lockValue": 4000, "evidenceValue": 4000, "action": "KEEP", "measurementId": "limits" },
+    { "field": "limits.stdoutBytes", "lockValue": 8192, "evidenceValue": 8192, "action": "KEEP", "measurementId": "limits" },
+    { "field": "limits.stderrBytes", "lockValue": 8192, "evidenceValue": 8192, "action": "KEEP", "measurementId": "limits" },
+    { "field": "limits.sourceBytes", "lockValue": 8000, "evidenceValue": 8000, "action": "KEEP", "measurementId": "limits" },
+    { "field": "limits.datasetBytes", "lockValue": 65536, "evidenceValue": 65536, "action": "KEEP", "measurementId": "limits" },
+    { "field": "capabilityFlags.processTreeTermination", "lockValue": true, "evidenceValue": true, "action": "KEEP", "measurementId": "processTreeTermination" },
+    { "field": "capabilityFlags.networkIsolation", "lockValue": false, "evidenceValue": false, "action": "KEEP", "measurementId": "networkIsolation" },
+    { "field": "capabilityFlags.reliableMemoryLimit", "lockValue": false, "evidenceValue": false, "action": "KEEP", "measurementId": "reliableMemoryLimit" },
+    { "field": "prototypeEvidenceRef", "lockValue": "scripts/w3-code-evaluation/environment-prototype-evidence.json", "evidenceValue": "scripts/w3-code-evaluation/environment-prototype-evidence.json", "action": "KEEP", "measurementId": "prototypeEvidenceRef" },
+    { "field": "environmentHash", "lockValue": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76", "evidenceValue": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76", "action": "KEEP", "measurementId": "environmentHash" },
+    { "field": "createdAt", "lockValue": "2026-08-08T01:30:21+08:00", "evidenceValue": "2026-08-08T01:30:21+08:00", "action": "KEEP", "basis": "现行正式锁创建时间，不伪造为D3测量时间" }
+  ],
+  "recordOnly": {
+    "npmVersion": "10.9.8",
+    "actualWindowsBuild": "10.0.26200"
+  },
+  "prohibitedClaims": ["measured_dual_backend", "PYODIDE_ENABLED", "networkIsolation=true", "reliableMemoryLimit=true"]
+}

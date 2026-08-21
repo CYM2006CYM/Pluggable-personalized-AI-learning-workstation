@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "contract": "W5-C1/W5-R1",
+  "status": "EXPECTED_ONLY_A_PATHENGINE_PENDING_E_INDEPENDENT_REVIEW_PENDING",
+  "commonBoundary": {
+    "subjectId": "pandas-cleaning",
+    "profileRevision": 3,
+    "assetTreeSha256": "ccff2e2afdabaad262baeaa498b527438fcadeec1ddf5e198289f8404071e85d",
+    "goalId": "goal-clean-orders",
+    "mode": "recommended",
+    "availableMinutes": 400,
+    "sameDeterministicEngine": true,
+    "sameFinalActivityAndRubric": true
+  },
+  "pairs": [
+    {
+      "leftCaseId": "showcase-high-foundation",
+      "rightCaseId": "showcase-non-computer-beginner",
+      "hypotheses": [
+        { "id": "HB-01", "observable": "diagnostic_evidence", "basis": "八题全部作答结果不同，初学者另有一题显式跳过", "expected": "诊断Evidence结果和证据不足项可观察不同" },
+        { "id": "HB-02", "observable": "node_difficulty", "basis": "确定性KnowledgeState状态预计不同", "expected": "同一知识点选择的合法难度档位不同" },
+        { "id": "HB-03", "observable": "node_scaffold", "basis": "ready与support_needed/unverified使用不同脚手架优先级", "expected": "高基础优先none，初学者优先worked_example或hint" },
+        { "id": "HB-04", "observable": "reason_codes", "basis": "低掌握和证据不足由确定性规则产生", "expected": "初学者出现更多low_mastery或evidence_insufficient理由" }
+      ]
+    },
+    {
+      "leftCaseId": "showcase-high-foundation",
+      "rightCaseId": "showcase-practice-oriented",
+      "hypotheses": [
+        { "id": "HP-01", "observable": "diagnostic_evidence", "basis": "实践导向者在缺失值和类型格式题上选择不同，并跳过一题", "expected": "相应知识点Evidence结果与证据不足项不同" },
+        { "id": "HP-02", "observable": "node_difficulty", "basis": "缺失值和类型格式KnowledgeState预计不同", "expected": "至少两个对应节点的合法难度档位不同" },
+        { "id": "HP-03", "observable": "node_scaffold", "basis": "不同KnowledgeState使用不同脚手架优先级", "expected": "相应节点的none、hint或worked_example选择不同" },
+        { "id": "HP-04", "observable": "explanation_preference", "basis": "concise与example_first为不同合法问卷值", "expected": "固定事实不变，个性化学习提示的表达偏好不同" }
+      ]
+    },
+    {
+      "leftCaseId": "showcase-non-computer-beginner",
+      "rightCaseId": "showcase-practice-oriented",
+      "hypotheses": [
+        { "id": "BP-01", "observable": "diagnostic_evidence", "basis": "实践导向者在读取、结构检查、去重和验证题上有更多正确作答", "expected": "多个知识点的诊断Evidence结果不同" },
+        { "id": "BP-02", "observable": "node_difficulty", "basis": "多个KnowledgeState预计由support_needed变为ready", "expected": "相应节点的合法难度档位不同" },
+        { "id": "BP-03", "observable": "node_scaffold", "basis": "support_needed与ready使用不同脚手架优先级", "expected": "相应节点的worked_example与none/hint选择不同" },
+        { "id": "BP-04", "observable": "explanation_preference", "basis": "step_by_step与example_first为不同合法问卷值", "expected": "个性化学习提示分别偏向分步讲解和先看例子" }
+      ]
+    }
+  ],
+  "forbiddenClaims": [
+    "本文件不是PathEngine实际输出",
+    "本文件不包含或预写KnowledgeState、路径、Evidence、mastery或实际难度",
+    "实际路径与状态必须由A使用正式PathEngine生成",
+    "实际差异与页面证据必须由E独立复验"
+  ]
+}

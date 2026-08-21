@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "status": "NO_CHANGE",
+  "beforeSha256": "59917d1528d031f46a1e76359d99628e810f2dfa78a92d66e03386c860fbaf43",
+  "afterSha256": "59917d1528d031f46a1e76359d99628e810f2dfa78a92d66e03386c860fbaf43",
+  "changedFields": [],
+  "reason": "C的正式测量值与负责人批准值及现行锁逐字段一致；Windows实际构建号仅记录，Pyodide保持null，未证明能力保持false。"
+}
