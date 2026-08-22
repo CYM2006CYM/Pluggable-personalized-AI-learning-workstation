@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "status": "PASS",
+  "proposedCount": 50,
+  "isolatedIndexCount": 50,
+  "missing": [],
+  "unexpected": [],
+  "diffCheckExitCode": 0,
+  "diffCheckOutput": ""
+}

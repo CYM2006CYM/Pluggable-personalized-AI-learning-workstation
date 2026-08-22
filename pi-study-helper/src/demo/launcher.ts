@@ -53,7 +53,7 @@ async function runSupervisor(): Promise<void> {
   const terminate = (child: ReturnType<typeof spawn>): void => { if (!child.killed) child.kill(); };
   try {
     await ready;
-    const vite = spawn(process.execPath, [resolve(dirname(fileURLToPath(import.meta.url)), "../../node_modules/vite/bin/vite.js"), "--host", "127.0.0.1", "--port", "5173", "--strictPort"], { shell: false, windowsHide: true, stdio: "ignore", env: { ...process.env } });
+    const vite = spawn(process.execPath, [resolve(dirname(fileURLToPath(import.meta.url)), "../../node_modules/vite/bin/vite.js"), "preview", "--host", "127.0.0.1", "--port", "5173", "--strictPort"], { shell: false, windowsHide: true, stdio: "ignore", env: { ...process.env } });
     const viteExit = childExit(vite);
     const result = await new Promise<number>((resolveExit) => {
       let done = false;

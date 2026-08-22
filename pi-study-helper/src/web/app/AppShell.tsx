@@ -6,6 +6,7 @@ export function AppShell() {
   const sessionId = parts.length >= 2 ? parts[1] : undefined;
   const navigation = [
     { label: "开始", to: "/" },
+    { label: "案例", to: "/showcases" },
     ...(sessionId === undefined ? [] : [
       { label: "诊断", to: `/diagnostic/${sessionId}` },
       { label: "路径", to: `/path/${sessionId}` },

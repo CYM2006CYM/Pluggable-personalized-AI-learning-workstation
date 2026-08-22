@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "candidate": "W5-D4-E",
+  "generatedAtUtc": "2026-08-22T13:56:31.701Z",
+  "limitations": [
+    {
+      "id": "pyodide",
+      "status": "DISABLED",
+      "decision": "PYODIDE_DISABLED_WITH_NODE_FALLBACK",
+      "impact": "页面不开放公开预览入口；Node/Python正式提交保留。"
+    },
+    {
+      "id": "dual_backend",
+      "status": "NOT_MEASURED",
+      "impact": "不得表述为双后端PASS或measured_dual_backend。"
+    },
+    {
+      "id": "live_model",
+      "status": "LIVE_NOT_RUN",
+      "impact": "模型失败只验证固定fallback，不声明在线模型成功。"
+    },
+    {
+      "id": "browser_activity_capture",
+      "status": "SAFE_HARNESS",
+      "impact": "关闭态截图只证明preview构建中的页面状态；真实五个代码活动和最终实操另由ActivityPage+HTTP+Node/Python集成测试覆盖。"
+    }
+  ],
+  "capabilities": [
+    "node_formal_submit",
+    "version_bound_draft_recovery",
+    "web_tui_shared_session",
+    "formal_showcase_read_only_projection"
+  ],
+  "status": "PASS"
+}

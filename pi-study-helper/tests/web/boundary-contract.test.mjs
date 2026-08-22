@@ -17,6 +17,9 @@ describe("W4 Web boundary contract", () => {
   it("uses a Web-only Vite root, same-origin proxy, strict port, and deny rules", () => {
     const config = readFileSync(join(packageRoot, "vite.config.ts"), "utf8");
     expect(config).toContain("root: webRoot");
+    expect(config).toContain('cacheDir: resolve(webRoot, "node_modules/.vite")');
+    expect(config).toContain("preview:");
+    expect(config).toContain("proxy: apiProxy");
     expect(config).toContain('target: "http://127.0.0.1:4310"');
     expect(config).toContain("bootstrap");
     expect(config).toContain("sessions");
@@ -36,6 +39,12 @@ describe("W4 Web boundary contract", () => {
   it("does not import repositories, demo composition, or private assets into Web runtime", () => {
     const source = sourceFiles(webRoot).map((path) => readFileSync(path, "utf8")).join("\n");
     expect(source).not.toMatch(/repositories|src\/demo|fixtures\/profiles|answer-key|hiddenTests|referenceSolution/iu);
+  });
+
+  it("keeps formal showcase runtime imports inside the Web root", () => {
+    const source = readFileSync(join(webRoot, "showcase", "formal-showcase-data.ts"), "utf8");
+    expect(source).toContain('./formal-showcase-data.json?raw');
+    expect(source).not.toMatch(/scripts\/w5-a-d4|\.\.\/\.\.\/\.\.\/scripts/u);
   });
 
   it("keeps the dedicated preview Worker offline and free of private evaluator material", () => {

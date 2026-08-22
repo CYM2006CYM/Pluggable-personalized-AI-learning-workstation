@@ -7,12 +7,14 @@ import { PathPage } from "../pages/PathPage.js";
 import { StartPage } from "../pages/StartPage.js";
 import { StudyDeepLinkPage } from "../pages/StudyDeepLinkPage.js";
 import { SummaryPage } from "../pages/SummaryPage.js";
+import { ShowcasePage } from "../pages/ShowcasePage.js";
 
 export const appRoutes: RouteObject[] = [
   {
     element: <AppShell />,
     children: [
       { index: true, element: <StartPage /> },
+      { path: "showcases", element: <ShowcasePage /> },
       { path: "study", element: <StudyDeepLinkPage /> },
       { path: "diagnostic/:sessionId", element: <DiagnosticPage /> },
       { path: "path/:sessionId", element: <PathPage /> },

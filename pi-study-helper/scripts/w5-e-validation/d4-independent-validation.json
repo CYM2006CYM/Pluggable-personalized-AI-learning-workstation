@@ -1,0 +1,151 @@
+{
+  "schemaVersion": 1,
+  "candidate": "W5-D4-E",
+  "contract": "W5-C1/W5-R1",
+  "baseHead": "aaf588202b3ae92ed72c63994b912d78977516bb",
+  "generatedAtUtc": "2026-08-22T13:54:33.208Z",
+  "profileBinding": {
+    "profileRevision": 3,
+    "assetTreeSha256": "ccff2e2afdabaad262baeaa498b527438fcadeec1ddf5e198289f8404071e85d"
+  },
+  "inputChecks": [
+    {
+      "caseId": "showcase-high-foundation",
+      "path": "evaluation/showcases/computer-background/input.json",
+      "expectedSha256": "29492ef83c3620f1bea6f92052c0126c61dcb44d82c079d7040a639d755028eb",
+      "actualNormalizedSha256": "29492ef83c3620f1bea6f92052c0126c61dcb44d82c079d7040a639d755028eb",
+      "byteLength": 1323,
+      "matchesB": true,
+      "matchesA": true
+    },
+    {
+      "caseId": "showcase-non-computer-beginner",
+      "path": "evaluation/showcases/beginner-background/input.json",
+      "expectedSha256": "43a8b7067adf0266e852d968f188532f9db465bec7d8c3c55119e80440367bb3",
+      "actualNormalizedSha256": "43a8b7067adf0266e852d968f188532f9db465bec7d8c3c55119e80440367bb3",
+      "byteLength": 1278,
+      "matchesB": true,
+      "matchesA": true
+    },
+    {
+      "caseId": "showcase-practice-oriented",
+      "path": "evaluation/showcases/task-oriented/input.json",
+      "expectedSha256": "4bd6d22aefc4bac82d156ae517111b786af973f3706d24add7afc4c361f39ef2",
+      "actualNormalizedSha256": "4bd6d22aefc4bac82d156ae517111b786af973f3706d24add7afc4c361f39ef2",
+      "byteLength": 1287,
+      "matchesB": true,
+      "matchesA": true
+    }
+  ],
+  "pathChecks": [
+    {
+      "caseId": "showcase-high-foundation",
+      "legal": true,
+      "findings": [],
+      "pathSha256": "07fe72291ec183a93937900a8bf615297a2e92cff26470e92057463f86bdde39",
+      "outputSha256": "3bc598639f6e04a333c8951577889aac96c2d479584257e2425199706661bc47"
+    },
+    {
+      "caseId": "showcase-non-computer-beginner",
+      "legal": true,
+      "findings": [],
+      "pathSha256": "1645fa370fd0a646f2365d94fa0e1197c8caccc80f3ecc3a12e98346176981a3",
+      "outputSha256": "ba8811dd55eb6e9e31d85413010caa773c0ff5ec613bb778bde69648e43f7181"
+    },
+    {
+      "caseId": "showcase-practice-oriented",
+      "legal": true,
+      "findings": [],
+      "pathSha256": "1c62126c85e793c05b5edc28fa50f179a2fb9bf31b9ee10423191bebf9c3f92c",
+      "outputSha256": "27f55e81d221387ba16fe2bffeaa6b9d38b188209f5e59507b4da0e5cf304830"
+    }
+  ],
+  "pathLegality": {
+    "legal": 3,
+    "total": 3,
+    "rate": "3/3"
+  },
+  "pairChecks": [
+    {
+      "leftCaseId": "showcase-high-foundation",
+      "rightCaseId": "showcase-non-computer-beginner",
+      "expectedCountFromA": 32,
+      "actualCount": 32,
+      "minimumThree": true,
+      "exactFormalMatch": true
+    },
+    {
+      "leftCaseId": "showcase-high-foundation",
+      "rightCaseId": "showcase-practice-oriented",
+      "expectedCountFromA": 12,
+      "actualCount": 12,
+      "minimumThree": true,
+      "exactFormalMatch": true
+    },
+    {
+      "leftCaseId": "showcase-non-computer-beginner",
+      "rightCaseId": "showcase-practice-oriented",
+      "expectedCountFromA": 21,
+      "actualCount": 21,
+      "minimumThree": true,
+      "exactFormalMatch": true
+    }
+  ],
+  "crossEndChecks": [
+    {
+      "direction": "TUI_TO_WEB_TO_RESTARTED_TUI",
+      "sessionId": "session-317da41e9af465b31b2a5cf4",
+      "attemptId": "attempt-fac036513a26212a417df56c",
+      "evidenceId": "evidence-fd81bc1ade8bc6d4fb291fbb",
+      "evidenceVersion": 1,
+      "committed": true,
+      "sameAttempt": true,
+      "sameEvidence": true,
+      "continuation": true
+    },
+    {
+      "direction": "WEB_TO_TUI_TO_WEB_REFRESH",
+      "sessionId": "session-29b637510b280c84e469f080",
+      "attemptId": "attempt-e3417663db8916299ee24eeb",
+      "evidenceId": "evidence-b9f05ca3868e6a6b56fa1c4c",
+      "evidenceVersion": 1,
+      "committed": true,
+      "sameAttempt": true,
+      "sameEvidence": true,
+      "continuation": true
+    }
+  ],
+  "closedState": {
+    "noPreviewButtonText": true,
+    "noPageRunCall": true,
+    "noPreviewRoute": true,
+    "formalSubmitPresent": true,
+    "decisionVisible": true,
+    "runnerContractRetained": true,
+    "workerContractRetained": true
+  },
+  "showcaseBinding": {
+    "readsLocalGeneratedProjection": true,
+    "generatedPathsMatchA": true,
+    "generatedDifferencesMatchA": true,
+    "containsManualPathNodes": false
+  },
+  "codeChainCheck": {
+    "status": "PASS",
+    "codeActivityIds": [
+      "act-inspect-dataframe",
+      "act-missing",
+      "act-duplicates",
+      "act-types",
+      "act-practical"
+    ],
+    "allPageSubmitted": true,
+    "finalPractical": true,
+    "nextStepCompleted": true,
+    "sessionCompleted": true,
+    "privateCodeIncluded": false
+  },
+  "pyodideDecision": "PYODIDE_DISABLED_WITH_NODE_FALLBACK",
+  "liveModel": "LIVE_NOT_RUN",
+  "status": "PASS"
+}

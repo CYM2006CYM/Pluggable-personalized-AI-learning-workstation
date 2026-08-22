@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "candidate": "W5-D4-E",
+  "mappings": [
+    {
+      "requirement": "Pyodide关闭态且正式提交可用",
+      "tests": [
+        "tests/web/w5-d2-e-runtime-evidence.test.tsx",
+        "tests/web/pages.test.tsx"
+      ],
+      "evidence": [
+        "d4-browser-capture.json"
+      ]
+    },
+    {
+      "requirement": "真实Web代码补全与最终实操闭环",
+      "tests": [
+        "tests/web/w5-d4-e-real-code-chain.test.tsx"
+      ],
+      "evidence": [
+        "d4-real-code-chain.json"
+      ]
+    },
+    {
+      "requirement": "三路径合法且差异可复算",
+      "tests": [
+        "tests/web/w5-d4-e-showcases.test.tsx",
+        "tests/w5-a-d4-showcase-paths.test.ts"
+      ],
+      "evidence": [
+        "d4-independent-validation.json"
+      ]
+    },
+    {
+      "requirement": "Web/TUI共享会话与重启恢复",
+      "tests": [
+        "tests/w5-a-d4-cross-end.test.ts",
+        "tests/shared-session.test.ts",
+        "tests/shared-web-extension-entry.test.ts"
+      ],
+      "evidence": [
+        "d4-independent-validation.json"
+      ]
+    },
+    {
+      "requirement": "模型与评测器失败、冲突和重复提交",
+      "tests": [
+        "tests/w4-d-fixed-fallback-integration.test.ts",
+        "tests/web/pages.test.tsx",
+        "tests/shared-session.test.ts",
+        "tests/w5-c-d3-fault-matrix.test.ts"
+      ],
+      "evidence": [
+        "d4-command-results.json"
+      ]
+    },
+    {
+      "requirement": "DOM/网络/Worker/缓存/日志/bundle安全",
+      "tests": [
+        "tests/web/vite-security.test.ts",
+        "tests/web/boundary-contract.test.mjs"
+      ],
+      "evidence": [
+        "d4-security-scan.json",
+        "d4-browser-capture.json"
+      ]
+    },
+    {
+      "requirement": "桌面与移动页面",
+      "tests": [
+        "tests/web/layout-contract.test.ts"
+      ],
+      "evidence": [
+        "d4-screenshot-index.json"
+      ]
+    }
+  ]
+}

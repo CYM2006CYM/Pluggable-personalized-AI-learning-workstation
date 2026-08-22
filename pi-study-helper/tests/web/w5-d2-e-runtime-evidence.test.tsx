@@ -3,24 +3,12 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { ActivityResult, BrowserCodeRunner, PublicExecutionBundle } from "../../src/contracts/index.js";
 import { ActivityPage } from "../../src/web/pages/ActivityPage.js";
-import { BrowserCodeRunnerError } from "../../src/web/preview/browser-code-runner.js";
+import { writeActivityDraft } from "../../src/web/state/activity-draft-storage.js";
 import { useUiStore } from "../../src/web/state/ui-store.js";
-import { bootstrap, ok, openedCode, preparedCode, recovery, savedCode } from "./fixtures/w4-api.js";
+import { bootstrap, codeSubmission, ok, openedCode, recovery, savedCode } from "./fixtures/w4-api.js";
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
-
-const publicResult: ActivityResult = {
-  executionStatus: "completed",
-  verdict: "pass",
-  score: 1,
-  safeFeedback: "公开检查通过",
-  evaluatorVersion: "browser-public-v1",
-  environmentHash: "public-environment",
-  assetBundleHash: "public-assets",
-};
-
 let root: Root | undefined;
 
 afterEach(() => {
@@ -39,7 +27,7 @@ async function settle() {
   });
 }
 
-async function renderActivity(fetchMock: ReturnType<typeof vi.fn>, runner: BrowserCodeRunner) {
+async function renderActivity(fetchMock: ReturnType<typeof vi.fn>) {
   vi.stubGlobal("fetch", fetchMock);
   const host = document.createElement("div");
   document.body.append(host);
@@ -47,7 +35,7 @@ async function renderActivity(fetchMock: ReturnType<typeof vi.fn>, runner: Brows
   await act(async () => {
     root!.render(
       <MemoryRouter initialEntries={[{ pathname: "/activity/session-w4/act-code", state: { opened: openedCode } }]}>
-        <Routes><Route path="/activity/:sessionId/:activityId" element={<ActivityPage previewRunner={runner} />} /></Routes>
+        <Routes><Route path="/activity/:sessionId/:activityId" element={<ActivityPage />} /></Routes>
       </MemoryRouter>,
     );
   });
@@ -70,85 +58,48 @@ function requestPaths(fetchMock: ReturnType<typeof vi.fn>): string[] {
   return fetchMock.mock.calls.map((call) => String(call[0]));
 }
 
-function requestBodies(fetchMock: ReturnType<typeof vi.fn>): string[] {
-  return fetchMock.mock.calls.flatMap((call) => {
-    const body = (call[1] as RequestInit | undefined)?.body;
-    return body === undefined ? [] : [String(body)];
+describe("W5 D4 E Pyodide closed-state evidence", () => {
+  it("exposes no preview control or run request while formal submission stays enabled", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(ok(bootstrap(recovery({ stage: "activity" }))));
+    const host = await renderActivity(fetchMock);
+
+    expect(host.querySelector('[data-preview-enabled="false"]')).not.toBeNull();
+    expect(host.textContent).toContain("PYODIDE_DISABLED_WITH_NODE_FALLBACK");
+    expect([...host.querySelectorAll("button")].some((item) => item.textContent?.includes("预览") || item.textContent?.includes("公开检查"))).toBe(false);
+    expect(requestPaths(fetchMock).some((path) => path.endsWith("/run"))).toBe(false);
+    expect(button(host, "提交正式评测").disabled).toBe(false);
   });
-}
 
-function storedDraft(): Record<string, unknown> {
-  const keys = Array.from({ length: sessionStorage.length }, (_, index) => sessionStorage.key(index));
-  const key = keys.find((value) => value?.startsWith("pi-study-helper.activity-draft.v1:"));
-  if (key === undefined || key === null) throw new Error("stored_draft_not_found");
-  return JSON.parse(sessionStorage.getItem(key)!) as Record<string, unknown>;
-}
-
-describe("W5 D2 E runtime evidence", () => {
-  it("preview success calls only draft and run and never uploads the preview result", async () => {
-    let received: { bundle: PublicExecutionBundle; code: string } | undefined;
-    const runner: BrowserCodeRunner = {
-      async run(bundle, code) {
-        received = { bundle, code };
-        return publicResult;
-      },
-    };
+  it("persists only the version-bound draft through the remaining secondary action", async () => {
     const fetchMock = vi.fn()
       .mockResolvedValueOnce(ok(bootstrap(recovery({ stage: "activity" }))))
-      .mockResolvedValueOnce(ok(savedCode))
-      .mockResolvedValueOnce(ok(preparedCode));
-    const host = await renderActivity(fetchMock, runner);
+      .mockResolvedValueOnce(ok(savedCode));
+    const host = await renderActivity(fetchMock);
 
-    await click(button(host, "运行公开检查"));
+    await click(button(host, "保存草稿"));
 
     expect(requestPaths(fetchMock)).toEqual([
       "/api/bootstrap?recoverSessionId=session-w4",
       "/api/activities/act-code/draft",
-      "/api/activities/act-code/run",
     ]);
-    expect(requestPaths(fetchMock).some((path) => path.endsWith("/submit"))).toBe(false);
-    expect(received).toEqual({ bundle: preparedCode, code: "print('server draft')" });
-    for (const body of requestBodies(fetchMock)) {
-      expect(body).not.toContain(publicResult.safeFeedback);
-      expect(body).not.toContain(`"verdict":"${publicResult.verdict}"`);
-      expect(body).not.toContain(`"executionStatus":"${publicResult.executionStatus}"`);
-    }
+    const stored = sessionStorage.getItem(sessionStorage.key(0)!);
+    expect(stored).toContain("attempt-code-1");
+    expect(stored).not.toContain("verdict");
+    expect(stored).not.toContain("executionStatus");
   });
 
-  it("preview output is displayed but never persisted in sessionStorage", async () => {
-    const runner: BrowserCodeRunner = { run: async () => publicResult };
+  it("uses the Node formal submit route without touching the retained preview route", async () => {
+    writeActivityDraft(sessionStorage, { sessionId: "session-w4", activityId: "act-code", attemptId: "attempt-code-1", profileRevision: 3, draftVersion: 1 }, "print('server draft')");
     const fetchMock = vi.fn()
       .mockResolvedValueOnce(ok(bootstrap(recovery({ stage: "activity" }))))
-      .mockResolvedValueOnce(ok(savedCode))
-      .mockResolvedValueOnce(ok(preparedCode));
-    const host = await renderActivity(fetchMock, runner);
+      .mockResolvedValueOnce(ok(codeSubmission))
+      .mockResolvedValueOnce(ok(bootstrap(recovery({ stage: "learning" }))));
+    const host = await renderActivity(fetchMock);
 
-    await click(button(host, "运行公开检查"));
+    await click(button(host, "提交正式评测"));
 
-    expect(host.textContent).toContain(publicResult.safeFeedback);
-    const record = storedDraft();
-    expect(Object.keys(record).sort()).toEqual([
-      "activityId", "attemptId", "draftVersion", "profileRevision", "schemaVersion", "sessionId", "userText",
-    ].sort());
-    expect(JSON.stringify(record)).not.toContain(publicResult.safeFeedback);
-    expect(JSON.stringify(record)).not.toContain("verdict");
-    expect(JSON.stringify(record)).not.toContain("executionStatus");
-  });
-
-  it("preview unavailable does not call submit and leaves formal submission enabled", async () => {
-    const runner: BrowserCodeRunner = {
-      run: async () => { throw new BrowserCodeRunnerError("preview_unavailable"); },
-    };
-    const fetchMock = vi.fn()
-      .mockResolvedValueOnce(ok(bootstrap(recovery({ stage: "activity" }))))
-      .mockResolvedValueOnce(ok(savedCode))
-      .mockResolvedValueOnce(ok(preparedCode));
-    const host = await renderActivity(fetchMock, runner);
-
-    await click(button(host, "运行公开检查"));
-
-    expect(host.textContent).toContain("PREVIEW_UNAVAILABLE");
-    expect(requestPaths(fetchMock).some((path) => path.endsWith("/submit"))).toBe(false);
-    expect(button(host, "提交正式评测").disabled).toBe(false);
+    expect(requestPaths(fetchMock).some((path) => path.endsWith("/submit"))).toBe(true);
+    expect(requestPaths(fetchMock).some((path) => path.endsWith("/run"))).toBe(false);
+    expect(sessionStorage.length).toBe(0);
   });
 });

@@ -1,0 +1,160 @@
+{
+  "schemaVersion": 1,
+  "candidate": "W5-D4-E",
+  "runId": "w5-d4-e-20260822135500691",
+  "command": "node scripts/w5-e-validation/capture-d4-browser.mjs",
+  "startedAtUtc": "2026-08-22T13:55:00.691Z",
+  "endedAtUtc": "2026-08-22T13:55:03.572Z",
+  "exitCode": 0,
+  "environment": {
+    "browser": "Edg/151.0.4129.93",
+    "protocolVersion": "1.3",
+    "vitePort": 5175,
+    "debugPort": 9234
+  },
+  "captures": [
+    {
+      "id": "showcase-high-foundation-desktop",
+      "url": "http://127.0.0.1:5175/showcases?case=showcase-high-foundation",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "waitCondition": "document.body.innerText.includes('showcase-high-foundation')",
+      "projectionFile": "scripts/w5-e-validation/evidence/d4/showcase-high-foundation-desktop.projection.json",
+      "projectionSha256": "c977e5366d4693f32ea754330a9610266d190a152881b53f3ded9f431bf02cab",
+      "pngFile": "scripts/w5-e-validation/evidence/d4/showcase-high-foundation-desktop.png",
+      "pngBytes": 91741,
+      "pngSha256": "ac72ca1e9b596dc3bb4c63ba259dbbfe9abc2e4cb818d9b7681fe16cbc5481e6",
+      "assertions": {
+        "rootNonBlank": true,
+        "noHorizontalOverflow": true,
+        "namedControls": true,
+        "expectedPage": true
+      }
+    },
+    {
+      "id": "showcase-non-computer-beginner-desktop",
+      "url": "http://127.0.0.1:5175/showcases?case=showcase-non-computer-beginner",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "waitCondition": "document.body.innerText.includes('showcase-non-computer-beginner')",
+      "projectionFile": "scripts/w5-e-validation/evidence/d4/showcase-non-computer-beginner-desktop.projection.json",
+      "projectionSha256": "6249c26d428c0a12f29d2407631181916561fa9db34c59ae440805ee1cc054e2",
+      "pngFile": "scripts/w5-e-validation/evidence/d4/showcase-non-computer-beginner-desktop.png",
+      "pngBytes": 99033,
+      "pngSha256": "79f366f315ccde968c278a764dfca37e05cc971d0f2d8910c6afb92c017752a7",
+      "assertions": {
+        "rootNonBlank": true,
+        "noHorizontalOverflow": true,
+        "namedControls": true,
+        "expectedPage": true
+      }
+    },
+    {
+      "id": "showcase-practice-oriented-desktop",
+      "url": "http://127.0.0.1:5175/showcases?case=showcase-practice-oriented",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "waitCondition": "document.body.innerText.includes('showcase-practice-oriented')",
+      "projectionFile": "scripts/w5-e-validation/evidence/d4/showcase-practice-oriented-desktop.projection.json",
+      "projectionSha256": "8cf21db08f6a2276f6eb46f8ebea45e3092f0e9c158fdbe4f2de15144ee0f21b",
+      "pngFile": "scripts/w5-e-validation/evidence/d4/showcase-practice-oriented-desktop.png",
+      "pngBytes": 93916,
+      "pngSha256": "796978d56821e96b7acd6616a0235827d8bf2eea33593e012166547d6aa51882",
+      "assertions": {
+        "rootNonBlank": true,
+        "noHorizontalOverflow": true,
+        "namedControls": true,
+        "expectedPage": true
+      }
+    },
+    {
+      "id": "showcase-practice-mobile",
+      "url": "http://127.0.0.1:5175/showcases?case=showcase-practice-oriented",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "waitCondition": "document.body.innerText.includes('showcase-practice-oriented')",
+      "projectionFile": "scripts/w5-e-validation/evidence/d4/showcase-practice-mobile.projection.json",
+      "projectionSha256": "0397880e1da6141812df0f1ab018ea3e7ee8d57be6f3d2f5f5d592158b4fdf32",
+      "pngFile": "scripts/w5-e-validation/evidence/d4/showcase-practice-mobile.png",
+      "pngBytes": 30459,
+      "pngSha256": "040e62a937be6f4744620467cbf646e1634eeb27cbfe18283a72fdec03105305",
+      "assertions": {
+        "rootNonBlank": true,
+        "noHorizontalOverflow": true,
+        "namedControls": true,
+        "expectedPage": true
+      }
+    },
+    {
+      "id": "activity-closed-desktop",
+      "url": "http://127.0.0.1:5175/activity/session-e-d4/act-e-d4",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "waitCondition": "document.querySelector('#root')?.childElementCount > 0",
+      "projectionFile": "scripts/w5-e-validation/evidence/d4/activity-closed-desktop.projection.json",
+      "projectionSha256": "f1b557fe326900f052e27f811508c136afe7eb9761ce67795743bdfadda6ed54",
+      "pngFile": "scripts/w5-e-validation/evidence/d4/activity-closed-desktop.png",
+      "pngBytes": 47825,
+      "pngSha256": "04935ec5647533b060359e3aad482101757ead6da39148d6f4216c172ddb3e56",
+      "assertions": {
+        "rootNonBlank": true,
+        "noHorizontalOverflow": true,
+        "namedControls": true,
+        "expectedPage": true
+      }
+    },
+    {
+      "id": "activity-closed-mobile",
+      "url": "http://127.0.0.1:5175/activity/session-e-d4/act-e-d4",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "waitCondition": "document.querySelector('#root')?.childElementCount > 0",
+      "projectionFile": "scripts/w5-e-validation/evidence/d4/activity-closed-mobile.projection.json",
+      "projectionSha256": "a196c0afb31c97931242bd1c46aeb7019c2c954bb1feebadb9ea545fb26deacc",
+      "pngFile": "scripts/w5-e-validation/evidence/d4/activity-closed-mobile.png",
+      "pngBytes": 23831,
+      "pngSha256": "5e8a5c6bca5bc79262b5a8733a39674f66f92a90bebbdb6a7dc618c63f3fbfc7",
+      "assertions": {
+        "rootNonBlank": true,
+        "noHorizontalOverflow": true,
+        "namedControls": true,
+        "expectedPage": true
+      }
+    }
+  ],
+  "security": {
+    "networkRequestCount": 21,
+    "externalRequests": [],
+    "runRequests": [],
+    "workerResources": [],
+    "domFindings": [],
+    "cacheFindings": [],
+    "logFindings": [],
+    "resourceFindings": [],
+    "requestFindings": [],
+    "consoleMessageCount": 0,
+    "assertions": {
+      "noExternalRequests": true,
+      "noRunRequests": true,
+      "noWorkerResources": true,
+      "domSafe": true,
+      "cacheSafe": true,
+      "logsSafe": true,
+      "resourceUrlsSafe": true,
+      "requestUrlsSafe": true
+    }
+  },
+  "status": "PASS"
+}

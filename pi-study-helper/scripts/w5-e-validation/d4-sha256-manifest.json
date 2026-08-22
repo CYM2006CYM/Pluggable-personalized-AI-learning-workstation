@@ -1,0 +1,307 @@
+{
+  "schemaVersion": 3,
+  "candidate": "W5-D4-E",
+  "kind": "FORMAL_GIT_PROPOSED_SCOPE",
+  "baseHead": "aaf588202b3ae92ed72c63994b912d78977516bb",
+  "generatedAtUtc": "2026-08-22T13:56:32.479Z",
+  "entryCount": 50,
+  "selfExcluded": [
+    "pi-study-helper/scripts/w5-e-validation/d4-sha256-manifest.json"
+  ],
+  "entries": [
+    {
+      "path": "pi-study-helper/package.json",
+      "hashMode": "utf8-lf-v1",
+      "byteLength": 2782,
+      "sha256": "383414b3e4fc5c1ef97f2b82894600715a6f776f53a30be941a5dc51fc6207b3"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-e-validation/capture-d4-browser.mjs",
+      "hashMode": "utf8-lf-v1",
+      "byteLength": 17043,
+      "sha256": "90b7049938b7a84da23c8b4f4dc8e18f103e2c10adce5292b2b56081575f7b16"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-e-validation/d4-audit-only-files.txt",
+      "hashMode": "utf8-lf-v1",
+      "byteLength": 515,
+      "sha256": "c23972f459d9c4154e39fc331e9f85e4be0a772a7e5623b7db3de7013eab1cf5"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-e-validation/d4-browser-capture.json",
+      "hashMode": "utf8-lf-v1",
+      "byteLength": 6131,
+      "sha256": "709d4220a5bff3d7f00cbb029a0b03d26916fe859296474e84be10ac73b6e2ac"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-e-validation/d4-candidate-diff-check.mjs",
+      "hashMode": "utf8-lf-v1",
+      "byteLength": 1967,
+      "sha256": "b573a2ff31a8d42386c95b56e1c0187f7fca504c1f3e04dabea570c2a78f9bee"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-e-validation/d4-command-results.json",
+      "hashMode": "utf8-lf-v1",
+      "byteLength": 34617,
+      "sha256": "52c97a20995aa7ca82db474facb380900e0111191fbf3ae5d6443fe030718d48"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-e-validation/d4-diff-check.json",
+      "hashMode": "utf8-lf-v1",
+      "byteLength": 184,
+      "sha256": "34378d256a82f9c4fb3a050ef8940406ca07bab5977166e0a30ef2d303d0f1e6"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-e-validation/d4-independent-validation.json",
+      "hashMode": "utf8-lf-v1",
+      "byteLength": 4821,
+      "sha256": "2fed802b1b91ffd958fd569262b2f34085e26e806c63959496c4d92b7b2541f6"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-e-validation/d4-known-limitations.json",
+      "hashMode": "utf8-lf-v1",
+      "byteLength": 1072,
+      "sha256": "a4fd33dfa2e7299cd6785ebd3db767a32e65bca4576b4be6a63f35239ff8269e"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-e-validation/d4-page-state-copy.json",
+      "hashMode": "utf8-lf-v1",
+      "byteLength": 1554,
+      "sha256": "a1f03235dc380ac27798336d972206420d735d4fa311643f86d329b9f2f4c219"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-e-validation/d4-proposed-files.txt",
+      "hashMode": "utf8-lf-v1",
+      "byteLength": 3080,
+      "sha256": "a621041b6f3212cb61e702fa8d168cd2b3ab29826a43a1c5e8bd3e63f957d028"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-e-validation/d4-real-code-chain.json",
+      "hashMode": "utf8-lf-v1",
+      "byteLength": 770,
+      "sha256": "14a79ab3863c0becc2ee228f5e3cfeeb58a4aae3457705f0617df240c90d585b"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-e-validation/d4-screenshot-index.json",
+      "hashMode": "utf8-lf-v1",
+      "byteLength": 5130,
+      "sha256": "d9756abc5904ca019c140ba785ef7b87805eab29fd74c9db535ce4128be34051"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-e-validation/d4-security-scan.json",
+      "hashMode": "utf8-lf-v1",
+      "byteLength": 2871,
+      "sha256": "065168ed931d63917f4a1e62490fc7d778644e477a5c9208b26e51fbd98f8e5e"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-e-validation/d4-test-mapping.json",
+      "hashMode": "utf8-lf-v1",
+      "byteLength": 1944,
+      "sha256": "0f8966ef01a69e2b8c0921d8541c52e38650b666e17abdcfd3a312b0db7ddb3f"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-e-validation/d4-upstream-binding.json",
+      "hashMode": "utf8-lf-v1",
+      "byteLength": 848,
+      "sha256": "c7d463f966eca1801b10621f027048e08eebc71d47c0926a76e1b77eefc4f339"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-e-validation/d4-zip-files.txt",
+      "hashMode": "utf8-lf-v1",
+      "byteLength": 3613,
+      "sha256": "ee34861ba212d076ecafe985c63c43224726599737b041ea3dc2925a610e1a5a"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-e-validation/evidence/d4/activity-closed-desktop.projection.json",
+      "hashMode": "utf8-lf-v1",
+      "byteLength": 1710,
+      "sha256": "f1b557fe326900f052e27f811508c136afe7eb9761ce67795743bdfadda6ed54"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-e-validation/evidence/d4/activity-closed-mobile.projection.json",
+      "hashMode": "utf8-lf-v1",
+      "byteLength": 1597,
+      "sha256": "a196c0afb31c97931242bd1c46aeb7019c2c954bb1feebadb9ea545fb26deacc"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-e-validation/evidence/d4/showcase-high-foundation-desktop.projection.json",
+      "hashMode": "utf8-lf-v1",
+      "byteLength": 3271,
+      "sha256": "c977e5366d4693f32ea754330a9610266d190a152881b53f3ded9f431bf02cab"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-e-validation/evidence/d4/showcase-non-computer-beginner-desktop.projection.json",
+      "hashMode": "utf8-lf-v1",
+      "byteLength": 3409,
+      "sha256": "6249c26d428c0a12f29d2407631181916561fa9db34c59ae440805ee1cc054e2"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-e-validation/evidence/d4/showcase-practice-mobile.projection.json",
+      "hashMode": "utf8-lf-v1",
+      "byteLength": 3168,
+      "sha256": "0397880e1da6141812df0f1ab018ea3e7ee8d57be6f3d2f5f5d592158b4fdf32"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-e-validation/evidence/d4/showcase-practice-oriented-desktop.projection.json",
+      "hashMode": "utf8-lf-v1",
+      "byteLength": 3282,
+      "sha256": "8cf21db08f6a2276f6eb46f8ebea45e3092f0e9c158fdbe4f2de15144ee0f21b"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-e-validation/generate-d4-evidence.mjs",
+      "hashMode": "utf8-lf-v1",
+      "byteLength": 11422,
+      "sha256": "3f97d9e37ef5da1ec3cee3303e98a43a0ebf71d5d54dacdcc64a05c0e9e63896"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-e-validation/generate-d4-manifest.mjs",
+      "hashMode": "utf8-lf-v1",
+      "byteLength": 5744,
+      "sha256": "9b70029023faae66e168bcfffc1711a54dea4f035fb29d8a4b351c37a1db3621"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-e-validation/generate-formal-showcase-data.mjs",
+      "hashMode": "utf8-lf-v1",
+      "byteLength": 1647,
+      "sha256": "f695da39f350b2dc876cbb0d8876965b3a189385910156eb26cec43a108cd8eb"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-e-validation/package-d4.mjs",
+      "hashMode": "utf8-lf-v1",
+      "byteLength": 7007,
+      "sha256": "790c08f6206bbe79f29475817fd18ca29ffeb81d73cd3110dcc2ecd1a51c04ae"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-e-validation/run-d4-independent-validation.mjs",
+      "hashMode": "utf8-lf-v1",
+      "byteLength": 11276,
+      "sha256": "8e845bbcce3cc4eba664698ea4d989bc0eedfd9659aa1dbe4739c9e4553781f3"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-e-validation/run-d4-validation.mjs",
+      "hashMode": "utf8-lf-v1",
+      "byteLength": 11646,
+      "sha256": "068f33263fee89e100f2fb33bd3fd7b8585a18d81dc92c1b78c0d891834d5ca3"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-e-validation/verify-d4-evidence.mjs",
+      "hashMode": "utf8-lf-v1",
+      "byteLength": 11746,
+      "sha256": "6668b9cd128fc8f865fe37e952b8cc8210334f8d79270c9a28d1a101297d4dfe"
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-e-validation/w5-e-d4-validation-report.md",
+      "hashMode": "utf8-lf-v1",
+      "byteLength": 2578,
+      "sha256": "a7e878bdef369c394f0e0578f0e32b8e4b17ca1df90ba6d2164e26470ba37440"
+    },
+    {
+      "path": "pi-study-helper/src/demo/launcher.ts",
+      "hashMode": "utf8-lf-v1",
+      "byteLength": 3476,
+      "sha256": "ec9277c5da309bc8f69c0fc23baa00eb95e652826f4146c004ce0f20a6c62a85"
+    },
+    {
+      "path": "pi-study-helper/src/web/app/AppShell.tsx",
+      "hashMode": "utf8-lf-v1",
+      "byteLength": 2246,
+      "sha256": "88f9bcaed115fc8aabd554b0655674320c47a6d9e3ab410ae640cefe1f4bc5dc"
+    },
+    {
+      "path": "pi-study-helper/src/web/app/routes.tsx",
+      "hashMode": "utf8-lf-v1",
+      "byteLength": 1316,
+      "sha256": "bca6dae9906aa9e3495900df91aad408000076e669fda82a8cbcf39cb10a3f6b"
+    },
+    {
+      "path": "pi-study-helper/src/web/pages/ActivityPage.tsx",
+      "hashMode": "utf8-lf-v1",
+      "byteLength": 21071,
+      "sha256": "98d2afddc719c8272113d08eea03e2f32c269b32829064dbcb36e24b03f82fe2"
+    },
+    {
+      "path": "pi-study-helper/src/web/pages/ShowcasePage.tsx",
+      "hashMode": "utf8-lf-v1",
+      "byteLength": 4310,
+      "sha256": "6664eb02a3dd6cdfde03b8c5651948dab38f37d72d65cbd904556158d3c1e069"
+    },
+    {
+      "path": "pi-study-helper/src/web/raw-imports.d.ts",
+      "hashMode": "utf8-lf-v1",
+      "byteLength": 78,
+      "sha256": "fc9c563cdef274837bf28d3dfff02b13ce3d19c84830b4b6c088c32c33ddb13e"
+    },
+    {
+      "path": "pi-study-helper/src/web/showcase/formal-showcase-data.json",
+      "hashMode": "utf8-lf-v1",
+      "byteLength": 39876,
+      "sha256": "12437e3e8ea0d8c3db6e824e59152951909e1023363e0aea8fc19cbf95e632fc"
+    },
+    {
+      "path": "pi-study-helper/src/web/showcase/formal-showcase-data.ts",
+      "hashMode": "utf8-lf-v1",
+      "byteLength": 3008,
+      "sha256": "cdbe9a23f08ee44a7b6b54b4e1314cc76530cd58151b2abdb52bec33e885b4d2"
+    },
+    {
+      "path": "pi-study-helper/src/web/styles.css",
+      "hashMode": "utf8-lf-v1",
+      "byteLength": 24239,
+      "sha256": "cab01b4daf9a25c225005e2fe247e8f51dc57419fe797b3e36ca79076c04f348"
+    },
+    {
+      "path": "pi-study-helper/tests/web/boundary-contract.test.mjs",
+      "hashMode": "utf8-lf-v1",
+      "byteLength": 2904,
+      "sha256": "914f880799c9cb6e4ade024a1c1d88bdb57bf65f345d19d44b4ee2897ebb8f83"
+    },
+    {
+      "path": "pi-study-helper/tests/web/pages.test.tsx",
+      "hashMode": "utf8-lf-v1",
+      "byteLength": 29748,
+      "sha256": "88b338a0188dbf336112df8089e1dc5becc9c790a084a4d6822f87feee3ab3e1"
+    },
+    {
+      "path": "pi-study-helper/tests/web/routes.test.tsx",
+      "hashMode": "utf8-lf-v1",
+      "byteLength": 1565,
+      "sha256": "1f77228867a75516f1f7689e4694488b76107e2e2349180f3f29f94b0a0ac247"
+    },
+    {
+      "path": "pi-study-helper/tests/web/vite-security.test.ts",
+      "hashMode": "utf8-lf-v1",
+      "byteLength": 2411,
+      "sha256": "7fc7f8d05bb230dd156c0fd0eae9c265eadee378e02b5db3c866e3a250652629"
+    },
+    {
+      "path": "pi-study-helper/tests/web/w5-d2-e-runtime-evidence.test.tsx",
+      "hashMode": "utf8-lf-v1",
+      "byteLength": 4516,
+      "sha256": "d2cc3d3a9c183c40803583ace9d22dee4d8495977e07ac2af8b6b049d1b79570"
+    },
+    {
+      "path": "pi-study-helper/tests/web/w5-d4-e-real-code-chain.test.tsx",
+      "hashMode": "utf8-lf-v1",
+      "byteLength": 11118,
+      "sha256": "aaefa4e078b871c0e81e9142b3a19015afe6c9bfe01e4aee9ab130099a5ed957"
+    },
+    {
+      "path": "pi-study-helper/tests/web/w5-d4-e-showcases.test.tsx",
+      "hashMode": "utf8-lf-v1",
+      "byteLength": 7748,
+      "sha256": "b004ca999b46ec1df1364da75c0f4862c2f23e05d087397d120b7816f95aba4f"
+    },
+    {
+      "path": "pi-study-helper/vite.config.ts",
+      "hashMode": "utf8-lf-v1",
+      "byteLength": 1279,
+      "sha256": "a84f4462efa7f54fffc20a80f9304fc814851ad2c3ffc5cf5b4f5d3aba314588"
+    },
+    {
+      "path": "新版设计文档-重写版/第五周任务/handoff-w5-e-d4.md",
+      "hashMode": "utf8-lf-v1",
+      "byteLength": 2369,
+      "sha256": "17cce0e02c8f1217499014f625aa7ad6c4acfdce04f4d22910df9db07c391031"
+    }
+  ]
+}

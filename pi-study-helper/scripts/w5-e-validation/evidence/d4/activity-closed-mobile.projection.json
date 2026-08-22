@@ -1,0 +1,39 @@
+{
+  "runId": "w5-d4-e-20260822135500691",
+  "id": "activity-closed-mobile",
+  "url": "http://127.0.0.1:5175/activity/session-e-d4/act-e-d4",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "waitCondition": "document.querySelector('#root')?.childElementCount > 0",
+  "capturedAtUtc": "2026-08-22T13:55:03.548Z",
+  "projection": {
+    "url": "http://127.0.0.1:5175/activity/session-e-d4/act-e-d4",
+    "title": "Pi Study Helper",
+    "text": "P\nPi Study Helper\n本地演示模式\n01\n开始\n02\n案例\n03\n诊断\n04\n路径\n05\n活动\n06\n总结\n\n代码活动\n\n代码补全\n\n完成代码并提交正式评测。\n\ncode\n\nACTIVITY CONTRACT\n\n知识点\npandas.clean.inspect-dataframe\n活动版本\n1\nAttempt\nattempt-e-d4\n会话版本\n3\n\n打开阶段不会显示答案；正式提交后只显示安全复盘字段。\n\n代码草稿\nPYODIDE_DISABLED_WITH_NODE_FALLBACK\n浏览器预览未启用；正式评测由本地 Node/Python 执行。\n保存草稿\n提交正式评测",
+    "rootChildren": 1,
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "pathNodes": 0,
+    "formalSource": false,
+    "previewControls": 0,
+    "formalSubmit": {
+      "disabled": false,
+      "text": "提交正式评测"
+    },
+    "previewEnabled": "false",
+    "controlsWithoutName": 0,
+    "resources": [
+      "http://127.0.0.1:5175/assets/index-Be7rS1x_.js",
+      "http://127.0.0.1:5175/assets/index-KOA7BrOI.css",
+      "http://127.0.0.1:5175/api/bootstrap"
+    ],
+    "storage": {
+      "local": {},
+      "session": {},
+      "caches": [],
+      "indexedDb": []
+    }
+  }
+}

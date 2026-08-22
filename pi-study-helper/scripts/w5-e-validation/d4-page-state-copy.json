@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "candidate": "W5-D4-E",
+  "generatedAtUtc": "2026-08-22T13:56:31.699Z",
+  "entries": [
+    {
+      "state": "loading",
+      "code": "LOADING",
+      "title": "正在加载{页面}",
+      "source": "src/web/components/PageStatePanel.tsx",
+      "verified": true
+    },
+    {
+      "state": "empty",
+      "code": "EMPTY",
+      "title": "暂无{页面}",
+      "source": "src/web/components/PageStatePanel.tsx",
+      "verified": true
+    },
+    {
+      "state": "conflict",
+      "code": "session_version_conflict",
+      "title": "另一窗口已有更新",
+      "source": "src/web/components/PageStatePanel.tsx",
+      "verified": true
+    },
+    {
+      "state": "model_failure",
+      "code": "fixed_fallback",
+      "title": "固定内容降级",
+      "source": "tests/w4-d-fixed-fallback-integration.test.ts",
+      "verified": true
+    },
+    {
+      "state": "evaluator_failure",
+      "code": "evaluator_error",
+      "title": "评测器暂时不可用",
+      "source": "src/web/pages/ActivityPage.tsx",
+      "verified": true
+    },
+    {
+      "state": "recovery",
+      "code": "ACTIVITY_SAFE_VIEW_INCOMPLETE",
+      "title": "服务端保留了进度，但当前安全投影不足",
+      "source": "src/web/components/PageStatePanel.tsx",
+      "verified": true
+    },
+    {
+      "state": "pyodide_closed",
+      "code": "PYODIDE_DISABLED_WITH_NODE_FALLBACK",
+      "title": "浏览器预览未启用",
+      "source": "src/web/pages/ActivityPage.tsx",
+      "verified": true
+    }
+  ],
+  "status": "PASS"
+}

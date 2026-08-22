@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "candidate": "W5-D4-E",
+  "generatedAtUtc": "2026-08-22T13:56:31.698Z",
+  "scopes": {
+    "dom": {
+      "evidence": [
+        "scripts/w5-e-validation/evidence/d4/showcase-high-foundation-desktop.projection.json",
+        "scripts/w5-e-validation/evidence/d4/showcase-non-computer-beginner-desktop.projection.json",
+        "scripts/w5-e-validation/evidence/d4/showcase-practice-oriented-desktop.projection.json",
+        "scripts/w5-e-validation/evidence/d4/showcase-practice-mobile.projection.json",
+        "scripts/w5-e-validation/evidence/d4/activity-closed-desktop.projection.json",
+        "scripts/w5-e-validation/evidence/d4/activity-closed-mobile.projection.json"
+      ],
+      "findings": []
+    },
+    "network": {
+      "evidence": "pi-study-helper/scripts/w5-e-validation/d4-browser-capture.json",
+      "requestCount": 21,
+      "externalRequests": [],
+      "runRequests": [],
+      "requestFindings": [],
+      "resourceFindings": []
+    },
+    "worker": {
+      "evidence": [
+        "pi-study-helper/src/web/preview/browser-code-runner.ts",
+        "pi-study-helper/src/web/preview/create-browser-code-runner.ts",
+        "pi-study-helper/src/web/preview/pyodide-preview.worker.ts"
+      ],
+      "loadedResources": [],
+      "findings": []
+    },
+    "cache": {
+      "evidence": [
+        "scripts/w5-e-validation/evidence/d4/showcase-high-foundation-desktop.projection.json",
+        "scripts/w5-e-validation/evidence/d4/showcase-non-computer-beginner-desktop.projection.json",
+        "scripts/w5-e-validation/evidence/d4/showcase-practice-oriented-desktop.projection.json",
+        "scripts/w5-e-validation/evidence/d4/showcase-practice-mobile.projection.json",
+        "scripts/w5-e-validation/evidence/d4/activity-closed-desktop.projection.json",
+        "scripts/w5-e-validation/evidence/d4/activity-closed-mobile.projection.json"
+      ],
+      "findings": []
+    },
+    "logs": {
+      "evidence": "pi-study-helper/scripts/w5-e-validation/d4-browser-capture.json",
+      "consoleMessageCount": 0,
+      "findings": []
+    },
+    "bundle": {
+      "evidence": [
+        {
+          "path": "pi-study-helper/dist-web/assets/index-Be7rS1x_.js",
+          "bytes": 309717,
+          "sha256": "f7cad8b83fc664cc5244a8116b348e2ceabe0abec52c2e2c4f2c23589e5f7c92"
+        },
+        {
+          "path": "pi-study-helper/dist-web/assets/index-KOA7BrOI.css",
+          "bytes": 19457,
+          "sha256": "45b777b4c56d294ad518d010f2b384f03cf60037a83509534aa35ec14b5089c3"
+        },
+        {
+          "path": "pi-study-helper/dist-web/index.html",
+          "bytes": 483,
+          "sha256": "a1840ff7c3cc81e5af60652d22ea46e07cce3af9198e88e9d6e5b22074a9b8e3"
+        }
+      ],
+      "findings": []
+    }
+  },
+  "pyodideDecision": "PYODIDE_DISABLED_WITH_NODE_FALLBACK",
+  "liveModel": "LIVE_NOT_RUN",
+  "status": "PASS"
+}

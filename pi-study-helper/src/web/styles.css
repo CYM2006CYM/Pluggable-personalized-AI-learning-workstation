@@ -1189,6 +1189,104 @@ h3 {
   font-size: 11px;
 }
 
+.showcase-toolbar {
+  min-height: 64px;
+  display: grid;
+  grid-template-columns: auto minmax(220px, 420px) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.showcase-toolbar label {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.showcase-toolbar select {
+  width: 100%;
+}
+
+.showcase-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(280px, 0.7fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.showcase-path-section,
+.showcase-facts {
+  min-height: 500px;
+}
+
+.hash-list {
+  display: grid;
+  gap: 12px;
+  margin: 22px 0 0;
+}
+
+.hash-list div {
+  min-width: 0;
+}
+
+.hash-list dt {
+  color: var(--muted);
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.hash-list dd {
+  margin: 4px 0 0;
+  overflow-wrap: anywhere;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.difference-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.difference-group {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-soft);
+}
+
+.difference-group header {
+  min-height: 56px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.difference-group dl {
+  display: grid;
+  gap: 10px;
+  margin: 14px 0 0;
+}
+
+.difference-group dt {
+  overflow-wrap: anywhere;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.difference-group dd {
+  margin: 3px 0 0;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;
@@ -1225,7 +1323,7 @@ h3 {
   }
 
   .primary-nav {
-    grid-template-columns: repeat(6, minmax(92px, 1fr));
+    grid-template-columns: repeat(7, minmax(92px, 1fr));
     overflow-x: auto;
     padding: 10px 0 0;
   }
@@ -1247,7 +1345,8 @@ h3 {
   .path-layout,
   .learn-layout,
   .activity-layout,
-  .summary-layout {
+  .summary-layout,
+  .showcase-layout {
     grid-template-columns: 1fr;
   }
 
@@ -1341,7 +1440,12 @@ h3 {
   .split-band,
   .state-details,
   .summary-metrics,
-  .metric-list.horizontal {
+  .metric-list.horizontal,
+  .difference-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .showcase-toolbar {
     grid-template-columns: 1fr;
   }
 

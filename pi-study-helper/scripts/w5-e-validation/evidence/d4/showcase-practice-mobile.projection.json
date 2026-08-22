@@ -1,0 +1,35 @@
+{
+  "runId": "w5-d4-e-20260822135500691",
+  "id": "showcase-practice-mobile",
+  "url": "http://127.0.0.1:5175/showcases?case=showcase-practice-oriented",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "waitCondition": "document.body.innerText.includes('showcase-practice-oriented')",
+  "capturedAtUtc": "2026-08-22T13:55:02.816Z",
+  "projection": {
+    "url": "http://127.0.0.1:5175/showcases?case=showcase-practice-oriented",
+    "title": "Pi Study Helper",
+    "text": "P\nPi Study Helper\n本地演示模式\n01\n开始\n02\n案例\n\nW5-D4 正式输出\n\n三类学习路径\n\nA-D4 PathEngine 实际结果 · Profile revision 3\n\n3 个案例\n正式案例\nhigh_foundation\nnon_computer_beginner\npractice_oriented\ncandidate\n\nPATH VERSION 1\n\nshowcase-practice-oriented\npractice_oriented\n01\nbasic-python\ngoal_required · prerequisite_gap\nS-R · hint · act-basic-python-remediation\n5分钟\navailable\n02\npandas.clean.read-csv\ngoal_required\nS-U · hint · act-read-csv\n16分钟\nlocked\n03\npandas.clean.inspect-dataframe\ngoal_required\nS-U · hint · act-quiz-inspect-dataframe / act-inspect-dataframe\n33分钟\nlocked\n04\npandas.clean.missing-values\ngoal_required · low_mastery\nM-U · worked_example · act-quiz-missing-values / act-missing\n40分钟\nlocked\n05\npandas.clean.duplicate-orders\ngoal_required\nM-A · hint · act-quiz-duplicate-orders / act-duplicates\n45分钟\nlocked\n06\npandas.clean.type-format\ngoal_required · low_mastery\nM-A · worked_example · act-quiz-type-format / act-types\n53分钟\nlocked\n07\npandas.clean.validate-result\ngoal_required\nC-A · none · act-quiz-validate-result / act-practical\n83分钟\nlocked\n\nFORMAL BINDING\n\n输入与输出\nProfile revision\n3\n下一节点\nnode-basic-python\n下一活动\nact-basic-python-remediation\n诊断缺口\n1\nSEAL\nccff2e2afdabaad262baeaa498b527438fcadeec1ddf5e198289f8404071e85d\nINPUT\n4bd6d22aefc4bac82d156ae517111b786af973f3706d24add7afc4c361f39ef2\nPATH\n1c62126c85e793c05b5edc28fa50f179a2fb9bf31b9ee10423191bebf9c3f92c\nOUTPUT\n27f55e81d221387ba16fe2bffeaa6b9d38b188209f5e59507b4da0e5cf304830\n\nOBSERVED DIFFERENCES\n\n实际差异\nshowcase-high-foundation\nshowcase-practice-oriented\n12\nbackground · explanation_preference\nconcise → example_first\ndiagnostic · insufficientKnowledgePointIds\n[] → pandas.clean.validate-result\nknowledge_state · pandas.clean.missing-values.mastery\n1 → 0\nshowcase-non-computer-beginner\nshowcase-practice-oriented\n21\nbackground · explanation_preference\nstep_by_step → example_first\nknowledge_state · basic-python.mastery\n0 → 1\nknowledge_state · basic-python.status\nsupport_needed → ready",
+    "rootChildren": 1,
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "pathNodes": 7,
+    "formalSource": true,
+    "previewControls": 0,
+    "formalSubmit": null,
+    "previewEnabled": null,
+    "controlsWithoutName": 0,
+    "resources": [
+      "http://127.0.0.1:5175/assets/index-Be7rS1x_.js",
+      "http://127.0.0.1:5175/assets/index-KOA7BrOI.css"
+    ],
+    "storage": {
+      "local": {},
+      "session": {},
+      "caches": [],
+      "indexedDb": []
+    }
+  }
+}

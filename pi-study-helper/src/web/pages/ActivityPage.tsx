@@ -2,9 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import type {
   ActivityDraftOutput,
-  ActivityResult,
   ActivitySubmissionOutput,
-  BrowserCodeRunner,
   CodeActivityDraftOutput,
   QuizAnswerInput,
 } from "../../contracts/index.js";
@@ -12,8 +10,6 @@ import { api, isApiError, isEvaluatorFailure, newRequestId, quizScore, type Eval
 import { useBootstrap } from "../api/use-bootstrap.js";
 import { PageFrame } from "../components/PageFrame.js";
 import { PageStatePanel } from "../components/PageStatePanel.js";
-import { BrowserCodeRunnerError } from "../preview/browser-code-runner.js";
-import { createBrowserCodeRunner, PYODIDE_CANDIDATE_STATUS } from "../preview/create-browser-code-runner.js";
 import {
   clearActivityDraft,
   readActivityDraft,
@@ -25,25 +21,14 @@ import { useUiStore } from "../state/ui-store.js";
 import { STABLE_LAYOUT } from "../styles/layout-contract.js";
 
 type SubmitResult = ActivitySubmissionOutput | EvaluatorFailureView;
-type PreviewState =
-  | { status: "idle" }
-  | { status: "preparing" }
-  | { status: "running" }
-  | { status: "cancelled" | "timeout" | "output_limit" | "unavailable" | "protocol_error" }
-  | { status: "result"; result: ActivityResult };
 
-export interface ActivityPageProps {
-  previewRunner?: BrowserCodeRunner;
-}
-
-export function ActivityPage({ previewRunner }: ActivityPageProps = {}) {
+export function ActivityPage() {
   const { sessionId = "", activityId = "" } = useParams<{ sessionId: string; activityId: string }>();
   const location = useLocation();
   const navigate = useNavigate();
   const bootstrap = useBootstrap(sessionId);
   const [opened, setOpened] = useState<ActivityDraftOutput | undefined>((location.state as { opened?: ActivityDraftOutput } | null)?.opened);
   const [result, setResult] = useState<SubmitResult>();
-  const [previewState, setPreviewState] = useState<PreviewState>({ status: "idle" });
   const [answers, setAnswers] = useState<Record<string, string | boolean>>({});
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState<Error>();
@@ -51,7 +36,6 @@ export function ActivityPage({ previewRunner }: ActivityPageProps = {}) {
   const [recoveryAttempted, setRecoveryAttempted] = useState(false);
   const routeStateChecked = useRef<string>();
   const initializedDraftBinding = useRef<string>();
-  const previewAbort = useRef<AbortController>();
   const drafts = useUiStore((state) => state.activityDrafts);
   const setDraft = useUiStore((state) => state.setActivityDraft);
   const clearDraft = useUiStore((state) => state.clearActivityDraft);
@@ -60,15 +44,12 @@ export function ActivityPage({ previewRunner }: ActivityPageProps = {}) {
     .flatMap((node) => node.activities)
     .find((activity) => activity.activityId === activityId && activity.result !== undefined);
   const localDraft = opened?.kind === "code" ? drafts[opened.attemptId] ?? opened.userText : "";
-  const previewBusy = previewState.status === "preparing" || previewState.status === "running";
 
   const captureActionError = async (error: unknown, fallback: string) => {
     const normalized = error instanceof Error ? error : new Error(fallback);
     setActionError(normalized);
     if (isApiError(normalized) && normalized.status === 409) await bootstrap.reload();
   };
-
-  useEffect(() => () => previewAbort.current?.abort(), []);
 
   useEffect(() => {
     if (opened?.kind !== "code") return;
@@ -93,7 +74,6 @@ export function ActivityPage({ previewRunner }: ActivityPageProps = {}) {
     if (result !== undefined || opened === undefined || submittedProgress === undefined) return;
     setOpened(undefined);
     setAnswers({});
-    setPreviewState({ status: "idle" });
   }, [activityId, bootstrap.error, bootstrap.loading, opened, result, session, submittedProgress]);
 
   useEffect(() => {
@@ -152,48 +132,22 @@ export function ActivityPage({ previewRunner }: ActivityPageProps = {}) {
     finally { setBusy(false); }
   };
 
-  const preview = async () => {
-    if (opened?.kind !== "code" || previewBusy) return;
-    const controller = new AbortController();
-    previewAbort.current = controller;
-    setActionError(undefined);
-    setPreviewState({ status: "preparing" });
-    try {
-      const code = localDraft;
-      const saved = await persistCodeDraft(opened, code);
-      if (controller.signal.aborted) throw new BrowserCodeRunnerError("preview_cancelled");
-      const prepared = await api.prepareActivityRun({
-        requestId: newRequestId("web-preview"), sessionId, sessionVersion: saved.sessionVersion,
-        profileRevision: saved.profileRevision, activityId, activityVersion: saved.activity.activityVersion,
-        attemptId: saved.attemptId, draftVersion: saved.draftVersion, mode: "preview",
-      });
-      if (controller.signal.aborted) throw new BrowserCodeRunnerError("preview_cancelled");
-      setPreviewState({ status: "running" });
-      const publicResult = await (previewRunner ?? createBrowserCodeRunner()).run(prepared, code, controller.signal);
-      setPreviewState({ status: "result", result: publicResult });
-    } catch (error) {
-      if (error instanceof BrowserCodeRunnerError) setPreviewState({ status: previewStatusForError(error) });
-      else if (isApiError(error) && error.status === 409) await captureActionError(error, "preview_failed");
-      else setPreviewState({ status: "unavailable" });
-    } finally {
-      if (previewAbort.current === controller) previewAbort.current = undefined;
-    }
-  };
-
   const submit = async () => {
     if (opened === undefined) return;
-    previewAbort.current?.abort();
     setBusy(true); setActionError(undefined);
     try {
-      const submitted = await api.submitActivity(opened.kind === "quiz" ? {
+      const submissionDraft = opened.kind === "code" && localDraft !== opened.userText
+        ? await persistCodeDraft(opened, localDraft)
+        : opened;
+      const submitted = await api.submitActivity(submissionDraft.kind === "quiz" ? {
         requestId: newRequestId("web-submit-quiz"), sessionId, sessionVersion: opened.sessionVersion, profileRevision: opened.profileRevision,
         kind: "quiz", activityId, activityVersion: opened.activity.activityVersion, attemptId: opened.attemptId, answers: completeAnswers,
       } : {
-        requestId: newRequestId("web-submit-code"), sessionId, sessionVersion: opened.sessionVersion, profileRevision: opened.profileRevision,
-        kind: "code", activityId, activityVersion: opened.activity.activityVersion, attemptId: opened.attemptId, draftVersion: opened.draftVersion, userText: localDraft,
+        requestId: newRequestId("web-submit-code"), sessionId, sessionVersion: submissionDraft.sessionVersion, profileRevision: submissionDraft.profileRevision,
+        kind: "code", activityId, activityVersion: submissionDraft.activity.activityVersion, attemptId: submissionDraft.attemptId, draftVersion: submissionDraft.draftVersion, userText: localDraft,
       });
       setResult(submitted);
-      if (!isEvaluatorFailure(submitted) && opened.kind === "code") removeBrowserDraft(opened.attemptId, clearDraft);
+      if (!isEvaluatorFailure(submitted) && submissionDraft.kind === "code") removeBrowserDraft(submissionDraft.attemptId, clearDraft);
       await bootstrap.reload();
     } catch (error) { await captureActionError(error, "activity_submit_failed"); }
     finally { setBusy(false); }
@@ -208,7 +162,7 @@ export function ActivityPage({ previewRunner }: ActivityPageProps = {}) {
       if (next.completed || next.node === undefined || next.activity === undefined) { navigate(`/summary/${sessionId}`); return; }
       if (retry) {
         const nextOpened = await api.openActivity({ requestId: newRequestId("web-open-retry"), sessionId, sessionVersion: next.sessionVersion, profileRevision: next.profileRevision, activityId: next.activity.activityId, activityVersion: next.activity.activityVersion, pathVersion: next.pathVersion, ...(next.card === undefined ? {} : { acknowledgedCardId: next.card.cardId }) });
-        setOpened(nextOpened); setResult(undefined); setAnswers({}); setPreviewState({ status: "idle" });
+        setOpened(nextOpened); setResult(undefined); setAnswers({});
         navigate(`/activity/${sessionId}/${next.activity.activityId}`, { replace: true, state: { opened: nextOpened, nodeId: next.node.nodeId } });
       } else navigate(`/learn/${sessionId}/${next.node.nodeId}`, { state: { next } });
     } catch (error) { await captureActionError(error, "advance_failed"); }
@@ -265,40 +219,13 @@ export function ActivityPage({ previewRunner }: ActivityPageProps = {}) {
         </> : <>
           <label htmlFor="code-draft">代码草稿</label>
           <textarea id="code-draft" value={localDraft} onChange={(event) => updateCodeDraft(opened, event.target.value)} spellCheck={false} />
-          <PreviewView state={previewState} />
-          <div className="section-footer"><div className="button-row"><button type="button" className="button secondary" disabled={busy} onClick={() => void saveCodeDraft()}>保存草稿</button><button type="button" className="button secondary" disabled={busy || previewBusy} onClick={() => void preview()}>运行公开检查</button>{previewBusy ? <button type="button" className="button text-button" onClick={() => previewAbort.current?.abort()}>取消预览</button> : null}</div><button type="button" className="button primary" disabled={busy || localDraft === ""} onClick={() => void submit()}>提交正式评测</button></div>
+          <div className="notice-line" role="status" data-preview-enabled="false"><strong>PYODIDE_DISABLED_WITH_NODE_FALLBACK</strong><br />浏览器预览未启用；正式评测由本地 Node/Python 执行。</div>
+          <div className="section-footer"><div className="button-row"><button type="button" className="button secondary" disabled={busy} onClick={() => void saveCodeDraft()}>保存草稿</button></div><button type="button" className="button primary" disabled={busy || localDraft === ""} onClick={() => void submit()}>提交正式评测</button></div>
         </>}
         {result !== undefined && isEvaluatorFailure(result) ? <div className="section-footer"><button type="button" className="button primary" disabled={busy || opened.kind !== "code"} onClick={() => void retryEvaluation()}>重新读取草稿后重试</button></div> : result !== undefined ? <div className="section-footer">{result.kind === "quiz" && result.result.retryAllowed ? <button type="button" className="button primary" disabled={busy} onClick={() => void advance(true)}>开始新 Attempt 重试</button> : <button type="button" className="button primary" disabled={busy} onClick={() => void advance(false)}>进入下一活动</button>}</div> : null}
       </section></div>
     </div> : null}
   </PageFrame>;
-}
-
-function PreviewView({ state }: { state: PreviewState }) {
-  if (state.status === "idle") return <div className="notice-line" role="status"><strong>{PYODIDE_CANDIDATE_STATUS}</strong><br />本地 Pyodide 资产未启用；正式 Node/Python 评测仍可独立提交。</div>;
-  if (state.status === "preparing") return <div className="notice-line" role="status"><strong>PREVIEW_PREPARING</strong><br />正在保存草稿并请求公开执行包。</div>;
-  if (state.status === "running") return <div className="notice-line" role="status"><strong>PREVIEW_RUNNING</strong><br />正在独立 Worker 中运行公开检查。</div>;
-  if (state.status === "result") return <div className="result-stage" aria-live="polite"><div className="result-header"><div><p className="section-kicker">PUBLIC PREVIEW</p><h2>{state.result.verdict}</h2></div><span className="score-block">{state.result.score ?? "N/A"}</span></div><p className="feedback-copy">{state.result.safeFeedback}</p><dl className="metric-list horizontal"><div><dt>执行状态</dt><dd>{state.result.executionStatus}</dd></div><div><dt>评测版本</dt><dd>{state.result.evaluatorVersion}</dd></div></dl></div>;
-  const labels = {
-    cancelled: ["PREVIEW_CANCELLED", "公开预览已取消，未改变正式学习状态。"],
-    timeout: ["PREVIEW_TIMEOUT", "公开预览超过墙钟限制，Worker 已销毁。"],
-    output_limit: ["PREVIEW_OUTPUT_LIMIT", "公开预览输出超过 UTF-8 字节上限，Worker 已销毁。"],
-    unavailable: ["PREVIEW_UNAVAILABLE", "本地 Pyodide 候选不可用；正式提交仍可使用。"],
-    protocol_error: ["PREVIEW_PROTOCOL_ERROR", "Worker 返回了非法公开结果，结果已丢弃。"],
-  } as const;
-  const [code, detail] = labels[state.status];
-  return <div className="notice-line" role="status"><strong>{code}</strong><br />{detail}</div>;
-}
-
-function previewStatusForError(error: BrowserCodeRunnerError): Exclude<PreviewState["status"], "idle" | "preparing" | "running" | "result"> {
-  const mapping = {
-    preview_cancelled: "cancelled",
-    preview_timeout: "timeout",
-    preview_output_limit: "output_limit",
-    preview_unavailable: "unavailable",
-    preview_protocol_error: "protocol_error",
-  } as const;
-  return mapping[error.code];
 }
 
 function draftBinding(sessionId: string, activityId: string, opened: CodeActivityDraftOutput): ActivityDraftBinding {

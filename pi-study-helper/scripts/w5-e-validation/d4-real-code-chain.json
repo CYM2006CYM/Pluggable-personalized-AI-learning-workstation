@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "status": "PASS",
+  "sessionId": "session-4b1395228c8d1cc94348c106",
+  "codeActivities": [
+    {
+      "activityId": "act-inspect-dataframe",
+      "pageSubmit": true,
+      "formalVerdict": "pass"
+    },
+    {
+      "activityId": "act-missing",
+      "pageSubmit": true,
+      "formalVerdict": "pass"
+    },
+    {
+      "activityId": "act-duplicates",
+      "pageSubmit": true,
+      "formalVerdict": "pass"
+    },
+    {
+      "activityId": "act-types",
+      "pageSubmit": true,
+      "formalVerdict": "pass"
+    },
+    {
+      "activityId": "act-practical",
+      "pageSubmit": true,
+      "formalVerdict": "pass"
+    }
+  ],
+  "finalPractical": true,
+  "nextStepCompleted": true,
+  "sessionCompleted": true,
+  "privateCodeIncluded": false
+}

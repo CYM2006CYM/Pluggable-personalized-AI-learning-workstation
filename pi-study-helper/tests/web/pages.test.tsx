@@ -16,7 +16,6 @@ import {
   openedCode,
   openedQuiz,
   pathNodes,
-  preparedCode,
   quizSubmission,
   recovery,
   replan,
@@ -236,63 +235,21 @@ describe("W4 real API pages", () => {
     expect(fetchMock.mock.calls.some((call) => String(call[0]).includes("/activities/act-basic/open"))).toBe(true);
   });
 
-  it("saves edited code before preview and runs the returned draftVersion", async () => {
-    const posted: unknown[] = [];
-    class SuccessfulWorker {
-      private messageListener?: (event: MessageEvent) => void;
-      postMessage(message: unknown) {
-        posted.push(message);
-        queueMicrotask(() => this.messageListener?.(new MessageEvent("message", { data: {
-          type: "result", runId: "run-code-1", result: {
-            executionStatus: "completed", verdict: "pass", score: 1, safeFeedback: "公开检查通过",
-            evaluatorVersion: "browser-public-v1", environmentHash: "public-env", assetBundleHash: "public-assets",
-          },
-        } })));
-      }
-      addEventListener(type: string, listener: (event: MessageEvent) => void) { if (type === "message") this.messageListener = listener; }
-      removeEventListener() { /* no-op test worker */ }
-      terminate() { /* no-op test worker */ }
-    }
-    vi.stubGlobal("Worker", SuccessfulWorker);
-    const fetchMock = vi.fn()
-      .mockResolvedValueOnce(ok(bootstrap(recovery({ stage: "activity" }))))
-      .mockResolvedValueOnce(ok(savedCode))
-      .mockResolvedValueOnce(ok(preparedCode));
-    const { host } = await renderRoute("/activity/session-w4/act-code", fetchMock, { opened: openedCode });
-    await editTextarea(host.querySelector("textarea")!, "print('edited draft')");
-    await click(button(host, "运行公开检查"));
-    expect(String(fetchMock.mock.calls[1]?.[0])).toBe("/api/activities/act-code/draft");
-    expect(bodyAt(fetchMock, 1)).toMatchObject({ draftVersion: 1, userText: "print('edited draft')" });
-    expect(String(fetchMock.mock.calls[2]?.[0])).toBe("/api/activities/act-code/run");
-    expect(bodyAt(fetchMock, 2)).toMatchObject({ draftVersion: 2, attemptId: "attempt-code-1", mode: "preview" });
-    expect(posted).toHaveLength(1);
-    expect(posted[0]).toMatchObject({ type: "run", runId: "run-code-1", bundle: preparedCode, code: "print('edited draft')" });
-    expect(host.textContent).toContain("PUBLIC PREVIEW");
-    expect(host.textContent).toContain("公开检查通过");
-  });
-
-  it("shows the unavailable Pyodide candidate without disabling formal submission", async () => {
+  it("renders the approved Pyodide closed state without a preview control", async () => {
     const { host } = await renderRoute("/activity/session-w4/act-code", vi.fn().mockResolvedValue(ok(bootstrap(recovery({ stage: "activity" })))), { opened: openedCode });
-    expect(host.textContent).toContain("PYODIDE_CANDIDATE_UNAVAILABLE");
+    expect(host.textContent).toContain("PYODIDE_DISABLED_WITH_NODE_FALLBACK");
+    expect([...host.querySelectorAll("button")].some((item) => item.textContent?.includes("预览") || item.textContent?.includes("公开检查"))).toBe(false);
     expect(button(host, "提交正式评测").disabled).toBe(false);
   });
 
-  it("cancels a running public preview and destroys its dedicated Worker", async () => {
-    let terminated = false;
-    class HangingWorker {
-      postMessage() { /* public run intentionally remains pending */ }
-      addEventListener() { /* no message */ }
-      removeEventListener() { /* no-op */ }
-      terminate() { terminated = true; }
-    }
-    vi.stubGlobal("Worker", HangingWorker);
-    const fetchMock = vi.fn().mockResolvedValueOnce(ok(bootstrap(recovery({ stage: "activity" })))).mockResolvedValueOnce(ok(savedCode)).mockResolvedValueOnce(ok(preparedCode));
+  it("saves an edited code draft without calling the retained public run route", async () => {
+    const fetchMock = vi.fn().mockResolvedValueOnce(ok(bootstrap(recovery({ stage: "activity" })))).mockResolvedValueOnce(ok(savedCode));
     const { host } = await renderRoute("/activity/session-w4/act-code", fetchMock, { opened: openedCode });
-    await click(button(host, "运行公开检查"));
-    expect(host.textContent).toContain("PREVIEW_RUNNING");
-    await click(button(host, "取消预览"));
-    expect(host.textContent).toContain("PREVIEW_CANCELLED");
-    expect(terminated).toBe(true);
+    await editTextarea(host.querySelector("textarea")!, "print('edited draft')");
+    await click(button(host, "保存草稿"));
+    expect(String(fetchMock.mock.calls[1]?.[0])).toBe("/api/activities/act-code/draft");
+    expect(bodyAt(fetchMock, 1)).toMatchObject({ draftVersion: 1, userText: "print('edited draft')" });
+    expect(fetchMock.mock.calls.some((call) => String(call[0]).endsWith("/run"))).toBe(false);
   });
 
   it("restores sessionStorage text only after Bootstrap confirms the same Attempt and version", async () => {
@@ -334,14 +291,14 @@ describe("W4 real API pages", () => {
     expect(host.textContent).not.toContain("basic-python0.00");
   });
 
-  it("does not run stale code after a draft save failure and keeps the local text", async () => {
+  it("keeps local text after a draft version conflict without opening the closed preview path", async () => {
     const fetchMock = vi.fn()
       .mockResolvedValueOnce(ok(bootstrap(recovery({ stage: "activity" }))))
       .mockResolvedValueOnce(fail(409, "draft_version_conflict"))
       .mockResolvedValueOnce(ok(bootstrap(recovery({ stage: "activity" }))));
     const { host } = await renderRoute("/activity/session-w4/act-code", fetchMock, { opened: openedCode });
     await editTextarea(host.querySelector("textarea")!, "print('unsaved local')");
-    await click(button(host, "运行公开检查"));
+    await click(button(host, "保存草稿"));
     expect(fetchMock).toHaveBeenCalledTimes(3);
     expect(fetchMock.mock.calls.some((call) => String(call[0]).endsWith("/run"))).toBe(false);
     expect(useUiStore.getState().activityDrafts["attempt-code-1"]).toBe("print('unsaved local')");

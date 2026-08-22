@@ -1,0 +1,1228 @@
+{
+  "schemaVersion": 1,
+  "generatedFrom": {
+    "pathResults": {
+      "path": "scripts/w5-a-d4/showcase-path-results.json",
+      "sha256": "9c12791704658e5d18b71b8f77439e5b9332839a690bda38e913eebe72ccb38d",
+      "byteLength": 23758
+    },
+    "differences": {
+      "path": "scripts/w5-a-d4/showcase-differences.json",
+      "sha256": "9c632ae0170fd630a6453e83a55178a85e33db718b6ed9875088b7d8e2b3925f",
+      "byteLength": 13215
+    }
+  },
+  "pathResults": {
+    "schemaVersion": 1,
+    "status": "PASS",
+    "results": [
+      {
+        "schemaVersion": 1,
+        "contract": "W5-C1/W5-R1",
+        "input": {
+          "caseId": "showcase-high-foundation",
+          "path": "evaluation/showcases/computer-background/input.json",
+          "byteLength": 1323,
+          "sha256": "29492ef83c3620f1bea6f92052c0126c61dcb44d82c079d7040a639d755028eb"
+        },
+        "profileBinding": {
+          "subjectId": "pandas-cleaning",
+          "profileRevision": 3,
+          "assetTreeSha256": "ccff2e2afdabaad262baeaa498b527438fcadeec1ddf5e198289f8404071e85d"
+        },
+        "actualIdentifiers": {
+          "pathId": "path-0e906691c5bd83fd5f9baa96",
+          "pathVersion": 1
+        },
+        "semantic": {
+          "caseId": "showcase-high-foundation",
+          "personaType": "high_foundation",
+          "background": {
+            "python_experience": "comfortable",
+            "pandas_experience": "comfortable",
+            "explanation_preference": "concise"
+          },
+          "diagnostic": {
+            "evidenceVersion": 1,
+            "insufficientKnowledgePointIds": [],
+            "knowledgeStates": [
+              {
+                "knowledgePointId": "basic-python",
+                "mastery": 1,
+                "confidence": 0.25,
+                "status": "ready",
+                "validEvidenceCount": 1,
+                "evidenceFormCount": 1,
+                "skipEligible": false
+              },
+              {
+                "knowledgePointId": "pandas.clean.read-csv",
+                "mastery": 1,
+                "confidence": 0.25,
+                "status": "ready",
+                "validEvidenceCount": 1,
+                "evidenceFormCount": 1,
+                "skipEligible": false
+              },
+              {
+                "knowledgePointId": "pandas.clean.inspect-dataframe",
+                "mastery": 1,
+                "confidence": 0.25,
+                "status": "ready",
+                "validEvidenceCount": 1,
+                "evidenceFormCount": 1,
+                "skipEligible": false
+              },
+              {
+                "knowledgePointId": "pandas.clean.missing-values",
+                "mastery": 1,
+                "confidence": 0.25,
+                "status": "ready",
+                "validEvidenceCount": 1,
+                "evidenceFormCount": 1,
+                "skipEligible": false
+              },
+              {
+                "knowledgePointId": "pandas.clean.duplicate-orders",
+                "mastery": 1,
+                "confidence": 0.25,
+                "status": "ready",
+                "validEvidenceCount": 1,
+                "evidenceFormCount": 1,
+                "skipEligible": false
+              },
+              {
+                "knowledgePointId": "pandas.clean.type-format",
+                "mastery": 1,
+                "confidence": 0.25,
+                "status": "ready",
+                "validEvidenceCount": 1,
+                "evidenceFormCount": 1,
+                "skipEligible": false
+              },
+              {
+                "knowledgePointId": "pandas.clean.validate-result",
+                "mastery": 1,
+                "confidence": 0.496240625180289,
+                "status": "ready",
+                "validEvidenceCount": 2,
+                "evidenceFormCount": 1,
+                "skipEligible": false
+              }
+            ]
+          },
+          "path": {
+            "status": "candidate",
+            "pathVersion": 1,
+            "missingPrerequisiteIds": [
+              "basic-python"
+            ],
+            "nodes": [
+              {
+                "nodeId": "node-basic-python",
+                "knowledgePointId": "basic-python",
+                "activityIds": [
+                  "act-basic-python-remediation"
+                ],
+                "status": "available",
+                "estimatedMinutes": 5,
+                "reasonCodes": [
+                  "goal_required",
+                  "prerequisite_gap"
+                ],
+                "difficulty": "S-R",
+                "scaffold": "hint",
+                "required": true,
+                "positionLocked": false
+              },
+              {
+                "nodeId": "node-pandas.clean.read-csv",
+                "knowledgePointId": "pandas.clean.read-csv",
+                "activityIds": [
+                  "act-read-csv"
+                ],
+                "status": "locked",
+                "estimatedMinutes": 16,
+                "reasonCodes": [
+                  "goal_required"
+                ],
+                "difficulty": "S-U",
+                "scaffold": "hint",
+                "required": true,
+                "positionLocked": false
+              },
+              {
+                "nodeId": "node-pandas.clean.inspect-dataframe",
+                "knowledgePointId": "pandas.clean.inspect-dataframe",
+                "activityIds": [
+                  "act-quiz-inspect-dataframe",
+                  "act-inspect-dataframe"
+                ],
+                "status": "locked",
+                "estimatedMinutes": 33,
+                "reasonCodes": [
+                  "goal_required"
+                ],
+                "difficulty": "S-U",
+                "scaffold": "hint",
+                "required": true,
+                "positionLocked": false
+              },
+              {
+                "nodeId": "node-pandas.clean.missing-values",
+                "knowledgePointId": "pandas.clean.missing-values",
+                "activityIds": [
+                  "act-quiz-missing-values",
+                  "act-missing"
+                ],
+                "status": "locked",
+                "estimatedMinutes": 40,
+                "reasonCodes": [
+                  "goal_required"
+                ],
+                "difficulty": "M-U",
+                "scaffold": "hint",
+                "required": true,
+                "positionLocked": false
+              },
+              {
+                "nodeId": "node-pandas.clean.duplicate-orders",
+                "knowledgePointId": "pandas.clean.duplicate-orders",
+                "activityIds": [
+                  "act-quiz-duplicate-orders",
+                  "act-duplicates"
+                ],
+                "status": "locked",
+                "estimatedMinutes": 45,
+                "reasonCodes": [
+                  "goal_required"
+                ],
+                "difficulty": "M-A",
+                "scaffold": "hint",
+                "required": true,
+                "positionLocked": false
+              },
+              {
+                "nodeId": "node-pandas.clean.type-format",
+                "knowledgePointId": "pandas.clean.type-format",
+                "activityIds": [
+                  "act-quiz-type-format",
+                  "act-types"
+                ],
+                "status": "locked",
+                "estimatedMinutes": 53,
+                "reasonCodes": [
+                  "goal_required"
+                ],
+                "difficulty": "M-A",
+                "scaffold": "hint",
+                "required": true,
+                "positionLocked": false
+              },
+              {
+                "nodeId": "node-pandas.clean.validate-result",
+                "knowledgePointId": "pandas.clean.validate-result",
+                "activityIds": [
+                  "act-quiz-validate-result",
+                  "act-practical"
+                ],
+                "status": "locked",
+                "estimatedMinutes": 83,
+                "reasonCodes": [
+                  "goal_required"
+                ],
+                "difficulty": "C-A",
+                "scaffold": "none",
+                "required": true,
+                "positionLocked": false
+              }
+            ],
+            "confirmedStatus": "active"
+          },
+          "nextStep": {
+            "completed": false,
+            "nodeId": "node-basic-python",
+            "activityId": "act-basic-python-remediation",
+            "contentReadiness": "ready"
+          }
+        },
+        "pathSha256": "07fe72291ec183a93937900a8bf615297a2e92cff26470e92057463f86bdde39",
+        "outputSha256": "3bc598639f6e04a333c8951577889aac96c2d479584257e2425199706661bc47"
+      },
+      {
+        "schemaVersion": 1,
+        "contract": "W5-C1/W5-R1",
+        "input": {
+          "caseId": "showcase-non-computer-beginner",
+          "path": "evaluation/showcases/beginner-background/input.json",
+          "byteLength": 1278,
+          "sha256": "43a8b7067adf0266e852d968f188532f9db465bec7d8c3c55119e80440367bb3"
+        },
+        "profileBinding": {
+          "subjectId": "pandas-cleaning",
+          "profileRevision": 3,
+          "assetTreeSha256": "ccff2e2afdabaad262baeaa498b527438fcadeec1ddf5e198289f8404071e85d"
+        },
+        "actualIdentifiers": {
+          "pathId": "path-ea9329cc301f83cbceb7698e",
+          "pathVersion": 1
+        },
+        "semantic": {
+          "caseId": "showcase-non-computer-beginner",
+          "personaType": "non_computer_beginner",
+          "background": {
+            "python_experience": "none",
+            "pandas_experience": "none",
+            "explanation_preference": "step_by_step"
+          },
+          "diagnostic": {
+            "evidenceVersion": 1,
+            "insufficientKnowledgePointIds": [
+              "pandas.clean.validate-result"
+            ],
+            "knowledgeStates": [
+              {
+                "knowledgePointId": "basic-python",
+                "mastery": 0,
+                "confidence": 0.25,
+                "status": "support_needed",
+                "validEvidenceCount": 1,
+                "evidenceFormCount": 1,
+                "skipEligible": false
+              },
+              {
+                "knowledgePointId": "pandas.clean.read-csv",
+                "mastery": 0,
+                "confidence": 0.25,
+                "status": "support_needed",
+                "validEvidenceCount": 1,
+                "evidenceFormCount": 1,
+                "skipEligible": false
+              },
+              {
+                "knowledgePointId": "pandas.clean.inspect-dataframe",
+                "mastery": 0,
+                "confidence": 0.25,
+                "status": "support_needed",
+                "validEvidenceCount": 1,
+                "evidenceFormCount": 1,
+                "skipEligible": false
+              },
+              {
+                "knowledgePointId": "pandas.clean.missing-values",
+                "mastery": 0,
+                "confidence": 0.25,
+                "status": "support_needed",
+                "validEvidenceCount": 1,
+                "evidenceFormCount": 1,
+                "skipEligible": false
+              },
+              {
+                "knowledgePointId": "pandas.clean.duplicate-orders",
+                "mastery": 0,
+                "confidence": 0.25,
+                "status": "support_needed",
+                "validEvidenceCount": 1,
+                "evidenceFormCount": 1,
+                "skipEligible": false
+              },
+              {
+                "knowledgePointId": "pandas.clean.type-format",
+                "mastery": 0,
+                "confidence": 0.25,
+                "status": "support_needed",
+                "validEvidenceCount": 1,
+                "evidenceFormCount": 1,
+                "skipEligible": false
+              },
+              {
+                "knowledgePointId": "pandas.clean.validate-result",
+                "mastery": 0,
+                "confidence": 0.25,
+                "status": "support_needed",
+                "validEvidenceCount": 1,
+                "evidenceFormCount": 1,
+                "skipEligible": false
+              }
+            ]
+          },
+          "path": {
+            "status": "candidate",
+            "pathVersion": 1,
+            "missingPrerequisiteIds": [
+              "basic-python"
+            ],
+            "nodes": [
+              {
+                "nodeId": "node-basic-python",
+                "knowledgePointId": "basic-python",
+                "activityIds": [
+                  "act-basic-python-remediation"
+                ],
+                "status": "available",
+                "estimatedMinutes": 5,
+                "reasonCodes": [
+                  "goal_required",
+                  "prerequisite_gap",
+                  "low_mastery"
+                ],
+                "difficulty": "S-R",
+                "scaffold": "worked_example",
+                "required": true,
+                "positionLocked": false
+              },
+              {
+                "nodeId": "node-pandas.clean.read-csv",
+                "knowledgePointId": "pandas.clean.read-csv",
+                "activityIds": [
+                  "act-read-csv"
+                ],
+                "status": "locked",
+                "estimatedMinutes": 16,
+                "reasonCodes": [
+                  "goal_required",
+                  "low_mastery"
+                ],
+                "difficulty": "S-U",
+                "scaffold": "worked_example",
+                "required": true,
+                "positionLocked": false
+              },
+              {
+                "nodeId": "node-pandas.clean.inspect-dataframe",
+                "knowledgePointId": "pandas.clean.inspect-dataframe",
+                "activityIds": [
+                  "act-quiz-inspect-dataframe",
+                  "act-inspect-dataframe"
+                ],
+                "status": "locked",
+                "estimatedMinutes": 33,
+                "reasonCodes": [
+                  "goal_required",
+                  "low_mastery"
+                ],
+                "difficulty": "S-U",
+                "scaffold": "worked_example",
+                "required": true,
+                "positionLocked": false
+              },
+              {
+                "nodeId": "node-pandas.clean.missing-values",
+                "knowledgePointId": "pandas.clean.missing-values",
+                "activityIds": [
+                  "act-quiz-missing-values",
+                  "act-missing"
+                ],
+                "status": "locked",
+                "estimatedMinutes": 40,
+                "reasonCodes": [
+                  "goal_required",
+                  "low_mastery"
+                ],
+                "difficulty": "M-U",
+                "scaffold": "worked_example",
+                "required": true,
+                "positionLocked": false
+              },
+              {
+                "nodeId": "node-pandas.clean.duplicate-orders",
+                "knowledgePointId": "pandas.clean.duplicate-orders",
+                "activityIds": [
+                  "act-quiz-duplicate-orders",
+                  "act-duplicates"
+                ],
+                "status": "locked",
+                "estimatedMinutes": 45,
+                "reasonCodes": [
+                  "goal_required",
+                  "low_mastery"
+                ],
+                "difficulty": "M-A",
+                "scaffold": "worked_example",
+                "required": true,
+                "positionLocked": false
+              },
+              {
+                "nodeId": "node-pandas.clean.type-format",
+                "knowledgePointId": "pandas.clean.type-format",
+                "activityIds": [
+                  "act-quiz-type-format",
+                  "act-types"
+                ],
+                "status": "locked",
+                "estimatedMinutes": 53,
+                "reasonCodes": [
+                  "goal_required",
+                  "low_mastery"
+                ],
+                "difficulty": "M-A",
+                "scaffold": "worked_example",
+                "required": true,
+                "positionLocked": false
+              },
+              {
+                "nodeId": "node-pandas.clean.validate-result",
+                "knowledgePointId": "pandas.clean.validate-result",
+                "activityIds": [
+                  "act-quiz-validate-result",
+                  "act-practical"
+                ],
+                "status": "locked",
+                "estimatedMinutes": 83,
+                "reasonCodes": [
+                  "goal_required",
+                  "low_mastery"
+                ],
+                "difficulty": "C-A",
+                "scaffold": "hint",
+                "required": true,
+                "positionLocked": false
+              }
+            ],
+            "confirmedStatus": "active"
+          },
+          "nextStep": {
+            "completed": false,
+            "nodeId": "node-basic-python",
+            "activityId": "act-basic-python-remediation",
+            "contentReadiness": "ready"
+          }
+        },
+        "pathSha256": "1645fa370fd0a646f2365d94fa0e1197c8caccc80f3ecc3a12e98346176981a3",
+        "outputSha256": "ba8811dd55eb6e9e31d85413010caa773c0ff5ec613bb778bde69648e43f7181"
+      },
+      {
+        "schemaVersion": 1,
+        "contract": "W5-C1/W5-R1",
+        "input": {
+          "caseId": "showcase-practice-oriented",
+          "path": "evaluation/showcases/task-oriented/input.json",
+          "byteLength": 1287,
+          "sha256": "4bd6d22aefc4bac82d156ae517111b786af973f3706d24add7afc4c361f39ef2"
+        },
+        "profileBinding": {
+          "subjectId": "pandas-cleaning",
+          "profileRevision": 3,
+          "assetTreeSha256": "ccff2e2afdabaad262baeaa498b527438fcadeec1ddf5e198289f8404071e85d"
+        },
+        "actualIdentifiers": {
+          "pathId": "path-b96502cd697b075c5f9c32ef",
+          "pathVersion": 1
+        },
+        "semantic": {
+          "caseId": "showcase-practice-oriented",
+          "personaType": "practice_oriented",
+          "background": {
+            "python_experience": "basic",
+            "pandas_experience": "comfortable",
+            "explanation_preference": "example_first"
+          },
+          "diagnostic": {
+            "evidenceVersion": 1,
+            "insufficientKnowledgePointIds": [
+              "pandas.clean.validate-result"
+            ],
+            "knowledgeStates": [
+              {
+                "knowledgePointId": "basic-python",
+                "mastery": 1,
+                "confidence": 0.25,
+                "status": "ready",
+                "validEvidenceCount": 1,
+                "evidenceFormCount": 1,
+                "skipEligible": false
+              },
+              {
+                "knowledgePointId": "pandas.clean.read-csv",
+                "mastery": 1,
+                "confidence": 0.25,
+                "status": "ready",
+                "validEvidenceCount": 1,
+                "evidenceFormCount": 1,
+                "skipEligible": false
+              },
+              {
+                "knowledgePointId": "pandas.clean.inspect-dataframe",
+                "mastery": 1,
+                "confidence": 0.25,
+                "status": "ready",
+                "validEvidenceCount": 1,
+                "evidenceFormCount": 1,
+                "skipEligible": false
+              },
+              {
+                "knowledgePointId": "pandas.clean.missing-values",
+                "mastery": 0,
+                "confidence": 0.25,
+                "status": "support_needed",
+                "validEvidenceCount": 1,
+                "evidenceFormCount": 1,
+                "skipEligible": false
+              },
+              {
+                "knowledgePointId": "pandas.clean.duplicate-orders",
+                "mastery": 1,
+                "confidence": 0.25,
+                "status": "ready",
+                "validEvidenceCount": 1,
+                "evidenceFormCount": 1,
+                "skipEligible": false
+              },
+              {
+                "knowledgePointId": "pandas.clean.type-format",
+                "mastery": 0,
+                "confidence": 0.25,
+                "status": "support_needed",
+                "validEvidenceCount": 1,
+                "evidenceFormCount": 1,
+                "skipEligible": false
+              },
+              {
+                "knowledgePointId": "pandas.clean.validate-result",
+                "mastery": 1,
+                "confidence": 0.25,
+                "status": "ready",
+                "validEvidenceCount": 1,
+                "evidenceFormCount": 1,
+                "skipEligible": false
+              }
+            ]
+          },
+          "path": {
+            "status": "candidate",
+            "pathVersion": 1,
+            "missingPrerequisiteIds": [
+              "basic-python"
+            ],
+            "nodes": [
+              {
+                "nodeId": "node-basic-python",
+                "knowledgePointId": "basic-python",
+                "activityIds": [
+                  "act-basic-python-remediation"
+                ],
+                "status": "available",
+                "estimatedMinutes": 5,
+                "reasonCodes": [
+                  "goal_required",
+                  "prerequisite_gap"
+                ],
+                "difficulty": "S-R",
+                "scaffold": "hint",
+                "required": true,
+                "positionLocked": false
+              },
+              {
+                "nodeId": "node-pandas.clean.read-csv",
+                "knowledgePointId": "pandas.clean.read-csv",
+                "activityIds": [
+                  "act-read-csv"
+                ],
+                "status": "locked",
+                "estimatedMinutes": 16,
+                "reasonCodes": [
+                  "goal_required"
+                ],
+                "difficulty": "S-U",
+                "scaffold": "hint",
+                "required": true,
+                "positionLocked": false
+              },
+              {
+                "nodeId": "node-pandas.clean.inspect-dataframe",
+                "knowledgePointId": "pandas.clean.inspect-dataframe",
+                "activityIds": [
+                  "act-quiz-inspect-dataframe",
+                  "act-inspect-dataframe"
+                ],
+                "status": "locked",
+                "estimatedMinutes": 33,
+                "reasonCodes": [
+                  "goal_required"
+                ],
+                "difficulty": "S-U",
+                "scaffold": "hint",
+                "required": true,
+                "positionLocked": false
+              },
+              {
+                "nodeId": "node-pandas.clean.missing-values",
+                "knowledgePointId": "pandas.clean.missing-values",
+                "activityIds": [
+                  "act-quiz-missing-values",
+                  "act-missing"
+                ],
+                "status": "locked",
+                "estimatedMinutes": 40,
+                "reasonCodes": [
+                  "goal_required",
+                  "low_mastery"
+                ],
+                "difficulty": "M-U",
+                "scaffold": "worked_example",
+                "required": true,
+                "positionLocked": false
+              },
+              {
+                "nodeId": "node-pandas.clean.duplicate-orders",
+                "knowledgePointId": "pandas.clean.duplicate-orders",
+                "activityIds": [
+                  "act-quiz-duplicate-orders",
+                  "act-duplicates"
+                ],
+                "status": "locked",
+                "estimatedMinutes": 45,
+                "reasonCodes": [
+                  "goal_required"
+                ],
+                "difficulty": "M-A",
+                "scaffold": "hint",
+                "required": true,
+                "positionLocked": false
+              },
+              {
+                "nodeId": "node-pandas.clean.type-format",
+                "knowledgePointId": "pandas.clean.type-format",
+                "activityIds": [
+                  "act-quiz-type-format",
+                  "act-types"
+                ],
+                "status": "locked",
+                "estimatedMinutes": 53,
+                "reasonCodes": [
+                  "goal_required",
+                  "low_mastery"
+                ],
+                "difficulty": "M-A",
+                "scaffold": "worked_example",
+                "required": true,
+                "positionLocked": false
+              },
+              {
+                "nodeId": "node-pandas.clean.validate-result",
+                "knowledgePointId": "pandas.clean.validate-result",
+                "activityIds": [
+                  "act-quiz-validate-result",
+                  "act-practical"
+                ],
+                "status": "locked",
+                "estimatedMinutes": 83,
+                "reasonCodes": [
+                  "goal_required"
+                ],
+                "difficulty": "C-A",
+                "scaffold": "none",
+                "required": true,
+                "positionLocked": false
+              }
+            ],
+            "confirmedStatus": "active"
+          },
+          "nextStep": {
+            "completed": false,
+            "nodeId": "node-basic-python",
+            "activityId": "act-basic-python-remediation",
+            "contentReadiness": "ready"
+          }
+        },
+        "pathSha256": "1c62126c85e793c05b5edc28fa50f179a2fb9bf31b9ee10423191bebf9c3f92c",
+        "outputSha256": "27f55e81d221387ba16fe2bffeaa6b9d38b188209f5e59507b4da0e5cf304830"
+      }
+    ]
+  },
+  "differences": {
+    "schemaVersion": 1,
+    "status": "PASS",
+    "pairs": [
+      {
+        "leftCaseId": "showcase-high-foundation",
+        "rightCaseId": "showcase-non-computer-beginner",
+        "differenceCount": 32,
+        "differences": [
+          {
+            "observable": "background",
+            "key": "explanation_preference",
+            "left": "concise",
+            "right": "step_by_step"
+          },
+          {
+            "observable": "diagnostic",
+            "key": "insufficientKnowledgePointIds",
+            "left": [],
+            "right": [
+              "pandas.clean.validate-result"
+            ]
+          },
+          {
+            "observable": "knowledge_state",
+            "key": "basic-python.mastery",
+            "left": 1,
+            "right": 0
+          },
+          {
+            "observable": "knowledge_state",
+            "key": "basic-python.status",
+            "left": "ready",
+            "right": "support_needed"
+          },
+          {
+            "observable": "knowledge_state",
+            "key": "pandas.clean.read-csv.mastery",
+            "left": 1,
+            "right": 0
+          },
+          {
+            "observable": "knowledge_state",
+            "key": "pandas.clean.read-csv.status",
+            "left": "ready",
+            "right": "support_needed"
+          },
+          {
+            "observable": "knowledge_state",
+            "key": "pandas.clean.inspect-dataframe.mastery",
+            "left": 1,
+            "right": 0
+          },
+          {
+            "observable": "knowledge_state",
+            "key": "pandas.clean.inspect-dataframe.status",
+            "left": "ready",
+            "right": "support_needed"
+          },
+          {
+            "observable": "knowledge_state",
+            "key": "pandas.clean.missing-values.mastery",
+            "left": 1,
+            "right": 0
+          },
+          {
+            "observable": "knowledge_state",
+            "key": "pandas.clean.missing-values.status",
+            "left": "ready",
+            "right": "support_needed"
+          },
+          {
+            "observable": "knowledge_state",
+            "key": "pandas.clean.duplicate-orders.mastery",
+            "left": 1,
+            "right": 0
+          },
+          {
+            "observable": "knowledge_state",
+            "key": "pandas.clean.duplicate-orders.status",
+            "left": "ready",
+            "right": "support_needed"
+          },
+          {
+            "observable": "knowledge_state",
+            "key": "pandas.clean.type-format.mastery",
+            "left": 1,
+            "right": 0
+          },
+          {
+            "observable": "knowledge_state",
+            "key": "pandas.clean.type-format.status",
+            "left": "ready",
+            "right": "support_needed"
+          },
+          {
+            "observable": "knowledge_state",
+            "key": "pandas.clean.validate-result.mastery",
+            "left": 1,
+            "right": 0
+          },
+          {
+            "observable": "knowledge_state",
+            "key": "pandas.clean.validate-result.confidence",
+            "left": 0.496240625180289,
+            "right": 0.25
+          },
+          {
+            "observable": "knowledge_state",
+            "key": "pandas.clean.validate-result.status",
+            "left": "ready",
+            "right": "support_needed"
+          },
+          {
+            "observable": "knowledge_state",
+            "key": "pandas.clean.validate-result.validEvidenceCount",
+            "left": 2,
+            "right": 1
+          },
+          {
+            "observable": "path_node",
+            "key": "basic-python.scaffold",
+            "left": "hint",
+            "right": "worked_example"
+          },
+          {
+            "observable": "path_node",
+            "key": "basic-python.reasonCodes",
+            "left": [
+              "goal_required",
+              "prerequisite_gap"
+            ],
+            "right": [
+              "goal_required",
+              "prerequisite_gap",
+              "low_mastery"
+            ]
+          },
+          {
+            "observable": "path_node",
+            "key": "pandas.clean.read-csv.scaffold",
+            "left": "hint",
+            "right": "worked_example"
+          },
+          {
+            "observable": "path_node",
+            "key": "pandas.clean.read-csv.reasonCodes",
+            "left": [
+              "goal_required"
+            ],
+            "right": [
+              "goal_required",
+              "low_mastery"
+            ]
+          },
+          {
+            "observable": "path_node",
+            "key": "pandas.clean.inspect-dataframe.scaffold",
+            "left": "hint",
+            "right": "worked_example"
+          },
+          {
+            "observable": "path_node",
+            "key": "pandas.clean.inspect-dataframe.reasonCodes",
+            "left": [
+              "goal_required"
+            ],
+            "right": [
+              "goal_required",
+              "low_mastery"
+            ]
+          },
+          {
+            "observable": "path_node",
+            "key": "pandas.clean.missing-values.scaffold",
+            "left": "hint",
+            "right": "worked_example"
+          },
+          {
+            "observable": "path_node",
+            "key": "pandas.clean.missing-values.reasonCodes",
+            "left": [
+              "goal_required"
+            ],
+            "right": [
+              "goal_required",
+              "low_mastery"
+            ]
+          },
+          {
+            "observable": "path_node",
+            "key": "pandas.clean.duplicate-orders.scaffold",
+            "left": "hint",
+            "right": "worked_example"
+          },
+          {
+            "observable": "path_node",
+            "key": "pandas.clean.duplicate-orders.reasonCodes",
+            "left": [
+              "goal_required"
+            ],
+            "right": [
+              "goal_required",
+              "low_mastery"
+            ]
+          },
+          {
+            "observable": "path_node",
+            "key": "pandas.clean.type-format.scaffold",
+            "left": "hint",
+            "right": "worked_example"
+          },
+          {
+            "observable": "path_node",
+            "key": "pandas.clean.type-format.reasonCodes",
+            "left": [
+              "goal_required"
+            ],
+            "right": [
+              "goal_required",
+              "low_mastery"
+            ]
+          },
+          {
+            "observable": "path_node",
+            "key": "pandas.clean.validate-result.scaffold",
+            "left": "none",
+            "right": "hint"
+          },
+          {
+            "observable": "path_node",
+            "key": "pandas.clean.validate-result.reasonCodes",
+            "left": [
+              "goal_required"
+            ],
+            "right": [
+              "goal_required",
+              "low_mastery"
+            ]
+          }
+        ]
+      },
+      {
+        "leftCaseId": "showcase-high-foundation",
+        "rightCaseId": "showcase-practice-oriented",
+        "differenceCount": 12,
+        "differences": [
+          {
+            "observable": "background",
+            "key": "explanation_preference",
+            "left": "concise",
+            "right": "example_first"
+          },
+          {
+            "observable": "diagnostic",
+            "key": "insufficientKnowledgePointIds",
+            "left": [],
+            "right": [
+              "pandas.clean.validate-result"
+            ]
+          },
+          {
+            "observable": "knowledge_state",
+            "key": "pandas.clean.missing-values.mastery",
+            "left": 1,
+            "right": 0
+          },
+          {
+            "observable": "knowledge_state",
+            "key": "pandas.clean.missing-values.status",
+            "left": "ready",
+            "right": "support_needed"
+          },
+          {
+            "observable": "knowledge_state",
+            "key": "pandas.clean.type-format.mastery",
+            "left": 1,
+            "right": 0
+          },
+          {
+            "observable": "knowledge_state",
+            "key": "pandas.clean.type-format.status",
+            "left": "ready",
+            "right": "support_needed"
+          },
+          {
+            "observable": "knowledge_state",
+            "key": "pandas.clean.validate-result.confidence",
+            "left": 0.496240625180289,
+            "right": 0.25
+          },
+          {
+            "observable": "knowledge_state",
+            "key": "pandas.clean.validate-result.validEvidenceCount",
+            "left": 2,
+            "right": 1
+          },
+          {
+            "observable": "path_node",
+            "key": "pandas.clean.missing-values.scaffold",
+            "left": "hint",
+            "right": "worked_example"
+          },
+          {
+            "observable": "path_node",
+            "key": "pandas.clean.missing-values.reasonCodes",
+            "left": [
+              "goal_required"
+            ],
+            "right": [
+              "goal_required",
+              "low_mastery"
+            ]
+          },
+          {
+            "observable": "path_node",
+            "key": "pandas.clean.type-format.scaffold",
+            "left": "hint",
+            "right": "worked_example"
+          },
+          {
+            "observable": "path_node",
+            "key": "pandas.clean.type-format.reasonCodes",
+            "left": [
+              "goal_required"
+            ],
+            "right": [
+              "goal_required",
+              "low_mastery"
+            ]
+          }
+        ]
+      },
+      {
+        "leftCaseId": "showcase-non-computer-beginner",
+        "rightCaseId": "showcase-practice-oriented",
+        "differenceCount": 21,
+        "differences": [
+          {
+            "observable": "background",
+            "key": "explanation_preference",
+            "left": "step_by_step",
+            "right": "example_first"
+          },
+          {
+            "observable": "knowledge_state",
+            "key": "basic-python.mastery",
+            "left": 0,
+            "right": 1
+          },
+          {
+            "observable": "knowledge_state",
+            "key": "basic-python.status",
+            "left": "support_needed",
+            "right": "ready"
+          },
+          {
+            "observable": "knowledge_state",
+            "key": "pandas.clean.read-csv.mastery",
+            "left": 0,
+            "right": 1
+          },
+          {
+            "observable": "knowledge_state",
+            "key": "pandas.clean.read-csv.status",
+            "left": "support_needed",
+            "right": "ready"
+          },
+          {
+            "observable": "knowledge_state",
+            "key": "pandas.clean.inspect-dataframe.mastery",
+            "left": 0,
+            "right": 1
+          },
+          {
+            "observable": "knowledge_state",
+            "key": "pandas.clean.inspect-dataframe.status",
+            "left": "support_needed",
+            "right": "ready"
+          },
+          {
+            "observable": "knowledge_state",
+            "key": "pandas.clean.duplicate-orders.mastery",
+            "left": 0,
+            "right": 1
+          },
+          {
+            "observable": "knowledge_state",
+            "key": "pandas.clean.duplicate-orders.status",
+            "left": "support_needed",
+            "right": "ready"
+          },
+          {
+            "observable": "knowledge_state",
+            "key": "pandas.clean.validate-result.mastery",
+            "left": 0,
+            "right": 1
+          },
+          {
+            "observable": "knowledge_state",
+            "key": "pandas.clean.validate-result.status",
+            "left": "support_needed",
+            "right": "ready"
+          },
+          {
+            "observable": "path_node",
+            "key": "basic-python.scaffold",
+            "left": "worked_example",
+            "right": "hint"
+          },
+          {
+            "observable": "path_node",
+            "key": "basic-python.reasonCodes",
+            "left": [
+              "goal_required",
+              "prerequisite_gap",
+              "low_mastery"
+            ],
+            "right": [
+              "goal_required",
+              "prerequisite_gap"
+            ]
+          },
+          {
+            "observable": "path_node",
+            "key": "pandas.clean.read-csv.scaffold",
+            "left": "worked_example",
+            "right": "hint"
+          },
+          {
+            "observable": "path_node",
+            "key": "pandas.clean.read-csv.reasonCodes",
+            "left": [
+              "goal_required",
+              "low_mastery"
+            ],
+            "right": [
+              "goal_required"
+            ]
+          },
+          {
+            "observable": "path_node",
+            "key": "pandas.clean.inspect-dataframe.scaffold",
+            "left": "worked_example",
+            "right": "hint"
+          },
+          {
+            "observable": "path_node",
+            "key": "pandas.clean.inspect-dataframe.reasonCodes",
+            "left": [
+              "goal_required",
+              "low_mastery"
+            ],
+            "right": [
+              "goal_required"
+            ]
+          },
+          {
+            "observable": "path_node",
+            "key": "pandas.clean.duplicate-orders.scaffold",
+            "left": "worked_example",
+            "right": "hint"
+          },
+          {
+            "observable": "path_node",
+            "key": "pandas.clean.duplicate-orders.reasonCodes",
+            "left": [
+              "goal_required",
+              "low_mastery"
+            ],
+            "right": [
+              "goal_required"
+            ]
+          },
+          {
+            "observable": "path_node",
+            "key": "pandas.clean.validate-result.scaffold",
+            "left": "hint",
+            "right": "none"
+          },
+          {
+            "observable": "path_node",
+            "key": "pandas.clean.validate-result.reasonCodes",
+            "left": [
+              "goal_required",
+              "low_mastery"
+            ],
+            "right": [
+              "goal_required"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

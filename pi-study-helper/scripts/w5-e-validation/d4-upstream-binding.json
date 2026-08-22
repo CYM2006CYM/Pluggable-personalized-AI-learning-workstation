@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "candidate": "W5-D4-E",
+  "contract": "W5-C1/W5-R1",
+  "baseHead": "aaf588202b3ae92ed72c63994b912d78977516bb",
+  "upstreamCommits": {
+    "aD2": "127a71cce4a8423327fb5ce75d31294252b92a0b",
+    "eD2": "590985af616861e503ee30f2bf56c6392b0055f7",
+    "cD3": "6acc56fa03986797be54156af639a905c2e74a64",
+    "bD3": "a0d5a37116a6c67f009ca19e313501d9eed96f78",
+    "aD4Initial": "a9674a4f6062f3a4f74f064acf3a9a7449dc5a65",
+    "aD4PortableManifest": "aaf588202b3ae92ed72c63994b912d78977516bb"
+  },
+  "profile": {
+    "subjectId": "pandas-cleaning",
+    "revision": 3,
+    "assetTreeSha256": "ccff2e2afdabaad262baeaa498b527438fcadeec1ddf5e198289f8404071e85d"
+  },
+  "pyodide": {
+    "decisionId": "W5-D64-PYODIDE-1",
+    "decision": "PYODIDE_DISABLED_WITH_NODE_FALLBACK",
+    "enabled": false
+  },
+  "liveModel": "LIVE_NOT_RUN"
+}

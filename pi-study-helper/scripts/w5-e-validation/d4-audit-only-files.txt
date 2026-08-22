@@ -1,0 +1,6 @@
+pi-study-helper/scripts/w5-e-validation/evidence/d4/activity-closed-desktop.png
+pi-study-helper/scripts/w5-e-validation/evidence/d4/activity-closed-mobile.png
+pi-study-helper/scripts/w5-e-validation/evidence/d4/showcase-high-foundation-desktop.png
+pi-study-helper/scripts/w5-e-validation/evidence/d4/showcase-non-computer-beginner-desktop.png
+pi-study-helper/scripts/w5-e-validation/evidence/d4/showcase-practice-mobile.png
+pi-study-helper/scripts/w5-e-validation/evidence/d4/showcase-practice-oriented-desktop.png
