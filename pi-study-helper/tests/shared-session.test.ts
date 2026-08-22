@@ -69,6 +69,11 @@ function harness(options: {
     : vi.fn().mockRejectedValue(options.bootstrapError);
   const facade = {
     getNextStep: vi.fn().mockResolvedValue(options.next ?? nextStep),
+    getActivityAttempt: vi.fn().mockResolvedValue({
+      sessionId: "session-1", sessionVersion: 4, profileRevision: 3,
+      kind: "code", activityId: "activity-1", attemptId: "attempt-1", status: "submitted", draftVersion: 2,
+      evidenceId: "evidence-1", evidenceVersion: 3,
+    }),
     recoverActivity: options.recoverError === undefined
       ? vi.fn().mockResolvedValue({ sessionId: "session-1", sessionVersion: 4, profileRevision: 3, attempt: { kind: "code", activityId: "activity-1", attemptId: "attempt-1", status: "draft", draftVersion: 2 }, draftVersion: 2, userText: "print(1)", recoveryAction: "resume_draft" })
       : vi.fn().mockRejectedValue(options.recoverError),
@@ -108,6 +113,19 @@ describe("W5-D2 A R3 pending and deep-link safety", () => {
 });
 
 describe("W5-D2 A R3 server-authoritative recovery", () => {
+  it("reads a submitted Attempt and its safe Evidence reference through the existing Facade", async () => {
+    const { bridge, facade } = harness();
+    const current = recovery({ currentAttempt: undefined });
+    await expect(bridge.readActivityAttempt(current, "activity-1", "attempt-1")).resolves.toMatchObject({
+      activityId: "activity-1", attemptId: "attempt-1", status: "submitted",
+      evidenceId: "evidence-1", evidenceVersion: 3,
+    });
+    expect(facade.getActivityAttempt).toHaveBeenCalledWith({
+      sessionId: "session-1", sessionVersion: 4, profileRevision: 3,
+      activityId: "activity-1", attemptId: "attempt-1",
+    });
+  });
+
   it("restores a valid pending attempt from Bootstrap and the latest getNextStep", async () => {
     const { bridge, facade, getBootstrap } = harness();
     await expect(bridge.restorePending(pending())).resolves.toMatchObject({ status: "restored", nextStep, recovery: { recoveryAction: "resume_draft" } });

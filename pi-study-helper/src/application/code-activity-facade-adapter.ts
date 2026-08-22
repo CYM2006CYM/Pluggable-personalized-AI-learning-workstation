@@ -374,13 +374,17 @@ export class CodeActivityFacadeAdapter {
     assertSession(snapshot, input);
     const key = { subjectId: snapshot.view.subjectId, sessionId: input.sessionId, activityId: input.activityId, attemptId: input.attemptId };
     const submitted = await this.options.activities.getAttempt(key);
-    if (submitted !== undefined) return {
-      kind: "code",
-      sessionId: input.sessionId, sessionVersion: input.sessionVersion, profileRevision: input.profileRevision,
-      activityId: input.activityId, attemptId: input.attemptId, status: "submitted", result: submitted.result,
-      draftVersion: (await this.options.activities.getDraft(key))?.draftVersion ?? 1,
-      codeHash: submitted.attempt.codeHash, ...(submitted.attempt.committedAt === undefined ? {} : { committedAt: submitted.attempt.committedAt }),
-    };
+    if (submitted !== undefined) {
+      const evidence = snapshot.evidence.find((item) => item.attemptId === input.attemptId && item.activityId === input.activityId);
+      return {
+        kind: "code",
+        sessionId: input.sessionId, sessionVersion: input.sessionVersion, profileRevision: input.profileRevision,
+        activityId: input.activityId, attemptId: input.attemptId, status: "submitted", result: submitted.result,
+        draftVersion: (await this.options.activities.getDraft(key))?.draftVersion ?? 1,
+        codeHash: submitted.attempt.codeHash, ...(submitted.attempt.committedAt === undefined ? {} : { committedAt: submitted.attempt.committedAt }),
+        ...(evidence === undefined ? {} : { evidenceId: evidence.evidenceId, evidenceVersion: evidence.evidenceVersion }),
+      };
+    }
     const [draft, failure] = await Promise.all([this.options.activities.getDraft(key), this.options.activities.getEvaluationFailure(key)]);
     if (draft === undefined) throw new ActivityRepositoryError("attempt_not_found", "Activity Attempt does not exist");
     return {

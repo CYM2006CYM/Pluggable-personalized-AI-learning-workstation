@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 2,
+  "status": "PASS",
+  "scannedFiles": 25,
+  "ruleIds": [
+    "host-absolute-path",
+    "openai-api-key",
+    "github-token",
+    "private-key",
+    "bearer-secret"
+  ],
+  "findings": []
+}

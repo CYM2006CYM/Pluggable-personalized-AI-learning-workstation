@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 2,
+  "contract": "W5-C1/W5-R1",
+  "baseHead": "a0d5a37116a6c67f009ca19e313501d9eed96f78",
+  "upstreamCommits": {
+    "aD2": "127a71cce4a8423327fb5ce75d31294252b92a0b",
+    "eD2": "590985af616861e503ee30f2bf56c6392b0055f7",
+    "cD3": "6acc56fa03986797be54156af639a905c2e74a64",
+    "bD3": "a0d5a37116a6c67f009ca19e313501d9eed96f78"
+  },
+  "profile": {
+    "subjectId": "pandas-cleaning",
+    "profileRevision": 3,
+    "assetTreeSha256": "ccff2e2afdabaad262baeaa498b527438fcadeec1ddf5e198289f8404071e85d",
+    "environmentLockSha256": "59917d1528d031f46a1e76359d99628e810f2dfa78a92d66e03386c860fbaf43"
+  },
+  "pyodideDecision": "PYODIDE_DISABLED_WITH_NODE_FALLBACK",
+  "liveModel": "LIVE_NOT_RUN",
+  "inputHashPolicy": "B bindings address LF-normalized Git blob bytes; Windows CRLF worktree bytes are normalized only for binding verification."
+}

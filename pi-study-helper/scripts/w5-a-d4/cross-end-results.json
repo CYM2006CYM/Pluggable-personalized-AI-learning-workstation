@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "status": "PASS",
+  "trajectories": [
+    {
+      "direction": "TUI_TO_WEB_TO_RESTARTED_TUI",
+      "sessionId": "session-317da41e9af465b31b2a5cf4",
+      "attemptId": "attempt-fac036513a26212a417df56c",
+      "evidenceId": "evidence-fd81bc1ade8bc6d4fb291fbb",
+      "evidenceVersion": 1,
+      "committed": true,
+      "sameAttemptReadAfterRestart": true,
+      "sameEvidenceReadAfterRestart": true,
+      "nextStepReadableAfterRestart": true
+    },
+    {
+      "direction": "WEB_TO_TUI_TO_WEB_REFRESH",
+      "sessionId": "session-29b637510b280c84e469f080",
+      "attemptId": "attempt-e3417663db8916299ee24eeb",
+      "evidenceId": "evidence-b9f05ca3868e6a6b56fa1c4c",
+      "evidenceVersion": 1,
+      "committed": true,
+      "sameAttemptReadAfterRefresh": true,
+      "sameEvidenceReadAfterRefresh": true,
+      "pendingClearedAfterCommit": true
+    }
+  ]
+}

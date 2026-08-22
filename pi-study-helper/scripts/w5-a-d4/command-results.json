@@ -1,0 +1,232 @@
+{
+  "schemaVersion": 2,
+  "candidate": "W5-D4-A-R2-OWNER-RECTIFIED",
+  "baseHead": "a0d5a37116a6c67f009ca19e313501d9eed96f78",
+  "capturedAt": "2026-08-22T08:40:49.442Z",
+  "environment": {
+    "node": "v22.23.1",
+    "npm": "10.9.8",
+    "python": "3.13.7",
+    "pandas": "3.0.5",
+    "pythonExecutable": "<CONTRACT_PYTHON_EXECUTABLE>",
+    "pythonNoUserSite": "1"
+  },
+  "contractEnvironmentMatch": true,
+  "status": "PASS",
+  "commands": [
+    {
+      "id": "typecheck-main",
+      "command": "node node_modules/typescript/bin/tsc --noEmit",
+      "workingDirectory": "pi-study-helper",
+      "startedAt": "2026-08-22T08:22:34.334Z",
+      "endedAt": "2026-08-22T08:22:40.082Z",
+      "exitCode": 0,
+      "stdout": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "summary": ""
+      },
+      "stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "summary": ""
+      }
+    },
+    {
+      "id": "typecheck-tests",
+      "command": "node node_modules/typescript/bin/tsc -p tsconfig.test.json",
+      "workingDirectory": "pi-study-helper",
+      "startedAt": "2026-08-22T08:22:40.082Z",
+      "endedAt": "2026-08-22T08:22:47.207Z",
+      "exitCode": 0,
+      "stdout": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "summary": ""
+      },
+      "stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "summary": ""
+      }
+    },
+    {
+      "id": "typecheck-web",
+      "command": "node node_modules/typescript/bin/tsc -p tsconfig.web.json",
+      "workingDirectory": "pi-study-helper",
+      "startedAt": "2026-08-22T08:22:47.208Z",
+      "endedAt": "2026-08-22T08:22:53.300Z",
+      "exitCode": 0,
+      "stdout": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "summary": ""
+      },
+      "stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "summary": ""
+      }
+    },
+    {
+      "id": "targeted-cross-role",
+      "command": "vitest run <6 A/cross-role files> --maxWorkers=1",
+      "workingDirectory": "pi-study-helper",
+      "startedAt": "2026-08-22T08:22:53.300Z",
+      "endedAt": "2026-08-22T08:24:08.960Z",
+      "exitCode": 0,
+      "stdout": {
+        "bytes": 5031,
+        "sha256": "02c9781d24cacb6bedac7963dc5808e06dacd90e6bcf2b554afbc1f561b52675",
+        "summary": "RUN  v4.1.10 <WORKSPACE>/pi-study-helper\n\n ✓ tests/w5-formal-bundle-revision-binding.test.ts > W5 formal task bundle revision binding > keeps every revision 2 bundle digest self-consistent 7ms\n ✓ tests/w5-formal-bundle-revision-binding.test.ts > W5 formal task bundle revision binding > keeps every revision 3 bundle digest self-consistent 4ms\n ✓ tests/w5-formal-bundle-revision-binding.test.ts > W5 formal task bundle revision binding > rejects a bundle whose assetBundleHash was copied from another revision 6ms\n ✓ tests/w5-formal-bundle-revision-binding.test.ts > W5 formal task bundle revision binding > runs every formal revision 3 activity three times with the approved Python environment 34432ms\n ✓ tests/w5-formal-bundle-revision-binding.test.ts > W5 formal task bundle revision binding > keeps revision 2 formal evaluation restricted to its two frozen activities 809ms\n ✓ tests/w5-a-d4-showc\n...<TRUNCATED>...\ned persisted state instead of exposing it 0ms\n ✓ tests/shared-session.test.ts > W5-D2 A R3 real TUI entry and formal write forwarding > runs the StudyTuiGateway path from current server step to pending and deep link 3ms\n ✓ tests/shared-session.test.ts > W5-D2 A R3 real TUI entry and formal write forwarding > returns a CAS conflict and re-Bootstraps instead of overwriting newer state 1ms\n ✓ tests/shared-session.test.ts > W5-D2 A R3 real TUI entry and formal write forwarding > preserves formal idempotency and clears pending only for a committed result 1ms\n ✓ tests/shared-session.test.ts > W5-D2 A R3 real TUI entry and formal write forwarding > surfaces different-input idempotency conflicts after reading current facts 0ms\n\n Test Files  6 passed (6)\n      Tests  29 passed (29)\n   Start at  16:22:54\n   Duration  74.89s (transform 1.14s, setup 0ms, import 10.94s, tests 62.62s, environment 1ms)"
+      },
+      "stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "summary": ""
+      }
+    },
+    {
+      "id": "full-test",
+      "command": "vitest run --maxWorkers=1",
+      "workingDirectory": "pi-study-helper",
+      "startedAt": "2026-08-22T08:24:08.960Z",
+      "endedAt": "2026-08-22T08:32:21.213Z",
+      "exitCode": 1,
+      "stdout": {
+        "bytes": 503,
+        "sha256": "509278569fd962bf2676ebd8e6ecacf19884859c8ce69e0daa5be894ca06e7e6",
+        "summary": "RUN  v4.1.10 <WORKSPACE>/pi-study-helper\n\n ❯ tests/w5-formal-bundle-revision-binding.test.ts (5 tests | 1 failed) 9494ms\n     × runs every formal revision 3 activity three times with the approved Python environment 8664ms\n\n Test Files  1 failed | 103 passed (104)\n      Tests  1 failed | 844 passed | 1 skipped (846)\n   Start at  16:24:09\n   Duration  491.45s (transform 4.95s, setup 0ms, import 81.88s, tests 350.44s, environment 36.00s)"
+      },
+      "stderr": {
+        "bytes": 1516,
+        "sha256": "658675e37e9f5993d5d304d6b7640e5c353d6606eddaf197cdccdff6dc59fe76",
+        "summary": "⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯\n\n FAIL  tests/w5-formal-bundle-revision-binding.test.ts > W5 formal task bundle revision binding > runs every formal revision 3 activity three times with the approved Python environment\nAssertionError: expected { executionStatus: 'failed', …(7) } to deeply equal { executionStatus: 'completed', …(7) }\n\n- Expected\n+ Received\n\n  {\n    \"assetBundleHash\": \"sha256:737b0d6ae618f98b5c3e7bd5b67c2f5342559decd7436dbed57a046ef4c97be6\",\n-   \"dimensionResults\": {\n-     \"structure\": 1,\n-   },\n    \"environmentHash\": \"sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76\",\n+   \"errorCode\": \"evaluator_timeout\",\n+   \"errorKind\": \"evaluator\",\n    \"evaluatorVersion\": \"node-python-evaluator-w3-c1\",\n-   \"executionStatus\": \"completed\",\n-   \"safeFeedback\": \"All deterministic checks passed.\",\n-   \"score\": 1,\n-   \"verdict\": \"pass\",\n+   \"executionStatus\": \"failed\",\n+   \"safeFeedback\": \"The evaluation harness exceeded the approved time limit.\",\n+   \"verdict\": \"not_graded\",\n  }\n\n ❯ tests/w5-formal-bundle-revision-binding.test.ts:143:26\n    141|       expect(results[0]).toMatchObject({ executionStatus: \"completed\",…\n    142|       expect(results[1]).toEqual(results[0]);\n    143|       expect(results[2]).toEqual(results[0]);\n       |                          ^\n    144|       expect(JSON.stringify(results)).not.toMatch(/private|hidden|refe…\n    145|     }\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯"
+      }
+    },
+    {
+      "id": "check-docs",
+      "command": "node scripts/check-doc-links.mjs",
+      "workingDirectory": "pi-study-helper",
+      "startedAt": "2026-08-22T08:32:21.214Z",
+      "endedAt": "2026-08-22T08:32:21.976Z",
+      "exitCode": 0,
+      "stdout": {
+        "bytes": 69,
+        "sha256": "38d4c33fabf7a7ea4c2571ecf032df485d46dfa9892a59d8a8247eaaef998ae6",
+        "summary": "已检查 95 个项目 Markdown 文件，本地链接全部有效。"
+      },
+      "stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "summary": ""
+      }
+    },
+    {
+      "id": "build-web",
+      "command": "vite build",
+      "workingDirectory": "pi-study-helper",
+      "startedAt": "2026-08-22T08:32:21.976Z",
+      "endedAt": "2026-08-22T08:32:23.952Z",
+      "exitCode": 0,
+      "stdout": {
+        "bytes": 474,
+        "sha256": "b4ec0c7d6fc85b5a24d0ae2dfcf0fa4d511b6c4e2562ca837a8b7cc0eae80409",
+        "summary": "vite v7.1.7 building for production...\ntransforming...\n✓ 51 modules transformed.\nrendering chunks...\ncomputing gzip size...\n../../dist-web/assets/pyodide-preview.worker-DtAokygp.js    0.30 kB\n../../dist-web/index.html                                   0.48 kB │ gzip:  0.32 kB\n../../dist-web/assets/index-BPvGnDzN.css                   18.06 kB │ gzip:  4.39 kB\n../../dist-web/assets/index-BbjFPJ_t.js                   270.06 kB │ gzip: 84.48 kB\n✓ built in 951ms"
+      },
+      "stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "summary": ""
+      }
+    },
+    {
+      "id": "smoke-extension",
+      "command": "node scripts/smoke-extension.mjs",
+      "workingDirectory": "pi-study-helper",
+      "startedAt": "2026-08-22T08:32:23.953Z",
+      "endedAt": "2026-08-22T08:32:30.675Z",
+      "exitCode": 0,
+      "stdout": {
+        "bytes": 60,
+        "sha256": "c028e49a0a13bca365732ae6887f44966c87af9322146196df4a6157b55be51f",
+        "summary": "pi 已成功解析并初始化 Pi Study Helper extension。"
+      },
+      "stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "summary": ""
+      }
+    },
+    {
+      "id": "check-release",
+      "command": "node scripts/check-release.mjs",
+      "workingDirectory": "pi-study-helper",
+      "startedAt": "2026-08-22T08:32:30.675Z",
+      "endedAt": "2026-08-22T08:32:34.415Z",
+      "exitCode": 0,
+      "stdout": {
+        "bytes": 75,
+        "sha256": "33f8ce81e3d1c4d1c2ef236f98a21f48fbad764755c69058117fd041bc659efd",
+        "summary": "Release check passed: 624 tracked files, no private data or secrets found."
+      },
+      "stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "summary": ""
+      }
+    },
+    {
+      "id": "full-test-rerun",
+      "command": "vitest run --maxWorkers=1",
+      "workingDirectory": "pi-study-helper",
+      "startedAt": "2026-08-22T08:33:37.065Z",
+      "endedAt": "2026-08-22T08:40:49.439Z",
+      "exitCode": 0,
+      "stdout": {
+        "bytes": 297,
+        "sha256": "58f4209113eb52c7276d61a8228a25e8caf7fe3491bca15e03ae142da3237fa6",
+        "summary": "RUN  v4.1.10 <WORKSPACE>/pi-study-helper\n\n\n Test Files  104 passed (104)\n      Tests  845 passed | 1 skipped (846)\n   Start at  16:33:39\n   Duration  430.34s (transform 2.76s, setup 0ms, import 36.69s, tests 369.60s, environment 2.11s)"
+      },
+      "stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "summary": ""
+      }
+    }
+  ],
+  "historicalFailures": [
+    {
+      "source": "A-R1",
+      "status": "NON_CONTRACT_ENVIRONMENT",
+      "result": "95/102 files passed; 806 passed / 30 failed / 1 skipped",
+      "environment": "Node 24.18.0 / npm 11.16.0 / Python 3.11.9 / Pandas unavailable"
+    },
+    {
+      "source": "owner-remediation-r1",
+      "status": "COMMAND_ERROR_NOT_A_TEST_RESULT",
+      "result": "npm wrapper did not expose project tsc on PATH"
+    },
+    {
+      "source": "owner-remediation-full-r1",
+      "status": "FLAKY_EVALUATOR_TIMEOUT",
+      "result": "103/104 files passed; 844 passed / 1 failed / 1 skipped",
+      "detail": "One third repeat in the revision 3 formal evaluation consistency test exceeded wallClockMs=4000; the preceding targeted 15 formal runs passed."
+    }
+  ],
+  "currentConclusion": {
+    "finalFullRerunExitCode": 0,
+    "historicalFailuresRetained": true,
+    "requiredCommandIds": [
+      "typecheck-main",
+      "typecheck-tests",
+      "typecheck-web",
+      "targeted-cross-role",
+      "full-test-rerun",
+      "check-docs",
+      "build-web",
+      "smoke-extension",
+      "check-release"
+    ]
+  }
+}

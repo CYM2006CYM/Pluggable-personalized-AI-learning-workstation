@@ -396,6 +396,8 @@ interface ActivityAttemptSafeViewBase extends FacadeResponseMeta {
   activityId: string;
   attemptId: string;
   status: "draft" | "submitted" | "evaluator_error";
+  evidenceId?: string;
+  evidenceVersion?: number;
 }
 
 export interface CodeActivityAttemptSafeView extends ActivityAttemptSafeViewBase {

@@ -1,0 +1,139 @@
+{
+  "schemaVersion": 2,
+  "contract": "W5-C1/W5-R1",
+  "owner": "A",
+  "day": "W5-D4",
+  "baseHead": "a0d5a37116a6c67f009ca19e313501d9eed96f78",
+  "status": "NOT_COMMITTED_NOT_PUSHED_UPLOAD_LOCK_NOT_GRANTED",
+  "entryCount": 25,
+  "entries": [
+    {
+      "path": "pi-study-helper/src/contracts/facade.ts",
+      "sha256": "f24a1298e2ede36a6b26f5f72f1be3d948f2d03886f39c38c74d93feaa2cc080",
+      "byteLength": 12646
+    },
+    {
+      "path": "pi-study-helper/src/application/code-activity-facade-adapter.ts",
+      "sha256": "7e8a0355dc5d679c3a71db29c7eeac49ebdefe8a1f36d77af9a5a8d32cf81ca6",
+      "byteLength": 34449
+    },
+    {
+      "path": "pi-study-helper/src/application/quiz-activity-runtime.ts",
+      "sha256": "2f8e5c081ffc604fcb1e9026e0aebe3d1dc088cf5b4ddbd07bc368f8b6472736",
+      "byteLength": 25741
+    },
+    {
+      "path": "pi-study-helper/src/tui/shared-session.ts",
+      "sha256": "5fc409b66999d402e283e726117643eb7cf13e9491e2ec203a1687ffb32ec55f",
+      "byteLength": 16174
+    },
+    {
+      "path": "pi-study-helper/tests/shared-session.test.ts",
+      "sha256": "b4220f4b0a656a5ffe3249f1d92c9537f4ad90e98441f8f352f876bbb53f4840",
+      "byteLength": 13036
+    },
+    {
+      "path": "pi-study-helper/tests/w5-a-d4-cross-end.test.ts",
+      "sha256": "c1c5b9981624460ef4ac32798ca49bad072c2753916710be30441620aa337cb1",
+      "byteLength": 11892
+    },
+    {
+      "path": "pi-study-helper/tests/w5-a-d4-showcase-paths.test.ts",
+      "sha256": "b950423120a769a228902b3d79cc4dcd9453ae7775997e7ad212be3a528d2496",
+      "byteLength": 11146
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-a-d4/capture-validation.mjs",
+      "sha256": "7a561346d1996a284c2e90f29a6ca4104ea76669ae898ebd6152a81e23b43e9b",
+      "byteLength": 5158
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-a-d4/capture-full-rerun.mjs",
+      "sha256": "0b42ea9b200f971c49b42655fb9dc88aa80189810a36f004ba1183758f3b0869",
+      "byteLength": 3572
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-a-d4/command-results.json",
+      "sha256": "6070de064727b6216964363d2ad334ae19189be011a5e34d528ee668fa01c8d5",
+      "byteLength": 12084
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-a-d4/cross-end-results.json",
+      "sha256": "9c9ac3d628426ba64aca49ad874454bfa757306804d444f9f42d5e4030bba75d",
+      "byteLength": 890
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-a-d4/showcase-path-results.json",
+      "sha256": "9c12791704658e5d18b71b8f77439e5b9332839a690bda38e913eebe72ccb38d",
+      "byteLength": 23758
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-a-d4/showcase-differences.json",
+      "sha256": "9c632ae0170fd630a6453e83a55178a85e33db718b6ed9875088b7d8e2b3925f",
+      "byteLength": 13215
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-a-d4/upstream-binding.json",
+      "sha256": "c1955637a316b2391f81ff9ae1f35749366a2ef21ea0ba4d0963177bfccd2e42",
+      "byteLength": 866
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-a-d4/test-mapping.json",
+      "sha256": "b9c9ad38dbe18f42260406b727f2dc46af187747232c8d0de94ad75411bd0a2e",
+      "byteLength": 1100
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-a-d4/v5-a-evidence.json",
+      "sha256": "6bb9fbddc03967789244de6b1afaba0b639b9b58446004c5d113fa09c08cbf02",
+      "byteLength": 1736
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-a-d4/w5-a-d4-validation-report.md",
+      "sha256": "c6affdad01772792dc63f74a6775e9e01f81f29bf309683963fb819a3f60b796",
+      "byteLength": 2924
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-a-d4/security-scan.mjs",
+      "sha256": "85a76e1378e4527491121c95eebd84a563aec5a833873384132385cd3d871759",
+      "byteLength": 1820
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-a-d4/security-scan.json",
+      "sha256": "de1e300ea351184d1f5efd00dd98439c120d9f7a7a5974721375dea8b18617b9",
+      "byteLength": 212
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-a-d4/candidate-diff-check.mjs",
+      "sha256": "fb0b8c7c7d46db538ee0548039d19493c45aff9facbbd86c0d7ae0d847c9d5e5",
+      "byteLength": 2235
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-a-d4/diff-check.json",
+      "sha256": "c8a38d8ab87a263078a6e974a0912eab4eddb04676a6a48eca50d9cb886c9e4f",
+      "byteLength": 212
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-a-d4/generate-manifest.mjs",
+      "sha256": "6ff33cff7a74a77c20988829d8f55649fe4442fc7f232a9a19f8c8fc99428928",
+      "byteLength": 1227
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-a-d4/verify-manifest.mjs",
+      "sha256": "c50669cdfcd92f75e79d7cd83e002df3b14fb64f55c4568a73fdaadaf40953db",
+      "byteLength": 974
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-a-d4/proposed-files.txt",
+      "sha256": "088ea83029da66a96d3657a065f6c18481a56911a74a705a84688319a20eb01d",
+      "byteLength": 1373
+    },
+    {
+      "path": "新版设计文档-重写版/第五周任务/handoff-w5-a-d4.md",
+      "sha256": "ac5a251135288166ca6b88950c806894a439ccbe6da7f84efca6920e1949fa46",
+      "byteLength": 2372
+    }
+  ],
+  "selfExcluded": [
+    "pi-study-helper/scripts/w5-a-d4/manifest.json"
+  ]
+}

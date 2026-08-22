@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 2,
+  "candidate": "W5-D4-A-R2-OWNER-RECTIFIED",
+  "baseHead": "a0d5a37116a6c67f009ca19e313501d9eed96f78",
+  "overallStatus": "PASS_A_SCOPE_E_INDEPENDENT_REVIEW_PENDING",
+  "gates": [
+    {
+      "gate": "V5-1",
+      "aResponsibilityStatus": "PASS",
+      "evidence": ["tests/w5-a-d4-cross-end.test.ts", "scripts/w5-a-d4/cross-end-results.json"],
+      "result": "Two clean-data-root trajectories preserve one session across TUI, HTTP/Web continuation, runtime restart and refresh."
+    },
+    {
+      "gate": "V5-3",
+      "aResponsibilityStatus": "PASS",
+      "eIndependentPageStatus": "PENDING",
+      "evidence": ["tests/w5-formal-bundle-revision-binding.test.ts", "scripts/w5-a-d4/command-results.json"],
+      "result": "All five revision 3 formal activities run three times in the approved Node/Python/Pandas environment. Pyodide remains disabled; the closed page state is E's responsibility."
+    },
+    {
+      "gate": "V5-4",
+      "aResponsibilityStatus": "PASS",
+      "fullCrossRoleGateStatus": "PENDING_E_AND_C",
+      "evidence": ["tests/w5-a-d4-cross-end.test.ts", "tests/shared-session.test.ts", "scripts/w5-a-d4/cross-end-results.json"],
+      "result": "A's refresh, restart, pending, CAS and idempotency responsibilities preserve the same Attempt, Evidence reference and next step without replacement sessions or half-written facts."
+    }
+  ],
+  "showcases": {
+    "aOutputStatus": "PASS",
+    "eIndependentReviewStatus": "PENDING",
+    "pairDifferenceCounts": [32, 12, 21],
+    "evidence": ["scripts/w5-a-d4/showcase-path-results.json", "scripts/w5-a-d4/showcase-differences.json"]
+  },
+  "liveModel": "LIVE_NOT_RUN",
+  "releaseState": "NOT_COMMITTED / NOT_PUSHED / uploadLock=NOT_GRANTED"
+}

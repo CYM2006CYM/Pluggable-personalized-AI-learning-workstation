@@ -1,4 +1,5 @@
 import type {
+  ActivityAttemptSafeView,
   ActivityDraftOutput,
   ActivityRecoveryOutput,
   ActivitySubmissionOutput,
@@ -46,7 +47,7 @@ export interface SafeStudyLink {
 
 type SharedFacade = Pick<
   LearningRuntimeFacade,
-  "getNextStep" | "recoverActivity" | "saveActivityDraft" | "submitActivity"
+  "getNextStep" | "getActivityAttempt" | "recoverActivity" | "saveActivityDraft" | "submitActivity"
 >;
 
 export type ResumeReason =
@@ -193,6 +194,20 @@ export class TuiSharedSessionBridge {
       sessionVersion: current.sessionVersion,
       profileRevision: current.profileRevision,
       pathVersion: current.path.pathVersion,
+    });
+  }
+
+  async readActivityAttempt(
+    current: SessionRecoverySafeView,
+    activityId: string,
+    attemptId: string,
+  ): Promise<ActivityAttemptSafeView> {
+    return this.facade.getActivityAttempt({
+      sessionId: current.sessionId,
+      sessionVersion: current.sessionVersion,
+      profileRevision: current.profileRevision,
+      activityId,
+      attemptId,
     });
   }
 

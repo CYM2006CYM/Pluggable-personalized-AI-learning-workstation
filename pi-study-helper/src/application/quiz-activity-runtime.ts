@@ -250,8 +250,18 @@ export class QuizActivityRuntime {
   }
 
   async getAttempt(input: { sessionId: string; sessionVersion: number; profileRevision: number; activityId: string; attemptId: string }): Promise<ActivityAttemptSafeView> {
-    const attempt = await this.options.sessions.getQuizAttempt(input);
+    const [attempt, snapshot] = await Promise.all([
+      this.options.sessions.getQuizAttempt(input),
+      this.options.sessions.getBoundSnapshot(input.sessionId),
+    ]);
     if (attempt === undefined) throw new QuizRuntimeError("attempt_not_found", "Quiz Attempt does not exist");
+    if (snapshot.profileRevision !== input.profileRevision) {
+      throw new LearningSessionRepositoryError("profile_revision_conflict", "Profile revision is stale");
+    }
+    if (snapshot.sessionVersion !== input.sessionVersion) {
+      throw new LearningSessionRepositoryError("session_version_conflict", "Session version is stale");
+    }
+    const evidence = snapshot.evidence.find((item) => item.attemptId === input.attemptId && item.activityId === input.activityId);
     return {
       kind: "quiz",
       sessionId: input.sessionId,
@@ -262,6 +272,7 @@ export class QuizActivityRuntime {
       status: attempt.status,
       retryNumber: attempt.retryNumber,
       ...(attempt.result === undefined ? {} : { result: attempt.result }),
+      ...(evidence === undefined ? {} : { evidenceId: evidence.evidenceId, evidenceVersion: evidence.evidenceVersion }),
     };
   }
 

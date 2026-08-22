@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 2,
+  "issues": [
+    {
+      "issueId": "A-D4-R2-01",
+      "requirement": "After formal submission, the opposite client reads the same Attempt, Evidence reference and next step",
+      "tests": ["tests/w5-a-d4-cross-end.test.ts", "tests/shared-session.test.ts"]
+    },
+    {
+      "issueId": "A-D4-R2-02",
+      "requirement": "Owner contract environment verification is recorded without erasing A's non-contract failures",
+      "evidence": ["scripts/w5-a-d4/command-results.json"]
+    },
+    {
+      "issueId": "A-D4-R2-03",
+      "requirement": "Formal Git candidate and audit-only delivery material are separated and diff-checked in an isolated index",
+      "evidence": ["scripts/w5-a-d4/proposed-files.txt", "scripts/w5-a-d4/diff-check.json", "scripts/w5-a-d4/manifest.json"]
+    },
+    {
+      "requirement": "B showcase inputs run twice through the formal DiagnosticRuntime and PathEngine",
+      "tests": ["tests/w5-a-d4-showcase-paths.test.ts"],
+      "evidence": ["scripts/w5-a-d4/showcase-path-results.json", "scripts/w5-a-d4/showcase-differences.json"]
+    }
+  ]
+}
