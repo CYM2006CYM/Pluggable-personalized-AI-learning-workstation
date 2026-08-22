@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "status": "PASS",
-  "scannedFiles": 25,
+  "scannedFiles": 27,
   "ruleIds": [
     "host-absolute-path",
     "openai-api-key",

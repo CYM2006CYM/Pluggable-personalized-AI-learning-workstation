@@ -26,7 +26,8 @@
 最终环境：Node `v22.23.1`、npm `10.9.8`、Python `3.13.7`、Pandas `3.0.5`、`PYTHONNOUSERSITE=1`。
 
 - 定向与跨岗位：`6 files / 29 passed / 0 failed`；
-- 最终全量：`104 files / 845 passed / 1 skipped / 0 failed`；
+- Manifest可移植性修复前全量：`104 files / 845 passed / 1 skipped / 0 failed`；
+- 最终全量：`105 files / 846 passed / 1 skipped / 0 failed`；
 - 三套TypeScript检查：PASS；
 - docs：PASS；
 - Web build：PASS；
@@ -39,7 +40,15 @@ A原交付在非合同环境中的`806 passed / 30 failed / 1 skipped`保留。�
 
 正式Git候选只包含源码、测试、最小结构化证据、验证工具和`handoff-w5-a-d4.md`。外层整改报告、ZIP和sidecar均为`AUDIT_ONLY / NOT_FOR_GIT`，不进入`proposed-files.txt`。
 
-候选通过隔离Git index的逐项清单核对与`git diff --cached --check`，Manifest唯一排除自身。
+完整候选由`proposed-files.txt`定义；首次正式提交后的纠正增量由`patch-files.txt`定义。纠正增量通过隔离Git index逐项核对与`git diff --cached --check`，完整Manifest唯一排除自身。
+
+## A-D4-R2-04：Windows换行可移植性
+
+首次正式提交后，E在`core.autocrlf=true`工作区发现`handoff-w5-a-d4.md`原始字节哈希与Manifest不一致。负责人复算确认Manifest与`origin/main` Git blob一致，差异来自LF在Windows检出时转换为CRLF。
+
+Manifest现对所有正式UTF-8文本显式登记`hashMode=utf8-lf-v1`；生成和验证均先把CRLF/CR规范化为LF，再计算SHA-256和字节数。自动测试会把全部正式候选转换成CRLF副本后重新验证，防止不同Windows Git配置再次误阻塞。
+
+该测试首次加入全量时正确拦截了晚于Manifest生成的`capture-full-rerun.mjs`修改；重生成Manifest后最终全量通过，失败事实保留在`command-results.json`。
 
 ## 三案例
 

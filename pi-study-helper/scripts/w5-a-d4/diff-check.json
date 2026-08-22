@@ -1,11 +1,22 @@
 {
   "schemaVersion": 2,
   "status": "PASS",
-  "proposedCount": 26,
-  "isolatedIndexCount": 26,
+  "patchCount": 14,
+  "isolatedIndexCount": 14,
   "missing": [],
   "unexpected": [],
   "diffCheckExitCode": 0,
   "diffCheckOutput": "",
-  "historicalFailures": []
+  "historicalFailures": [
+    {
+      "status": "FAIL",
+      "reason": "full_candidate_list_was_used_as_post_upload_patch_list",
+      "expectedCount": 27,
+      "actualCount": 11,
+      "missingCount": 16,
+      "unexpectedCount": 0,
+      "diffCheckExitCode": 0,
+      "diffCheckOutput": ""
+    }
+  ]
 }

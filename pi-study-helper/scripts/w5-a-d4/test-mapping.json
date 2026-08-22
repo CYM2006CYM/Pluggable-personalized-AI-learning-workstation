@@ -17,6 +17,12 @@
       "evidence": ["scripts/w5-a-d4/proposed-files.txt", "scripts/w5-a-d4/diff-check.json", "scripts/w5-a-d4/manifest.json"]
     },
     {
+      "issueId": "A-D4-R2-04",
+      "requirement": "Manifest verification produces the same result for LF Git blobs and Windows CRLF worktree files",
+      "tests": ["tests/w5-a-d4-manifest-portability.test.ts"],
+      "evidence": ["scripts/w5-a-d4/manifest.json", "scripts/w5-a-d4/verify-manifest.mjs"]
+    },
+    {
       "requirement": "B showcase inputs run twice through the formal DiagnosticRuntime and PathEngine",
       "tests": ["tests/w5-a-d4-showcase-paths.test.ts"],
       "evidence": ["scripts/w5-a-d4/showcase-path-results.json", "scripts/w5-a-d4/showcase-differences.json"]

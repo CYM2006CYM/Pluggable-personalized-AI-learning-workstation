@@ -38,9 +38,10 @@ E必须独立复验路径合法率100%、每对至少三项实际差异和页面
 ## 验证
 
 - 合同环境定向：`6 files / 29 passed`；
-- 最终全量：`104 files / 845 passed / 1 skipped / 0 failed`；
+- 最终全量：`105 files / 846 passed / 1 skipped / 0 failed`；
 - typecheck、docs、Web build、extension smoke、release：PASS；
 - A原非合同环境失败和负责人首轮单次evaluator超时均保留在结构化命令结果中。
+- Manifest使用`utf8-lf-v1`规范化哈希；Windows `core.autocrlf=true`检出的CRLF文件与Git中的LF blob按同一内容验证。
 
 ## 禁止与后续
 

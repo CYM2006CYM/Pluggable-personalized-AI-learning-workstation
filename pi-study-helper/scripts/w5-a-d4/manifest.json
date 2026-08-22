@@ -1,136 +1,173 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "contract": "W5-C1/W5-R1",
   "owner": "A",
   "day": "W5-D4",
   "baseHead": "a0d5a37116a6c67f009ca19e313501d9eed96f78",
   "status": "NOT_COMMITTED_NOT_PUSHED_UPLOAD_LOCK_NOT_GRANTED",
-  "entryCount": 25,
+  "entryCount": 27,
   "entries": [
     {
       "path": "pi-study-helper/src/contracts/facade.ts",
+      "hashMode": "utf8-lf-v1",
       "sha256": "f24a1298e2ede36a6b26f5f72f1be3d948f2d03886f39c38c74d93feaa2cc080",
       "byteLength": 12646
     },
     {
       "path": "pi-study-helper/src/application/code-activity-facade-adapter.ts",
+      "hashMode": "utf8-lf-v1",
       "sha256": "7e8a0355dc5d679c3a71db29c7eeac49ebdefe8a1f36d77af9a5a8d32cf81ca6",
       "byteLength": 34449
     },
     {
       "path": "pi-study-helper/src/application/quiz-activity-runtime.ts",
+      "hashMode": "utf8-lf-v1",
       "sha256": "2f8e5c081ffc604fcb1e9026e0aebe3d1dc088cf5b4ddbd07bc368f8b6472736",
       "byteLength": 25741
     },
     {
       "path": "pi-study-helper/src/tui/shared-session.ts",
+      "hashMode": "utf8-lf-v1",
       "sha256": "5fc409b66999d402e283e726117643eb7cf13e9491e2ec203a1687ffb32ec55f",
       "byteLength": 16174
     },
     {
       "path": "pi-study-helper/tests/shared-session.test.ts",
+      "hashMode": "utf8-lf-v1",
       "sha256": "b4220f4b0a656a5ffe3249f1d92c9537f4ad90e98441f8f352f876bbb53f4840",
       "byteLength": 13036
     },
     {
       "path": "pi-study-helper/tests/w5-a-d4-cross-end.test.ts",
+      "hashMode": "utf8-lf-v1",
       "sha256": "c1c5b9981624460ef4ac32798ca49bad072c2753916710be30441620aa337cb1",
       "byteLength": 11892
     },
     {
       "path": "pi-study-helper/tests/w5-a-d4-showcase-paths.test.ts",
+      "hashMode": "utf8-lf-v1",
       "sha256": "b950423120a769a228902b3d79cc4dcd9453ae7775997e7ad212be3a528d2496",
       "byteLength": 11146
     },
     {
+      "path": "pi-study-helper/tests/w5-a-d4-manifest-portability.test.ts",
+      "hashMode": "utf8-lf-v1",
+      "sha256": "9fd87043cbb8a7f06c03114e09ef16dfd4003cec364b5349ac618a8df232f83a",
+      "byteLength": 2182
+    },
+    {
       "path": "pi-study-helper/scripts/w5-a-d4/capture-validation.mjs",
+      "hashMode": "utf8-lf-v1",
       "sha256": "7a561346d1996a284c2e90f29a6ca4104ea76669ae898ebd6152a81e23b43e9b",
       "byteLength": 5158
     },
     {
       "path": "pi-study-helper/scripts/w5-a-d4/capture-full-rerun.mjs",
-      "sha256": "0b42ea9b200f971c49b42655fb9dc88aa80189810a36f004ba1183758f3b0869",
-      "byteLength": 3572
+      "hashMode": "utf8-lf-v1",
+      "sha256": "0dfbbb4cc518a956381d3612854e4024a2dd439e88fc5981783309ca7c9ccb3f",
+      "byteLength": 4229
     },
     {
       "path": "pi-study-helper/scripts/w5-a-d4/command-results.json",
-      "sha256": "6070de064727b6216964363d2ad334ae19189be011a5e34d528ee668fa01c8d5",
-      "byteLength": 12084
+      "hashMode": "utf8-lf-v1",
+      "sha256": "d773c26c9cdf6db437b6ec732c2ab5448f87913538c29b1a74b1142849da68a1",
+      "byteLength": 16180
     },
     {
       "path": "pi-study-helper/scripts/w5-a-d4/cross-end-results.json",
+      "hashMode": "utf8-lf-v1",
       "sha256": "9c9ac3d628426ba64aca49ad874454bfa757306804d444f9f42d5e4030bba75d",
       "byteLength": 890
     },
     {
       "path": "pi-study-helper/scripts/w5-a-d4/showcase-path-results.json",
+      "hashMode": "utf8-lf-v1",
       "sha256": "9c12791704658e5d18b71b8f77439e5b9332839a690bda38e913eebe72ccb38d",
       "byteLength": 23758
     },
     {
       "path": "pi-study-helper/scripts/w5-a-d4/showcase-differences.json",
+      "hashMode": "utf8-lf-v1",
       "sha256": "9c632ae0170fd630a6453e83a55178a85e33db718b6ed9875088b7d8e2b3925f",
       "byteLength": 13215
     },
     {
       "path": "pi-study-helper/scripts/w5-a-d4/upstream-binding.json",
+      "hashMode": "utf8-lf-v1",
       "sha256": "c1955637a316b2391f81ff9ae1f35749366a2ef21ea0ba4d0963177bfccd2e42",
       "byteLength": 866
     },
     {
       "path": "pi-study-helper/scripts/w5-a-d4/test-mapping.json",
-      "sha256": "b9c9ad38dbe18f42260406b727f2dc46af187747232c8d0de94ad75411bd0a2e",
-      "byteLength": 1100
+      "hashMode": "utf8-lf-v1",
+      "sha256": "21c2d58b8ea8903fe4bf98eaac0b28bf78b9dc32622180a4b612878f40d69fad",
+      "byteLength": 1418
     },
     {
       "path": "pi-study-helper/scripts/w5-a-d4/v5-a-evidence.json",
+      "hashMode": "utf8-lf-v1",
       "sha256": "6bb9fbddc03967789244de6b1afaba0b639b9b58446004c5d113fa09c08cbf02",
       "byteLength": 1736
     },
     {
       "path": "pi-study-helper/scripts/w5-a-d4/w5-a-d4-validation-report.md",
-      "sha256": "c6affdad01772792dc63f74a6775e9e01f81f29bf309683963fb819a3f60b796",
-      "byteLength": 2924
+      "hashMode": "utf8-lf-v1",
+      "sha256": "8159f0d4e87678b70f5e57a51f4ab370acf7a771eda80a73f21016494edad7ed",
+      "byteLength": 3872
     },
     {
       "path": "pi-study-helper/scripts/w5-a-d4/security-scan.mjs",
+      "hashMode": "utf8-lf-v1",
       "sha256": "85a76e1378e4527491121c95eebd84a563aec5a833873384132385cd3d871759",
       "byteLength": 1820
     },
     {
       "path": "pi-study-helper/scripts/w5-a-d4/security-scan.json",
-      "sha256": "de1e300ea351184d1f5efd00dd98439c120d9f7a7a5974721375dea8b18617b9",
+      "hashMode": "utf8-lf-v1",
+      "sha256": "0daf072d34f9498bffe6e4360ce9d4a39bd8dffc1525296e658779906ca6924f",
       "byteLength": 212
     },
     {
       "path": "pi-study-helper/scripts/w5-a-d4/candidate-diff-check.mjs",
-      "sha256": "fb0b8c7c7d46db538ee0548039d19493c45aff9facbbd86c0d7ae0d847c9d5e5",
-      "byteLength": 2235
+      "hashMode": "utf8-lf-v1",
+      "sha256": "07a8a7de474ed15da41fa0650e61e56ced15ede6b50419402358221d03a9fce0",
+      "byteLength": 2541
     },
     {
       "path": "pi-study-helper/scripts/w5-a-d4/diff-check.json",
-      "sha256": "c8a38d8ab87a263078a6e974a0912eab4eddb04676a6a48eca50d9cb886c9e4f",
-      "byteLength": 212
+      "hashMode": "utf8-lf-v1",
+      "sha256": "7978997e9e7260c445ed09c2114dd33558f1b925c05d1169eff0415361478daa",
+      "byteLength": 486
     },
     {
       "path": "pi-study-helper/scripts/w5-a-d4/generate-manifest.mjs",
-      "sha256": "6ff33cff7a74a77c20988829d8f55649fe4442fc7f232a9a19f8c8fc99428928",
-      "byteLength": 1227
+      "hashMode": "utf8-lf-v1",
+      "sha256": "ec9af236c597750b40b4e0c42c378ff1f23e09a7e416d6970aa4650e75b38f86",
+      "byteLength": 1369
     },
     {
       "path": "pi-study-helper/scripts/w5-a-d4/verify-manifest.mjs",
-      "sha256": "c50669cdfcd92f75e79d7cd83e002df3b14fb64f55c4568a73fdaadaf40953db",
-      "byteLength": 974
+      "hashMode": "utf8-lf-v1",
+      "sha256": "90f900b6328290a5c3995ec0b0b7e64af0cf0348e3012f8b6663aa82e45e2162",
+      "byteLength": 1364
     },
     {
       "path": "pi-study-helper/scripts/w5-a-d4/proposed-files.txt",
-      "sha256": "088ea83029da66a96d3657a065f6c18481a56911a74a705a84688319a20eb01d",
-      "byteLength": 1373
+      "hashMode": "utf8-lf-v1",
+      "sha256": "921b9841d6f00f7ff865294ac4768fa537329ccc368da69a2bfc42cf002e450d",
+      "byteLength": 1480
+    },
+    {
+      "path": "pi-study-helper/scripts/w5-a-d4/patch-files.txt",
+      "hashMode": "utf8-lf-v1",
+      "sha256": "56326d1c4f0af5c435e944caa85db6dc55ecf0b7b29783c92346804a92bd66a6",
+      "byteLength": 749
     },
     {
       "path": "新版设计文档-重写版/第五周任务/handoff-w5-a-d4.md",
-      "sha256": "ac5a251135288166ca6b88950c806894a439ccbe6da7f84efca6920e1949fa46",
-      "byteLength": 2372
+      "hashMode": "utf8-lf-v1",
+      "sha256": "dc602c5f130cf7854265005d11f637a364444fcd2746a2937df795379b441697",
+      "byteLength": 2509
     }
   ],
   "selfExcluded": [

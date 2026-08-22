@@ -7,14 +7,15 @@ const manifestPath = resolve(import.meta.dirname, "manifest.json");
 const manifestRelative = "pi-study-helper/scripts/w5-a-d4/manifest.json";
 const paths = (await readFile(resolve(import.meta.dirname, "proposed-files.txt"), "utf8"))
   .trim().split(/\r?\n/u).filter(Boolean);
+const normalizeText = (bytes) => Buffer.from(bytes.toString("utf8").replace(/\r\n?/gu, "\n"), "utf8");
 const entries = [];
 for (const path of paths) {
   if (path === manifestRelative) continue;
-  const bytes = await readFile(resolve(workspaceRoot, path));
-  entries.push({ path, sha256: createHash("sha256").update(bytes).digest("hex"), byteLength: bytes.byteLength });
+  const bytes = normalizeText(await readFile(resolve(workspaceRoot, path)));
+  entries.push({ path, hashMode: "utf8-lf-v1", sha256: createHash("sha256").update(bytes).digest("hex"), byteLength: bytes.byteLength });
 }
 const manifest = {
-  schemaVersion: 2,
+  schemaVersion: 3,
   contract: "W5-C1/W5-R1",
   owner: "A",
   day: "W5-D4",

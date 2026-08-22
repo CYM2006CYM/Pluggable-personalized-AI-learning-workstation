@@ -1,0 +1,14 @@
+pi-study-helper/scripts/w5-a-d4/candidate-diff-check.mjs
+pi-study-helper/scripts/w5-a-d4/capture-full-rerun.mjs
+pi-study-helper/scripts/w5-a-d4/command-results.json
+pi-study-helper/scripts/w5-a-d4/diff-check.json
+pi-study-helper/scripts/w5-a-d4/generate-manifest.mjs
+pi-study-helper/scripts/w5-a-d4/manifest.json
+pi-study-helper/scripts/w5-a-d4/proposed-files.txt
+pi-study-helper/scripts/w5-a-d4/patch-files.txt
+pi-study-helper/scripts/w5-a-d4/security-scan.json
+pi-study-helper/scripts/w5-a-d4/test-mapping.json
+pi-study-helper/scripts/w5-a-d4/verify-manifest.mjs
+pi-study-helper/scripts/w5-a-d4/w5-a-d4-validation-report.md
+pi-study-helper/tests/w5-a-d4-manifest-portability.test.ts
+新版设计文档-重写版/第五周任务/handoff-w5-a-d4.md

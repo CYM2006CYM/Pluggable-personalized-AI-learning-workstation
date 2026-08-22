@@ -5,6 +5,7 @@ pi-study-helper/src/tui/shared-session.ts
 pi-study-helper/tests/shared-session.test.ts
 pi-study-helper/tests/w5-a-d4-cross-end.test.ts
 pi-study-helper/tests/w5-a-d4-showcase-paths.test.ts
+pi-study-helper/tests/w5-a-d4-manifest-portability.test.ts
 pi-study-helper/scripts/w5-a-d4/capture-validation.mjs
 pi-study-helper/scripts/w5-a-d4/capture-full-rerun.mjs
 pi-study-helper/scripts/w5-a-d4/command-results.json
@@ -23,4 +24,5 @@ pi-study-helper/scripts/w5-a-d4/generate-manifest.mjs
 pi-study-helper/scripts/w5-a-d4/verify-manifest.mjs
 pi-study-helper/scripts/w5-a-d4/manifest.json
 pi-study-helper/scripts/w5-a-d4/proposed-files.txt
+pi-study-helper/scripts/w5-a-d4/patch-files.txt
 新版设计文档-重写版/第五周任务/handoff-w5-a-d4.md

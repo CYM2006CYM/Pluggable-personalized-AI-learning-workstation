@@ -2,7 +2,7 @@
   "schemaVersion": 2,
   "candidate": "W5-D4-A-R2-OWNER-RECTIFIED",
   "baseHead": "a0d5a37116a6c67f009ca19e313501d9eed96f78",
-  "capturedAt": "2026-08-22T08:40:49.442Z",
+  "capturedAt": "2026-08-22T09:55:57.860Z",
   "environment": {
     "node": "v22.23.1",
     "npm": "10.9.8",
@@ -193,6 +193,42 @@
         "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
         "summary": ""
       }
+    },
+    {
+      "id": "full-test-portability-rerun",
+      "command": "vitest run --maxWorkers=1",
+      "workingDirectory": "pi-study-helper",
+      "startedAt": "2026-08-22T09:39:06.731Z",
+      "endedAt": "2026-08-22T09:46:54.737Z",
+      "exitCode": 1,
+      "stdout": {
+        "bytes": 482,
+        "sha256": "631e6b40fd84bd886d81042879a26482b2086608cb87062b6e8719f5e0536a0a",
+        "summary": "RUN  v4.1.10 <WORKSPACE>/pi-study-helper\n\n ❯ tests/w5-a-d4-manifest-portability.test.ts (1 test | 1 failed) 911ms\n     × verifies the same candidate after every UTF-8 file is checked out as CRLF 910ms\n\n Test Files  1 failed | 104 passed (105)\n      Tests  1 failed | 845 passed | 1 skipped (847)\n   Start at  17:39:07\n   Duration  467.24s (transform 3.04s, setup 0ms, import 37.12s, tests 388.54s, environment 19.44s)"
+      },
+      "stderr": {
+        "bytes": 2058,
+        "sha256": "5f8e8f20073c09802824c683f47966861c1e6ad22350243a9c9771636281b649",
+        "summary": "file:///<WORKSPACE>/pi-study-helper/scripts/w5-a-d4/verify-manifest.mjs:17\r\n    throw new Error(`manifest mismatch: ${entry.path}`);\r\n          ^\r\n\r\nError: manifest mismatch: pi-study-helper/scripts/w5-a-d4/capture-full-rerun.mjs\r\n    at file:///<WORKSPACE>/pi-study-helper/scripts/w5-a-d4/verify-manifest.mjs:17:11\r\n\r\nNode.js v22.23.1\r\n\n⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯\n\n FAIL  tests/w5-a-d4-manifest-portability.test.ts > W5-D4 A Manifest worktree portability > verifies the same candidate after every UTF-8 file is checked out as CRLF\nError: Command failed: <USERPROFILE>\\AppData\\Local\\Temp\\pluggable-w3-approved-env\\node\\node-v22.23.1-win-x64\\node.exe <WORKSPACE>\\pi-study-helper\\scripts\\w5-a-d4\\verify-manifest.mjs <USERPROFILE>\\AppData\\Local\\Temp\\w5-a-d4-crlf-manifest-bt4sLf <USERPROFILE>\\AppData\\Local\\Temp\\w5-a-d4-crlf-manifest-bt4sLf\\pi-study-helper\\scripts\\w5-a-d4\\manifest.json\nfile:///<WORKSPACE>/pi-study-helper/scripts/w5-a-d4/verify-manifest.mjs:17\r\n    throw new Error(`manifest mismatch: ${entry.path}`);\r\n          ^\r\n\r\nError: manifest mismatch: pi-study-helper/scripts/w5-a-d4/capture-full-rerun.mjs\r\n    at file:///<WORKSPACE>/pi-study-helper/scripts/w5-a-d4/verify-manifest.mjs:17:11\r\n\r\nNode.js v22.23.1\r\n\n ❯ scripts/w5-a-d4/verify-manifest.mjs:17:11\n ❯ tests/w5-a-d4-manifest-portability.test.ts:40:22\n     38|       await mkdir(dirname(copiedManifest), { recursive: true });\n     39|       await cp(manifestPath, copiedManifest, { force: true });\n     40|       const stdout = execFileSync(process.execPath, [verifierPath, tem…\n       |                      ^\n     41|         cwd: appRoot,\n     42|         encoding: \"utf8\",\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯"
+      }
+    },
+    {
+      "id": "full-test-portability-final",
+      "command": "vitest run --maxWorkers=1",
+      "workingDirectory": "pi-study-helper",
+      "startedAt": "2026-08-22T09:48:04.043Z",
+      "endedAt": "2026-08-22T09:55:57.857Z",
+      "exitCode": 0,
+      "stdout": {
+        "bytes": 297,
+        "sha256": "e9b914b66b239c27e4832d9ef970d7470d5bcdc3958e0497f3d7d4fdc23105af",
+        "summary": "RUN  v4.1.10 <WORKSPACE>/pi-study-helper\n\n\n Test Files  105 passed (105)\n      Tests  846 passed | 1 skipped (847)\n   Start at  17:48:04\n   Duration  472.99s (transform 3.10s, setup 0ms, import 40.27s, tests 406.49s, environment 2.36s)"
+      },
+      "stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "summary": ""
+      }
     }
   ],
   "historicalFailures": [
@@ -212,10 +248,16 @@
       "status": "FLAKY_EVALUATOR_TIMEOUT",
       "result": "103/104 files passed; 844 passed / 1 failed / 1 skipped",
       "detail": "One third repeat in the revision 3 formal evaluation consistency test exceeded wallClockMs=4000; the preceding targeted 15 formal runs passed."
+    },
+    {
+      "source": "owner-manifest-portability-r1",
+      "status": "STALE_MANIFEST_BEFORE_RERUN",
+      "result": "104/105 files passed; 845 passed / 1 failed / 1 skipped",
+      "detail": "The new CRLF portability test correctly rejected capture-full-rerun.mjs because that script changed after the previous Manifest generation. The Manifest is regenerated before the final full rerun."
     }
   ],
   "currentConclusion": {
-    "finalFullRerunExitCode": 0,
+    "finalPortabilityFullRerunExitCode": 0,
     "historicalFailuresRetained": true,
     "requiredCommandIds": [
       "typecheck-main",
@@ -223,6 +265,7 @@
       "typecheck-web",
       "targeted-cross-role",
       "full-test-rerun",
+      "full-test-portability-final",
       "check-docs",
       "build-web",
       "smoke-extension",

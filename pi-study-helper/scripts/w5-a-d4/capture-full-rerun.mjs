@@ -45,7 +45,7 @@ const command = await new Promise((done) => {
     const out = Buffer.concat(stdout);
     const err = Buffer.concat(stderr);
     done({
-      id: "full-test-rerun",
+      id: "full-test-portability-final",
       command: "vitest run --maxWorkers=1",
       workingDirectory: "pi-study-helper",
       startedAt,
@@ -60,23 +60,29 @@ const command = await new Promise((done) => {
 const outputPath = resolve(import.meta.dirname, "command-results.json");
 const previous = JSON.parse(await readFile(outputPath, "utf8"));
 previous.commands.push(command);
-previous.historicalFailures.push({
+if (!previous.historicalFailures.some((item) => item.source === "owner-remediation-full-r1")) previous.historicalFailures.push({
   source: "owner-remediation-full-r1",
   status: "FLAKY_EVALUATOR_TIMEOUT",
   result: "103/104 files passed; 844 passed / 1 failed / 1 skipped",
   detail: "One third repeat in the revision 3 formal evaluation consistency test exceeded wallClockMs=4000; the preceding targeted 15 formal runs passed.",
 });
+if (!previous.historicalFailures.some((item) => item.source === "owner-manifest-portability-r1")) previous.historicalFailures.push({
+  source: "owner-manifest-portability-r1",
+  status: "STALE_MANIFEST_BEFORE_RERUN",
+  result: "104/105 files passed; 845 passed / 1 failed / 1 skipped",
+  detail: "The new CRLF portability test correctly rejected capture-full-rerun.mjs because that script changed after the previous Manifest generation. The Manifest is regenerated before the final full rerun.",
+});
 previous.capturedAt = new Date().toISOString();
 previous.status = command.exitCode === 0
-  && previous.commands.filter((item) => item.id !== "full-test").every((item) => item.exitCode === 0)
+  && previous.commands.filter((item) => !item.id.startsWith("full-test")).every((item) => item.exitCode === 0)
   ? "PASS"
   : "FAIL";
 previous.currentConclusion = {
-  finalFullRerunExitCode: command.exitCode,
+  finalPortabilityFullRerunExitCode: command.exitCode,
   historicalFailuresRetained: true,
   requiredCommandIds: [
     "typecheck-main", "typecheck-tests", "typecheck-web", "targeted-cross-role",
-    "full-test-rerun", "check-docs", "build-web", "smoke-extension", "check-release"
+    "full-test-rerun", "full-test-portability-final", "check-docs", "build-web", "smoke-extension", "check-release"
   ]
 };
 await writeFile(outputPath, `${JSON.stringify(previous, null, 2)}\n`, "utf8");
