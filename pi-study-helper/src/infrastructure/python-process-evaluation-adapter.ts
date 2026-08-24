@@ -63,6 +63,7 @@ export interface PythonProcessCodeEvaluationAdapterOptions {
   profileRoot: string;
   pythonExecutable: string;
   runnerScript?: string;
+  temporaryRoot?: string;
   now?: () => Date;
   preparedTtlMs?: number;
 }
@@ -92,7 +93,7 @@ interface TaskBundle {
     datasetRefs: string[];
     allowedLibraries: string[];
   };
-  contract: { entryPoint: { name: string; argumentFixtureIds: string[] } };
+  contract: { entryPoint: { name: string; argumentFixtureIds: string[]; fixtureArgumentMode?: "dataframe" | "path" } };
   publicTests: TaskTest[];
   hiddenTests: TaskTest[];
   rubric: ActivityRubricDefinition;
@@ -130,7 +131,7 @@ type StageOutcome =
 // The parser recognizes every fixed code activity, while the revision-specific
 // digest table below is the single source of truth for formal evaluation scope.
 const KNOWN_CODE_ACTIVITY_IDS = new Set([
-  "act-inspect-dataframe", "act-missing", "act-duplicates", "act-types", "act-practical",
+  "act-load-csv", "act-inspect-dataframe", "act-missing", "act-duplicates", "act-types", "act-practical",
 ]);
 const HASH_PATTERN = /^(?:sha256:)?[a-f0-9]{64}$/u;
 const ENVIRONMENT_HASH_PATTERN = /^sha256:[a-f0-9]{64}$/u;
@@ -151,6 +152,7 @@ const FORMAL_ASSET_BUNDLE_HASHES: Readonly<Record<number, Readonly<Record<string
     "act-practical": "3273308c4c9829b263a550c2d69eb40e5098b4e0802399c2334053afb3d6815c",
   },
   3: {
+    "act-load-csv": "5e1b444472c136364809b926adc8b9ec0f7eaff29a2b6715605c062db2eebe7d",
     "act-inspect-dataframe": "737b0d6ae618f98b5c3e7bd5b67c2f5342559decd7436dbed57a046ef4c97be6",
     "act-missing": "1a42dfe66391ea56d11b7c8b525ac2da19146c3fc7d4401a3439e6b7b793125b",
     "act-duplicates": "dd88d60ef3320f7eba10fbba7cddc76ee96859e3f7fd7f7a9139fe9ed96d4886",
@@ -293,6 +295,7 @@ function parseTaskBundle(value: unknown): TaskBundle | null {
     || typeof entryPoint.name !== "string"
     || !Array.isArray(entryPoint.argumentFixtureIds)
     || !entryPoint.argumentFixtureIds.every((item) => typeof item === "string")
+    || (entryPoint.fixtureArgumentMode !== undefined && entryPoint.fixtureArgumentMode !== "dataframe" && entryPoint.fixtureArgumentMode !== "path")
     || typeof value.environmentRef !== "string"
     || value.environmentRef !== activity.environmentRef
     || typeof value.assetBundleHash !== "string"
@@ -381,6 +384,7 @@ export class PythonProcessCodeEvaluationAdapter implements CodeEvaluationPort {
   readonly #profileRoot: string;
   readonly #pythonExecutable: string;
   readonly #runnerScript: string;
+  readonly #temporaryRoot: string;
   readonly #now: () => Date;
   readonly #preparedTtlMs: number;
   #preflightPromise: Promise<MeasuredNodeEnvironment | null> | undefined;
@@ -392,6 +396,7 @@ export class PythonProcessCodeEvaluationAdapter implements CodeEvaluationPort {
     this.#profileRoot = resolve(options.profileRoot);
     this.#pythonExecutable = resolve(options.pythonExecutable);
     this.#runnerScript = resolve(options.runnerScript ?? resolve(dirname(fileURLToPath(import.meta.url)), "../../scripts/python-evaluator.py"));
+    this.#temporaryRoot = resolve(options.temporaryRoot ?? tmpdir());
     this.#now = options.now ?? (() => new Date());
     this.#preparedTtlMs = options.preparedTtlMs ?? 5 * 60_000;
   }
@@ -585,8 +590,9 @@ export class PythonProcessCodeEvaluationAdapter implements CodeEvaluationPort {
       }));
     }
 
-    const runRoot = await mkdtemp(join(tmpdir(), "pi-w3-evaluation-"));
+    let runRoot: string | undefined;
     try {
+      runRoot = await mkdtemp(join(this.#temporaryRoot, "pi-w3-evaluation-"));
       const submission = resolve(runRoot, "submission.py");
       await writeFile(submission, input.code, { encoding: "utf8", flag: "wx" });
       const allTests: InternalTestResult[] = [];
@@ -634,8 +640,22 @@ export class PythonProcessCodeEvaluationAdapter implements CodeEvaluationPort {
         assetBundleHash: state.prepared.assetBundleHash,
       });
       return this.#recordRun(input, fingerprint, result);
+    } catch {
+      return this.#recordRun(input, fingerprint, evaluatorFailure({
+        errorCode: "evaluator_error",
+        safeFeedback: "The evaluator workspace could not be used; the draft remains available.",
+        evaluatorVersion: state.environment.evaluatorVersion,
+        environmentHash: state.prepared.environmentHash,
+        assetBundleHash: state.prepared.assetBundleHash,
+      }));
     } finally {
-      await rm(runRoot, { recursive: true, force: true });
+      if (runRoot !== undefined) {
+        try {
+          await rm(runRoot, { recursive: true, force: true });
+        } catch {
+          // Cleanup failure must not replace the already classified evaluator result.
+        }
+      }
     }
   }
 
@@ -703,6 +723,7 @@ export class PythonProcessCodeEvaluationAdapter implements CodeEvaluationPort {
       "--stage", stage,
       "--submission", submission,
       "--entry-point", state.bundle.contract.entryPoint.name,
+      "--fixture-argument-mode", state.bundle.contract.entryPoint.fixtureArgumentMode ?? "dataframe",
       "--result", resultPath,
       "--state", statePath,
       ...state.environment.allowedLibraries.flatMap((library) => ["--allowed-library", library.name]),

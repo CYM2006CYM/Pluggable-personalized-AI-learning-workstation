@@ -176,9 +176,15 @@ describe("DiagnosticRuntime", () => {
     expect((await repository.getSnapshot({ sessionId: view.sessionId, sessionVersion: 1, profileRevision: 2 })).diagnosticDraft)
       .toMatchObject({ currentQuestionId: "q-1", processedQuestionIds: ["q-1"] });
 
-    await expect(runtime.submitDiagnosticAnswer({ ...input, requestId: "answer-2" })).rejects.toMatchObject({
-      errorCode: "diagnostic_answer_conflict",
+    const changed = await runtime.submitDiagnosticAnswer({
+      ...input,
+      requestId: "answer-2",
+      diagnosticDraftVersion: 2,
+      answer: "let",
     });
+    expect(changed).toMatchObject({ result: "fail", diagnosticDraftVersion: 3 });
+    expect((await repository.getSnapshot({ sessionId: view.sessionId, sessionVersion: 1, profileRevision: 2 })).diagnosticDraft?.answers)
+      .toEqual([{ questionId: "q-1", status: "answered", submittedAnswer: "let" }]);
   });
 
   it("supports explicit skip through the internal discriminated input", async () => {
@@ -345,7 +351,7 @@ describe("DiagnosticRuntime", () => {
       .rejects.toMatchObject({ errorCode: "idempotency_conflict" });
   });
 
-  it("serializes concurrent submissions so the first answer cannot be overwritten", async () => {
+  it("serializes concurrent submissions so only one stale draft writer can win", async () => {
     const { root, runtime, view } = await setup();
     const base = {
       sessionId: view.sessionId,
@@ -365,7 +371,7 @@ describe("DiagnosticRuntime", () => {
     const rejected = results.filter((result): result is PromiseRejectedResult => result.status === "rejected");
     expect(fulfilled).toHaveLength(1);
     expect(rejected).toHaveLength(1);
-    expect(rejected[0]?.reason).toMatchObject({ errorCode: "diagnostic_answer_conflict" });
+    expect(rejected[0]?.reason).toMatchObject({ errorCode: "session_version_conflict" });
 
     const answerPath = resolve(
       root,

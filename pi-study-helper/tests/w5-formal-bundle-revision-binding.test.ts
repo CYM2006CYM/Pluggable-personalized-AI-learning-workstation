@@ -22,6 +22,7 @@ const REVISIONS = [
 ] as const;
 
 const REVISION_3_FORMAL_ACTIVITIES = [
+  ["act-load-csv", "solution-read-csv.py"],
   ["act-inspect-dataframe", "solution-structure.py"],
   ["act-missing", "solution-missing.py"],
   ["act-duplicates", "solution-duplicates.py"],

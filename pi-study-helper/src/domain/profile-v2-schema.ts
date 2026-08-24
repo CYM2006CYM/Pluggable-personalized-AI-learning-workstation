@@ -101,6 +101,7 @@ const CODE_ACTIVITY_KEYS = [
   "editableRegions",
   "entryPoint",
   "outputContract",
+  "publicAcceptanceCriteria",
   "datasetRefs",
   "publicTestRefs",
   "hiddenTestRefs",
@@ -109,13 +110,33 @@ const CODE_ACTIVITY_KEYS = [
   "knownWrongSolutionRefs",
   "environmentRef",
   "allowedLibraries",
+  "problemStatement",
 ] as const;
 const CODE_COMPLETION_ACTIVITY_KEYS = new Set(CODE_ACTIVITY_KEYS);
 const CODING_PRACTICAL_ACTIVITY_KEYS = new Set([...CODE_ACTIVITY_KEYS, "businessAcceptanceCriteria"]);
 const DEBUG_ACTIVITY_KEYS = new Set([...CODE_ACTIVITY_KEYS, "defectCategory"]);
 const EDITABLE_REGION_KEYS = new Set(["regionId", "startMarker", "endMarker", "required", "maxCharacters"]);
+const CODE_PROBLEM_KEYS = new Set(["background", "inputDescription", "outputDescription", "rules", "prohibitedActions", "sample"]);
+const CODE_SAMPLE_KEYS = new Set(["inputFileName", "inputCsv", "outputFileName", "outputCsv", "explanation"]);
 const CARD_CONTAINER_KEYS = new Set(["cards"]);
-const CARD_KEYS = new Set(["cardId", "knowledgePointId", "title", "objective", "explanation", "example", "commonMistake", "sourceAnchorIds", "estimatedMinutes"]);
+const CARD_KEYS = new Set(["cardId", "knowledgePointId", "title", "objective", "explanation", "example", "commonMistake", "sourceAnchorIds", "estimatedMinutes", "richLesson"]);
+const RICH_LESSON_KEYS = new Set(["sourceDocument", "sourceDocumentSha256", "canonicalRules", "sourceClaims", "variants"]);
+const CANONICAL_RULE_KEYS = new Set(["ruleId", "statement", "sourceClaimIds"]);
+const SOURCE_CLAIM_KEYS = new Set(["claimId", "statement", "sourceAnchorIds"]);
+const VARIANT_KEYS = new Set(["variantId", "label", "learningObjectives", "modules", "termNotes", "coveredRuleIds", "chineseCharacterCount"]);
+const OBJECTIVE_KEYS = new Set(["understand", "master"]);
+const MODULE_KEYS = new Set(["moduleId", "title", "summary", "blocks"]);
+const TERM_NOTE_KEYS = new Set(["term", "explanation"]);
+const BLOCK_COMMON_KEYS = ["blockId", "kind"] as const;
+const BLOCK_KEYS = {
+  paragraph: new Set([...BLOCK_COMMON_KEYS, "text"]),
+  subheading: new Set([...BLOCK_COMMON_KEYS, "text"]),
+  code: new Set([...BLOCK_COMMON_KEYS, "language", "code"]),
+  list: new Set([...BLOCK_COMMON_KEYS, "ordered", "items"]),
+  callout: new Set([...BLOCK_COMMON_KEYS, "tone", "title", "text"]),
+};
+const LESSON_VARIANT_IDS = ["guided", "concise", "practice"] as const;
+const LESSON_MODULE_IDS = ["intuition", "concepts", "walkthrough", "mistakes", "final-task", "terms-sources"] as const;
 const GROUP_CONTAINER_KEYS = new Set(["groups"]);
 const PUBLIC_GROUP_KEYS = new Set(["groupId", "role", "activityId", "knowledgePointId", "questions"]);
 const PRIVATE_GROUP_KEYS = new Set(["groupId", "answers"]);
@@ -501,11 +522,35 @@ function validateActivityEntry(activity: unknown, index: number, issues: string[
     validateEditableRegions(activity.editableRegions, `${location}.editableRegions`, issues);
     requireNonEmptyString(activity, "entryPoint", location, issues);
     requireNonEmptyString(activity, "outputContract", location, issues);
+    if (activity.profileRevision === 3) {
+      requireStringArray(activity, "publicAcceptanceCriteria", location, issues);
+      if (Array.isArray(activity.publicAcceptanceCriteria) && activity.publicAcceptanceCriteria.length < 4) {
+        issues.push(`${location}.publicAcceptanceCriteria must contain at least four public checks`);
+      }
+    }
     for (const key of ["datasetRefs", "publicTestRefs", "hiddenTestRefs", "knownWrongSolutionRefs", "allowedLibraries"] as const) {
       requireStringArray(activity, key, location, issues);
     }
     for (const key of ["rubricRef", "referenceSolutionRef", "environmentRef"] as const) {
       requireNonEmptyString(activity, key, location, issues);
+    }
+    if (activity.profileRevision === 3 && activity.problemStatement === undefined) {
+      issues.push(`${location}.problemStatement must be present for revision 3 code activities`);
+    }
+    if (activity.problemStatement !== undefined) {
+      const statement = isRecord(activity.problemStatement) ? activity.problemStatement : undefined;
+      if (statement === undefined) issues.push(`${location}.problemStatement must be an object`);
+      else {
+        addUnknownKeyIssues(statement, CODE_PROBLEM_KEYS, `${location}.problemStatement`, issues, false);
+        for (const key of ["background", "inputDescription", "outputDescription"] as const) requireNonEmptyString(statement, key, `${location}.problemStatement`, issues);
+        for (const key of ["rules", "prohibitedActions"] as const) requireStringArray(statement, key, `${location}.problemStatement`, issues);
+        const sample = isRecord(statement.sample) ? statement.sample : undefined;
+        if (sample === undefined) issues.push(`${location}.problemStatement.sample must be an object`);
+        else {
+          addUnknownKeyIssues(sample, CODE_SAMPLE_KEYS, `${location}.problemStatement.sample`, issues, false);
+          for (const key of ["inputFileName", "inputCsv", "outputFileName", "outputCsv", "explanation"] as const) requireNonEmptyString(sample, key, `${location}.problemStatement.sample`, issues);
+        }
+      }
     }
     if (kind === "coding_practical") requireStringArray(activity, "businessAcceptanceCriteria", location, issues);
     if (kind === "debug") requireNonEmptyString(activity, "defectCategory", location, issues);
@@ -545,6 +590,127 @@ async function jsonDocuments(root: string): Promise<Array<{ path: string; value:
   return documents;
 }
 
+function validateRichLesson(value: unknown, point: KnowledgePointDefinition, location: string, issues: string[]): void {
+  if (!isRecord(value)) { issues.push(`${location} must be an object`); return; }
+  addUnknownKeyIssues(value, RICH_LESSON_KEYS, location, issues, false);
+  requireNonEmptyString(value, "sourceDocument", location, issues);
+  if (typeof value.sourceDocumentSha256 !== "string" || !/^[a-f0-9]{64}$/u.test(value.sourceDocumentSha256)) {
+    issues.push(`${location}.sourceDocumentSha256 must be a SHA-256 hex digest`);
+  }
+  const rules = Array.isArray(value.canonicalRules) ? value.canonicalRules : [];
+  const claims = Array.isArray(value.sourceClaims) ? value.sourceClaims : [];
+  if (rules.length === 0) issues.push(`${location}.canonicalRules must be non-empty`);
+  if (claims.length === 0) issues.push(`${location}.sourceClaims must be non-empty`);
+  const ruleIds = new Set<string>();
+  const claimIds = new Set<string>();
+  for (const [index, claim] of claims.entries()) {
+    const claimLocation = `${location}.sourceClaims[${index}]`;
+    if (!isRecord(claim)) { issues.push(`${claimLocation} must be an object`); continue; }
+    addUnknownKeyIssues(claim, SOURCE_CLAIM_KEYS, claimLocation, issues, false);
+    requireStableId(claim, "claimId", claimLocation, issues);
+    requireNonEmptyString(claim, "statement", claimLocation, issues);
+    requireStringArray(claim, "sourceAnchorIds", claimLocation, issues, true);
+    if (typeof claim.claimId === "string") {
+      if (claimIds.has(claim.claimId)) issues.push(`${claimLocation}.claimId must be unique`);
+      claimIds.add(claim.claimId);
+    }
+    if (Array.isArray(claim.sourceAnchorIds) && claim.sourceAnchorIds.some((sourceId) => typeof sourceId !== "string" || !point.sourceAnchorIds.includes(sourceId))) {
+      issues.push(`${claimLocation}.sourceAnchorIds must stay inside knowledge point sources`);
+    }
+  }
+  for (const [index, rule] of rules.entries()) {
+    const ruleLocation = `${location}.canonicalRules[${index}]`;
+    if (!isRecord(rule)) { issues.push(`${ruleLocation} must be an object`); continue; }
+    addUnknownKeyIssues(rule, CANONICAL_RULE_KEYS, ruleLocation, issues, false);
+    requireStableId(rule, "ruleId", ruleLocation, issues);
+    requireNonEmptyString(rule, "statement", ruleLocation, issues);
+    requireStringArray(rule, "sourceClaimIds", ruleLocation, issues, true);
+    if (typeof rule.ruleId === "string") {
+      if (ruleIds.has(rule.ruleId)) issues.push(`${ruleLocation}.ruleId must be unique`);
+      ruleIds.add(rule.ruleId);
+    }
+  }
+  for (const [index, rule] of rules.entries()) {
+    if (isRecord(rule) && Array.isArray(rule.sourceClaimIds) && rule.sourceClaimIds.some((claimId) => typeof claimId !== "string" || !claimIds.has(claimId))) {
+      issues.push(`${location}.canonicalRules[${index}].sourceClaimIds contains a missing claim`);
+    }
+  }
+  if (!isRecord(value.variants)) { issues.push(`${location}.variants must be an object`); return; }
+  addUnknownKeyIssues(value.variants, new Set(LESSON_VARIANT_IDS), `${location}.variants`, issues, false);
+  const expectedRuleIds = [...ruleIds];
+  for (const variantId of LESSON_VARIANT_IDS) {
+    const variant = value.variants[variantId];
+    const variantLocation = `${location}.variants.${variantId}`;
+    if (!isRecord(variant)) { issues.push(`${variantLocation} must be an object`); continue; }
+    addUnknownKeyIssues(variant, VARIANT_KEYS, variantLocation, issues, false);
+    if (variant.variantId !== variantId) issues.push(`${variantLocation}.variantId must equal ${variantId}`);
+    requireNonEmptyString(variant, "label", variantLocation, issues);
+    if (!Number.isInteger(variant.chineseCharacterCount) || (variant.chineseCharacterCount as number) < 2000 || (variant.chineseCharacterCount as number) > 3000) {
+      issues.push(`${variantLocation}.chineseCharacterCount must be within 2000..3000`);
+    }
+    requireStringArray(variant, "coveredRuleIds", variantLocation, issues, true);
+    if (Array.isArray(variant.coveredRuleIds) && JSON.stringify(variant.coveredRuleIds) !== JSON.stringify(expectedRuleIds)) {
+      issues.push(`${variantLocation}.coveredRuleIds must exactly match canonicalRules`);
+    }
+    if (!isRecord(variant.learningObjectives)) issues.push(`${variantLocation}.learningObjectives must be an object`);
+    else {
+      addUnknownKeyIssues(variant.learningObjectives, OBJECTIVE_KEYS, `${variantLocation}.learningObjectives`, issues, false);
+      requireStringArray(variant.learningObjectives, "understand", `${variantLocation}.learningObjectives`, issues);
+      requireStringArray(variant.learningObjectives, "master", `${variantLocation}.learningObjectives`, issues);
+    }
+    const modules = Array.isArray(variant.modules) ? variant.modules : [];
+    if (modules.length !== LESSON_MODULE_IDS.length) issues.push(`${variantLocation}.modules must contain six modules`);
+    const blockIds = new Set<string>();
+    modules.forEach((module, moduleIndex) => {
+      const moduleLocation = `${variantLocation}.modules[${moduleIndex}]`;
+      if (!isRecord(module)) { issues.push(`${moduleLocation} must be an object`); return; }
+      addUnknownKeyIssues(module, MODULE_KEYS, moduleLocation, issues, false);
+      if (module.moduleId !== LESSON_MODULE_IDS[moduleIndex]) issues.push(`${moduleLocation}.moduleId is out of order`);
+      requireNonEmptyString(module, "title", moduleLocation, issues);
+      requireNonEmptyString(module, "summary", moduleLocation, issues);
+      const blocks = Array.isArray(module.blocks) ? module.blocks : [];
+      if (blocks.length === 0) issues.push(`${moduleLocation}.blocks must be non-empty`);
+      blocks.forEach((block, blockIndex) => {
+        const blockLocation = `${moduleLocation}.blocks[${blockIndex}]`;
+        if (!isRecord(block) || typeof block.kind !== "string" || !Object.hasOwn(BLOCK_KEYS, block.kind)) {
+          issues.push(`${blockLocation} has an unsupported kind`);
+          return;
+        }
+        const blockKind = block.kind as keyof typeof BLOCK_KEYS;
+        addUnknownKeyIssues(block, BLOCK_KEYS[blockKind], blockLocation, issues, false);
+        requireStableId(block, "blockId", blockLocation, issues);
+        if (typeof block.blockId === "string") {
+          if (blockIds.has(block.blockId)) issues.push(`${blockLocation}.blockId must be unique inside the variant`);
+          blockIds.add(block.blockId);
+        }
+        if (block.kind === "paragraph" || block.kind === "subheading") requireNonEmptyString(block, "text", blockLocation, issues);
+        else if (block.kind === "code") {
+          if (block.language !== "python" && block.language !== "csv" && block.language !== "text") issues.push(`${blockLocation}.language is unsupported`);
+          requireNonEmptyString(block, "code", blockLocation, issues);
+        } else if (block.kind === "list") {
+          if (typeof block.ordered !== "boolean") issues.push(`${blockLocation}.ordered must be boolean`);
+          requireStringArray(block, "items", blockLocation, issues);
+        } else {
+          if (block.tone !== "info" && block.tone !== "warning" && block.tone !== "term") issues.push(`${blockLocation}.tone is unsupported`);
+          requireNonEmptyString(block, "title", blockLocation, issues);
+          requireNonEmptyString(block, "text", blockLocation, issues);
+        }
+      });
+    });
+    const terms = Array.isArray(variant.termNotes) ? variant.termNotes : [];
+    if (terms.length === 0) issues.push(`${variantLocation}.termNotes must be non-empty`);
+    const rendered = JSON.stringify(modules);
+    terms.forEach((term, termIndex) => {
+      const termLocation = `${variantLocation}.termNotes[${termIndex}]`;
+      if (!isRecord(term)) { issues.push(`${termLocation} must be an object`); return; }
+      addUnknownKeyIssues(term, TERM_NOTE_KEYS, termLocation, issues, false);
+      requireNonEmptyString(term, "term", termLocation, issues);
+      requireNonEmptyString(term, "explanation", termLocation, issues);
+      if (typeof term.term === "string" && !rendered.includes(term.term)) issues.push(`${termLocation}.term must appear in module content`);
+    });
+  }
+}
+
 function validateRevision3CardAsset(
   documents: readonly { path: string; value: unknown }[],
   points: readonly KnowledgePointDefinition[],
@@ -578,7 +744,11 @@ function validateRevision3CardAsset(
     if (typeof card.knowledgePointId === "string") seenPoints.add(card.knowledgePointId);
     const point = typeof card.knowledgePointId === "string" ? pointIndex.get(card.knowledgePointId) : undefined;
     if (point === undefined) issues.push(`${location}.knowledgePointId references a missing knowledge point`);
-    else if (card.estimatedMinutes !== point.contentEstimatedMinutes) issues.push(`${location}.estimatedMinutes must equal knowledge point contentEstimatedMinutes`);
+    else {
+      if (card.estimatedMinutes !== point.contentEstimatedMinutes) issues.push(`${location}.estimatedMinutes must equal knowledge point contentEstimatedMinutes`);
+      if (point.id.startsWith("pandas.clean.")) validateRichLesson(card.richLesson, point, `${location}.richLesson`, issues);
+      else if (card.richLesson !== undefined) validateRichLesson(card.richLesson, point, `${location}.richLesson`, issues);
+    }
   });
   for (const point of points) if (!seenPoints.has(point.id)) issues.push(`knowledge point ${point.id} must have exactly one fixed card`);
   if (cards.length !== points.length) issues.push("revision 3 card count must equal knowledge point count");

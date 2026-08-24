@@ -51,7 +51,7 @@ export function AppShell() {
           <div><span className="topbar-label">本地确定性学习闭环</span></div>
           <div className="sync-status" role="status">
             <span className="status-dot" aria-hidden="true" />
-            真实 API 模式
+            本地服务模式
           </div>
         </header>
         <Outlet />

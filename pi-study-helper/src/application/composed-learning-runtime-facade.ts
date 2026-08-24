@@ -16,7 +16,7 @@ import type {
   SaveActivityDraftInput,
   SubmitActivityInput,
 } from "../contracts/facade.js";
-import type { CapabilityTaskPort } from "../contracts/index.js";
+import type { CapabilityTaskPort, ContinueActivityWithGapInput, ContinueActivityWithGapOutput } from "../contracts/index.js";
 import { LearningSessionRepositoryError, type LearningSessionRepository } from "../repositories/learning-session-repository.js";
 import type { PathEngineProfile } from "../domain/path-engine.js";
 import type { RuntimeCommitContext, RuntimeCommitSnapshot } from "./runtime-commit-context.js";
@@ -26,16 +26,17 @@ type DiagnosticMethods = Pick<LearningRuntimeFacade, "saveDiagnosticDraft" | "su
   completeDiagnosticWithContext?(input: Parameters<LearningRuntimeFacade["completeDiagnostic"]>[0]): Promise<RuntimeCommitContext<Awaited<ReturnType<LearningRuntimeFacade["completeDiagnostic"]>>>>;
 };
 type PathMethods = Pick<LearningRuntimeFacade, "recoverSession" | "buildPath" | "confirmPath" | "getNextStep" | "replanPath">;
-type ActivityMethods = Pick<LearningRuntimeFacade, "openActivity" | "saveActivityDraft" | "prepareActivityRun" | "submitActivity" | "getActivityAttempt" | "recoverActivity"> & {
+type ActivityMethods = Pick<LearningRuntimeFacade, "openActivity" | "saveActivityDraft" | "prepareActivityRun" | "submitActivity" | "continueActivityWithGap" | "getActivityAttempt" | "recoverActivity"> & {
   submitActivityWithContext?(input: SubmitActivityInput): Promise<RuntimeCommitContext<ActivitySubmissionOutput>>;
 };
+type QuizActivityMethods = Pick<ActivityMethods, "openActivity" | "submitActivity" | "continueActivityWithGap" | "getActivityAttempt" | "submitActivityWithContext">;
 
 export interface ComposedLearningRuntimeFacadeOptions {
   session: SessionMethods;
   diagnostic: DiagnosticMethods;
   path: PathMethods;
   codeActivity: ActivityMethods;
-  quizActivity: Pick<ActivityMethods, "openActivity" | "submitActivity" | "getActivityAttempt" | "submitActivityWithContext">;
+  quizActivity: QuizActivityMethods;
   sessions: LearningSessionRepository;
   profile: { load(subjectId: string, profileRevision: number): Promise<PathEngineProfile> };
   capabilityTasks?: CapabilityTaskPort;
@@ -115,6 +116,14 @@ export class ComposedLearningRuntimeFacade implements LearningRuntimeFacade {
       void this.enqueueCompletedNode(input.activityId, context.output, context.snapshot).catch(() => undefined);
     }
     return context.output;
+  }
+
+  async continueActivityWithGap(input: ContinueActivityWithGapInput): Promise<ContinueActivityWithGapOutput> {
+    const kind = await this.options.resolveActivityKind(input);
+    switch (kind) {
+      case "code": return this.options.codeActivity.continueActivityWithGap(input);
+      case "quiz": return this.options.quizActivity.continueActivityWithGap(input);
+    }
   }
 
   async getActivityAttempt(input: GetActivityAttemptInput): Promise<ActivityAttemptSafeView> {

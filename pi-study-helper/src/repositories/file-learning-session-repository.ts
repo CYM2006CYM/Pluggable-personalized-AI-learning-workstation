@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 import { profileFamiliesRoot, resolveStudyDataRoot } from "../config/data-paths.js";
 import type { BackgroundQuestionnaire, LearningCardSafeView } from "../contracts/index.js";
 import type { Evidence, KnowledgeState, LearnerDiagnostic } from "../domain/v2-types.js";
-import type { QuizAttemptSnapshot } from "../domain/quiz-runtime.js";
+import { quizQuestionSetSha256, type QuizAttemptSnapshot } from "../domain/quiz-runtime.js";
 import {
   assertSafeFileComponent,
   assertSafeSubjectId,
@@ -399,7 +399,7 @@ function validateQuizAttempt(attempt: QuizAttemptSnapshot | undefined, input: Co
       || typeof attempt.prompt !== "string"
       || typeof attempt.primaryKnowledgePointId !== "string" || attempt.primaryKnowledgePointId.length === 0
       || !Array.isArray(attempt.supportingKnowledgePointIds) || attempt.supportingKnowledgePointIds.some((id) => typeof id !== "string" || id.length === 0)
-      || (attempt.retryNumber !== 0 && attempt.retryNumber !== 1)
+      || !Number.isSafeInteger(attempt.retryNumber) || attempt.retryNumber < 0
       || (attempt.status !== "draft" && attempt.status !== "submitted")
       || !Array.isArray(attempt.questions)) {
     throw new LearningSessionRepositoryError("evidence_invalid", "Quiz Attempt binding is invalid");
@@ -413,6 +413,18 @@ function validateQuizAttempt(attempt: QuizAttemptSnapshot | undefined, input: Co
       throw new LearningSessionRepositoryError("evidence_invalid", "Quiz Attempt question snapshot is invalid");
     }
     ids.add(question.questionId);
+  }
+  if (attempt.gradingBinding !== undefined) {
+    const source = attempt.gradingBinding.source;
+    const expectedSource = attempt.questionSource === "ai_live" || attempt.questionSource === "ai_recorded" ? "ai_reviewed"
+      : attempt.questionSource === "ai_supplemented" ? "profile_supplemental"
+        : attempt.questionSource === "insufficient" ? "none" : "profile_fixed";
+    if ((source !== "ai_reviewed" && source !== "profile_fixed" && source !== "profile_supplemental" && source !== "none")
+        || source !== expectedSource
+        || attempt.gradingBinding.questionSetSha256 !== quizQuestionSetSha256(attempt.questions)
+        || (source === "ai_reviewed" && (!("generationRunId" in attempt.gradingBinding) || !attempt.gradingBinding.generationRunId))) {
+      throw new LearningSessionRepositoryError("evidence_invalid", "Quiz Attempt grading binding is invalid");
+    }
   }
   if (attempt.status === "submitted" && (attempt.result === undefined || attempt.result.kind !== "quiz" || !attempt.submissionRequestId || !attempt.submissionHash)) {
     throw new LearningSessionRepositoryError("evidence_invalid", "Submitted Quiz Attempt is incomplete");
@@ -438,7 +450,9 @@ function validateActivityProgress(input: CommitLearningSessionInput, current: St
       if (!activity.activityId || activityIds.has(activity.activityId)
           || !["pending", "in_progress", "completed", "insufficient"].includes(activity.status)
           || !Array.isArray(activity.attemptIds) || new Set(activity.attemptIds).size !== activity.attemptIds.length
-          || (activity.quizRetryCount !== 0 && activity.quizRetryCount !== 1)
+          || !Number.isSafeInteger(activity.quizRetryCount) || activity.quizRetryCount < 0
+          || (activity.bestResult !== undefined && !["pass", "partial", "fail", "insufficient"].includes(activity.bestResult))
+          || (activity.continuedWithGap !== undefined && typeof activity.continuedWithGap !== "boolean")
           || !Number.isFinite(Date.parse(activity.updatedAt))) {
         throw new LearningSessionRepositoryError("evidence_invalid", "Activity progress entry is invalid");
       }
@@ -552,6 +566,7 @@ export class FileLearningSessionRepository implements LearningSessionRepository,
         "diagnostic draft version",
       );
       const background = parseStoredBackgroundQuestionnaire(draft.background);
+      const restoredAnswers: NonNullable<SessionSnapshot["diagnosticDraft"]>["answers"] = [];
       snapshot.diagnosticDraft = {
         diagnosticDraftVersion,
         ...(background === undefined ? {} : { background }),
@@ -559,7 +574,22 @@ export class FileLearningSessionRepository implements LearningSessionRepository,
         processedQuestionIds: Array.isArray(draft.processedQuestionIds)
           ? draft.processedQuestionIds.filter((value): value is string => typeof value === "string")
           : [],
+        answers: restoredAnswers,
       };
+      const answersDirectory = resolve(directory, "diagnostic", "answers");
+      if (await exists(answersDirectory)) {
+        for (const entry of (await readdir(answersDirectory, { withFileTypes: true }))
+          .filter((item) => item.isFile() && item.name.endsWith(".json"))
+          .sort((left, right) => left.name.localeCompare(right.name, "en"))) {
+          const answer = await readJson<StoredDiagnosticAnswerState>(resolve(answersDirectory, entry.name), entry.name);
+          if (typeof answer.questionId !== "string" || (answer.status !== "answered" && answer.status !== "skipped")) continue;
+          restoredAnswers.push({
+            questionId: answer.questionId,
+            status: answer.status,
+            ...(answer.submittedAnswer === undefined ? {} : { submittedAnswer: answer.submittedAnswer }),
+          });
+        }
+      }
     }
     return {
       ...snapshot,
@@ -999,9 +1029,6 @@ export class FileLearningSessionRepository implements LearningSessionRepository,
         }
         recoverableAnswer = existing;
       }
-      if (await exists(answerPath) && recoverableAnswer === undefined) {
-        throw new LearningSessionRepositoryError("diagnostic_answer_conflict", "Diagnostic question was already answered or skipped");
-      }
       if (current.diagnosticDraftVersion !== input.diagnosticDraftVersion) {
         throw new LearningSessionRepositoryError("session_version_conflict", "Diagnostic draft version is stale");
       }
@@ -1018,6 +1045,15 @@ export class FileLearningSessionRepository implements LearningSessionRepository,
       const priorIds = Array.isArray(previous.processedQuestionIds)
         ? previous.processedQuestionIds.filter((value): value is string => typeof value === "string")
         : [];
+      if (await exists(answerPath) && recoverableAnswer === undefined) {
+        const previousAnswer = await readJson<StoredDiagnosticAnswerState>(answerPath, "previous diagnostic answer");
+        const historyDirectory = resolve(directory, "diagnostic", "answer-history", input.answer.questionId);
+        await mkdir(historyDirectory, { recursive: true });
+        await writeJsonAtomic(
+          resolve(historyDirectory, `${previousAnswer.output.diagnosticDraftVersion}-${hashValue(previousAnswer.requestId).slice(0, 12)}.json`),
+          previousAnswer,
+        );
+      }
       await writeJsonAtomic(answerPath, recoverableAnswer ?? input.answer);
       await writeJsonAtomic(resolve(versions, `${nextVersion}.json`), {
         ...previous,

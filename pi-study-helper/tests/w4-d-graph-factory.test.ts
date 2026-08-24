@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { GraphRunResult } from "pi-loop-graph-sdk";
-import { createW4DModelGraphs } from "../src/graphs/w4-d-graph-factory.js";
+import { createW4DModelGraphs, W4_D_LIVE_PROMPT_VERSION } from "../src/graphs/w4-d-graph-factory.js";
 import { PiGraphModelExecutionAdapter } from "../src/infrastructure/model-execution-port.js";
 
 describe("W4 D graph factory", () => {
@@ -10,6 +10,7 @@ describe("W4 D graph factory", () => {
       "capability-scorer", "defender", "generator", "hunter", "judge",
     ]);
     expect(new Set(graphs.map((graph) => graph.id)).size).toBe(graphs.length);
+    expect(new Set(graphs.map((graph) => graph.version))).toEqual(new Set([W4_D_LIVE_PROMPT_VERSION]));
 
     const calls: string[] = [];
     const adapter = new PiGraphModelExecutionAdapter({

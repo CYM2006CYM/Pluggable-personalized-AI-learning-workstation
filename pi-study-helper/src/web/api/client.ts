@@ -8,6 +8,8 @@ import type {
   CompleteDiagnosticInput,
   CompleteSessionInput,
   CompleteSessionOutput,
+  ContinueActivityWithGapInput,
+  ContinueActivityWithGapOutput,
   ConfirmPathInput,
   ConfirmedPathOutput,
   ContextAnswerOutput,
@@ -149,6 +151,9 @@ export const api = {
   },
   submitActivity(input: SubmitActivityInput) {
     return post<SubmitActivityResponse>(`/api/activities/${id(input.activityId)}/submit`, without(input, "activityId"));
+  },
+  continueActivityWithGap(input: ContinueActivityWithGapInput) {
+    return post<ContinueActivityWithGapOutput>(`/api/activities/${id(input.activityId)}/continue-with-gap`, without(input, "activityId"));
   },
   getActivityAttempt(input: GetActivityAttemptInput) {
     return request<ActivityAttemptSafeView>(`/api/activities/${id(input.activityId)}/attempts/${id(input.attemptId)}${query({

@@ -111,7 +111,7 @@ export const quizSubmission: ActivitySubmissionOutput = {
     kind: "quiz", verdict: "partial", correctCount: 2, totalCount: 4, requiredCorrectCount: 3,
     retryAllowed: true, safeFeedback: "本次结果已记录，可进行一次重试。",
     answerReview: openedQuiz.kind === "quiz" ? openedQuiz.activity.questions.map((question, index) => ({
-      questionId: question.questionId, correct: index < 2,
+      questionId: question.questionId, prompt: question.prompt, correct: index < 2,
       correctAnswer: question.kind === "judgment" ? false : question.options[0]!,
       explanation: "安全复盘", sourceAnchorIds: ["source-basic"],
     })) : [],

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createStudyReviewGraphs } from "../src/graphs/v2-learning-graphs.js";
+import { createStudyReviewGraphs, type ReviewSafeContext } from "../src/graphs/v2-learning-graphs.js";
 
 const context = {
   activity: {
@@ -116,5 +116,57 @@ describe("v2 review graphs", () => {
         extraField: true,
       },
     })).toBe(false);
+  });
+
+  it("requires Hunter and Judge to audit private candidate answers without echoing them", () => {
+    const graphs = createStudyReviewGraphs();
+    const reviewContext: ReviewSafeContext = {
+      ...context,
+      activity: { ...context.activity, supportingKnowledgePointIds: [...context.activity.supportingKnowledgePointIds] },
+      sourceIds: [...context.sourceIds],
+    };
+    const generator = {
+      artifactId: "artifact-1",
+      candidateFeedback: JSON.stringify({
+        artifactKind: "quiz",
+        questions: [{ prompt: "题干", options: ["A", "B"], correctAnswer: "A", explanation: "正文依据" }],
+      }),
+      rationale: "Reason",
+      citedSourceIds: ["source-public-1"],
+      riskFlags: [],
+    };
+    const hunterInput = { context: reviewContext, generator };
+    const hunterPrompt = graphs.hunter.buildSystemPrompt(hunterInput);
+    expect(hunterPrompt).toContain("correctAnswer");
+    expect(hunterPrompt).toContain("语义上确实正确");
+    expect(hunterPrompt).toContain("不得在 message");
+
+    const judgePrompt = graphs.judge.buildSystemPrompt({
+      context: reviewContext,
+      generator,
+      hunter: { issues: [], requiresDefender: false, recommendedVerdict: "accepted" },
+    });
+    expect(judgePrompt).toContain("Hunter 已逐题审核");
+    expect(judgePrompt).toContain("不得复述正确答案");
+  });
+
+  it("gives Generator a four-question example and a concrete repair instruction", () => {
+    const graphs = createStudyReviewGraphs();
+    const prompt = graphs.generator.buildSystemPrompt({
+      context: {
+        ...context,
+        activity: { ...context.activity, supportingKnowledgePointIds: [...context.activity.supportingKnowledgePointIds] },
+        sourceIds: [...context.sourceIds],
+        allowedSourceIds: [...context.sourceIds],
+        teachingContent: "当前章节中文教学正文。",
+      },
+      allowedSourcesSummary: "Only public sources.",
+      repairInstruction: "失败类别=candidate_question_count。questions 必须包含 4 至 6 道题。",
+    });
+
+    expect(prompt).toContain("包含四道题的完整结构示例");
+    expect(prompt).toContain("quiz-read-csv-4");
+    expect(prompt).toContain("candidate_question_count");
+    expect(prompt).toContain("必须逐字执行");
   });
 });

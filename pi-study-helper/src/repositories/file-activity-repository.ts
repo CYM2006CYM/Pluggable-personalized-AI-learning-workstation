@@ -132,7 +132,19 @@ export class FileActivityRepository implements ActivityRepository, ActivityDraft
       if (await exists(draftPath)) {
         const stored = await readJson<StoredDraft>(draftPath, "draft.json");
         if (stored.profileRevision !== input.assignment.profileRevision || stored.activityVersion !== input.assignment.activityVersion) throw new ActivityRepositoryError("activity_version_conflict", "Draft is bound to another activity revision");
-        return this.readDraft(directory, stored);
+        const current = await this.readDraft(directory, stored);
+        if (input.attemptId === undefined || current.attemptId === input.attemptId
+            || !(await exists(resolve(directory, "attempts", current.attemptId, "attempt.json")))) return current;
+        const retry: ActivityDraft = {
+          ...current,
+          attemptId: input.attemptId,
+          draftVersion: 1,
+          hintEvents: [],
+          updatedAt: this.iso(input.now),
+        };
+        await writeTextAtomic(resolve(directory, "draft.py"), retry.code);
+        await writeJsonAtomic(draftPath, { ...retry, code: undefined, codeRef: "draft.py" });
+        return clone(retry);
       }
       const draft: ActivityDraft = { sessionId: input.sessionId, activityId: input.assignment.activityId, activityVersion: input.assignment.activityVersion, profileRevision: input.assignment.profileRevision, attemptId: input.attemptId ?? `attempt-${randomUUID()}`, draftVersion: 1, code: "", codeHash: hashCode(""), hintEvents: [], updatedAt: this.iso(input.now) };
       await writeTextAtomic(resolve(directory, "draft.py"), "");

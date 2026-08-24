@@ -4,9 +4,16 @@ import type {
   OpenActivityInput,
   QuizActivityDraftOutput,
 } from "../contracts/facade.js";
-import type { AdaptiveContentPort, NodeActivityProgress, QuizQuestionPrivate, QuizSubmitActivityInput } from "../contracts/index.js";
+import type { AdaptiveContentPort, ContinueActivityWithGapInput, ContinueActivityWithGapOutput, NodeActivityProgress, QuizQuestionPrivate, QuizSubmitActivityInput } from "../contracts/index.js";
 import { calculateKnowledgeStates } from "../domain/knowledge-state.js";
-import { DeterministicQuizRuntime, QuizRuntimeError, type QuizActivityDefinition, type QuizAttemptSnapshot } from "../domain/quiz-runtime.js";
+import {
+  DeterministicQuizRuntime,
+  QuizRuntimeError,
+  quizQuestionSetSha256,
+  type QuizActivityDefinition,
+  type QuizAttemptSnapshot,
+  type QuizGradingBinding,
+} from "../domain/quiz-runtime.js";
 import type { KnowledgePointDefinition } from "../domain/v2-types.js";
 import type { ProfileFamilyRepository } from "../repositories/profile-family-repository.js";
 import {
@@ -19,10 +26,12 @@ import { selectDeterministicQuizContent } from "./deterministic-content-policy.j
 import type { ActivityPathSuffixReplanner } from "./activity-path-suffix.js";
 import { toPathSafeSnapshot } from "../repositories/internal-path-session-port.js";
 import type { RuntimeCommitContext } from "./runtime-commit-context.js";
+import { lessonVariantForPreference } from "./rich-lesson-selection.js";
 
 export interface QuizActivityAssets {
   activity: QuizActivityDefinition;
   knowledgePoint: Pick<KnowledgePointDefinition, "id" | "requiresCodeEvidence" | "sourceAnchorIds">;
+  allowedSourceAnchorIds?: string[];
   knowledgePoints?: Array<Pick<KnowledgePointDefinition, "id" | "requiresCodeEvidence">>;
   fixedQuestions: QuizQuestionPrivate[];
   supplementalQuestions: QuizQuestionPrivate[];
@@ -49,6 +58,12 @@ function progressFor(snapshot: Awaited<ReturnType<LearningSessionRepository["get
     progress.push(node);
   }
   return progress;
+}
+
+const RESULT_RANK = { insufficient: 0, fail: 1, partial: 2, pass: 3 } as const;
+
+function bestResult(current: NodeActivityProgress["activities"][number]["bestResult"], latest: NonNullable<NodeActivityProgress["activities"][number]["result"]>) {
+  return current === undefined || RESULT_RANK[latest] > RESULT_RANK[current] ? latest : current;
 }
 
 export class QuizActivityRuntime {
@@ -99,25 +114,48 @@ export class QuizActivityRuntime {
     if (assets.activity.activityVersion !== input.activityVersion) throw new LearningSessionRepositoryError("activity_version_conflict", "Activity version is stale");
     const previousAttempts = (await Promise.all(entry.attemptIds.map((attemptId) => this.options.sessions.getQuizAttempt({ ...input, attemptId }))))
       .filter((attempt): attempt is QuizAttemptSnapshot => attempt !== undefined);
-    const excludedQuestionIds = previousAttempts.flatMap((attempt) => attempt.questions.map((question) => question.questionId));
+    const excludedQuestionIds = previousAttempts.at(-1)?.questions.map((question) => question.questionId) ?? [];
     const retryNumber = entry.quizRetryCount;
-    const selected = assets.legacyQuestion === undefined
-      ? await (async () => {
-        const dynamic = await this.options.content.prepareQuiz({
+    const dynamic = assets.legacyQuestion === undefined
+      ? await this.options.content.prepareQuiz({
           profileRevision: input.profileRevision,
           activityId: input.activityId,
           retryNumber,
           excludedQuestionIds,
-        });
-        return selectDeterministicQuizContent({
-          dynamic: dynamic.status === "accepted" ? dynamic.questions ?? [] : [],
+          lessonVariantId: lessonVariantForPreference(snapshot.diagnosticDraft?.background?.explanation_preference),
+        })
+      : undefined;
+    const selected = assets.legacyQuestion === undefined
+      ? selectDeterministicQuizContent({
+          dynamic: dynamic?.status === "accepted" ? dynamic.questions ?? [] : [],
           supplemental: assets.supplementalQuestions,
           fixed: assets.fixedQuestions,
           excludedQuestionIds,
-          allowedSourceAnchorIds: assets.knowledgePoint.sourceAnchorIds,
-        });
-      })()
+          allowedSourceAnchorIds: assets.allowedSourceAnchorIds ?? assets.knowledgePoint.sourceAnchorIds,
+        })
       : { source: "fixed" as const, questions: [structuredClone(assets.legacyQuestion)] };
+    const questionSource = selected.source === "dynamic"
+      ? dynamic?.origin === "live_model" ? "ai_live" as const : "ai_recorded" as const
+      : selected.source === "supplemental" ? "ai_supplemented" as const
+        : selected.source === "fixed" ? "profile_fixed" as const : "insufficient" as const;
+    let gradingBinding: QuizGradingBinding;
+    if (selected.source === "dynamic") {
+      if (dynamic?.status !== "accepted" || dynamic.reviewBinding === undefined
+          || dynamic.reviewBinding.acceptedQuestionSetSha256 !== quizQuestionSetSha256(selected.questions)) {
+        throw new QuizRuntimeError("submission_contract_error", "AI quiz is missing its accepted review binding");
+      }
+      gradingBinding = {
+        source: "ai_reviewed",
+        generationRunId: dynamic.reviewBinding.generationRunId,
+        questionSetSha256: dynamic.reviewBinding.acceptedQuestionSetSha256,
+      };
+    } else {
+      gradingBinding = {
+        source: selected.source === "supplemental" ? "profile_supplemental"
+          : selected.source === "fixed" ? "profile_fixed" : "none",
+        questionSetSha256: quizQuestionSetSha256(selected.questions),
+      };
+    }
     const core = new DeterministicQuizRuntime();
     const opened = core.open({
       requestId: input.requestId,
@@ -126,6 +164,8 @@ export class QuizActivityRuntime {
       activity: assets.activity,
       questions: selected.questions,
       retryNumber,
+      questionSource,
+      gradingBinding,
       ...(assets.legacySubtype === undefined ? {} : { legacySubtype: assets.legacySubtype }),
     });
     const attempt = core.getAttempt(opened.attemptId);
@@ -198,10 +238,12 @@ export class QuizActivityRuntime {
     if (node === undefined || entry === undefined || !entry.attemptIds.includes(input.attemptId)) {
       throw new LearningSessionRepositoryError("prerequisite_violation", "Quiz Attempt is not current activity progress");
     }
-    const retryPending = evaluated.result.verdict !== "pass" && attempt.retryNumber === 0;
+    const retryPending = evaluated.result.verdict !== "pass";
     entry.status = retryPending ? "in_progress" : evaluated.result.verdict === "insufficient" ? "insufficient" : "completed";
     entry.result = evaluated.result.verdict;
-    entry.quizRetryCount = retryPending ? 1 : attempt.retryNumber;
+    entry.bestResult = bestResult(entry.bestResult, evaluated.result.verdict);
+    entry.quizRetryCount = retryPending ? attempt.retryNumber + 1 : attempt.retryNumber;
+    delete entry.continuedWithGap;
     entry.updatedAt = now;
     const evidence = evaluated.evidence;
     const nextEvidenceVersion = snapshot.latestCommit.evidenceVersion + (evidence === undefined ? 0 : 1);
@@ -247,6 +289,49 @@ export class QuizActivityRuntime {
       profileRevision: committed.profileRevision,
       ...(committed.committedEvidenceId === undefined ? {} : { evidenceId: committed.committedEvidenceId, evidenceVersion: committed.latestCommit.evidenceVersion }),
     } };
+  }
+
+  async continueActivityWithGap(input: ContinueActivityWithGapInput): Promise<ContinueActivityWithGapOutput> {
+    const snapshot = await this.options.sessions.getBoundSnapshot(input.sessionId);
+    if (snapshot.profileRevision !== input.profileRevision) throw new LearningSessionRepositoryError("profile_revision_conflict", "Profile revision does not match session");
+    const progress = structuredClone(snapshot.activityProgress);
+    const node = progress.find((item) => item.activities.some((activity) => activity.activityId === input.activityId));
+    const entry = node?.activities.find((activity) => activity.activityId === input.activityId);
+    const result = entry?.result;
+    const replay = snapshot.latestCommit.requestId === input.requestId && entry?.continuedWithGap === true && entry.attemptIds.at(-1) === input.attemptId;
+    if (replay && result !== undefined && result !== "pass") {
+      return { requestId: input.requestId, sessionId: snapshot.sessionId, sessionVersion: snapshot.sessionVersion, profileRevision: snapshot.profileRevision, activityId: input.activityId, status: "insufficient", result, attemptCount: entry.attemptIds.length };
+    }
+    if (snapshot.sessionVersion !== input.sessionVersion) throw new LearningSessionRepositoryError("session_version_conflict", "Session version is stale");
+    if (entry === undefined || entry.status !== "in_progress" || entry.attemptIds.length < 2 || entry.attemptIds.at(-1) !== input.attemptId || result === undefined || result === "pass") {
+      throw new LearningSessionRepositoryError("prerequisite_violation", "Only a twice-attempted unresolved quiz can continue with a learning gap");
+    }
+    const attempt = await this.options.sessions.getQuizAttempt({ ...input, sessionVersion: snapshot.sessionVersion });
+    if (attempt?.status !== "submitted") throw new LearningSessionRepositoryError("prerequisite_violation", "Latest quiz Attempt is not submitted");
+    entry.status = "insufficient";
+    entry.continuedWithGap = true;
+    entry.updatedAt = this.now().toISOString();
+    const suffix = await this.options.pathSuffix.replan({
+      snapshot: { ...snapshot, activityProgress: progress },
+      knowledgeStates: snapshot.knowledgeStates,
+      evidenceVersion: snapshot.latestCommit.evidenceVersion,
+      trigger: "error_remediation",
+    });
+    const committed = await this.options.sessions.commit({
+      requestId: input.requestId,
+      sessionId: input.sessionId,
+      sessionVersion: input.sessionVersion,
+      profileRevision: input.profileRevision,
+      candidate: {
+        requestId: input.requestId,
+        knowledgeStates: snapshot.knowledgeStates,
+        activityProgress: progress,
+        currentAttempt: null,
+        ...(suffix.path === undefined ? {} : { pathCandidate: toPathSafeSnapshot(suffix.path), internalPathCandidate: suffix.path }),
+        nextStage: "learning",
+      },
+    });
+    return { requestId: input.requestId, sessionId: committed.sessionId, sessionVersion: committed.sessionVersion, profileRevision: committed.profileRevision, activityId: input.activityId, status: "insufficient", result, attemptCount: entry.attemptIds.length };
   }
 
   async getAttempt(input: { sessionId: string; sessionVersion: number; profileRevision: number; activityId: string; attemptId: string }): Promise<ActivityAttemptSafeView> {
@@ -295,6 +380,7 @@ export class QuizActivityRuntime {
         supportingKnowledgePointIds: [...attempt.supportingKnowledgePointIds],
         questions: [{ questionId: question.questionId, kind: question.kind, prompt: question.prompt, options: [...question.options] }],
         retryNumber: attempt.retryNumber,
+        questionSource: attempt.questionSource ?? "profile_fixed",
       };
     }
     return {
@@ -307,6 +393,7 @@ export class QuizActivityRuntime {
       supportingKnowledgePointIds: [...attempt.supportingKnowledgePointIds],
       questions: attempt.questions.map(({ questionId, kind, prompt, options }) => ({ questionId, kind, prompt, options: [...options] })),
       retryNumber: attempt.retryNumber,
+      questionSource: attempt.questionSource ?? "profile_fixed",
     };
   }
 }
@@ -399,6 +486,7 @@ export class ProfileFamilyQuizActivityAssetResolver {
           supportingKnowledgePointIds: [...stored.supportingKnowledgePointIds],
         },
         knowledgePoint: { id: point.id, sourceAnchorIds: [...point.sourceAnchorIds], ...(point.requiresCodeEvidence === undefined ? {} : { requiresCodeEvidence: point.requiresCodeEvidence }) },
+        allowedSourceAnchorIds: [...new Set([...stored.sourceAnchorIds, ...point.sourceAnchorIds])],
         knowledgePoints: [point].map((item) => ({ id: item.id, ...(item.requiresCodeEvidence === undefined ? {} : { requiresCodeEvidence: item.requiresCodeEvidence }) })),
         fixedQuestions: [],
         supplementalQuestions: [],
@@ -438,6 +526,7 @@ export class ProfileFamilyQuizActivityAssetResolver {
         supportingKnowledgePointIds: [...stored.supportingKnowledgePointIds],
       },
       knowledgePoint: { id: point.id, sourceAnchorIds: [...point.sourceAnchorIds], ...(point.requiresCodeEvidence === undefined ? {} : { requiresCodeEvidence: point.requiresCodeEvidence }) },
+      allowedSourceAnchorIds: [...new Set([...stored.sourceAnchorIds, ...point.sourceAnchorIds])],
       knowledgePoints: knowledgePoints.map((item) => ({ id: item.id, ...(item.requiresCodeEvidence === undefined ? {} : { requiresCodeEvidence: item.requiresCodeEvidence }) })),
       fixedQuestions: merge(stored.fixedQuestionGroupId, "fixed"),
       supplementalQuestions: stored.supplementalQuestionGroupId === undefined ? [] : merge(stored.supplementalQuestionGroupId, "supplemental"),

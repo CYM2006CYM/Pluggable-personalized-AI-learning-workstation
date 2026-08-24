@@ -284,3 +284,331 @@ MIT — 见 [LICENSE](LICENSE)。
 
 - [pi-loop-graph-sdk](https://github.com/0liveiraaa/pi-loop-graph-sdk) — Loop Graph SDK 运行时
 - [pi-review-agent](https://github.com/0liveiraaa/pi-review-agent) — 参考实现
+
+## Windows 本地网页 Demo 完整部署流程
+
+本节用于在一台新的 Windows 10/11 电脑上，从零部署当前六节 Pandas 中文教学网页。下面的命令均在 **PowerShell** 中执行；除非步骤明确要求，否则不需要管理员权限。
+
+当前比赛 Demo 的合同环境为：
+
+```text
+Node.js 22.23.1
+npm 10.9.8
+Python 3.13.7
+pandas 3.0.5
+网页地址 http://127.0.0.1:5173/
+默认本地 API 端口 4311
+实时模型提示词版本 w4-d2-v8
+```
+
+> API Key 只能放在当前 PowerShell 进程的环境变量中。不要把真实 Key 写入 README、`.env`、源码、截图、聊天记录或 Git 提交。
+
+### 1. 安装基础工具
+
+打开一个新的 PowerShell，检查 Git、NVM 和 Conda：
+
+```powershell
+git --version
+nvm version
+conda --version
+```
+
+缺少哪个工具，就安装哪个工具：
+
+```powershell
+winget install --id Git.Git -e
+winget install --id CoreyButler.NVMforWindows -e
+winget install --id Anaconda.Miniconda3 -e
+```
+
+安装结束后关闭所有 PowerShell 窗口，再重新打开 PowerShell。旧窗口不会自动读取安装程序新增的 PATH。
+
+如果新窗口中 `conda` 仍不可用，先找到 Miniconda 的实际安装目录，再执行初始化：
+
+```powershell
+$condaExe = "$env:USERPROFILE/miniconda3/Scripts/conda.exe"
+Test-Path $condaExe
+& $condaExe init powershell
+```
+
+`Test-Path` 必须输出 `True`。如果 Miniconda 安装在其他位置，请把 `$condaExe` 改成实际路径。初始化后再次关闭并重新打开 PowerShell。
+
+### 2. 克隆仓库
+
+首次部署时执行：
+
+```powershell
+$sourceRoot = Join-Path $env:USERPROFILE "source"
+New-Item -ItemType Directory -Force -Path $sourceRoot | Out-Null
+Set-Location $sourceRoot
+git clone https://github.com/CYM2006CYM/Pluggable-personalized-AI-learning-workstation.git
+$repoRoot = Join-Path $sourceRoot "Pluggable-personalized-AI-learning-workstation"
+$projectRoot = Join-Path $repoRoot "pi-study-helper"
+Set-Location $projectRoot
+Test-Path ".\package.json"
+```
+
+最后一条必须输出 `True`。如果已经克隆过仓库，不要再次 `git clone`；确认本地没有未保存修改后，从仓库根目录快进到最新 `main`：
+
+```powershell
+Set-Location $repoRoot
+git status --short
+git pull --ff-only origin main
+Set-Location $projectRoot
+```
+
+`git status --short` 有输出时，先处理自己的本地修改，不要用 `reset --hard` 覆盖文件。
+
+### 3. 安装并切换合同 Node.js
+
+```powershell
+nvm install 22.23.1
+nvm use 22.23.1
+node --version
+npm.cmd --version
+```
+
+预期输出：
+
+```text
+v22.23.1
+10.9.8
+```
+
+如果仍提示找不到 `nvm` 或 `node`，关闭 PowerShell 后重新打开；仍无效时重启 Windows。不要用 Node 24 代替合同版本。
+
+### 4. 创建合同 Python 环境
+
+环境只需创建一次：
+
+```powershell
+conda create -n pi-study-py313 python=3.13.7 -y
+conda activate pi-study-py313
+python -m pip install --upgrade pip
+python -m pip install "pandas==3.0.5"
+```
+
+以后重新打开 PowerShell 时，只需激活：
+
+```powershell
+conda activate pi-study-py313
+```
+
+核对实际版本和解释器：
+
+```powershell
+python --version
+python -c "import sys, pandas; print(sys.executable); print(pandas.__version__)"
+```
+
+必须看到 `Python 3.13.7` 和 `3.0.5`。不要通过修改环境锁绕过版本检查。
+
+### 5. 安装项目依赖
+
+进入应用目录并按锁文件安装：
+
+```powershell
+Set-Location $projectRoot
+npm.cmd ci
+```
+
+`npm.cmd ci` 需要访问 npm registry 和 GitHub，因为 Loop Graph SDK 使用固定 Git 提交。不要改用 `npm install` 更新锁文件，也不要执行 `npm audit fix`。
+
+安装完成后执行不调用模型的检查：
+
+```powershell
+npm.cmd run typecheck
+npm.cmd run build:demo
+npm.cmd run build:web
+```
+
+### 6. 绑定 Python、数据目录和端口
+
+以下变量只对当前 PowerShell 窗口有效：
+
+```powershell
+$env:PYTHONNOUSERSITE = "1"
+$env:PI_PYTHON_EXECUTABLE = (python -c "import sys; print(sys.executable)").Trim()
+$env:PI_STUDY_API_PORT = "4311"
+$env:PI_STUDY_DATA = Join-Path $projectRoot ".demo-data-live"
+New-Item -ItemType Directory -Force -Path $env:PI_STUDY_DATA | Out-Null
+Write-Host "PI_PYTHON_EXECUTABLE=$env:PI_PYTHON_EXECUTABLE"
+Write-Host "PI_STUDY_API_PORT=$env:PI_STUDY_API_PORT"
+Write-Host "PI_STUDY_DATA=$env:PI_STUDY_DATA"
+```
+
+`PI_PYTHON_EXECUTABLE` 应指向 `pi-study-py313` 环境中的 `python.exe`。`.demo-data-live` 是本机运行数据，不得提交到 Git。
+
+如果 4311 被占用，先检查占用者：
+
+```powershell
+Get-NetTCPConnection -State Listen -LocalPort 4311 -ErrorAction SilentlyContinue
+```
+
+确认是旧的 Pi Study Helper 后，回到旧服务窗口按 `Ctrl+C`。不要结束不确定的系统进程。确实需要换端口时，可以在启动前把 `PI_STUDY_API_PORT` 改成另一个空闲本地端口；前端和后端会读取同一个值。
+
+### 7. 配置 DeepSeek API Key
+
+真实 AI 模式使用 OpenAI 兼容接口。使用安全输入，Key 不会显示在屏幕上：
+
+```powershell
+$env:OPENAI_BASE_URL = "https://api.deepseek.com/v1"
+$env:OPENAI_MODEL = "deepseek-chat"
+$secret = Read-Host "请输入 DeepSeek API Key（输入时不显示）" -AsSecureString
+$env:OPENAI_API_KEY = [System.Net.NetworkCredential]::new("", $secret).Password
+Remove-Variable secret
+```
+
+只检查变量是否存在，不打印 Key：
+
+```powershell
+if ([string]::IsNullOrWhiteSpace($env:OPENAI_API_KEY)) { throw "OPENAI_API_KEY 未设置" }
+Write-Host "OPENAI_API_KEY=已设置（内容不显示）"
+Write-Host "OPENAI_BASE_URL=$env:OPENAI_BASE_URL"
+Write-Host "OPENAI_MODEL=$env:OPENAI_MODEL"
+```
+
+`OPENAI_BASE_URL`、`OPENAI_MODEL` 和 `OPENAI_API_KEY` 必须同时存在。关闭当前 PowerShell 后，临时Key自动失效。
+
+### 8. 启动真实 AI 网页
+
+确认仍在同一个已激活Conda、已配置Key的PowerShell中执行：
+
+```powershell
+Set-Location $projectRoot
+npm.cmd run demo:live
+```
+
+启动成功后，终端必须出现类似：
+
+```text
+PI_STUDY_READY mode=live_model promptVersion=w4-d2-v8 apiPort=4311 url=http://127.0.0.1:5173/
+```
+
+然后打开：
+
+```text
+http://127.0.0.1:5173/
+```
+
+保持启动服务的 PowerShell 窗口开启。停止服务时回到该窗口按 `Ctrl+C`。
+
+### 9. 确认题目确实来自实时 AI
+
+每次验收新版本时新建学习会话，不要恢复旧会话。进入某一节教学内容并打开课后客观题，实时链路为：
+
+```text
+当前会话选中的中文教学正文
+→ Generator 生成4至6道中文单选题和候选答案
+→ Hunter 逐题检查题干、选项、答案、解析和正文依据
+→ 高风险或存在争议时 Defender 辩护
+→ Judge 裁决；安全措辞不合规时允许一次 Judge Repair
+→ 审核通过后展示AI题组
+→ API失败、超时或审核不通过时使用固定题保障
+```
+
+页面右上角应显示“AI个性化生成题组”。显示“固定题保障”表示本次没有通过实时生成与审核链，不能把它记录为实时模型成功。实时审核可能需要几十秒，等待期间不要重复点击。
+
+注意：
+
+- `npm.cmd run demo:live` 才是实时 API 模式。
+- `npm.cmd run demo` 使用录制响应，适合离线演示和回归测试，不代表当次调用了DeepSeek。
+- 录制文件里的 `modelId=deepseek-chat` 只是历史字段，不是实时调用证据。
+- 网页能打开只证明本地服务启动，不能单独证明实时AI成功。
+
+### 10. 不使用 API 的离线启动
+
+需要先确认网页和确定性学习闭环时，不配置 `OPENAI_*`，执行：
+
+```powershell
+Set-Location $projectRoot
+npm.cmd run demo
+```
+
+离线模式会使用录制响应或固定保障题。它不会产生实时模型通过证据，但诊断、路径、教学正文、正式活动、Node/Python判分、重试和恢复仍可本地运行。
+
+### 11. 常见故障
+
+#### 网页显示固定题保障
+
+先确认启动终端包含：
+
+```text
+mode=live_model promptVersion=w4-d2-v8
+```
+
+如果没有，说明启动方式或运行进程不正确。回到旧窗口按 `Ctrl+C`，在保留三个 `OPENAI_*` 变量的同一窗口重新执行 `npm.cmd run demo:live`，然后创建新会话。
+
+如果启动标志正确但仍回退，可能是API错误、超时、Generator结构不合法或Agent审核拒绝。保留本地 `.demo-data-live` 供负责人读取脱敏轨迹，不要把该目录上传。
+
+#### 页面打不开或端口被占用
+
+```powershell
+Get-NetTCPConnection -State Listen -LocalPort 5173,4311 -ErrorAction SilentlyContinue
+```
+
+优先在旧服务窗口按 `Ctrl+C`，再重新启动。网页固定使用5173；4311是本地API端口，不是浏览器页面地址。
+
+#### Python代码评测提示环境不匹配
+
+```powershell
+conda activate pi-study-py313
+$env:PYTHONNOUSERSITE = "1"
+$env:PI_PYTHON_EXECUTABLE = (python -c "import sys; print(sys.executable)").Trim()
+node --version
+python --version
+python -c "import pandas; print(pandas.__version__)"
+```
+
+版本必须分别为Node `v22.23.1`、Python `3.13.7`和pandas `3.0.5`。
+
+#### API变量不完整
+
+```powershell
+@("OPENAI_BASE_URL", "OPENAI_MODEL", "OPENAI_API_KEY") | ForEach-Object {
+  $value = [Environment]::GetEnvironmentVariable($_)
+  Write-Host "$_=" -NoNewline
+  Write-Host ($(if ([string]::IsNullOrWhiteSpace($value)) { "未设置" } else { "已设置" }))
+}
+```
+
+不要执行会打印 `$env:OPENAI_API_KEY` 实际内容的命令。
+
+### 12. 最短重复启动命令
+
+完成首次安装、克隆和 `npm.cmd ci` 后，新开 PowerShell 可逐行执行：
+
+```powershell
+$repoRoot = Join-Path $env:USERPROFILE "source/Pluggable-personalized-AI-learning-workstation"
+$projectRoot = Join-Path $repoRoot "pi-study-helper"
+Set-Location $projectRoot
+nvm use 22.23.1
+conda activate pi-study-py313
+$env:PYTHONNOUSERSITE = "1"
+$env:PI_PYTHON_EXECUTABLE = (python -c "import sys; print(sys.executable)").Trim()
+$env:PI_STUDY_API_PORT = "4311"
+$env:PI_STUDY_DATA = Join-Path $projectRoot ".demo-data-live"
+$env:OPENAI_BASE_URL = "https://api.deepseek.com/v1"
+$env:OPENAI_MODEL = "deepseek-chat"
+$secret = Read-Host "请输入 DeepSeek API Key（输入时不显示）" -AsSecureString
+$env:OPENAI_API_KEY = [System.Net.NetworkCredential]::new("", $secret).Password
+Remove-Variable secret
+node --version
+python --version
+python -c "import pandas; print(pandas.__version__)"
+npm.cmd run demo:live
+```
+
+浏览器打开 `http://127.0.0.1:5173/`。
+
+停止服务后，可清除当前 PowerShell 中的临时变量：
+
+```powershell
+Remove-Item Env:OPENAI_API_KEY -ErrorAction SilentlyContinue
+Remove-Item Env:OPENAI_BASE_URL -ErrorAction SilentlyContinue
+Remove-Item Env:OPENAI_MODEL -ErrorAction SilentlyContinue
+Remove-Item Env:PI_PYTHON_EXECUTABLE -ErrorAction SilentlyContinue
+Remove-Item Env:PI_STUDY_API_PORT -ErrorAction SilentlyContinue
+Remove-Item Env:PI_STUDY_DATA -ErrorAction SilentlyContinue
+Remove-Item Env:PYTHONNOUSERSITE -ErrorAction SilentlyContinue
+```

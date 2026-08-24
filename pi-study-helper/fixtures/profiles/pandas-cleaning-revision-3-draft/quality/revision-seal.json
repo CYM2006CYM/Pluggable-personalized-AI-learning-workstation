@@ -6,8 +6,8 @@
     {
       "path": "activities/learning-activities.json",
       "hashMode": "raw-binary",
-      "sha256": "65c38c2098f84ba9124e3011d19386f5f280140af1cf763c52a4f74a6e1e8653",
-      "byteLength": 17142
+      "sha256": "d639aca566371159a9f05212a4412fba939de407d87087a9556ce93093878f40",
+      "byteLength": 33974
     },
     {
       "path": "assessments/diagnostic/private/answer-key.json",
@@ -40,6 +40,12 @@
       "byteLength": 110
     },
     {
+      "path": "assessments/private/known-wrong/wrong-read-csv.py",
+      "hashMode": "raw-binary",
+      "sha256": "2df538e6597d5f9826779289496c0192706513b4aae11b3e7d98dca21f414f03",
+      "byteLength": 75
+    },
+    {
       "path": "assessments/private/known-wrong/wrong-structure.py",
       "hashMode": "raw-binary",
       "sha256": "b69266121f954761295d7ea8dce38959d7fa6d6f31925bdb86f645e1f136d973",
@@ -60,14 +66,14 @@
     {
       "path": "assessments/private/task-bundles.json",
       "hashMode": "raw-binary",
-      "sha256": "32127112141efd833c96f82d6955ddd6060bdad51bb2ba8f38ea258e2728c30d",
-      "byteLength": 32508
+      "sha256": "1dde7bf18a6ee90957044eec73ffedb19f6c975c2837c36d92ed58541e80450d",
+      "byteLength": 36806
     },
     {
       "path": "assessments/private/test-cases.json",
       "hashMode": "raw-binary",
-      "sha256": "373ced00c649cad669b300cad61f884018726fd9c34b276329104056635bc27c",
-      "byteLength": 4267
+      "sha256": "63a5436dc536f16cb39264046118c31436e519c799b7241f7b25c6904b708d7f",
+      "byteLength": 4623
     },
     {
       "path": "assessments/private/tests/test-duplicates-hidden.py",
@@ -124,6 +130,12 @@
       "byteLength": 1031
     },
     {
+      "path": "assessments/private/tests/test-read-csv-hidden.py",
+      "hashMode": "raw-binary",
+      "sha256": "1186331b2374c62c5a480880e4de1c06d651ded268735e0028c2449f46883b93",
+      "byteLength": 572
+    },
+    {
       "path": "assessments/private/tests/test-structure-hidden.py",
       "hashMode": "raw-binary",
       "sha256": "935f988b1d21ebd927fec8015328599376ca0ce05be593130130c9ede7c4dc4e",
@@ -138,8 +150,8 @@
     {
       "path": "assessments/public/test-cases.json",
       "hashMode": "raw-binary",
-      "sha256": "7eff3cba4069bf4b021ec55b0456c5be5f5b6d9daa5edc616c26613bb2b2af24",
-      "byteLength": 1851
+      "sha256": "07c23de545f2e6489015b1c647f3756e75a208c14fcbf349bc34782e5985b302",
+      "byteLength": 2217
     },
     {
       "path": "assessments/public/tests/test-duplicates-public.py",
@@ -158,6 +170,12 @@
       "hashMode": "raw-binary",
       "sha256": "acaa0a8141a2d300452dd4bb786376da5b227c339f897325a20e4a359a0b3906",
       "byteLength": 924
+    },
+    {
+      "path": "assessments/public/tests/test-read-csv-public.py",
+      "hashMode": "raw-binary",
+      "sha256": "aee18e579c821de88badc4e8f2072d68ed8dab2ea9d301d6798e467c8f9cd183",
+      "byteLength": 574
     },
     {
       "path": "assessments/public/tests/test-structure-public.py",
@@ -204,8 +222,14 @@
     {
       "path": "cards/learning-cards.json",
       "hashMode": "raw-binary",
-      "sha256": "9ce43b22d11a29a0e6a7d086250c6895b4c8e5c3a206d1867b67e601f4133129",
-      "byteLength": 6288
+      "sha256": "2d7814665fb694fc2cc7174b1dec6092a94418f896700bc62dbfdb557c36b66e",
+      "byteLength": 496987
+    },
+    {
+      "path": "cards/rich-lessons-maintenance.md",
+      "hashMode": "raw-binary",
+      "sha256": "8065a632ad6a2afae5dcd33994a27461bae0acba2b4590a54dad8de3aa9c33de",
+      "byteLength": 2326
     },
     {
       "path": "chapters/chapter-01-data-entry-and-inspection/section-01-read-csv.md",
@@ -294,8 +318,8 @@
     {
       "path": "knowledge/knowledge-points.json",
       "hashMode": "raw-binary",
-      "sha256": "d34c0b4b362ef09ca1f2dcc403a54a0c9a3c36e63de07dc3ffb8b6644452f5ed",
-      "byteLength": 4314
+      "sha256": "bd16ddc343a762eaf374bc52cab46e3046a8c5ab1f3784e6db333ad5d70b5053",
+      "byteLength": 4338
     },
     {
       "path": "profile.json",
@@ -412,6 +436,12 @@
       "byteLength": 1809
     },
     {
+      "path": "reference-solutions/solution-read-csv.py",
+      "hashMode": "raw-binary",
+      "sha256": "054e688726c1d089145bd9fc3fdf439237bb171aa8065f0bf87f3bb9ac6c9f9b",
+      "byteLength": 98
+    },
+    {
       "path": "reference-solutions/solution-structure.py",
       "hashMode": "raw-binary",
       "sha256": "4408b65632045e036f9f877f6fb5af8d7ddeb31e38f118dc8756929316df55f5",
@@ -440,6 +470,12 @@
       "hashMode": "raw-binary",
       "sha256": "880a988dabd30c1067621ca5323b5c89c13449cbd60ad93b50f850b22f0388dd",
       "byteLength": 2427
+    },
+    {
+      "path": "rubrics/rubric-read-csv.json",
+      "hashMode": "raw-binary",
+      "sha256": "cefeefb6b0a2529ba113d425eadfb5160a505a931f9cf1baf46d5b4b553f19df",
+      "byteLength": 524
     },
     {
       "path": "rubrics/rubric-structure.json",
@@ -472,5 +508,5 @@
       "byteLength": 455
     }
   ],
-  "assetTreeSha256": "ccff2e2afdabaad262baeaa498b527438fcadeec1ddf5e198289f8404071e85d"
+  "assetTreeSha256": "f0c009169a090de8ec9beb5afcf6aaa971f8aac847e235c96c36720f6de8d45c"
 }

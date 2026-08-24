@@ -1,0 +1,26 @@
+{
+  "rubricId": "rubric-read-csv",
+  "version": "1.0.0-draft",
+  "passThreshold": 1.0,
+  "dimensions": [
+    {
+      "dimensionId": "read_csv",
+      "label": "CSV读取合同",
+      "weight": 1.0,
+      "scoringMethod": "tests",
+      "blocking": true,
+      "safeFeedbackCodes": [
+        "dataframe_required",
+        "columns_invalid",
+        "dtype_invalid",
+        "content_changed"
+      ]
+    }
+  ],
+  "dimensionTestMap": {
+    "read_csv": [
+      "test-read-csv-public",
+      "test-read-csv-hidden"
+    ]
+  }
+}

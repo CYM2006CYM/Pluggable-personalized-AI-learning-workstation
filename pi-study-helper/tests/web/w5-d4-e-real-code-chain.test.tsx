@@ -11,6 +11,7 @@ import { createDemoRuntime, type DemoRuntime } from "../../src/demo/composition-
 import { startHttpServer, type HttpServerHandle } from "../../src/demo/http-server.js";
 import { ProfileFamilyQuizActivityAssetResolver } from "../../src/application/quiz-activity-runtime.js";
 import { ProfileFamilyRepository } from "../../src/repositories/profile-family-repository.js";
+import { recordedQuizAnswers } from "./fixtures/recorded-quiz-answers.js";
 import { appRoutes } from "../../src/web/app/routes.js";
 import { useUiStore } from "../../src/web/state/ui-store.js";
 
@@ -18,6 +19,7 @@ import { useUiStore } from "../../src/web/state/ui-store.js";
 const fixturesRoot = resolve("fixtures/profiles");
 const profileRoot = resolve(fixturesRoot, "pandas-cleaning-revision-3-draft");
 const solutionFiles: Readonly<Record<string, string>> = {
+  "act-load-csv": "solution-read-csv.py",
   "act-inspect-dataframe": "solution-structure.py",
   "act-missing": "solution-missing.py",
   "act-duplicates": "solution-duplicates.py",
@@ -103,11 +105,11 @@ async function submitCodeThroughPage(baseUrl: string, opened: any, code: string)
   await waitFor(() => !submit.disabled, "formal_submit_enabled");
   await act(async () => { submit.click(); });
   try {
-    await waitFor(() => host.textContent?.includes("SERVER VERDICT") === true, "formal_result");
+    await waitFor(() => host.textContent?.includes("权威评测结果") === true, "formal_result");
   } catch {
     throw new Error(`formal_result_missing:${host.textContent?.slice(-800)}`);
   }
-  expect(host.textContent).toContain("pass");
+  expect(host.textContent).toContain("通过");
   act(() => root?.unmount());
   root = undefined;
   vi.unstubAllGlobals();
@@ -147,6 +149,7 @@ describe("W5 D4 E real Web code chain", () => {
     const profiles = new ProfileFamilyRepository({ dataRoot: profileDataRoot, fixturesRoot });
     await profiles.activateRevision3Draft("pandas-cleaning");
     const quizzes = new ProfileFamilyQuizActivityAssetResolver(profiles);
+    const recordedAnswers = await recordedQuizAnswers();
     const completedCodeActivities: string[] = [];
 
     for (let step = 0; step < 24; step += 1) {
@@ -169,7 +172,10 @@ describe("W5 D4 E real Web code chain", () => {
         const assets = await quizzes.loadAssets("pandas-cleaning", 3, activity.activityId);
         const privateQuestions = [...assets.fixedQuestions, ...assets.supplementalQuestions,
           ...(assets.legacyQuestion === undefined ? [] : [assets.legacyQuestion])];
-        const answersById = new Map(privateQuestions.map((question) => [question.questionId, question.correctAnswer]));
+        const answersById = new Map<string, string | boolean>([
+          ...privateQuestions.map((question) => [question.questionId, question.correctAnswer] as const),
+          ...recordedAnswers,
+        ]);
         const answers = opened.activity.questions.map((question: any) => ({ questionId: question.questionId, answer: answersById.get(question.questionId) }));
         const submitted = await post(url, `/api/activities/${activity.activityId}/submit`, {
           ...meta(opened, `e-d4-quiz-${step}`), sessionId, kind: "quiz", activityVersion: opened.activity.activityVersion,
@@ -180,7 +186,7 @@ describe("W5 D4 E real Web code chain", () => {
     }
 
     expect(completedCodeActivities).toEqual([
-      "act-inspect-dataframe", "act-missing", "act-duplicates", "act-types", "act-practical",
+      "act-load-csv", "act-inspect-dataframe", "act-missing", "act-duplicates", "act-types", "act-practical",
     ]);
     const final = await request(url, `/api/bootstrap?recoverSessionId=${sessionId}`);
     const finalNext = await request(url, `/api/sessions/${sessionId}/next-step?sessionVersion=${final.session.view.sessionVersion}&profileRevision=${final.session.view.profileRevision}&pathVersion=${final.session.path.pathVersion}`);

@@ -15,7 +15,8 @@ const showcaseRoot = resolve(workspaceRoot, "evaluation/showcases");
 
 const EXPECTED_LOCK_SHA256 = "59917d1528d031f46a1e76359d99628e810f2dfa78a92d66e03386c860fbaf43";
 const EXPECTED_ENVIRONMENT_HASH = "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76";
-const EXPECTED_SEAL = "ccff2e2afdabaad262baeaa498b527438fcadeec1ddf5e198289f8404071e85d";
+const HISTORICAL_W5_SEAL = "ccff2e2afdabaad262baeaa498b527438fcadeec1ddf5e198289f8404071e85d";
+const CURRENT_PROFILE_SEAL = "f0c009169a090de8ec9beb5afcf6aaa971f8aac847e235c96c36720f6de8d45c";
 const EXPECTED_REVISION2_TREE = "2a4538272cc47a3451b434999d620f429e5deaa0eb0f2c3f95fa76e53d80786d";
 const EXPECTED_UPSTREAM = "6acc56fa03986797be54156af639a905c2e74a64";
 
@@ -111,7 +112,7 @@ for (const field of bMapping.fields) {
 ensure(bMapping.decision === "NO_PROFILE_BYTE_CHANGE_REQUIRED", "B must not fabricate an environment-lock byte change");
 
 const recalculatedSeal = await calculateSeal();
-ensure(storedSeal.assetTreeSha256 === EXPECTED_SEAL && recalculatedSeal.assetTreeSha256 === EXPECTED_SEAL, "revision 3 seal hash changed");
+ensure(storedSeal.assetTreeSha256 === CURRENT_PROFILE_SEAL && recalculatedSeal.assetTreeSha256 === CURRENT_PROFILE_SEAL, "current revision 3 seal hash changed");
 ensure(stableJson(storedSeal.entries) === stableJson(recalculatedSeal.entries), "revision 3 seal entries do not match the asset tree");
 const revision2 = await rawSnapshot(revision2Root);
 ensure(revision2.fileCount === 71 && revision2.treeSha256 === EXPECTED_REVISION2_TREE, "revision 2 bytes changed");
@@ -133,7 +134,7 @@ for (let index = 0; index < cases.length; index += 1) {
   ensure(!caseIds.has(item.caseId), `duplicate caseId: ${item.caseId}`);
   caseIds.add(item.caseId);
   ensure(item.profileBinding.subjectId === "pandas-cleaning" && item.profileBinding.profileRevision === 3, `case Profile binding is invalid: ${item.caseId}`);
-  ensure(item.profileBinding.assetTreeSha256 === EXPECTED_SEAL, `case seal binding is invalid: ${item.caseId}`);
+  ensure(item.profileBinding.assetTreeSha256 === HISTORICAL_W5_SEAL, `historical case seal binding is invalid: ${item.caseId}`);
   ensure(item.entry.mode === "recommended" && item.entry.goalId === "goal-clean-orders" && item.entry.availableMinutes === 400, `case common entry boundary changed: ${item.caseId}`);
   ensure(allowedExperience.has(item.background.python_experience) && allowedExperience.has(item.background.pandas_experience), `case experience value is invalid: ${item.caseId}`);
   ensure(allowedPreference.has(item.background.explanation_preference), `case explanation preference is invalid: ${item.caseId}`);
@@ -184,7 +185,7 @@ if (!checkOnly) {
     writeFile(resolve(outputRoot, "environment-lock-diff.json"), `${JSON.stringify({ schemaVersion: 1, status: "NO_CHANGE", beforeSha256: EXPECTED_LOCK_SHA256, afterSha256: digest(lockBytes), changedFields: [], reason: bMapping.reason }, null, 2)}\n`, "utf8"),
     writeFile(resolve(outputRoot, "seal-recalculation.json"), `${JSON.stringify({ schemaVersion: 1, status: "PASS", entryCount: recalculatedSeal.entries.length, storedAssetTreeSha256: storedSeal.assetTreeSha256, recalculatedAssetTreeSha256: recalculatedSeal.assetTreeSha256, matches: true }, null, 2)}\n`, "utf8"),
     writeFile(resolve(outputRoot, "revision-2-immutability.json"), `${JSON.stringify({ schemaVersion: 1, status: "PASS", fileCount: revision2.fileCount, treeSha256: revision2.treeSha256, expectedTreeSha256: EXPECTED_REVISION2_TREE, unchanged: true }, null, 2)}\n`, "utf8"),
-    writeFile(resolve(outputRoot, "showcase-input-bindings.json"), `${JSON.stringify({ schemaVersion: 1, status: "INPUTS_ONLY", profileRevision: 3, assetTreeSha256: EXPECTED_SEAL, entries: inputBindings, aPathEngineStatus: "PENDING", eIndependentReviewStatus: "PENDING" }, null, 2)}\n`, "utf8"),
+    writeFile(resolve(outputRoot, "showcase-input-bindings.json"), `${JSON.stringify({ schemaVersion: 1, status: "HISTORICAL_INPUTS_ONLY", profileRevision: 3, assetTreeSha256: HISTORICAL_W5_SEAL, entries: inputBindings, aPathEngineStatus: "PENDING", eIndependentReviewStatus: "PENDING" }, null, 2)}\n`, "utf8"),
     writeFile(resolve(outputRoot, "verification-result.json"), `${JSON.stringify(result, null, 2)}\n`, "utf8"),
   ]);
 }

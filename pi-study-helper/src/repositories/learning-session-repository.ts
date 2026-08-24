@@ -110,7 +110,13 @@ export interface SessionSnapshot extends FacadeResponseMeta {
   latestCommit: LatestCommitMarker;
   activityProgress: NodeActivityProgress[];
   diagnosticDraftVersion: number;
-  diagnosticDraft?: { diagnosticDraftVersion: number; background?: BackgroundQuestionnaire; currentQuestionId?: string; processedQuestionIds: string[] };
+  diagnosticDraft?: {
+    diagnosticDraftVersion: number;
+    background?: BackgroundQuestionnaire;
+    currentQuestionId?: string;
+    processedQuestionIds: string[];
+    answers?: Array<{ questionId: string; status: "answered" | "skipped"; submittedAnswer?: string | boolean }>;
+  };
   currentAttempt?: CurrentAttemptSafeReference;
 }
 

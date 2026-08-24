@@ -1,6 +1,15 @@
 {
   "tests": [
     {
+      "testId": "test-read-csv-hidden",
+      "visibility": "hidden",
+      "fileRef": "assessments/private/tests/test-read-csv-hidden.py",
+      "fixtureRefs": ["dataset-private-variant-01"],
+      "dimensionId": "read_csv",
+      "blocking": true,
+      "assetHash": "sha256:1186331b2374c62c5a480880e4de1c06d651ded268735e0028c2449f46883b93"
+    },
+    {
       "testId": "test-structure-hidden",
       "visibility": "hidden",
       "fileRef": "assessments/private/tests/test-structure-hidden.py",

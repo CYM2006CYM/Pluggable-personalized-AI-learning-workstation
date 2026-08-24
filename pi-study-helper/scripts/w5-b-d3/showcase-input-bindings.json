@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "status": "INPUTS_ONLY",
+  "status": "HISTORICAL_INPUTS_ONLY",
   "profileRevision": 3,
   "assetTreeSha256": "ccff2e2afdabaad262baeaa498b527438fcadeec1ddf5e198289f8404071e85d",
   "entries": [

@@ -11,7 +11,7 @@ import {
 import { validateProfileV2Directory } from "../domain/profile-v2-schema.js";
 import { validateRevisionSeal, type RevisionSeal } from "../domain/profile-revision-seal.js";
 import type { ProfileManifestV2 } from "../domain/v2-types.js";
-import type { LearningCardSafeView, QuizQuestionGroupAsset } from "../contracts/index.js";
+import type { LearningCardAsset, QuizQuestionGroupAsset } from "../contracts/index.js";
 import type { Profile } from "../domain/types.js";
 import type { ProfileRevisionChange, ProfileFileSnapshot } from "../domain/profile-revision.js";
 import { isMutableProfileContentPath } from "../domain/profile-revision.js";
@@ -247,7 +247,7 @@ export class ProfileFamilyRepository {
     return readFile(resolveInside(directory, relativePath), "utf8");
   }
 
-  async loadProfileV2RevisionCards(subjectId: string, revision: number): Promise<LearningCardSafeView[]> {
+  async loadProfileV2RevisionCards(subjectId: string, revision: number): Promise<LearningCardAsset[]> {
     const directory = await this.profileV2RevisionDirectory(subjectId, revision);
     const manifest = await validateProfileV2Directory(directory);
     if (manifest.paths.cards === undefined) return [];
@@ -263,7 +263,7 @@ export class ProfileFamilyRepository {
     };
     if (entry.isFile()) candidates.push(cardsRoot); else await visit(cardsRoot);
     for (const path of candidates.sort((left, right) => left.localeCompare(right, "en"))) {
-      const parsed = JSON.parse(await readFile(path, "utf8")) as { cards?: LearningCardSafeView[] };
+      const parsed = JSON.parse(await readFile(path, "utf8")) as { cards?: LearningCardAsset[] };
       if (Array.isArray(parsed.cards)) return structuredClone(parsed.cards);
     }
     return [];

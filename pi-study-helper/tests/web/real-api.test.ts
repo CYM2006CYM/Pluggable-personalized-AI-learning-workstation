@@ -7,6 +7,7 @@ import { ProfileFamilyQuizActivityAssetResolver } from "../../src/application/qu
 import { createDemoRuntime } from "../../src/demo/composition-root.js";
 import { startHttpServer, type HttpServerHandle } from "../../src/demo/http-server.js";
 import { ProfileFamilyRepository } from "../../src/repositories/profile-family-repository.js";
+import { recordedQuizAnswers } from "./fixtures/recorded-quiz-answers.js";
 
 const fixturesRoot = resolve(import.meta.dirname, "../../fixtures/profiles");
 const cleanups: Array<() => Promise<void>> = [];
@@ -183,6 +184,7 @@ describe("W4 E independent real API trajectories", () => {
     const profiles = new ProfileFamilyRepository({ dataRoot: resolverRoot, fixturesRoot });
     await profiles.activateRevision3Draft("pandas-cleaning");
     const quizAssets = new ProfileFamilyQuizActivityAssetResolver(profiles);
+    const recordedAnswers = await recordedQuizAnswers();
     let state = confirmed.body.data;
     for (let step = 0; step < 8; step += 1) {
       const next = await get(url, `/api/sessions/${sessionId}/next-step?sessionVersion=${state.sessionVersion}&profileRevision=${state.profileRevision}&pathVersion=${state.pathVersion}`);
@@ -206,7 +208,10 @@ describe("W4 E independent real API trajectories", () => {
       const assets = await quizAssets.loadAssets("pandas-cleaning", 3, activity.activityId);
       const privateQuestions = [...assets.fixedQuestions, ...assets.supplementalQuestions,
         ...(assets.legacyQuestion === undefined ? [] : [assets.legacyQuestion])];
-      const answersById = new Map(privateQuestions.map((question) => [question.questionId, question.correctAnswer]));
+      const answersById = new Map<string, string | boolean>([
+        ...privateQuestions.map((question) => [question.questionId, question.correctAnswer] as const),
+        ...recordedAnswers,
+      ]);
       const answers = questions.map((question: any) => {
         const answer = answersById.get(question.questionId);
         if (answer === undefined) throw new Error(`Missing deterministic answer for ${question.questionId}`);

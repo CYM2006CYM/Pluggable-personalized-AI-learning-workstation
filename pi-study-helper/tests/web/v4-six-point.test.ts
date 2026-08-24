@@ -102,7 +102,8 @@ describe("W4 E V4-8 six-point independent verification", () => {
     });
     expect(passed.evidence?.score).toBe(passed.result.correctCount / passed.result.totalCount);
     for (const review of passed.result.answerReview ?? []) {
-      expect(Object.keys(review).sort()).toEqual(["correct", "correctAnswer", "explanation", "questionId", "sourceAnchorIds"]);
+      expect(Object.keys(review).sort()).toEqual(["correct", "correctAnswer", "explanation", "prompt", "questionId", "sourceAnchorIds"]);
+      expect(review.prompt).toEqual(expect.any(String));
     }
 
     const retryRuntime = new DeterministicQuizRuntime();
@@ -135,7 +136,7 @@ describe("W4 E V4-8 six-point independent verification", () => {
       answers: supplementalPrivate!.answers.map((question) => ({ questionId: question.questionId, answer: question.correctAnswer })),
     });
     expect(insufficient.result).toMatchObject({
-      verdict: "insufficient", totalCount: supplementalPrivate!.answers.length, retryAllowed: false,
+      verdict: "insufficient", totalCount: supplementalPrivate!.answers.length, retryAllowed: true,
     });
     expect(insufficient.evidence).toBeUndefined();
     expect(insufficient.attempt.status).toBe("submitted");

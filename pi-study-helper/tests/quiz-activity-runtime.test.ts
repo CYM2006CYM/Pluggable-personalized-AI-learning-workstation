@@ -4,7 +4,8 @@ import { resolve } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { QuizActivityRuntime, type QuizActivityAssets } from "../src/application/quiz-activity-runtime.js";
 import { createActivityPathSuffixReplanner } from "../src/application/activity-path-suffix.js";
-import { createDeterministicContentPort, type QuizQuestionPrivate } from "../src/contracts/index.js";
+import { createDeterministicContentPort, type AdaptiveContentPort, type QuizQuestionPrivate } from "../src/contracts/index.js";
+import { quizQuestionSetSha256 } from "../src/domain/quiz-runtime.js";
 import type { PathEngineProfile } from "../src/domain/path-engine.js";
 import { FileLearningSessionRepository } from "../src/repositories/file-learning-session-repository.js";
 import { toPathSafeSnapshot, type InternalPersistedPathSnapshot } from "../src/repositories/internal-path-session-port.js";
@@ -50,7 +51,7 @@ function activeInternalPath(sessionId: string): InternalPersistedPathSnapshot {
 
 afterEach(async () => { await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true }))); });
 
-async function setup(runtimeAssets: QuizActivityAssets = assets) {
+async function setup(runtimeAssets: QuizActivityAssets = assets, content: AdaptiveContentPort = createDeterministicContentPort()) {
   const root = await mkdtemp(resolve(tmpdir(), "quiz-activity-runtime-")); roots.push(root);
   const sessions = new FileLearningSessionRepository({ dataRoot: root, now });
   const view = await sessions.create({ requestId: "create", subjectId: "subject", mode: "recommended", goalId: "goal", availableMinutes: 20, profileRevision: 3, diagnosticRequired: false });
@@ -77,11 +78,69 @@ async function setup(runtimeAssets: QuizActivityAssets = assets) {
     },
   }, path);
   const pathSuffix = createActivityPathSuffixReplanner({ sessions, profile: { async load() { return structuredClone(pathProfile); } }, now });
-  const runtime = new QuizActivityRuntime({ sessions, content: createDeterministicContentPort(), loadAssets: async () => structuredClone(runtimeAssets), pathSuffix, now });
+  const runtime = new QuizActivityRuntime({ sessions, content, loadAssets: async () => structuredClone(runtimeAssets), pathSuffix, now });
   return { root, sessions, view, runtime };
 }
 
 describe("QuizActivityRuntime", () => {
+  it("locks the accepted AI answer set to the Attempt and never grades it with the fixed key", async () => {
+    const generated = questions("dynamic").map((question) => ({
+      ...question,
+      options: ["A", "B"],
+      correctAnswer: "B",
+      explanation: "The reviewed AI candidate intentionally uses an answer different from the fixed fallback.",
+      sourceAnchorIds: ["activity-source"],
+    }));
+    const runtimeAssets: QuizActivityAssets = {
+      ...assets,
+      allowedSourceAnchorIds: ["source-1", "activity-source"],
+    };
+    const content: AdaptiveContentPort = {
+      async prepareCard() { return { status: "unavailable" }; },
+      async prepareQuiz() {
+        return {
+          status: "accepted",
+          questions: generated,
+          origin: "live_model",
+          reviewBinding: {
+            generationRunId: "w6-live-reviewed-quiz",
+            acceptedQuestionSetSha256: quizQuestionSetSha256(generated),
+          },
+        };
+      },
+    };
+    const { sessions, view, runtime } = await setup(runtimeAssets, content);
+    const opened = await runtime.openActivity({ requestId: "activity-source-open", sessionId: view.sessionId, sessionVersion: 3, profileRevision: 3, activityId: "quiz", activityVersion: 1, pathVersion: 1, acknowledgedCardId: "actual-card-kp" });
+    expect(opened.activity.questionSource).toBe("ai_live");
+    expect(opened.activity.questions.map((question) => question.questionId)).toEqual(generated.map((question) => question.questionId));
+    expect(JSON.stringify(opened)).not.toMatch(/correctAnswer|gradingBinding|generationRunId/iu);
+    const attempt = await sessions.getQuizAttempt({
+      sessionId: view.sessionId,
+      sessionVersion: opened.sessionVersion,
+      profileRevision: 3,
+      activityId: "quiz",
+      attemptId: opened.attemptId,
+    });
+    expect(attempt?.gradingBinding).toEqual({
+      source: "ai_reviewed",
+      generationRunId: "w6-live-reviewed-quiz",
+      questionSetSha256: quizQuestionSetSha256(generated),
+    });
+    expect(attempt?.questions.every((question) => question.correctAnswer === "B")).toBe(true);
+    const submitted = await runtime.submitActivity({
+      requestId: "activity-source-submit",
+      sessionId: view.sessionId,
+      sessionVersion: opened.sessionVersion,
+      profileRevision: 3,
+      kind: "quiz",
+      activityId: "quiz",
+      activityVersion: 1,
+      attemptId: opened.attemptId,
+      answers: opened.activity.questions.map((question) => ({ questionId: question.questionId, answer: "B" })),
+    });
+    expect(submitted.result).toMatchObject({ verdict: "pass", correctCount: 4 });
+  });
+
   it("opens a legal legacy single-question helper without routing it through W4 group selection", async () => {
     const legacyQuestion = questions("legacy", 1)[0]!;
     const legacyAssets: QuizActivityAssets = {
@@ -150,7 +209,7 @@ describe("QuizActivityRuntime", () => {
     expect(snapshot.path).toMatchObject({ pathVersion: 2, nodes: [{ status: "completed" }, { status: "available" }] });
   });
 
-  it("opens one disjoint retry and rejects a third attempt", async () => {
+  it("opens disjoint retries beyond the second attempt", async () => {
     const { sessions, view, runtime } = await setup();
     const first = await runtime.openActivity({ requestId: "open-1", sessionId: view.sessionId, sessionVersion: 3, profileRevision: 3, activityId: "quiz", activityVersion: 1, pathVersion: 1, acknowledgedCardId: "actual-card-kp" });
     await runtime.submitActivity({ requestId: "submit-1", sessionId: view.sessionId, sessionVersion: 4, profileRevision: 3, kind: "quiz", activityId: "quiz", activityVersion: 1, attemptId: first.attemptId, answers: first.activity.questions.map((question) => ({ questionId: question.questionId, answer: "B" })) });
@@ -160,7 +219,9 @@ describe("QuizActivityRuntime", () => {
     expect(retry.activity.questions.filter((question) => firstIds.has(question.questionId))).toHaveLength(0);
     await runtime.submitActivity({ requestId: "submit-2", sessionId: view.sessionId, sessionVersion: 6, profileRevision: 3, kind: "quiz", activityId: "quiz", activityVersion: 1, attemptId: retry.attemptId, answers: retry.activity.questions.map((question) => ({ questionId: question.questionId, answer: "B" })) });
     const afterSecond = await sessions.getSnapshot({ sessionId: view.sessionId, sessionVersion: 7, profileRevision: 3 });
-    await expect(runtime.openActivity({ requestId: "open-3", sessionId: view.sessionId, sessionVersion: 7, profileRevision: 3, activityId: "quiz", activityVersion: 1, pathVersion: afterSecond.path!.pathVersion })).rejects.toMatchObject({ errorCode: "prerequisite_violation" });
+    const third = await runtime.openActivity({ requestId: "open-3", sessionId: view.sessionId, sessionVersion: 7, profileRevision: 3, activityId: "quiz", activityVersion: 1, pathVersion: afterSecond.path!.pathVersion });
+    expect(third.activity.retryNumber).toBe(2);
+    expect(third.activity.questions).toHaveLength(4);
   });
 
   it("publishes a recomputed path suffix and archives the prior path in the quiz transaction", async () => {
@@ -169,9 +230,12 @@ describe("QuizActivityRuntime", () => {
     await runtime.submitActivity({ requestId: "submit-suffix-1", sessionId: view.sessionId, sessionVersion: 4, profileRevision: 3, kind: "quiz", activityId: "quiz", activityVersion: 1, attemptId: first.attemptId, answers: first.activity.questions.map((question) => ({ questionId: question.questionId, answer: "B" })) });
     const retry = await runtime.openActivity({ requestId: "open-suffix-2", sessionId: view.sessionId, sessionVersion: 5, profileRevision: 3, activityId: "quiz", activityVersion: 1, pathVersion: 1 });
     await runtime.submitActivity({ requestId: "submit-suffix-2", sessionId: view.sessionId, sessionVersion: 6, profileRevision: 3, kind: "quiz", activityId: "quiz", activityVersion: 1, attemptId: retry.attemptId, answers: retry.activity.questions.map((question) => ({ questionId: question.questionId, answer: "B" })) });
-    const snapshot = await sessions.getSnapshot({ sessionId: view.sessionId, sessionVersion: 7, profileRevision: 3 });
+    const continued = await runtime.continueActivityWithGap({ requestId: "continue-suffix", sessionId: view.sessionId, sessionVersion: 7, profileRevision: 3, activityId: "quiz", attemptId: retry.attemptId });
+    expect(continued).toMatchObject({ status: "insufficient", result: "insufficient", attemptCount: 2, sessionVersion: 8 });
+    const snapshot = await sessions.getSnapshot({ sessionId: view.sessionId, sessionVersion: 8, profileRevision: 3 });
     expect(snapshot.path).toMatchObject({ pathVersion: 2, status: "active" });
     expect(snapshot.path?.nodes).toMatchObject([{ status: "completed", positionLocked: true }, { status: "available" }]);
+    expect(snapshot.activityProgress[0]?.activities[0]).toMatchObject({ status: "insufficient", continuedWithGap: true, bestResult: "fail" });
     expect(snapshot.latestCommit.evidenceVersion).toBe(1);
     const archived = JSON.parse(await readFile(resolve(root, "profile_families", "subject", "_user", "learning_sessions", view.sessionId, "paths", "superseded", "1.json"), "utf8"));
     expect(archived).toMatchObject({ pathVersion: 1, status: "superseded" });

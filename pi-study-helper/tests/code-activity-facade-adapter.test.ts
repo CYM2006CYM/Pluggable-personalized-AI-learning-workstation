@@ -78,7 +78,7 @@ describe("CodeActivityFacadeAdapter", () => {
     const profiles = new ProfileFamilyRepository({ dataRoot, fixturesRoot, now });
     await profiles.activateRevision3Draft("pandas-cleaning");
     const resolver = new ProfileFamilyCodeActivityAssetResolver(profiles);
-    for (const activityId of ["act-inspect-dataframe", "act-missing", "act-duplicates", "act-types", "act-practical"]) {
+    for (const activityId of ["act-load-csv", "act-inspect-dataframe", "act-missing", "act-duplicates", "act-types", "act-practical"]) {
       const assets = await resolver.load("pandas-cleaning", 3, activityId);
       expect(assets.activity.activityVersion).toBe(3);
       expect(assets.assignment.activityVersion).toBe(3);
@@ -87,6 +87,16 @@ describe("CodeActivityFacadeAdapter", () => {
         expect.objectContaining({ name: "orders-learning.csv", hash: expect.stringMatching(/^sha256:[a-f0-9]{64}$/u) }),
       ]);
       expect(assets.publicTestSources).toHaveLength(1);
+      expect(assets.activity.problemStatement).toMatchObject({
+        background: expect.any(String),
+        inputDescription: expect.any(String),
+        outputDescription: expect.any(String),
+        rules: expect.arrayContaining([expect.any(String)]),
+        prohibitedActions: expect.arrayContaining([expect.any(String)]),
+        sample: { inputFileName: expect.stringMatching(/\.csv$/u), inputCsv: expect.stringContaining("order_id"), outputFileName: expect.stringMatching(/\.csv$/u), outputCsv: expect.stringContaining("order_id"), explanation: expect.any(String) },
+      });
+      expect(assets.activity.publicAcceptanceCriteria).toHaveLength(activityId === "act-practical" ? 6 : 4);
+      expect(assets.activity.publicAcceptanceCriteria?.join(" ")).toContain(activityId === "act-load-csv" ? "csv_path" : "原始 DataFrame");
       expect(JSON.stringify({ datasets: assets.publicDatasetFiles, tests: assets.publicTestSources }))
         .not.toMatch(/private|hidden|reference-solutions|rubric|[A-Za-z]:[\\/]/iu);
     }
@@ -165,6 +175,83 @@ describe("CodeActivityFacadeAdapter", () => {
     expect(snapshot.knowledgeStates).toEqual([]);
     expect(snapshot.activityProgress[0]?.activities[0]).toMatchObject({ status: "in_progress" });
     expect(await adapter.recoverActivity({ sessionId: view.sessionId, sessionVersion: 4, profileRevision: 3, activityId: "code", attemptId: opened.attemptId })).toMatchObject({ recoveryAction: "retry_after_evaluator_error" });
+  });
+
+  it("keeps a learner failure in progress and opens a new editable Attempt with the submitted code", async () => {
+    const { adapter, sessions, view } = await setup({
+      executionStatus: "completed",
+      verdict: "fail",
+      score: 0,
+      errorKind: "learner",
+      errorCode: "test_failed",
+      safeFeedback: "modify and retry",
+      evaluatorVersion: "fixture",
+      environmentHash,
+      assetBundleHash,
+    });
+    const opened = await adapter.openActivity({ requestId: "open-fail", sessionId: view.sessionId, sessionVersion: 3, profileRevision: 3, activityId: "code", activityVersion: 3, pathVersion: 1, acknowledgedCardId: "card-kp" });
+    const submittedCode = "print('needs revision')";
+    const saved = await adapter.saveActivityDraft({ requestId: "save-fail", sessionId: view.sessionId, sessionVersion: 4, profileRevision: 3, activityId: "code", activityVersion: 3, attemptId: opened.attemptId, draftVersion: 2, userText: submittedCode });
+    if (saved.kind !== "code") throw new Error("code_draft_expected");
+    const submitted = await adapter.submitActivity({ requestId: "submit-fail", sessionId: view.sessionId, sessionVersion: 4, profileRevision: 3, kind: "code", activityId: "code", activityVersion: 3, attemptId: opened.attemptId, draftVersion: saved.draftVersion, userText: submittedCode });
+    expect(submitted).toMatchObject({ committed: true, sessionVersion: 5, result: { verdict: "fail" } });
+    const failedSnapshot = await sessions.getSnapshot({ sessionId: view.sessionId, sessionVersion: 5, profileRevision: 3 });
+    expect(failedSnapshot.currentAttempt).toBeUndefined();
+    expect(failedSnapshot.activityProgress[0]?.activities[0]).toMatchObject({ status: "in_progress", result: "fail" });
+    expect(failedSnapshot.evidence).toHaveLength(1);
+
+    const retry = await adapter.openActivity({ requestId: "open-retry", sessionId: view.sessionId, sessionVersion: 5, profileRevision: 3, activityId: "code", activityVersion: 3, pathVersion: 1 });
+    expect(retry.attemptId).not.toBe(opened.attemptId);
+    expect(retry).toMatchObject({ sessionVersion: 6, draftVersion: 1, userText: submittedCode });
+    const retrySnapshot = await sessions.getSnapshot({ sessionId: view.sessionId, sessionVersion: 6, profileRevision: 3 });
+    expect(retrySnapshot.currentAttempt).toMatchObject({ kind: "code", activityId: "code", attemptId: retry.attemptId, status: "draft" });
+  });
+
+  it("allows an idempotent gap continuation only after a second submitted learner failure", async () => {
+    const { adapter, sessions, view } = await setup({
+      executionStatus: "completed",
+      verdict: "fail",
+      score: 0,
+      errorKind: "learner",
+      errorCode: "test_failed",
+      safeFeedback: "modify and retry",
+      evaluatorVersion: "fixture",
+      environmentHash,
+      assetBundleHash,
+    });
+    const first = await adapter.openActivity({ requestId: "open-first-gap", sessionId: view.sessionId, sessionVersion: 3, profileRevision: 3, activityId: "code", activityVersion: 3, pathVersion: 1, acknowledgedCardId: "card-kp" });
+    if (first.kind !== "code") throw new Error("code_draft_expected");
+    const firstResult = await adapter.submitActivity({ requestId: "submit-first-gap", sessionId: view.sessionId, sessionVersion: 4, profileRevision: 3, kind: "code", activityId: "code", activityVersion: 3, attemptId: first.attemptId, draftVersion: 2, userText: first.userText });
+    expect(firstResult).toMatchObject({ sessionVersion: 5, result: { verdict: "fail" } });
+    const afterFirst = await sessions.getSnapshot({ sessionId: view.sessionId, sessionVersion: 5, profileRevision: 3 });
+    await expect(adapter.continueActivityWithGap({ requestId: "gap-too-early", sessionId: view.sessionId, sessionVersion: 5, profileRevision: 3, activityId: "code", attemptId: first.attemptId }))
+      .rejects.toMatchObject({ errorCode: "prerequisite_violation" });
+    expect(await sessions.getSnapshot({ sessionId: view.sessionId, sessionVersion: 5, profileRevision: 3 })).toEqual(afterFirst);
+
+    const second = await adapter.openActivity({ requestId: "open-second-gap", sessionId: view.sessionId, sessionVersion: 5, profileRevision: 3, activityId: "code", activityVersion: 3, pathVersion: 1 });
+    if (second.kind !== "code") throw new Error("code_draft_expected");
+    const secondResult = await adapter.submitActivity({ requestId: "submit-second-gap", sessionId: view.sessionId, sessionVersion: 6, profileRevision: 3, kind: "code", activityId: "code", activityVersion: 3, attemptId: second.attemptId, draftVersion: 1, userText: second.userText });
+    expect(secondResult).toMatchObject({ sessionVersion: 7, result: { verdict: "fail" } });
+    const beforeContinue = await sessions.getSnapshot({ sessionId: view.sessionId, sessionVersion: 7, profileRevision: 3 });
+    expect(beforeContinue.activityProgress[0]?.activities[0]).toMatchObject({ status: "in_progress", result: "fail", attemptIds: [first.attemptId, second.attemptId] });
+    expect(beforeContinue.evidence).toHaveLength(2);
+
+    const continuationInput = { requestId: "continue-code-gap", sessionId: view.sessionId, sessionVersion: 7, profileRevision: 3, activityId: "code", attemptId: second.attemptId } as const;
+    const continued = await adapter.continueActivityWithGap(continuationInput);
+    expect(continued).toMatchObject({ sessionVersion: 8, status: "insufficient", result: "fail", attemptCount: 2 });
+    await expect(adapter.continueActivityWithGap(continuationInput)).resolves.toEqual(continued);
+
+    const finalSnapshot = await sessions.getSnapshot({ sessionId: view.sessionId, sessionVersion: 8, profileRevision: 3 });
+    expect(finalSnapshot.currentAttempt).toBeUndefined();
+    expect(finalSnapshot.activityProgress[0]?.activities[0]).toMatchObject({
+      status: "insufficient",
+      result: "fail",
+      continuedWithGap: true,
+      attemptIds: [first.attemptId, second.attemptId],
+    });
+    expect(finalSnapshot.evidence).toEqual(beforeContinue.evidence);
+    expect(finalSnapshot.knowledgeStates).toEqual(beforeContinue.knowledgeStates);
+    expect(finalSnapshot.latestCommit.evidenceVersion).toBe(beforeContinue.latestCommit.evidenceVersion);
   });
 
   it("rejects missing and incorrect card acknowledgements without changing formal state", async () => {

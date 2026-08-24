@@ -245,6 +245,7 @@ describe("W4 D formal A/D capability binding", () => {
         submitActivity: runtime.submitActivity.bind(runtime),
         submitActivityWithContext: runtime.submitActivityWithContext.bind(runtime),
         getActivityAttempt: runtime.getAttempt.bind(runtime),
+        continueActivityWithGap: runtime.continueActivityWithGap.bind(runtime),
       },
       sessions,
       profile: { async load() { return structuredClone(pathProfile); } },

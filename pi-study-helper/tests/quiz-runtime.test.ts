@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DeterministicQuizRuntime, QuizRuntimeError, type QuizActivityDefinition } from "../src/domain/quiz-runtime.js";
+import { DeterministicQuizRuntime, QuizRuntimeError, quizQuestionSetSha256, type QuizActivityDefinition } from "../src/domain/quiz-runtime.js";
 import type { QuizQuestionPrivate } from "../src/contracts/index.js";
 
 const activity: QuizActivityDefinition = {
@@ -44,5 +44,28 @@ describe("DeterministicQuizRuntime", () => {
     expect(() => runtime.submit({ ...base, answers: opened.activity.questions.slice(0, -1).map((question) => ({ questionId: question.questionId, answer: "A" })).concat({ questionId: "unknown", answer: "A" }) })).toThrow();
     expect(() => runtime.submit({ ...base, answers: opened.activity.questions.map((question) => ({ questionId: question.questionId, answer: true })) })).toThrow("type does not match");
     expect(() => runtime.submit({ ...base, answers: opened.activity.questions.map((question) => ({ questionId: question.questionId, answer: "A", prompt: question.prompt })) as never })).toThrow("unsupported fields");
+  });
+
+  it("rejects a tampered AI grading binding before an Attempt can be opened or restored", () => {
+    const runtime = new DeterministicQuizRuntime();
+    const candidate = questions(4);
+    expect(() => runtime.open({
+      sessionId: "s",
+      profileRevision: 3,
+      activity,
+      questions: candidate,
+      retryNumber: 0,
+      questionSource: "ai_live",
+      gradingBinding: { source: "profile_fixed", questionSetSha256: quizQuestionSetSha256(candidate) },
+    })).toThrow("grading source does not match");
+    expect(() => runtime.open({
+      sessionId: "s",
+      profileRevision: 3,
+      activity,
+      questions: candidate,
+      retryNumber: 0,
+      questionSource: "ai_live",
+      gradingBinding: { source: "ai_reviewed", generationRunId: "live-run", questionSetSha256: "0".repeat(64) },
+    })).toThrow("grading binding does not match");
   });
 });

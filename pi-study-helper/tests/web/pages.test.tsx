@@ -89,7 +89,12 @@ describe("W4 real API pages", () => {
     expect(host.textContent).toContain("Pandas Cleaning");
     expect(host.textContent).toContain("系统推荐");
     expect(host.textContent).toContain("按章节学习");
-    expect(host.querySelectorAll("select")).toHaveLength(6);
+    expect(host.querySelectorAll("select")).toHaveLength(5);
+    expect(host.textContent).toContain("学习时长由系统计算");
+    expect(host.querySelector('select[aria-label="可用时间"]')).toBeNull();
+    expect(Array.from(host.querySelectorAll('select[aria-label="讲解偏好"] option')).map((option) => option.textContent))
+      .toEqual(["逐步讲解", "重点速览", "案例优先"]);
+    expect((host.querySelector('select[aria-label="讲解偏好"]') as HTMLSelectElement).value).toBe("step_by_step");
     expect(host.textContent).not.toContain("Mock DTO");
   });
 
@@ -112,16 +117,44 @@ describe("W4 real API pages", () => {
     const session = recovery({ stage: "diagnostic" });
     const { host } = await renderRoute("/diagnostic/session-w4", vi.fn().mockResolvedValue(ok(bootstrap(session))));
     expect(host.textContent).toContain("哪个表达式创建列表");
-    expect(host.textContent).toContain("Draft v1");
+    expect(host.textContent).toContain("草稿 v1");
   });
 
   it("renders all W4 path node fields", async () => {
     const session = recovery({ stage: "path" });
     const { host } = await renderRoute("/path/session-w4", vi.fn().mockResolvedValue(ok(bootstrap(session))));
-    expect(host.textContent).toContain("S-R");
-    expect(host.textContent).toContain("worked_example");
-    expect(host.textContent).toContain("必需");
-    expect(host.textContent).toContain("位置锁定");
+    expect(host.textContent).toContain("基础回顾");
+    expect(host.textContent).toContain("示例带练");
+    expect(host.textContent).toContain("本次目标要求");
+    expect(host.textContent).toContain("可以开始");
+  });
+
+  it("shows elapsed-time feedback while the learning path is being confirmed", async () => {
+    const session = recovery({ stage: "path" });
+    session.path = undefined;
+    const candidate = {
+      requestId: "candidate-1",
+      sessionId: "session-w4",
+      sessionVersion: 2,
+      profileRevision: 3,
+      status: "candidate" as const,
+      pathId: "path-w4",
+      pathVersion: 1,
+      nodes: pathNodes,
+      missingPrerequisiteIds: [],
+      minimumRequiredMinutes: 12,
+    };
+    const pendingConfirm = new Promise<Response>(() => undefined);
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(ok(bootstrap(session)))
+      .mockImplementationOnce(() => pendingConfirm);
+    const { host } = await renderRoute("/path/session-w4", fetchMock, { candidate });
+
+    await click(button(host, "确认学习路径"));
+
+    expect(button(host, "正在确认学习路径（已处理 0 秒）").disabled).toBe(true);
+    expect(host.querySelector('.async-action-status[role="status"]')?.textContent)
+      .toContain("正在确认学习路径（已处理 0 秒）");
   });
 
   it("prefers a server-confirmed path over a stale candidate kept in browser history", async () => {
@@ -151,12 +184,78 @@ describe("W4 real API pages", () => {
     expect(fetchMock.mock.calls.some((call) => String(call[0]).includes("/next-step"))).toBe(true);
   });
 
-  it("renders the learning card and treats the optional review timeline as not provided", async () => {
+  it("renders the learning card without an invented review timeline", async () => {
     const fetchMock = vi.fn().mockResolvedValueOnce(ok(bootstrap(recovery()))).mockResolvedValueOnce(ok(nextStep));
     const { host } = await renderRoute("/learn/session-w4/node-basic", fetchMock);
     expect(host.textContent).toContain("Python 列表");
-    expect(host.textContent).toContain("NOT_PROVIDED");
+    expect(host.textContent).toContain("数据清洗实验手册");
+    expect(host.textContent).toContain("使用安全基础内容");
+    expect(host.textContent).toContain("客观题组");
+    expect(host.textContent).not.toMatch(/\b(?:ready|mcq)\b/u);
+    expect(host.textContent).not.toContain("NOT_PROVIDED");
     expect(host.textContent).not.toContain("UPSTREAM_CONTRACT_BLOCKED");
+  });
+
+  it("shows an immediate elapsed-time status while a quiz is being generated and audited", async () => {
+    let resolveOpen: ((response: Response) => void) | undefined;
+    const pendingOpen = new Promise<Response>((resolve) => { resolveOpen = resolve; });
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(ok(bootstrap(recovery())))
+      .mockResolvedValueOnce(ok(nextStep))
+      .mockImplementationOnce(() => pendingOpen);
+    const { host, router } = await renderRoute("/learn/session-w4/node-basic", fetchMock);
+
+    await click(button(host, "进入正式活动"));
+    expect(button(host, "正在生成并审核题组（已处理 0 秒）").disabled).toBe(true);
+    expect(host.querySelector('.async-action-status[role="status"]')?.textContent).toContain("正在生成并审核题组（已处理 0 秒）");
+
+    await act(async () => { resolveOpen?.(ok(openedQuiz)); });
+    await settle();
+    expect(router.state.location.pathname).toBe("/activity/session-w4/act-basic");
+  });
+
+  it("keeps rich lesson bulk and individual disclosure controls in sync", async () => {
+    const modules = (["intuition", "concepts", "walkthrough", "mistakes", "final-task", "terms-sources"] as const).map((moduleId, index) => ({
+      moduleId,
+      title: `模块${index + 1}`,
+      summary: `模块${index + 1}摘要`,
+      blocks: [{ blockId: `block-${index + 1}`, kind: "paragraph" as const, text: `模块${index + 1}正文` }],
+    }));
+    const richStep = {
+      ...nextStep,
+      card: {
+        ...nextStep.card!,
+        selectedLesson: {
+          lessonId: "lesson-read-csv-guided",
+          variantId: "guided" as const,
+          label: "逐步讲解版",
+          learningObjectives: { understand: ["理解读取流程"], master: ["掌握读取方法"] },
+          modules,
+          termNotes: [],
+          sourceClaims: [],
+          coveredRuleIds: ["rule-read-csv"],
+        },
+      },
+    };
+    const fetchMock = vi.fn().mockResolvedValueOnce(ok(bootstrap(recovery()))).mockResolvedValueOnce(ok(richStep));
+    const { host } = await renderRoute("/learn/session-w4/node-basic", fetchMock);
+    const details = () => [...host.querySelectorAll<HTMLDetailsElement>(".lesson-module")];
+
+    expect(details().map((item) => item.open)).toEqual([true, true, true, false, false, false]);
+    await click(button(host, "全部收起"));
+    expect(details().every((item) => !item.open)).toBe(true);
+    expect(details().every((item) => item.querySelector("summary")?.getAttribute("aria-expanded") === "false")).toBe(true);
+
+    await click(button(host, "展开全部"));
+    expect(details().every((item) => item.open)).toBe(true);
+    expect(details().every((item) => item.querySelector("summary")?.getAttribute("aria-expanded") === "true")).toBe(true);
+
+    await click(details()[0]!.querySelector("summary")!);
+    expect(details()[0]!.open).toBe(false);
+    expect(details().slice(1).every((item) => item.open)).toBe(true);
+    await click(button(host, "全部收起"));
+    await click(button(host, "全部收起"));
+    expect(details().every((item) => !item.open)).toBe(true);
   });
 
   it("does not send an incomplete learning step to summary", async () => {
@@ -168,9 +267,10 @@ describe("W4 real API pages", () => {
 
   it("renders a four-question quiz without opening-stage answers", async () => {
     const { host } = await renderRoute("/activity/session-w4/act-basic", vi.fn().mockResolvedValue(ok(bootstrap(recovery({ stage: "activity" })))), { opened: openedQuiz, nodeId: "node-basic" });
-    expect(host.querySelectorAll(".quiz-question")).toHaveLength(4);
+    expect(host.querySelectorAll(".quiz-question")).toHaveLength(1);
     expect(host.textContent).not.toContain("正确答案：");
-    expect(host.textContent).toContain("0/4 已回答");
+    expect(host.textContent).toContain("第 1 / 4 题");
+    expect(host.textContent).toContain("0 题已作答");
   });
 
   it("recovers the same quiz Attempt and question IDs from the Bootstrap reference", async () => {
@@ -182,26 +282,53 @@ describe("W4 real API pages", () => {
       .mockResolvedValueOnce(ok(openedQuiz));
     const { host } = await renderRoute("/activity/session-w4/act-basic", fetchMock);
     expect(host.textContent).toContain("attempt-1");
-    expect([...host.querySelectorAll(".quiz-question h2")].map((item) => item.textContent)).toEqual([
-      "1. 列表字面量？", "2. 列表有顺序。", "3. 追加方法？", "4. 索引从0开始。",
-    ]);
+    const prompts: Array<string | null> = [];
+    for (let index = 0; index < 4; index += 1) {
+      prompts.push(host.querySelector(".quiz-question h2")?.textContent ?? null);
+      await click(host.querySelector(".quiz-question input")!);
+      if (index < 3) await click(button(host, "下一题 →"));
+    }
+    expect(prompts).toEqual(["列表字面量？", "列表有顺序。", "追加方法？", "索引从0开始。"]);
+    await click(button(host, "← 上一题"));
+    expect(host.querySelector(".quiz-question h2")?.textContent).toBe("追加方法？");
     expect(fetchMock).toHaveBeenCalledTimes(3);
     expect(String(fetchMock.mock.calls[2]?.[0])).toContain("/api/activities/act-basic/open");
+  });
+
+  it("stops activity recovery after two failures and keeps safe exits visible", async () => {
+    const session = recovery({ stage: "activity" });
+    session.currentAttempt = { kind: "quiz", activityId: "act-basic", attemptId: "attempt-1", status: "draft", retryNumber: 0 };
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(ok(bootstrap(session)))
+      .mockResolvedValueOnce(fail(503, "service_unavailable"))
+      .mockResolvedValueOnce(fail(404, "activity_not_found"));
+    const { host } = await renderRoute("/activity/session-w4/act-basic", fetchMock, { nodeId: "node-basic" });
+    expect(host.textContent).toContain("服务连接暂时失败");
+    expect(button(host, "再次尝试恢复")).toBeDefined();
+    await click(button(host, "再次尝试恢复"));
+    expect(host.textContent).toContain("原活动或作答记录不存在");
+    expect(host.textContent).toContain("已达到本页恢复上限");
+    expect([...host.querySelectorAll("button")].some((item) => item.textContent?.includes("再次尝试恢复"))).toBe(false);
+    expect(host.textContent).toContain("返回教学内容");
+    expect(host.textContent).toContain("返回学习路径");
+    expect(fetchMock).toHaveBeenCalledTimes(3);
   });
 
   it("advances a submitted refresh through Bootstrap and getNextStep without reopening the old Attempt", async () => {
     const session = recovery({ stage: "activity" });
     session.currentAttempt = undefined;
     session.activityProgress = [{ nodeId: "node-basic", activities: [{ activityId: "act-basic", status: "completed", attemptIds: ["attempt-1"], result: "pass", quizRetryCount: 0, updatedAt: "2026-08-16T00:00:00.000Z" }] }];
+    const following = { ...nextStep, activity: openedCode.kind === "code" ? openedCode.activity : undefined };
     const fetchMock = vi.fn()
       .mockResolvedValueOnce(ok(bootstrap(session)))
       .mockResolvedValueOnce(ok(bootstrap(session)))
-      .mockResolvedValueOnce(ok(nextStep));
+      .mockResolvedValueOnce(ok(following))
+      .mockResolvedValueOnce(ok(openedCode));
     const { host, router } = await renderRoute("/activity/session-w4/act-basic", fetchMock, { opened: openedQuiz, nodeId: "node-basic" });
-    expect(host.textContent).toContain("SUBMITTED_PROGRESS_RECOVERED");
+    expect(host.textContent).toContain("已恢复服务端进度");
     expect(host.querySelectorAll(".quiz-question")).toHaveLength(0);
-    await click(button(host, "进入下一活动"));
-    expect(router.state.location.pathname).toBe("/learn/session-w4/node-basic");
+    await click(button(host, "继续下一步"));
+    expect(router.state.location.pathname).toBe("/activity/session-w4/act-code");
     expect(fetchMock.mock.calls.map((call) => String(call[0])).slice(0, 3)).toEqual([
       "/api/bootstrap?recoverSessionId=session-w4",
       "/api/bootstrap?recoverSessionId=session-w4",
@@ -227,9 +354,9 @@ describe("W4 real API pages", () => {
       .mockResolvedValueOnce(ok(nextStep))
       .mockResolvedValueOnce(ok(retryQuiz));
     const { host, router } = await renderRoute("/activity/session-w4/act-basic", fetchMock);
-    expect(host.textContent).toContain("SUBMITTED_PROGRESS_RECOVERED");
-    expect(host.textContent).toContain("in_progress/insufficient");
-    await click(button(host, "开始新 Attempt 重试"));
+    expect(host.textContent).toContain("已恢复服务端进度");
+    expect(host.textContent).toContain("等待重做 / 证据不足");
+    await click(button(host, "修改并重新评测"));
     expect(router.state.location.pathname).toBe("/activity/session-w4/act-basic");
     expect(host.textContent).toContain("attempt-2");
     expect(fetchMock.mock.calls.some((call) => String(call[0]).includes("/activities/act-basic/open"))).toBe(true);
@@ -240,6 +367,38 @@ describe("W4 real API pages", () => {
     expect(host.textContent).toContain("PYODIDE_DISABLED_WITH_NODE_FALLBACK");
     expect([...host.querySelectorAll("button")].some((item) => item.textContent?.includes("预览") || item.textContent?.includes("公开检查"))).toBe(false);
     expect(button(host, "提交正式评测").disabled).toBe(false);
+  });
+
+  it("renders a complete public code statement with downloadable CSV samples", async () => {
+    if (openedCode.kind !== "code") throw new Error("code fixture expected");
+    const detailed = {
+      ...openedCode,
+      activity: {
+        ...openedCode.activity,
+        problemStatement: {
+          background: "公开任务背景",
+          inputDescription: "输入一个公开订单 DataFrame。",
+          outputDescription: "输出符合七列合同的新 DataFrame。",
+          rules: ["保持七列顺序"],
+          prohibitedActions: ["不得修改原始 df"],
+          sample: {
+            inputFileName: "sample-input.csv",
+            inputCsv: "order_id,amount\nO001,88\n",
+            outputFileName: "sample-output.csv",
+            outputCsv: "order_id,amount\nO001,88\n",
+            explanation: "本例保持公开字段。",
+          },
+        },
+      },
+    };
+    const { host } = await renderRoute("/activity/session-w4/act-code", vi.fn().mockResolvedValue(ok(bootstrap(recovery({ stage: "activity" })))), { opened: detailed });
+    expect(host.textContent).toContain("公开任务背景");
+    expect(host.textContent).toContain("输入说明");
+    expect(host.textContent).toContain("禁止事项");
+    expect(host.textContent).toContain("样例解释");
+    const downloads = [...host.querySelectorAll<HTMLAnchorElement>("a[download]")];
+    expect(downloads.map((link) => link.download)).toEqual(["sample-input.csv", "sample-output.csv"]);
+    expect(downloads.every((link) => link.href.startsWith("data:text/csv"))).toBe(true);
   });
 
   it("saves an edited code draft without calling the retained public run route", async () => {
@@ -273,6 +432,30 @@ describe("W4 real API pages", () => {
     expect(useUiStore.getState().activityDrafts["attempt-code-1"]).toBeUndefined();
   });
 
+  it("renders the frozen generic evaluator failure as actionable Chinese feedback", async () => {
+    const failedSubmission = {
+      ...codeSubmission,
+      committed: true,
+      evidenceId: "evidence-code-failed",
+      result: {
+        ...codeSubmission.result,
+        verdict: "partial" as const,
+        errorCode: "test_failed",
+        score: 0.5,
+        safeFeedback: "One or more deterministic checks did not pass.",
+      },
+    };
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(ok(bootstrap(recovery({ stage: "activity" }))))
+      .mockResolvedValueOnce(ok(failedSubmission))
+      .mockResolvedValueOnce(ok(bootstrap(recovery({ stage: "activity" }))));
+    const { host } = await renderRoute("/activity/session-w4/act-code", fetchMock, { opened: openedCode });
+    await click(button(host, "提交正式评测"));
+    expect(host.textContent).toContain("公开验收项尚未全部通过");
+    expect(host.textContent).toContain("修改后重新提交");
+    expect(host.textContent).not.toContain("One or more deterministic checks did not pass.");
+  });
+
   it("renders safe diagnostic knowledge state projection without converting null mastery to zero", async () => {
     const state = {
       evidenceVersion: 7,
@@ -287,8 +470,8 @@ describe("W4 real API pages", () => {
     };
     const { host } = await renderRoute("/path/session-w4", vi.fn().mockResolvedValue(ok(bootstrap(recovery({ stage: "path" })))), state);
     expect(host.textContent).toContain("能力画像修订4");
-    expect(host.textContent).toContain("basic-pythonunverified · unverified");
-    expect(host.textContent).not.toContain("basic-python0.00");
+    expect(host.textContent).toContain("Python基础准备未验证 · 尚未验证");
+    expect(host.textContent).not.toContain("Python基础准备0.00");
   });
 
   it("keeps local text after a draft version conflict without opening the closed preview path", async () => {
@@ -346,9 +529,9 @@ describe("W4 real API pages", () => {
       .mockResolvedValueOnce(ok(bootstrap(recovery({ stage: "learning", sessionVersion: 6 }))));
     const { host } = await renderRoute("/activity/session-w4/act-code", fetchMock, { opened: openedCode });
     await click(button(host, "提交正式评测"));
-    expect(host.textContent).toContain("evaluator_timeout");
-    await click(button(host, "重新读取草稿后重试"));
-    expect(host.textContent).toContain("pass");
+    expect(host.textContent).toContain("评测服务超时");
+    await click(button(host, "恢复草稿并重试评测"));
+    expect(host.textContent).toContain("通过");
     expect(bodyAt(fetchMock, 5)).toMatchObject({ attemptId: "attempt-code-1", draftVersion: 1, userText: "print('server draft')" });
     expect(fetchMock.mock.calls.map((call) => String(call[0]))).toContain("/api/activities/act-code/recover");
   });
@@ -375,9 +558,9 @@ describe("W4 real API pages", () => {
       .mockResolvedValueOnce(ok(bootstrap(errorSession)));
     const { host } = await renderRoute("/activity/session-w4/act-code", fetchMock, { opened: openedCode });
     await click(button(host, "提交正式评测"));
-    await click(button(host, "重新读取草稿后重试"));
-    expect(host.textContent).toContain("evaluator_timeout");
-    expect(button(host, "重新读取草稿后重试").disabled).toBe(false);
+    await click(button(host, "恢复草稿并重试评测"));
+    expect(host.textContent).toContain("评测服务超时");
+    expect(button(host, "恢复草稿并重试评测").disabled).toBe(false);
     expect(bodyAt(fetchMock, 5)).toMatchObject({ attemptId: "attempt-code-1", draftVersion: 1 });
   });
 
@@ -388,7 +571,7 @@ describe("W4 real API pages", () => {
   ])("renders %s replan output and server changeReasons", async (_case, output) => {
     const fetchMock = vi.fn().mockResolvedValueOnce(ok(bootstrap(recovery({ stage: "path" })))).mockResolvedValueOnce(ok(output));
     const { host } = await renderRoute("/path/session-w4", fetchMock, { evidenceVersion: 7 });
-    await click(button(host, "重新计算路径"));
+    await click(button(host, "按最新诊断重算"));
     expect(host.textContent).toContain(output.changed ? "路径变化是" : "路径变化否");
     expect(host.textContent).toContain(output.fallbackToPrevious ? "沿用旧路径是" : "沿用旧路径否");
     expect(bodyAt(fetchMock, 1)).toMatchObject({ evidenceVersion: 7, pathVersion: 1, trigger: "user_constraint_changed" });
@@ -398,12 +581,11 @@ describe("W4 real API pages", () => {
   it("shows replan conflicts and disables replan after a refresh without evidenceVersion", async () => {
     const conflictFetch = vi.fn().mockResolvedValueOnce(ok(bootstrap(recovery({ stage: "path" })))).mockResolvedValueOnce(fail(409, "path_version_conflict"));
     const first = await renderRoute("/path/session-w4", conflictFetch, { evidenceVersion: 7 });
-    await click(button(first.host, "重新计算路径"));
+    await click(button(first.host, "按最新诊断重算"));
     expect(first.host.textContent).toContain("path_version_conflict");
     act(() => root?.unmount()); root = undefined; document.body.innerHTML = "";
     const refreshed = await renderRoute("/path/session-w4", vi.fn().mockResolvedValue(ok(bootstrap(recovery({ stage: "path" })))));
-    expect(button(refreshed.host, "重新计算路径").disabled).toBe(true);
-    expect(refreshed.host.textContent).toContain("安全 DTO 未冻结 evidenceVersion");
+    expect(button(refreshed.host, "按最新诊断重算").disabled).toBe(true);
   });
 
   it("renders fail, partial, insufficient and unverified from safe progress facts", async () => {
@@ -411,12 +593,14 @@ describe("W4 real API pages", () => {
     session.activityProgress = [{ nodeId: "node-basic", activities: [
       { activityId: "act-fail", status: "completed", attemptIds: ["a1"], result: "fail", quizRetryCount: 1, updatedAt: "2026-08-16T00:00:00.000Z" },
       { activityId: "act-partial", status: "completed", attemptIds: ["a2"], result: "partial", quizRetryCount: 1, updatedAt: "2026-08-16T00:00:00.000Z" },
-      { activityId: "act-insufficient", status: "insufficient", attemptIds: ["a3"], result: "insufficient", quizRetryCount: 0, updatedAt: "2026-08-16T00:00:00.000Z" },
+      { activityId: "act-insufficient", status: "insufficient", attemptIds: ["a3"], result: "insufficient", continuedWithGap: true, quizRetryCount: 0, updatedAt: "2026-08-16T00:00:00.000Z" },
       { activityId: "act-pending", status: "pending", attemptIds: [], quizRetryCount: 0, updatedAt: "2026-08-16T00:00:00.000Z" },
     ] }];
     const completed = { requestId: "complete", sessionId: "session-w4", sessionVersion: 3, profileRevision: 3, completedAt: "2026-08-16T00:00:00.000Z", summary: "Session completed.", nextRecommendation: "Review." };
     const { host } = await renderRoute("/summary/session-w4", vi.fn().mockResolvedValueOnce(ok(bootstrap(session))).mockResolvedValueOnce(ok(completed)));
-    for (const expected of ["act-fail: fail", "act-partial: partial", "act-insufficient: insufficient", "act-pending: unverified"]) expect(host.textContent).toContain(expected);
+    for (const expected of ["未通过 · 作答 1 次", "部分完成 · 作答 1 次", "尚未验证 · 作答 0 次"]) expect(host.textContent).toContain(expected);
+    expect(host.textContent).toContain("暂时跳过 / 未掌握 · 作答 1 次");
+    expect(host.textContent).toContain("返回主菜单");
   });
 
   it("shows completed-session recovery without replaying a frozen historical summary", async () => {
@@ -425,7 +609,8 @@ describe("W4 real API pages", () => {
     const fetchMock = vi.fn().mockResolvedValue(ok(bootstrap(session)));
     const { host } = await renderRoute("/summary/session-w4", fetchMock);
     expect(host.textContent).toContain("COMPLETED_SUMMARY_NOT_REPLAYABLE");
-    expect(host.textContent).toContain("act-pending: unverified");
+    expect(host.textContent).toContain("尚未验证 · 作答 0 次");
+    expect(host.textContent).toContain("返回主菜单");
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
@@ -451,12 +636,141 @@ describe("W4 real API pages", () => {
       .mockResolvedValueOnce(ok(retryNext))
       .mockResolvedValueOnce(ok(retryQuiz));
     const { host } = await renderRoute("/activity/session-w4/act-basic", fetchMock, { opened: openedQuiz });
-    for (const question of host.querySelectorAll(".quiz-question")) await click(question.querySelector("input")!);
+    for (let index = 0; index < 4; index += 1) {
+      await click(host.querySelector(".quiz-question input")!);
+      if (index < 3) await click(button(host, "下一题 →"));
+    }
     await click(button(host, "提交完整题组"));
     expect(host.textContent).toContain("提交后安全复盘");
-    await click(button(host, "开始新 Attempt 重试"));
+    expect(host.textContent).toContain("原题列表字面量？");
+    const reviewText = host.querySelector(".answer-review")?.textContent ?? "";
+    expect(reviewText.indexOf("列表字面量？")).toBeLessThan(reviewText.indexOf("正确答案："));
+    await click(button(host, "使用新题组重试"));
     expect(host.textContent).toContain("attempt-2");
     expect(String(fetchMock.mock.calls[5]?.[0])).toBe("/api/activities/act-basic/open");
+  });
+
+  it("keeps the new-quiz retry disabled with an elapsed-time status while Agent review is pending", async () => {
+    let resolveRetry: ((response: Response) => void) | undefined;
+    const pendingRetry = new Promise<Response>((resolve) => { resolveRetry = resolve; });
+    const afterSubmit = recovery({ stage: "activity", sessionVersion: 4 });
+    afterSubmit.sessionVersion = 4;
+    const retryQuiz = openedQuiz.kind === "quiz" ? { ...openedQuiz, attemptId: "attempt-2", sessionVersion: 5, activity: { ...openedQuiz.activity, retryNumber: 1 as const } } : openedQuiz;
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(ok(bootstrap(recovery({ stage: "activity" }))))
+      .mockResolvedValueOnce(ok(quizSubmission))
+      .mockResolvedValueOnce(ok(bootstrap(afterSubmit)))
+      .mockResolvedValueOnce(ok(bootstrap(afterSubmit)))
+      .mockResolvedValueOnce(ok(nextStep))
+      .mockImplementationOnce(() => pendingRetry);
+    const { host } = await renderRoute("/activity/session-w4/act-basic", fetchMock, { opened: openedQuiz, nodeId: "node-basic" });
+    for (let index = 0; index < 4; index += 1) {
+      await click(host.querySelector(".quiz-question input")!);
+      if (index < 3) await click(button(host, "下一题 →"));
+    }
+    await click(button(host, "提交完整题组"));
+    await click(button(host, "使用新题组重试"));
+
+    expect(button(host, "正在生成并审核新题组（已处理 0 秒）").disabled).toBe(true);
+    expect(host.querySelector('.async-action-status[role="status"]')?.textContent).toContain("正在生成并审核新题组（已处理 0 秒）");
+    await act(async () => { resolveRetry?.(ok(retryQuiz)); });
+    await settle();
+    expect(host.textContent).toContain("attempt-2");
+  });
+
+  it("offers retry or explicit gap continuation after the second unresolved quiz", async () => {
+    const retryQuiz = openedQuiz.kind === "quiz" ? {
+      ...openedQuiz,
+      attemptId: "attempt-2",
+      sessionVersion: 6,
+      activity: { ...openedQuiz.activity, retryNumber: 1 },
+    } : openedQuiz;
+    const secondResult = {
+      ...quizSubmission,
+      attemptId: "attempt-2",
+      sessionVersion: 7,
+      result: { ...quizSubmission.result, verdict: "fail" as const, correctCount: 0, retryAllowed: true },
+    };
+    const afterSecond = recovery({ stage: "activity", sessionVersion: 7 });
+    afterSecond.sessionVersion = 7;
+    const continued = { requestId: "gap", sessionId: "session-w4", sessionVersion: 8, profileRevision: 3, activityId: "act-basic", status: "insufficient", result: "fail", attemptCount: 2 };
+    const afterContinue = recovery({ stage: "learning", sessionVersion: 8, pathVersion: 2 });
+    afterContinue.sessionVersion = 8;
+    afterContinue.path = { ...afterContinue.path!, pathVersion: 2 };
+    const nextChapter = {
+      ...nextStep,
+      sessionVersion: 8,
+      pathVersion: 2,
+      node: { ...nextStep.node!, nodeId: "node-next" },
+    };
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(ok(bootstrap(recovery({ stage: "activity" }))))
+      .mockResolvedValueOnce(ok(secondResult))
+      .mockResolvedValueOnce(ok(bootstrap(afterSecond)))
+      .mockResolvedValueOnce(ok(bootstrap(afterSecond)))
+      .mockResolvedValueOnce(ok(continued))
+      .mockResolvedValueOnce(ok(bootstrap(afterContinue)))
+      .mockResolvedValueOnce(ok(nextChapter));
+    const { host, router } = await renderRoute("/activity/session-w4/act-basic", fetchMock, { opened: retryQuiz, nodeId: "node-basic" });
+    for (let index = 0; index < 4; index += 1) {
+      await click(host.querySelector(".quiz-question input")!);
+      if (index < 3) await click(button(host, "下一题 →"));
+    }
+    await click(button(host, "提交完整题组"));
+    expect(button(host, "使用新题组重试")).toBeDefined();
+    expect(button(host, "暂时跳过，进入下一章节")).toBeDefined();
+    await click(button(host, "暂时跳过，进入下一章节"));
+    expect(String(fetchMock.mock.calls[4]?.[0])).toBe("/api/activities/act-basic/continue-with-gap");
+    expect(bodyAt(fetchMock, 4)).toMatchObject({ sessionVersion: 7, attemptId: "attempt-2" });
+    expect(String(fetchMock.mock.calls[5]?.[0])).toBe("/api/bootstrap?recoverSessionId=session-w4");
+    expect(String(fetchMock.mock.calls[6]?.[0])).toContain("sessionVersion=8");
+    expect(String(fetchMock.mock.calls[6]?.[0])).toContain("pathVersion=2");
+    expect(router.state.location.pathname).toBe("/learn/session-w4/node-next");
+  });
+
+  it("offers code editing or gap continuation after the second failed code Attempt", async () => {
+    const retryCode = openedCode.kind === "code" ? { ...openedCode, attemptId: "attempt-code-2", sessionVersion: 6, draftVersion: 1 } : openedCode;
+    const secondFailure = {
+      ...codeSubmission,
+      attemptId: "attempt-code-2",
+      sessionVersion: 7,
+      result: {
+        ...codeSubmission.result,
+        verdict: "fail" as const,
+        score: 0,
+        errorCode: "test_failed",
+        safeFeedback: "One or more deterministic checks did not pass.",
+      },
+    };
+    const initial = recovery({ stage: "activity", sessionVersion: 6 });
+    initial.sessionVersion = 6;
+    const afterSecond = recovery({ stage: "activity", sessionVersion: 7 });
+    afterSecond.sessionVersion = 7;
+    afterSecond.activityProgress = [{ nodeId: "node-basic", activities: [{
+      activityId: "act-code", status: "in_progress", attemptIds: ["attempt-code-1", "attempt-code-2"],
+      result: "fail", quizRetryCount: 0, updatedAt: "2026-08-16T00:00:00.000Z",
+    }] }];
+    const continued = { requestId: "gap", sessionId: "session-w4", sessionVersion: 8, profileRevision: 3, activityId: "act-code", status: "insufficient", result: "fail", attemptCount: 2 };
+    const afterContinue = recovery({ stage: "learning", sessionVersion: 8 });
+    afterContinue.sessionVersion = 8;
+    const nextChapter = { ...nextStep, sessionVersion: 8, node: { ...nextStep.node!, nodeId: "node-next" } };
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(ok(bootstrap(initial)))
+      .mockResolvedValueOnce(ok(secondFailure))
+      .mockResolvedValueOnce(ok(bootstrap(afterSecond)))
+      .mockResolvedValueOnce(ok(bootstrap(afterSecond)))
+      .mockResolvedValueOnce(ok(continued))
+      .mockResolvedValueOnce(ok(bootstrap(afterContinue)))
+      .mockResolvedValueOnce(ok(nextChapter));
+    const { host, router } = await renderRoute("/activity/session-w4/act-code", fetchMock, { opened: retryCode, nodeId: "node-basic" });
+
+    await click(button(host, "提交正式评测"));
+    expect(button(host, "修改代码后重试")).toBeDefined();
+    expect(button(host, "放弃并进入下一环节")).toBeDefined();
+    await click(button(host, "放弃并进入下一环节"));
+    expect(String(fetchMock.mock.calls[4]?.[0])).toBe("/api/activities/act-code/continue-with-gap");
+    expect(bodyAt(fetchMock, 4)).toMatchObject({ sessionVersion: 7, attemptId: "attempt-code-2" });
+    expect(router.state.location.pathname).toBe("/learn/session-w4/node-next");
   });
 
   it("maps loading, empty, error, conflict and recovery to stable accessible panels", () => {

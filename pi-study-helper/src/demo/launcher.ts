@@ -3,8 +3,16 @@ import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 import { createDemoRuntime } from "./composition-root.js";
 import { startHttpServer } from "./http-server.js";
+import { resolveDemoModelMode } from "./runtime-mode.js";
+import { W4_D_LIVE_PROMPT_VERSION } from "../graphs/w4-d-graph-factory.js";
 
-const live = process.argv.includes("--live");
+const modelMode = resolveDemoModelMode(process.argv, process.env);
+const live = modelMode === "live_model";
+const apiPort = Number(process.env.PI_STUDY_API_PORT ?? "4310");
+
+if (!Number.isSafeInteger(apiPort) || apiPort < 1 || apiPort > 65_535) {
+  throw new Error("PI_STUDY_API_PORT must be a valid TCP port.");
+}
 
 function childExit(child: ReturnType<typeof spawn>): Promise<number> {
   return new Promise((resolveExit) => {
@@ -30,7 +38,7 @@ async function runApi(): Promise<void> {
   } : undefined;
   const configuredPython = process.env.PI_PYTHON_EXECUTABLE;
   const runtime = createDemoRuntime({ dataRoot, fixturesRoot, ...(configuredPython === undefined ? {} : { pythonExecutable: resolve(configuredPython) }), liveConfig });
-  const handle = startHttpServer(runtime, 4310);
+  const handle = startHttpServer(runtime, apiPort);
   process.once("SIGINT", () => { void handle.close().finally(() => process.exit(0)); });
   process.once("SIGTERM", () => { void handle.close().finally(() => process.exit(0)); });
   try { await handle.ready; process.stdout.write("API_READY\n"); await new Promise<void>(() => undefined); }
@@ -53,6 +61,7 @@ async function runSupervisor(): Promise<void> {
   const terminate = (child: ReturnType<typeof spawn>): void => { if (!child.killed) child.kill(); };
   try {
     await ready;
+    process.stdout.write(`PI_STUDY_READY mode=${modelMode} promptVersion=${live ? W4_D_LIVE_PROMPT_VERSION : "w4-d2-v1"} apiPort=${apiPort} url=http://127.0.0.1:5173/\n`);
     const vite = spawn(process.execPath, [resolve(dirname(fileURLToPath(import.meta.url)), "../../node_modules/vite/bin/vite.js"), "preview", "--host", "127.0.0.1", "--port", "5173", "--strictPort"], { shell: false, windowsHide: true, stdio: "ignore", env: { ...process.env } });
     const viteExit = childExit(vite);
     const result = await new Promise<number>((resolveExit) => {

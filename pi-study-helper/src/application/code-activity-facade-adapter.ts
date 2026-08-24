@@ -14,6 +14,7 @@ import type {
   SaveActivityDraftInput,
   CodeSubmitActivityInput,
 } from "../contracts/facade.js";
+import type { ContinueActivityWithGapInput, ContinueActivityWithGapOutput } from "../contracts/index.js";
 import { calculateKnowledgeStates } from "../domain/knowledge-state.js";
 import type { KnowledgePointDefinition } from "../domain/v2-types.js";
 import type { EvaluationActivityProjection, EvaluationEnvironmentProjection } from "../infrastructure/code-evaluation-port.js";
@@ -103,6 +104,18 @@ function safeActivity(activity: CodeActivityAssets["activity"]): CodeActivitySaf
     primaryKnowledgePointId: activity.primaryKnowledgePointId,
     supportingKnowledgePointIds: [...activity.supportingKnowledgePointIds],
     ...(activity.starterCode === undefined ? {} : { starterCode: activity.starterCode }),
+    ...(activity.entryPoint === undefined ? {} : { entryPoint: activity.entryPoint }),
+    ...(activity.outputContract === undefined ? {} : { outputContract: activity.outputContract }),
+    ...(activity.editableRegions === undefined ? {} : { editableRegions: activity.editableRegions.map((region) => ({
+      regionId: region.regionId,
+      startMarker: region.startMarker,
+      endMarker: region.endMarker,
+      maxCharacters: region.maxCharacters,
+    })) }),
+    ...(activity.allowedLibraries === undefined ? {} : { allowedLibraries: [...activity.allowedLibraries] }),
+    ...(activity.publicTestIds === undefined ? {} : { publicTestIds: [...activity.publicTestIds] }),
+    ...(activity.publicAcceptanceCriteria === undefined ? {} : { publicAcceptanceCriteria: [...activity.publicAcceptanceCriteria] }),
+    ...(activity.problemStatement === undefined ? {} : { problemStatement: structuredClone(activity.problemStatement) }),
   };
 }
 
@@ -339,7 +352,7 @@ export class CodeActivityFacadeAdapter {
         const node = progress.find((entry) => entry.activities.some((activity) => activity.activityId === input.activityId));
         const entry = node?.activities.find((activity) => activity.activityId === input.activityId);
         if (entry === undefined || !entry.attemptIds.includes(input.attemptId)) throw new LearningSessionRepositoryError("prerequisite_violation", "Activity Attempt is not current progress");
-        entry.status = "completed";
+        entry.status = evidence.outcome === "correct" ? "completed" : "in_progress";
         entry.result = evidence.outcome === "correct" ? "pass" : evidence.outcome === "partial" ? "partial" : "fail";
         entry.updatedAt = now;
         const evidenceVersion = bound.latestCommit.evidenceVersion + 1;
@@ -367,6 +380,88 @@ export class CodeActivityFacadeAdapter {
         };
       },
     }, new AbortController().signal);
+  }
+
+  async continueActivityWithGap(input: ContinueActivityWithGapInput): Promise<ContinueActivityWithGapOutput> {
+    const snapshot = await this.options.sessions.getBoundSnapshot(input.sessionId);
+    if (snapshot.profileRevision !== input.profileRevision) {
+      throw new LearningSessionRepositoryError("profile_revision_conflict", "Profile revision does not match session");
+    }
+    const progress = structuredClone(snapshot.activityProgress);
+    const node = progress.find((item) => item.activities.some((activity) => activity.activityId === input.activityId));
+    const entry = node?.activities.find((activity) => activity.activityId === input.activityId);
+    const result = entry?.result;
+    const replay = snapshot.latestCommit.requestId === input.requestId
+      && entry?.continuedWithGap === true
+      && entry.attemptIds.at(-1) === input.attemptId;
+    if (replay && result !== undefined && result !== "pass") {
+      return {
+        requestId: input.requestId,
+        sessionId: snapshot.sessionId,
+        sessionVersion: snapshot.sessionVersion,
+        profileRevision: snapshot.profileRevision,
+        activityId: input.activityId,
+        status: "insufficient",
+        result,
+        attemptCount: entry.attemptIds.length,
+      };
+    }
+    if (snapshot.sessionVersion !== input.sessionVersion) {
+      throw new LearningSessionRepositoryError("session_version_conflict", "Session version is stale");
+    }
+    if (entry === undefined || entry.status !== "in_progress" || entry.attemptIds.length < 2
+        || entry.attemptIds.at(-1) !== input.attemptId || result === undefined || result === "pass") {
+      throw new LearningSessionRepositoryError(
+        "prerequisite_violation",
+        "Only a twice-attempted unresolved code Activity can continue with a learning gap",
+      );
+    }
+    const recorded = await this.options.activities.getAttempt({
+      subjectId: snapshot.view.subjectId,
+      sessionId: input.sessionId,
+      activityId: input.activityId,
+      attemptId: input.attemptId,
+    });
+    if (recorded === undefined || recorded.result.executionStatus !== "completed"
+        || (recorded.result.verdict !== "fail" && recorded.result.verdict !== "partial")) {
+      throw new LearningSessionRepositoryError("prerequisite_violation", "Latest code Attempt is not a submitted learner failure");
+    }
+    entry.status = "insufficient";
+    entry.continuedWithGap = true;
+    entry.updatedAt = this.now().toISOString();
+    const suffix = await this.options.pathSuffix.replan({
+      snapshot: { ...snapshot, activityProgress: progress },
+      knowledgeStates: snapshot.knowledgeStates,
+      evidenceVersion: snapshot.latestCommit.evidenceVersion,
+      trigger: "error_remediation",
+    });
+    const committed = await this.options.sessions.commit({
+      requestId: input.requestId,
+      sessionId: input.sessionId,
+      sessionVersion: input.sessionVersion,
+      profileRevision: input.profileRevision,
+      candidate: {
+        requestId: input.requestId,
+        knowledgeStates: snapshot.knowledgeStates,
+        activityProgress: progress,
+        currentAttempt: null,
+        nextStage: "learning",
+        ...(suffix.path === undefined ? {} : {
+          pathCandidate: toPathSafeSnapshot(suffix.path),
+          internalPathCandidate: suffix.path,
+        }),
+      },
+    });
+    return {
+      requestId: input.requestId,
+      sessionId: committed.sessionId,
+      sessionVersion: committed.sessionVersion,
+      profileRevision: committed.profileRevision,
+      activityId: input.activityId,
+      status: "insufficient",
+      result,
+      attemptCount: entry.attemptIds.length,
+    };
   }
 
   async getActivityAttempt(input: GetActivityAttemptInput): Promise<ActivityAttemptSafeView> {
@@ -439,6 +534,7 @@ interface StoredActivity extends CodeActivitySafeView {
   environmentRef: string;
   datasetRefs?: string[];
   publicTestRefs?: string[];
+  businessAcceptanceCriteria?: string[];
 }
 
 interface StoredPublicTest {
@@ -574,6 +670,12 @@ export class ProfileFamilyCodeActivityAssetResolver implements CodeActivityAsset
       ...activity,
       kind: codeKind,
       activityVersion: activity.profileRevision,
+      ...(activity.publicTestRefs === undefined ? {} : { publicTestIds: [...activity.publicTestRefs] }),
+      ...(activity.publicAcceptanceCriteria !== undefined
+        ? { publicAcceptanceCriteria: [...activity.publicAcceptanceCriteria] }
+        : activity.businessAcceptanceCriteria === undefined
+          ? activity.outputContract === undefined ? {} : { publicAcceptanceCriteria: [activity.outputContract] }
+          : { publicAcceptanceCriteria: [...activity.businessAcceptanceCriteria] }),
     };
     return {
       activity: code,

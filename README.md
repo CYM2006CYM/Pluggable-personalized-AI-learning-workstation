@@ -172,3 +172,11 @@ XH-202630上海云之脑智能科技有限公司-领域知识个性化生成与�
 `pi-study-helper`目前主要提供已有学习助手基础框架；Profile v2、Pandas正式资料包、个性化路径、代码执行器、网页和新增测试仍需按六周计划逐步实现。设计文档中的规划、候选和延期能力，不代表源码已经具备。
 
 本仓库将作为团队后续开发的唯一正式协作仓库。可交付代码、负责人批准的SDK修改和正式设计变更都应进入本仓库规定的五个项目条目中，不能再形成第二套项目目录。
+
+## 本地网页部署入口
+
+需要在新的 Windows 电脑上部署并运行当前 `pi-study-helper` 网页 Demo 时，请按照应用目录 README 中新增的“Windows 本地网页 Demo 完整部署流程”逐项操作：
+
+- [`pi-study-helper/README.md`](pi-study-helper/README.md)
+
+该流程包含 Git、NVM、Node.js `22.23.1`、Python `3.13.7`、pandas `3.0.5`、npm 依赖、DeepSeek API Key、安全环境变量、本地端口、真实 AI 模式、录制模式和故障排查。不要把 API Key、`.demo-data*` 或 `.demo-build` 提交到 GitHub。

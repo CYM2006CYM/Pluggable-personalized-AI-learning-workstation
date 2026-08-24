@@ -28,9 +28,10 @@ import {
   type SessionSnapshot,
 } from "../repositories/learning-session-repository.js";
 import type { ProfileFamilyRepository } from "../repositories/profile-family-repository.js";
-import type { LearningCardSafeView, NodeActivityProgress } from "../contracts/index.js";
+import type { LearningCardAsset, LearningCardSafeView, NodeActivityProgress } from "../contracts/index.js";
 import type { AdaptiveContentPort } from "../contracts/index.js";
 import { selectDeterministicCard } from "./deterministic-content-policy.js";
+import { lessonVariantForPreference, projectLearningCardForSession } from "./rich-lesson-selection.js";
 import {
   toPathSafeSnapshot,
   type InternalPathSessionPort,
@@ -39,7 +40,7 @@ import {
 
 export interface PathProfileResolver {
   load(subjectId: string, profileRevision: number): Promise<PathEngineProfile>;
-  loadCard?(subjectId: string, profileRevision: number, knowledgePointId: string): Promise<LearningCardSafeView | undefined>;
+  loadCard?(subjectId: string, profileRevision: number, knowledgePointId: string): Promise<LearningCardAsset | undefined>;
 }
 
 /** Uses the revision bound to the session; it never silently follows current active. */
@@ -67,7 +68,7 @@ export class ProfileFamilyPathResolver implements PathProfileResolver {
     };
   }
 
-  async loadCard(subjectId: string, profileRevision: number, knowledgePointId: string): Promise<LearningCardSafeView | undefined> {
+  async loadCard(subjectId: string, profileRevision: number, knowledgePointId: string): Promise<LearningCardAsset | undefined> {
     return this.profiles.loadProfileV2RevisionCards(subjectId, profileRevision)
       .then((cards) => cards.find((card) => card.knowledgePointId === knowledgePointId));
   }
@@ -250,7 +251,7 @@ class PathRuntimeCollaborator implements PathMethods {
       throw new LearningSessionRepositoryError("path_version_conflict", "Path candidate does not belong to the current session snapshot");
     }
     const profile = await this.options.profile.load(snapshot.view.subjectId, snapshot.profileRevision);
-    const fixedCards = new Map<string, LearningCardSafeView>();
+    const fixedCards = new Map<string, LearningCardAsset>();
     if (this.options.profile.loadCard !== undefined) {
       const loaded = await Promise.all(path.nodes.map((node) =>
         this.options.profile.loadCard!(snapshot.view.subjectId, snapshot.profileRevision, node.knowledgePointId)));
@@ -263,6 +264,7 @@ class PathRuntimeCollaborator implements PathMethods {
         profileRevision: snapshot.profileRevision,
         knowledgePointId: node.knowledgePointId,
         excludedArtifactIds: fixedCards.has(node.knowledgePointId) ? [fixedCards.get(node.knowledgePointId)!.cardId] : [],
+        lessonVariantId: lessonVariantForPreference(snapshot.diagnosticDraft?.background?.explanation_preference),
       }).catch(() => unavailable));
     let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
     const deadline = new Promise<typeof unavailable>((resolve) => {
@@ -275,13 +277,29 @@ class PathRuntimeCollaborator implements PathMethods {
       const fixed = fixedCards.get(node.knowledgePointId);
       const dynamic = prepared[index];
       if (point?.contentEstimatedMinutes === undefined) return [];
+      const fixedBase = fixed === undefined ? undefined : projectLearningCardForSession({
+        fixed,
+        preference: snapshot.diagnosticDraft?.background?.explanation_preference,
+      });
       const selected = selectDeterministicCard({
         dynamic: dynamic?.status === "accepted" ? dynamic.card : undefined,
-        fixed,
+        fixed: fixedBase,
         knowledgePointId: node.knowledgePointId,
         contentEstimatedMinutes: point.contentEstimatedMinutes,
         allowedSourceAnchorIds: point.sourceAnchorIds,
       });
+      if (fixed?.richLesson !== undefined && fixedBase !== undefined) {
+        const dynamicTipSource = selected.source === "dynamic" ? selected.card : undefined;
+        return [{
+          nodeId: node.nodeId,
+          source: "fixed" as const,
+          card: projectLearningCardForSession({
+            fixed,
+            preference: snapshot.diagnosticDraft?.background?.explanation_preference,
+            dynamicTipSource,
+          }),
+        }];
+      }
       return selected.card === undefined || selected.source === "unavailable"
         ? []
         : [{ nodeId: node.nodeId, source: selected.source, card: selected.card }];
@@ -342,7 +360,11 @@ class PathRuntimeCollaborator implements PathMethods {
         ...meta(snapshot), pathVersion: path.pathVersion, completed: false, node: asSafeNode(projectedNode),
         ...(activity === undefined ? {} : { activity }),
         ...(card === undefined ? {} : { card, sourceAnchorIds: [...card.sourceAnchorIds] }),
-        contentReadiness: card === undefined ? "preparing" : binding?.source === "fixed" ? "fallback" : "ready",
+        contentReadiness: card === undefined
+          ? "preparing"
+          : card.selectedLesson !== undefined || binding?.source === "dynamic"
+            ? "ready"
+            : "fallback",
       };
     }
     return {

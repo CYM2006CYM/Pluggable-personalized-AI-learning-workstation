@@ -90,6 +90,34 @@ describe("W4 C D3 HTTP adapter", () => {
     await handle.close();
   });
 
+  it("accepts the three new explanation preferences and rejects uncertain on new HTTP input", async () => {
+    const received: Record<string, unknown>[] = [];
+    const fake = {
+      facade: { saveDiagnosticDraft: async (input: Record<string, unknown>) => { received.push(input); return { ok: true }; } },
+      bootstrap: {},
+      close: async () => undefined,
+    } as unknown as DemoRuntime;
+    const { handle, url } = await listen(Promise.resolve(fake));
+    await handle.ready;
+    const payload = (preference: string) => ({
+      requestId: `preference-${preference.replaceAll("_", "-")}`,
+      sessionVersion: 1,
+      profileRevision: 3,
+      diagnosticId: "diagnostic-pandas-cleaning",
+      diagnosticVersion: 1,
+      background: { python_experience: "uncertain", pandas_experience: "uncertain", explanation_preference: preference },
+      diagnosticDraftVersion: 0,
+    });
+    for (const preference of ["step_by_step", "concise", "example_first"]) {
+      expect((await postJson(url, "/api/sessions/s1/diagnostic/draft", payload(preference))).response.status).toBe(200);
+    }
+    const rejected = await postJson(url, "/api/sessions/s1/diagnostic/draft", payload("uncertain"));
+    expect(rejected.response.status).toBe(400);
+    expect(rejected.body.error.code).toBe("invalid_request_shape");
+    expect(received).toHaveLength(3);
+    await handle.close();
+  });
+
   it("returns 202 for an accepted asynchronous content state", async () => {
     const fake = {
       facade: { getNextStep: async () => ({ contentReadiness: "preparing" }) },

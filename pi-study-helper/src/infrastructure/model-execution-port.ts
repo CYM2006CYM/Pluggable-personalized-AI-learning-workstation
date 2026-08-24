@@ -62,6 +62,7 @@ export interface PiGraphModelExecutionAdapterOptions {
 }
 
 const MAX_TEXT_LENGTH = 800;
+const MAX_CANDIDATE_FEEDBACK_LENGTH = 4096;
 const MAX_TRACE_LENGTH = MAX_TEXT_LENGTH * 8;
 const MAX_COLLECTION_ITEMS = 64;
 const MAX_OBJECT_KEYS = 32;
@@ -138,9 +139,11 @@ function clone<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
 }
 
-function fixturePayloadWithinLimits(value: unknown, depth = 0): boolean {
+function fixturePayloadWithinLimits(value: unknown, depth = 0, fieldName?: string): boolean {
   if (depth > MAX_NESTING_DEPTH) return false;
-  if (typeof value === "string") return value.length <= MAX_TEXT_LENGTH;
+  if (typeof value === "string") {
+    return value.length <= (fieldName === "candidateFeedback" ? MAX_CANDIDATE_FEEDBACK_LENGTH : MAX_TEXT_LENGTH);
+  }
   if (Array.isArray(value)) {
     return value.length <= MAX_COLLECTION_ITEMS
       && value.every((item) => fixturePayloadWithinLimits(item, depth + 1));
@@ -148,7 +151,7 @@ function fixturePayloadWithinLimits(value: unknown, depth = 0): boolean {
   if (!isRecord(value)) return true;
   const entries = Object.entries(value);
   return entries.length <= MAX_OBJECT_KEYS
-    && entries.every(([, next]) => fixturePayloadWithinLimits(next, depth + 1));
+    && entries.every(([key, next]) => fixturePayloadWithinLimits(next, depth + 1, key));
 }
 
 function fixturePayloadFitsJson(value: unknown): boolean {

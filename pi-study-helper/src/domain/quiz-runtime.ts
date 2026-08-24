@@ -27,7 +27,9 @@ export interface QuizAttemptSnapshot {
   prompt: string;
   primaryKnowledgePointId: string;
   supportingKnowledgePointIds: string[];
-  retryNumber: 0 | 1;
+  retryNumber: number;
+  questionSource?: NonNullable<QuizActivitySafeView["questionSource"]>;
+  gradingBinding?: QuizGradingBinding;
   legacySubtype?: "single_choice" | "judgment";
   questions: QuizQuestionPrivate[];
   status: "draft" | "submitted";
@@ -37,6 +39,17 @@ export interface QuizAttemptSnapshot {
   submissionHash?: string;
   submittedAt?: string;
 }
+
+export type QuizGradingBinding =
+  | {
+      source: "ai_reviewed";
+      questionSetSha256: string;
+      generationRunId: string;
+    }
+  | {
+      source: "profile_fixed" | "profile_supplemental" | "none";
+      questionSetSha256: string;
+    };
 
 export interface QuizSubmission {
   requestId: string;
@@ -64,6 +77,30 @@ export class QuizRuntimeError extends Error {
 
 function hash(value: unknown): string {
   return createHash("sha256").update(JSON.stringify(value), "utf8").digest("hex").slice(0, 24);
+}
+
+export function quizQuestionSetSha256(questions: readonly QuizQuestionPrivate[]): string {
+  return createHash("sha256").update(JSON.stringify(questions), "utf8").digest("hex");
+}
+
+function validateGradingBinding(
+  questions: readonly QuizQuestionPrivate[],
+  binding: QuizGradingBinding | undefined,
+  questionSource: NonNullable<QuizActivitySafeView["questionSource"]>,
+): void {
+  if (binding === undefined) return;
+  if (binding.questionSetSha256 !== quizQuestionSetSha256(questions)) {
+    throw new QuizRuntimeError("submission_contract_error", "Quiz grading binding does not match the private question snapshot");
+  }
+  if (binding.source === "ai_reviewed" && !binding.generationRunId) {
+    throw new QuizRuntimeError("submission_contract_error", "AI-reviewed quiz binding requires a generation run ID");
+  }
+  const expectedSource = questionSource === "ai_live" || questionSource === "ai_recorded" ? "ai_reviewed"
+    : questionSource === "ai_supplemented" ? "profile_supplemental"
+      : questionSource === "profile_fixed" ? "profile_fixed" : "none";
+  if (binding.source !== expectedSource) {
+    throw new QuizRuntimeError("submission_contract_error", "Quiz grading source does not match the displayed question source");
+  }
 }
 
 function safeQuestion(question: QuizQuestionPrivate): QuizActivitySafeView["questions"][number] {
@@ -98,13 +135,16 @@ export class DeterministicQuizRuntime {
     profileRevision: number;
     activity: QuizActivityDefinition;
     questions: QuizQuestionPrivate[];
-    retryNumber: 0 | 1;
+    retryNumber: number;
+    questionSource?: NonNullable<QuizActivitySafeView["questionSource"]>;
+    gradingBinding?: QuizGradingBinding;
     legacySubtype?: "single_choice" | "judgment";
     excludedQuestionIds?: string[];
     requestId?: string;
   }): { attemptId: string; activity: QuizActivitySafeView } {
     if (input.activity.profileRevision !== input.profileRevision) throw new QuizRuntimeError("activity_version_conflict", "Activity revision does not match session");
     validatePrivateQuestions(input.questions);
+    validateGradingBinding(input.questions, input.gradingBinding, input.questionSource ?? "profile_fixed");
     const excluded = new Set(input.excludedQuestionIds ?? []);
     const questions = input.questions.filter((question) => !excluded.has(question.questionId));
     const attemptId = input.requestId === undefined
@@ -121,6 +161,8 @@ export class DeterministicQuizRuntime {
       primaryKnowledgePointId: input.activity.primaryKnowledgePointId,
       supportingKnowledgePointIds: [...input.activity.supportingKnowledgePointIds],
       retryNumber: input.retryNumber,
+      questionSource: input.questionSource ?? "profile_fixed",
+      ...(input.gradingBinding === undefined ? {} : { gradingBinding: structuredClone(input.gradingBinding) }),
       ...(input.legacySubtype === undefined ? {} : { legacySubtype: input.legacySubtype }),
       questions: structuredClone(questions),
       status: "draft",
@@ -139,6 +181,7 @@ export class DeterministicQuizRuntime {
         supportingKnowledgePointIds: [...input.activity.supportingKnowledgePointIds],
         questions: questions.map(safeQuestion),
         retryNumber: input.retryNumber,
+        questionSource: input.questionSource ?? "profile_fixed",
       },
     };
   }
@@ -151,6 +194,7 @@ export class DeterministicQuizRuntime {
 
   restore(attempt: QuizAttemptSnapshot): void {
     validatePrivateQuestions(attempt.questions);
+    validateGradingBinding(attempt.questions, attempt.gradingBinding, attempt.questionSource ?? "profile_fixed");
     this.attempts.set(attempt.attemptId, structuredClone(attempt));
   }
 
@@ -196,7 +240,14 @@ export class DeterministicQuizRuntime {
       if (!validType) throw new QuizRuntimeError("submission_contract_error", "Quiz answer type does not match the question");
       const correct = answer.answer === question.correctAnswer;
       if (correct) correctCount += 1;
-      review.push({ questionId: question.questionId, correct, correctAnswer: question.correctAnswer, explanation: question.explanation, sourceAnchorIds: [...question.sourceAnchorIds] });
+      review.push({
+        questionId: question.questionId,
+        prompt: question.prompt,
+        correct,
+        correctAnswer: question.correctAnswer,
+        explanation: question.explanation,
+        sourceAnchorIds: [...question.sourceAnchorIds],
+      });
     }
     const totalCount = expected.size;
     const legacySingleQuestion = attempt.legacySubtype !== undefined;
@@ -210,10 +261,10 @@ export class DeterministicQuizRuntime {
       correctCount,
       totalCount,
       requiredCorrectCount,
-      retryAllowed: verdict !== "pass" && attempt.retryNumber === 0,
+      retryAllowed: verdict !== "pass",
       safeFeedback: legacySingleQuestion
-        ? verdict === "pass" ? "题目已通过。" : "本题未通过，可进行一次重试。"
-        : verdict === "pass" ? "题组已通过。" : verdict === "insufficient" ? "当前题组不足以形成确定性判定。" : "本次结果已记录，可进行一次重试。",
+        ? verdict === "pass" ? "题目已通过。" : "本题未通过，可以换一组题继续练习。"
+        : verdict === "pass" ? "题组已通过。" : verdict === "insufficient" ? "当前题组不足以形成确定性判定，可以重新生成题组。" : "本次结果已记录，可以换一组题继续练习。",
       answerReview: review,
     };
     attempt.status = "submitted";

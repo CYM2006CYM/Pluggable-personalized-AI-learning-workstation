@@ -62,12 +62,13 @@ describe("W1-C2 LearningRuntimeFacade contract", () => {
       "saveActivityDraft",
       "prepareActivityRun",
       "submitActivity",
+      "continueActivityWithGap",
       "getActivityAttempt",
       "recoverActivity",
       "askContextQuestion",
     ] as const satisfies readonly (keyof Facade.LearningRuntimeFacade)[];
 
-    expect(methodNames).toHaveLength(17);
+    expect(methodNames).toHaveLength(18);
     expectTypeOf<(typeof methodNames)[number]>().toEqualTypeOf<keyof Facade.LearningRuntimeFacade>();
     expectTypeOf<Extract<keyof Facade.LearningRuntimeFacade, "submitDiagnostic" | "runActivity">>()
       .toEqualTypeOf<never>();

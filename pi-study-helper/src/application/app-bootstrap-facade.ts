@@ -48,6 +48,11 @@ function diagnosticDraft(draft: DiagnosticDraftSafeView): DiagnosticDraftSafeVie
     } }),
     ...(draft.currentQuestionId === undefined ? {} : { currentQuestionId: draft.currentQuestionId }),
     processedQuestionIds: [...draft.processedQuestionIds],
+    answers: (draft.answers ?? []).map((answer) => ({
+      questionId: answer.questionId,
+      status: answer.status,
+      ...(answer.submittedAnswer === undefined ? {} : { submittedAnswer: answer.submittedAnswer }),
+    })),
   };
 }
 
@@ -65,6 +70,8 @@ function progress(entries: readonly NodeActivityProgress[]): NodeActivityProgres
       attemptIds: [...activity.attemptIds],
       ...(activity.result === undefined ? {} : { result: activity.result }),
       quizRetryCount: activity.quizRetryCount,
+      ...(activity.bestResult === undefined ? {} : { bestResult: activity.bestResult }),
+      ...(activity.continuedWithGap === undefined ? {} : { continuedWithGap: activity.continuedWithGap }),
       updatedAt: activity.updatedAt,
     })),
   }));
@@ -163,6 +170,13 @@ export class FileAppBootstrapFacade implements AppBootstrapFacade {
           sessionVersion: recovered.sessionVersion,
           profileRevision: recovered.profileRevision,
         });
+    const boundLearningCards = recovered === undefined || typeof this.options.sessions.getBoundLearningCards !== "function"
+      ? []
+      : await this.options.sessions.getBoundLearningCards({
+          sessionId: recovered.sessionId,
+          sessionVersion: recovered.sessionVersion,
+          profileRevision: recovered.profileRevision,
+        });
     const session: SessionRecoverySafeView | undefined = recovered === undefined ? undefined : {
       sessionId: recovered.sessionId,
       sessionVersion: recovered.sessionVersion,
@@ -171,6 +185,12 @@ export class FileAppBootstrapFacade implements AppBootstrapFacade {
       diagnosticDraftVersion: recovered.diagnosticDraftVersion,
       ...(recovered.diagnosticDraft === undefined ? {} : { diagnosticDraft: diagnosticDraft(recovered.diagnosticDraft) }),
       activityProgress: progress(recovered.activityProgress),
+      evidenceVersion: recovered.latestCommit?.evidenceVersion ?? 0,
+      knowledgeStates: structuredClone(recovered.knowledgeStates ?? []),
+      learningCards: boundLearningCards.map((binding) => ({
+        nodeId: binding.nodeId,
+        card: structuredClone(binding.card),
+      })),
       ...(recovered.currentAttempt === undefined ? {} : { currentAttempt: currentAttempt(recovered.currentAttempt) }),
       ...(recovered.path === undefined ? {} : { path: {
         pathId: recovered.path.pathId,

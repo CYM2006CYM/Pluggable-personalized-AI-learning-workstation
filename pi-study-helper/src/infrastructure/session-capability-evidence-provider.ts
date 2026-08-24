@@ -56,6 +56,7 @@ const REVISION_3_OBSERVABLE_MAP: readonly ObservableRule[] = [
   { knowledgePointId: "pandas.clean.duplicate-orders", form: "selected_response", dimensions: ["cleaning_reasoning"] },
   { knowledgePointId: "pandas.clean.type-format", form: "selected_response", dimensions: ["syntax_api", "cleaning_reasoning"] },
   { knowledgePointId: "pandas.clean.validate-result", form: "selected_response", dimensions: ["validation_debugging"] },
+  { knowledgePointId: "pandas.clean.read-csv", activityId: "act-load-csv", form: "code_execution", dimensions: ["syntax_api", "data_abstraction", "validation_debugging"] },
   { knowledgePointId: "pandas.clean.inspect-dataframe", activityId: "act-inspect-dataframe", form: "code_execution", dimensions: ["syntax_api", "data_abstraction", "validation_debugging"] },
   { knowledgePointId: "pandas.clean.missing-values", activityId: "act-missing", form: "code_execution", dimensions: ["syntax_api", "cleaning_reasoning", "validation_debugging"] },
   { knowledgePointId: "pandas.clean.duplicate-orders", activityId: "act-duplicates", form: "code_execution", dimensions: ["syntax_api", "cleaning_reasoning", "validation_debugging"] },

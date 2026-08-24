@@ -8,12 +8,17 @@ import { PageFrame } from "../components/PageFrame.js";
 import { PageStatePanel } from "../components/PageStatePanel.js";
 
 const EXPERIENCE = ["none", "basic", "comfortable", "uncertain"] as const;
-const PREFERENCES = ["concise", "step_by_step", "example_first", "uncertain"] as const;
+const PREFERENCES = [
+  { value: "step_by_step", label: "逐步讲解" },
+  { value: "concise", label: "重点速览" },
+  { value: "example_first", label: "案例优先" },
+] as const;
 const DEFAULT_BACKGROUND: BackgroundQuestionnaire = {
   python_experience: "uncertain",
   pandas_experience: "uncertain",
   explanation_preference: "step_by_step",
 };
+const SYSTEM_PATH_BUDGET_MINUTES = 400;
 
 export function StartPage() {
   const bootstrap = useBootstrap();
@@ -22,7 +27,6 @@ export function StartPage() {
   const [subjectId, setSubjectId] = useState("");
   const [goalId, setGoalId] = useState("");
   const [chapterId, setChapterId] = useState("");
-  const [availableMinutes, setAvailableMinutes] = useState(120);
   const [background, setBackground] = useState(DEFAULT_BACKGROUND);
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState<Error>();
@@ -43,7 +47,7 @@ export function StartPage() {
     setActionError(undefined);
     try {
       const session = await api.startSession({
-        requestId: newRequestId("web-start"), subjectId, mode, goalId, availableMinutes,
+        requestId: newRequestId("web-start"), subjectId, mode, goalId, availableMinutes: SYSTEM_PATH_BUDGET_MINUTES,
         ...(mode === "chapter" ? { chapterId } : {}),
       });
       await api.saveDiagnosticDraft({
@@ -85,7 +89,7 @@ export function StartPage() {
   const activeProfile = bootstrap.data?.profiles.find((profile) => profile.subjectId === subjectId)
     ?? bootstrap.data?.profiles[0];
   return (
-    <PageFrame eyebrow="学习入口" title="开始一次可追踪的学习会话" summary="选择资料包、入口和问卷。所有正式进度由本地服务保存。" actions={<span className="header-badge">真实 API</span>}>
+    <PageFrame eyebrow="学习入口" title="开始一次可追踪的学习会话" summary="选择资料包、入口和问卷。所有正式进度由本地服务保存。" actions={<span className="header-badge">服务端记录</span>}>
       {bootstrap.loading ? <PageStatePanel page="start" state="loading" /> : null}
       {!bootstrap.loading && stateError ? <PageStatePanel page="start" state={isApiError(stateError) && stateError.status === 409 ? "conflict" : "error"} code={isApiError(stateError) ? stateError.code : stateError.message} onRetry={() => { setActionError(undefined); void bootstrap.reload(); }} /> : null}
       {!bootstrap.loading && stateError === undefined && (bootstrap.data?.profiles.length === 0 || bootstrap.data?.goals.length === 0) ? <PageStatePanel page="start" state="empty" /> : null}
@@ -101,11 +105,11 @@ export function StartPage() {
               <label>学习资料包<select aria-label="学习资料包" value={subjectId} onChange={(event) => setSubjectId(event.target.value)}>{bootstrap.data.profiles.map((profile) => <option key={profile.subjectId} value={profile.subjectId}>{profile.name}</option>)}</select></label>
               <fieldset><legend>学习入口</legend><label className="choice-row"><input type="radio" name="entry" checked={mode === "recommended"} onChange={() => setMode("recommended")} /> 系统推荐</label><label className="choice-row"><input type="radio" name="entry" checked={mode === "chapter"} onChange={() => setMode("chapter")} /> 按章节学习</label></fieldset>
               <label>学习目标<select aria-label="学习目标" value={goalId} onChange={(event) => setGoalId(event.target.value)}>{bootstrap.data.goals.map((goal) => <option key={goal.goalId} value={goal.goalId}>{goal.title}</option>)}</select></label>
-              <label>可用时间<select aria-label="可用时间" value={availableMinutes} onChange={(event) => setAvailableMinutes(Number(event.target.value))}><option value={60}>60分钟</option><option value={120}>120分钟</option><option value={400}>400分钟</option></select></label>
+              <div className="system-time-note"><strong>学习时长由系统计算</strong><span>完成诊断后，系统会按需要学习的章节和正式活动给出预计时间。</span></div>
               {mode === "chapter" ? <label>起始章节<select aria-label="起始章节" value={chapterId} onChange={(event) => setChapterId(event.target.value)}>{bootstrap.data.chapters.map((chapter) => <option key={chapter.chapterId} value={chapter.chapterId}>{chapter.title}</option>)}</select></label> : null}
               <label>Python经验<select aria-label="Python经验" value={background.python_experience} onChange={(event) => setBackground({ ...background, python_experience: event.target.value as BackgroundQuestionnaire["python_experience"] })}>{EXPERIENCE.map((value) => <option key={value}>{value}</option>)}</select></label>
               <label>Pandas经验<select aria-label="Pandas经验" value={background.pandas_experience} onChange={(event) => setBackground({ ...background, pandas_experience: event.target.value as BackgroundQuestionnaire["pandas_experience"] })}>{EXPERIENCE.map((value) => <option key={value}>{value}</option>)}</select></label>
-              <label>讲解偏好<select aria-label="讲解偏好" value={background.explanation_preference} onChange={(event) => setBackground({ ...background, explanation_preference: event.target.value as BackgroundQuestionnaire["explanation_preference"] })}>{PREFERENCES.map((value) => <option key={value}>{value}</option>)}</select></label>
+              <label>讲解偏好<select aria-label="讲解偏好" value={background.explanation_preference} onChange={(event) => setBackground({ ...background, explanation_preference: event.target.value as BackgroundQuestionnaire["explanation_preference"] })}>{PREFERENCES.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
             </div>
             <div className="section-footer"><span className="quiet-label">{subjectId}</span><button type="submit" className="button primary" disabled={busy || subjectId === "" || goalId === "" || (mode === "chapter" && chapterId === "")}>{busy ? "正在创建" : "开始学习"}</button></div>
           </form>

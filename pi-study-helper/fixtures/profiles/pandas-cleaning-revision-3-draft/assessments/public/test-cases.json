@@ -1,6 +1,17 @@
 {
   "tests": [
     {
+      "testId": "test-read-csv-public",
+      "visibility": "public",
+      "fileRef": "assessments/public/tests/test-read-csv-public.py",
+      "fixtureRefs": [
+        "dataset-public-orders"
+      ],
+      "dimensionId": "read_csv",
+      "blocking": true,
+      "assetHash": "sha256:aee18e579c821de88badc4e8f2072d68ed8dab2ea9d301d6798e467c8f9cd183"
+    },
+    {
       "testId": "test-structure-public",
       "visibility": "public",
       "fileRef": "assessments/public/tests/test-structure-public.py",

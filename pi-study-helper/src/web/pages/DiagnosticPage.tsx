@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import type { BackgroundQuestionnaire, DiagnosticQuestionSafeView } from "../../contracts/index.js";
 import { api, isApiError, newRequestId } from "../api/client.js";
@@ -11,11 +11,25 @@ export function DiagnosticPage() {
   const bootstrap = useBootstrap(sessionId);
   const navigate = useNavigate();
   const [answer, setAnswer] = useState<string | boolean>();
+  const [questionIndex, setQuestionIndex] = useState(0);
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState<Error>();
   const session = bootstrap.data?.session;
   const processed = session?.diagnosticDraft?.processedQuestionIds ?? [];
-  const question = useMemo(() => bootstrap.data?.diagnostic.questions.find((item) => !processed.includes(item.questionId)), [bootstrap.data, processed]);
+  const questions = useMemo(() => bootstrap.data?.diagnostic.questions ?? [], [bootstrap.data]);
+  const savedAnswers = session?.diagnosticDraft?.answers ?? [];
+  const firstUnprocessedIndex = questions.findIndex((item) => !processed.includes(item.questionId));
+  const question = questions[questionIndex];
+  const savedAnswer = question === undefined ? undefined : savedAnswers.find((item) => item.questionId === question.questionId);
+
+  useEffect(() => {
+    if (session?.view.mode !== "recommended" || questions.length === 0) return;
+    setQuestionIndex(firstUnprocessedIndex === -1 ? questions.length : firstUnprocessedIndex);
+  }, [firstUnprocessedIndex, questions.length, session?.diagnosticDraftVersion, session?.view.mode]);
+
+  useEffect(() => {
+    setAnswer(savedAnswer?.submittedAnswer);
+  }, [question?.questionId, savedAnswer?.submittedAnswer]);
 
   const submitQuestion = async (item: DiagnosticQuestionSafeView, skip: boolean) => {
     if (session === undefined) return;
@@ -28,7 +42,7 @@ export function DiagnosticPage() {
         diagnosticDraftVersion: session.diagnosticDraftVersion,
         ...(skip ? { action: "skip" as const } : { action: "answer" as const, answer: answer! }),
       });
-      setAnswer(undefined); await bootstrap.reload();
+      await bootstrap.reload();
     } catch (error) { setActionError(error instanceof Error ? error : new Error("diagnostic_answer_failed")); }
     finally { setBusy(false); }
   };
@@ -37,7 +51,7 @@ export function DiagnosticPage() {
     if (session === undefined || bootstrap.data === undefined) return;
     setBusy(true); setActionError(undefined);
     try {
-      const background: BackgroundQuestionnaire = session.diagnosticDraft?.background ?? { python_experience: "uncertain", pandas_experience: "uncertain", explanation_preference: "uncertain" };
+      const background: BackgroundQuestionnaire = session.diagnosticDraft?.background ?? { python_experience: "uncertain", pandas_experience: "uncertain", explanation_preference: "step_by_step" };
       const completed = await api.completeDiagnostic(session.view.mode === "chapter" ? {
         requestId: newRequestId("web-diagnostic-complete"), sessionId, sessionVersion: session.view.sessionVersion,
         profileRevision: session.view.profileRevision, mode: "background_only", background, diagnosticDraftVersion: session.diagnosticDraftVersion,
@@ -65,13 +79,13 @@ export function DiagnosticPage() {
 
   const error = actionError ?? bootstrap.error;
   const state = error === undefined ? undefined : isApiError(error) && error.status === 409 ? "conflict" : "error";
-  return <PageFrame eyebrow={session?.view.mode === "chapter" ? "背景问卷" : "固定诊断"} title="确认当前学习起点" summary="问卷和逐题草稿使用独立版本；完成诊断时才推进正式会话。" actions={<span className="header-badge">Draft v{session?.diagnosticDraftVersion ?? 0}</span>}>
+  return <PageFrame eyebrow={session?.view.mode === "chapter" ? "背景问卷" : "固定诊断"} title="确认当前学习起点" summary="可返回检查并修改答案；只有完成诊断后，最新草稿才会生成正式学习画像。" back={{ to: "/", label: "返回主菜单" }} actions={<span className="header-badge">草稿 v{session?.diagnosticDraftVersion ?? 0}</span>}>
     {bootstrap.loading ? <PageStatePanel page="diagnostic" state="loading" /> : null}
     {!bootstrap.loading && error ? <PageStatePanel page="diagnostic" state={state!} code={isApiError(error) ? error.code : error.message} onRetry={() => { setActionError(undefined); void bootstrap.reload(); }} /> : null}
     {!bootstrap.loading && error === undefined && session === undefined ? <PageStatePanel page="diagnostic" state="empty" /> : null}
     {!bootstrap.loading && error === undefined && session !== undefined ? <div className="diagnostic-layout" data-page="diagnostic">
       <section className="work-section question-section" aria-labelledby="question-heading">
-        {session.view.mode === "chapter" ? <><p className="section-kicker">BACKGROUND ONLY</p><h2 id="question-heading">章节模式不生成诊断 Evidence</h2><dl className="metric-list"><div><dt>Python经验</dt><dd>{session.diagnosticDraft?.background?.python_experience}</dd></div><div><dt>Pandas经验</dt><dd>{session.diagnosticDraft?.background?.pandas_experience}</dd></div><div><dt>讲解偏好</dt><dd>{session.diagnosticDraft?.background?.explanation_preference}</dd></div></dl><div className="section-footer"><button type="button" className="button primary" disabled={busy} onClick={() => void completeAndBuild()}>完成问卷并生成路径</button></div></> : question === undefined ? <><p className="section-kicker">DIAGNOSTIC COMPLETE</p><h2 id="question-heading">所有诊断题均已处理</h2><p>现在可以原子完成诊断并生成路径。</p><button type="button" className="button primary" disabled={busy} onClick={() => void completeAndBuild()}>完成诊断</button></> : <><div className="progress-track" aria-label={`诊断进度 ${processed.length + 1}/${bootstrap.data!.diagnostic.questions.length}`}><span style={{ width: `${((processed.length + 1) / bootstrap.data!.diagnostic.questions.length) * 100}%` }} /></div><p className="section-kicker">{question.knowledgePointId}</p><h2 id="question-heading">{question.prompt}</h2><fieldset className="answer-list"><legend className="sr-only">请选择答案</legend>{question.kind === "judgment" ? [true, false].map((value) => <label className="answer-option" key={String(value)}><input type="radio" name="diagnostic-answer" checked={answer === value} onChange={() => setAnswer(value)} /><span>{value ? "正确" : "错误"}</span></label>) : question.options?.map((option, index) => <label className="answer-option" key={option}><input type="radio" name="diagnostic-answer" checked={answer === option} onChange={() => setAnswer(option)} /><span className="option-key">{String.fromCharCode(65 + index)}</span><span>{option}</span></label>)}</fieldset><div className="section-footer"><button type="button" className="button text-button" disabled={busy} onClick={() => void submitQuestion(question, true)}>跳过并保持未验证</button><button type="button" className="button primary" disabled={busy || answer === undefined} onClick={() => void submitQuestion(question, false)}>保存并继续</button></div></>}
+        {session.view.mode === "chapter" ? <><p className="section-kicker">背景问卷</p><h2 id="question-heading">章节模式不生成诊断证据</h2><dl className="metric-list"><div><dt>Python经验</dt><dd>{session.diagnosticDraft?.background?.python_experience}</dd></div><div><dt>Pandas经验</dt><dd>{session.diagnosticDraft?.background?.pandas_experience}</dd></div><div><dt>讲解偏好</dt><dd>{session.diagnosticDraft?.background?.explanation_preference}</dd></div></dl><div className="section-footer"><button type="button" className="button secondary" onClick={() => navigate("/")}>返回修改问卷</button><button type="button" className="button primary" disabled={busy} onClick={() => void completeAndBuild()}>完成问卷并生成路径</button></div></> : question === undefined ? <><p className="section-kicker">诊断题已处理</p><h2 id="question-heading">请确认答案后生成学习画像</h2><p>你可以返回上一题检查或修改，系统只会采用每道题最后保存的答案。</p><div className="section-footer"><button type="button" className="button secondary" disabled={busy || questions.length === 0} onClick={() => setQuestionIndex(Math.max(0, questions.length - 1))}>← 返回上一题</button><button type="button" className="button primary" disabled={busy} onClick={() => void completeAndBuild()}>完成诊断并计算路径</button></div></> : <><div className="progress-track" aria-label={`诊断进度 ${questionIndex + 1}/${questions.length}`}><span style={{ width: `${((questionIndex + 1) / questions.length) * 100}%` }} /></div><p className="section-kicker">第 {questionIndex + 1} 题 / 共 {questions.length} 题 · {processed.includes(question.questionId) ? "已保存，可修改" : "尚未保存"}</p><h2 id="question-heading">{question.prompt}</h2><fieldset className="answer-list"><legend className="sr-only">请选择答案</legend>{question.kind === "judgment" ? [true, false].map((value) => <label className="answer-option" key={String(value)}><input type="radio" name="diagnostic-answer" checked={answer === value} onChange={() => setAnswer(value)} /><span>{value ? "正确" : "错误"}</span></label>) : question.options?.map((option, index) => <label className="answer-option" key={option}><input type="radio" name="diagnostic-answer" checked={answer === option} onChange={() => setAnswer(option)} /><span className="option-key">{String.fromCharCode(65 + index)}</span><span className="option-copy">{option}</span></label>)}</fieldset><div className="section-footer diagnostic-actions"><button type="button" className="button secondary" disabled={busy || questionIndex === 0} onClick={() => setQuestionIndex((current) => Math.max(0, current - 1))}>← 上一题</button><div className="button-row"><button type="button" className="button text-button" disabled={busy} onClick={() => void submitQuestion(question, true)}>跳过本题</button>{processed.includes(question.questionId) && answer === savedAnswer?.submittedAnswer ? <button type="button" className="button primary" disabled={busy} onClick={() => setQuestionIndex((current) => Math.min(questions.length, current + 1))}>下一题 →</button> : <button type="button" className="button primary" disabled={busy || answer === undefined} onClick={() => void submitQuestion(question, false)}>{processed.includes(question.questionId) ? "保存修改并继续" : "保存并继续"}</button>}</div></div></>}
       </section>
       <aside className="work-section evidence-summary"><p className="section-kicker">SERVER SNAPSHOT</p><h2>恢复状态</h2><dl className="metric-list"><div><dt>会话版本</dt><dd>{session.view.sessionVersion}</dd></div><div><dt>草稿版本</dt><dd>{session.diagnosticDraftVersion}</dd></div><div><dt>已处理题目</dt><dd>{processed.length}</dd></div></dl><p className="notice-line">刷新后重新读取 Bootstrap，不依赖浏览器内存恢复。</p></aside>
     </div> : null}

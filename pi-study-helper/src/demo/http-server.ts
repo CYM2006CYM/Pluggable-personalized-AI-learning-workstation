@@ -54,7 +54,7 @@ function background(value: unknown): void {
   exact(item, ["python_experience", "pandas_experience", "explanation_preference"]);
   enumField(item.python_experience, "python_experience", ["none", "basic", "comfortable", "uncertain"]);
   enumField(item.pandas_experience, "pandas_experience", ["none", "basic", "comfortable", "uncertain"]);
-  enumField(item.explanation_preference, "explanation_preference", ["concise", "step_by_step", "example_first", "uncertain"]);
+  enumField(item.explanation_preference, "explanation_preference", ["concise", "step_by_step", "example_first"]);
 }
 
 function writeMeta(value: JsonObject): void {
@@ -127,6 +127,8 @@ function validateRequest(name: keyof LearningRuntimeFacade, value: JsonObject): 
       if (value.kind === "code") { exact(value, ["requestId", "sessionId", "sessionVersion", "profileRevision", "kind", "activityId", "activityVersion", "attemptId", "draftVersion", "userText"]); writeMeta({ requestId: value.requestId, sessionId: value.sessionId, sessionVersion: value.sessionVersion, profileRevision: value.profileRevision }); stringField(value.activityId, "activityId", true); integerField(value.activityVersion, "activityVersion"); stringField(value.attemptId, "attemptId", true); integerField(value.draftVersion, "draftVersion"); stringField(value.userText, "userText"); return; }
       if (value.kind === "quiz") { exact(value, ["requestId", "sessionId", "sessionVersion", "profileRevision", "kind", "activityId", "activityVersion", "attemptId", "answers"]); writeMeta({ requestId: value.requestId, sessionId: value.sessionId, sessionVersion: value.sessionVersion, profileRevision: value.profileRevision }); stringField(value.activityId, "activityId", true); integerField(value.activityVersion, "activityVersion"); stringField(value.attemptId, "attemptId", true); if (!Array.isArray(value.answers) || value.answers.some((answer) => typeof answer !== "object" || answer === null || Array.isArray(answer) || Object.keys(answer as JsonObject).some((key) => !["questionId", "answer"].includes(key)) || !("questionId" in (answer as JsonObject)) || !["string", "boolean"].includes(typeof (answer as JsonObject).answer) || typeof (answer as JsonObject).questionId !== "string")) throw invalidShape("Invalid quiz answers."); return; }
       throw invalidShape("Invalid activity kind.");
+    case "continueActivityWithGap":
+      exact(value, ["requestId", "sessionId", "sessionVersion", "profileRevision", "activityId", "attemptId"]); writeMeta({ requestId: value.requestId, sessionId: value.sessionId, sessionVersion: value.sessionVersion, profileRevision: value.profileRevision }); stringField(value.activityId, "activityId", true); stringField(value.attemptId, "attemptId", true); return;
     case "getActivityAttempt": case "recoverActivity":
       exact(value, ["sessionId", "sessionVersion", "profileRevision", "activityId", "attemptId"]); readMeta({ sessionId: value.sessionId, sessionVersion: value.sessionVersion, profileRevision: value.profileRevision }); stringField(value.activityId, "activityId", true); stringField(value.attemptId, "attemptId", true); return;
     case "askContextQuestion":
@@ -248,6 +250,7 @@ function route(url: URL, method: string): RouteTarget | undefined {
   if ((match = pathname.match(/^\/api\/activities\/([^/]+)\/draft$/u)) && method === "POST") return call("saveActivityDraft", (v, id) => withRequestId({ ...v, activityId: match![1] }, id));
   if ((match = pathname.match(/^\/api\/activities\/([^/]+)\/run$/u)) && method === "POST") return call("prepareActivityRun", (v, id) => withRequestId({ ...v, activityId: match![1] }, id));
   if ((match = pathname.match(/^\/api\/activities\/([^/]+)\/submit$/u)) && method === "POST") return call("submitActivity", (v, id) => withRequestId({ ...v, activityId: match![1] }, id));
+  if ((match = pathname.match(/^\/api\/activities\/([^/]+)\/continue-with-gap$/u)) && method === "POST") return call("continueActivityWithGap", (v, id) => withRequestId({ ...v, activityId: match![1] }, id));
   if ((match = pathname.match(/^\/api\/activities\/([^/]+)\/attempts\/([^/]+)$/u)) && method === "GET") return call("getActivityAttempt", () => {
     assertQueryKeys(searchParams, ["sessionId", "sessionVersion", "profileRevision"]);
     const sessionId = requiredQuery(searchParams, "sessionId");

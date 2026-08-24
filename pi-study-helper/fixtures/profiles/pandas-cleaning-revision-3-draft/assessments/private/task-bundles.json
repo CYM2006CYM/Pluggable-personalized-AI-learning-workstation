@@ -13,6 +13,107 @@
   },
   "bundles": [
     {
+      "bundleId": "bundle-act-load-csv-v3",
+      "source": "profile_fixed",
+      "activity": {
+        "activityId": "act-load-csv",
+        "profileRevision": 3,
+        "kind": "code_completion",
+        "allowedSources": ["profile_fixed"],
+        "primaryKnowledgePointId": "pandas.clean.read-csv",
+        "supportingKnowledgePointIds": ["basic-python"],
+        "goalIds": ["goal-clean-orders"],
+        "title": "补全可靠的 CSV 读取函数",
+        "prompt": "实现 load_orders(csv_path)，按本资料包约定把 UTF-8 订单 CSV 读取为保持原始文本的 DataFrame。",
+        "difficulty": "S-U",
+        "estimatedMinutes": 15,
+        "sourceAnchorIds": ["src-pandas-read-csv"],
+        "templateVersion": "3.0.0-draft",
+        "leakagePolicyId": "policy-no-private-assets",
+        "runtimePolicyId": "python-pandas-candidate",
+        "allowedScaffolds": ["hint", "worked_example"],
+        "starterCode": "import pandas as pd\n\ndef load_orders(csv_path):\n    # TODO_BEGIN\n    pass\n    # TODO_END\n",
+        "editableRegions": [
+          {
+            "regionId": "region-main",
+            "startMarker": "# TODO_BEGIN",
+            "endMarker": "# TODO_END",
+            "required": true,
+            "maxCharacters": 2000
+          }
+        ],
+        "entryPoint": "load_orders",
+        "outputContract": "返回包含原 CSV 全部行和七个合同列的 DataFrame；读取阶段保持各列为 pandas StringDtype。",
+        "datasetRefs": ["dataset-public-orders", "dataset-private-variant-01"],
+        "publicTestRefs": ["test-read-csv-public"],
+        "hiddenTestRefs": ["test-read-csv-hidden"],
+        "rubricRef": "rubric-read-csv",
+        "referenceSolutionRef": "solution-read-csv",
+        "knownWrongSolutionRefs": ["wrong-read-csv"],
+        "environmentRef": "env-python-pandas-candidate",
+        "allowedLibraries": ["pandas"]
+      },
+      "contract": {
+        "entryPoint": {
+          "kind": "function",
+          "name": "load_orders",
+          "argumentFixtureIds": ["dataset-public-orders", "dataset-private-variant-01"],
+          "fixtureArgumentMode": "path"
+        },
+        "inputDescription": "评测器提供的UTF-8订单CSV安全临时路径。",
+        "output": {
+          "kind": "dataframe",
+          "comparisonRef": "dfcmp-orders-seven-columns",
+          "includeIndex": false
+        },
+        "outputDescription": "返回保持原始文本和七列顺序的DataFrame。",
+        "invariants": ["固定七列和顺序", "读取阶段保持StringDtype", "行数、行序和内容不变"],
+        "prohibitedBehaviors": ["硬编码路径或数据", "提前清洗", "访问网络", "运行时安装依赖"]
+      },
+      "publicTests": [
+        {
+          "testId": "test-read-csv-public",
+          "visibility": "public",
+          "fileRef": "assessments/public/tests/test-read-csv-public.py",
+          "fixtureRefs": ["dataset-public-orders"],
+          "dimensionId": "read_csv",
+          "blocking": true,
+          "assetHash": "sha256:aee18e579c821de88badc4e8f2072d68ed8dab2ea9d301d6798e467c8f9cd183"
+        }
+      ],
+      "hiddenTests": [
+        {
+          "testId": "test-read-csv-hidden",
+          "visibility": "hidden",
+          "fileRef": "assessments/private/tests/test-read-csv-hidden.py",
+          "fixtureRefs": ["dataset-private-variant-01"],
+          "dimensionId": "read_csv",
+          "blocking": true,
+          "assetHash": "sha256:1186331b2374c62c5a480880e4de1c06d651ded268735e0028c2449f46883b93"
+        }
+      ],
+      "rubric": {
+        "rubricId": "rubric-read-csv",
+        "version": "1.0.0-draft",
+        "passThreshold": 1.0,
+        "dimensions": [
+          {
+            "dimensionId": "read_csv",
+            "label": "CSV读取合同",
+            "weight": 1.0,
+            "scoringMethod": "tests",
+            "blocking": true,
+            "safeFeedbackCodes": ["dataframe_required", "columns_invalid", "dtype_invalid", "content_changed"]
+          }
+        ],
+        "dimensionTestMap": {
+          "read_csv": ["test-read-csv-public", "test-read-csv-hidden"]
+        }
+      },
+      "environmentRef": "env-python-pandas-candidate",
+      "assetBundleHash": "5e1b444472c136364809b926adc8b9ec0f7eaff29a2b6715605c062db2eebe7d"
+    },
+    {
       "bundleId": "bundle-act-inspect-dataframe-v2",
       "source": "profile_fixed",
       "activity": {

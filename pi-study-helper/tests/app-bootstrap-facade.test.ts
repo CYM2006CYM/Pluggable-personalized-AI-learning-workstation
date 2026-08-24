@@ -31,6 +31,7 @@ describe("FileAppBootstrapFacade", () => {
       async listBoundSnapshots() { return [recovered]; },
       async getBoundSnapshot() { return recovered; },
       async getInternalPathSnapshot() { return { ...recovered.path, nodes: [{ ...recovered.path.nodes[0], difficulty: "M-U", scaffold: "hint", required: true, positionLocked: true }] }; },
+      async getBoundLearningCards() { return []; },
     } as unknown as FileLearningSessionRepository;
     const bootstrap = await new FileAppBootstrapFacade({ profiles, sessions }).getBootstrap({ recoverSessionId: "session" });
     expect(bootstrap).toMatchObject({
@@ -73,6 +74,7 @@ describe("FileAppBootstrapFacade", () => {
       async listBoundSnapshots() { return [recovered]; },
       async getBoundSnapshot() { return recovered; },
       async getInternalPathSnapshot() { return recovered.path; },
+      async getBoundLearningCards() { return []; },
     } as unknown as FileLearningSessionRepository;
     const output = await new FileAppBootstrapFacade({ profiles, sessions }).getBootstrap({ recoverSessionId: "session" });
     const serialized = JSON.stringify(output);

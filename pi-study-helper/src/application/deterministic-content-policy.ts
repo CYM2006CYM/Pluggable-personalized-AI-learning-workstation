@@ -14,7 +14,7 @@ export interface QuizContentSelection {
 }
 
 const QUESTION_KEYS = new Set(["questionId", "kind", "prompt", "options", "correctAnswer", "explanation", "sourceAnchorIds"]);
-const CARD_KEYS = new Set(["cardId", "knowledgePointId", "title", "objective", "explanation", "example", "commonMistake", "sourceAnchorIds", "estimatedMinutes"]);
+const CARD_KEYS = new Set(["cardId", "knowledgePointId", "title", "objective", "explanation", "example", "commonMistake", "sourceAnchorIds", "estimatedMinutes", "selectedLesson", "personalizedTip"]);
 
 export function selectDeterministicCard(input: {
   dynamic?: LearningCardSafeView;

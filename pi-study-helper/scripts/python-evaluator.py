@@ -100,12 +100,15 @@ def run_tests(args, candidate, result_path: Path, state_path: Path | None) -> in
         passed = True
         for fixture_path in test["fixturePaths"]:
             try:
-                # Fixtures are raw dirty input: every column must reach the
-                # candidate as text so that missing keys stay pd.NA instead of
-                # becoming float NaN. Type conversion is the learner's job under
-                # the frozen seven-column contract, never the loader's.
-                frame = pd.read_csv(fixture_path, dtype="string")
-                run_case(candidate_proxy, frame)
+                if args.fixture_argument_mode == "path":
+                    run_case(candidate_proxy, fixture_path)
+                else:
+                    # Fixtures are raw dirty input: every column must reach the
+                    # candidate as text so that missing keys stay pd.NA instead of
+                    # becoming float NaN. Type conversion is the learner's job under
+                    # the frozen seven-column contract, never the loader's.
+                    frame = pd.read_csv(fixture_path, dtype="string")
+                    run_case(candidate_proxy, frame)
             except BaseException as error:
                 if traceback_has_submission(error, Path(args.submission)):
                     return fail(result_path, "runtime_error", "learner")
@@ -132,6 +135,7 @@ def main() -> int:
     parser.add_argument("--stage", choices=("user_code", "public_tests", "hidden_tests"), required=True)
     parser.add_argument("--submission", required=True)
     parser.add_argument("--entry-point", required=True)
+    parser.add_argument("--fixture-argument-mode", choices=("dataframe", "path"), default="dataframe")
     parser.add_argument("--allowed-library", action="append", default=[])
     parser.add_argument("--test-manifest")
     parser.add_argument("--state")

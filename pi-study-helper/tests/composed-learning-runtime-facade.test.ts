@@ -14,15 +14,15 @@ describe("ComposedLearningRuntimeFacade", () => {
     const session = { startSession: method({ operation: "start" }) };
     const diagnostic = { saveDiagnosticDraft: method({ operation: "draft" }), submitDiagnosticAnswer: method({ operation: "answer" }), completeDiagnostic: method({ operation: "diagnostic", sessionId: "s", sessionVersion: 2, profileRevision: 3, evidenceVersion: 0, knowledgeStates: [], insufficientKnowledgePointIds: [] }) };
     const path = { recoverSession: method({ operation: "recover-session" }), buildPath: method({ operation: "build" }), confirmPath: method({ operation: "confirm" }), getNextStep: method({ operation: "next" }), replanPath: method({ operation: "replan" }) };
-    const codeActivity = { openActivity: method({ operation: "open-code" }), saveActivityDraft: method({ operation: "save-code" }), prepareActivityRun: method({ operation: "prepare-code" }), submitActivity: method({ operation: "submit-code", committed: false }), getActivityAttempt: method({ operation: "attempt-code" }), recoverActivity: method({ operation: "recover-code" }) };
-    const quizActivity = { openActivity: method({ operation: "open-quiz" }), submitActivity: method({ operation: "submit-quiz", committed: false }), getActivityAttempt: method({ operation: "attempt-quiz" }) };
+    const codeActivity = { openActivity: method({ operation: "open-code" }), saveActivityDraft: method({ operation: "save-code" }), prepareActivityRun: method({ operation: "prepare-code" }), submitActivity: method({ operation: "submit-code", committed: false }), continueActivityWithGap: method({ operation: "continue-code-gap" }), getActivityAttempt: method({ operation: "attempt-code" }), recoverActivity: method({ operation: "recover-code" }) };
+    const quizActivity = { openActivity: method({ operation: "open-quiz" }), submitActivity: method({ operation: "submit-quiz", committed: false }), getActivityAttempt: method({ operation: "attempt-quiz" }), continueActivityWithGap: method({ operation: "continue-gap" }) };
     const sessions = { getSnapshot: method({}) } as unknown as LearningSessionRepository;
     const facade = new ComposedLearningRuntimeFacade({
       session: session as unknown as Pick<LearningRuntimeFacade, "startSession">,
       diagnostic: diagnostic as unknown as Pick<LearningRuntimeFacade, "saveDiagnosticDraft" | "submitDiagnosticAnswer" | "completeDiagnostic">,
       path: path as unknown as Pick<LearningRuntimeFacade, "recoverSession" | "buildPath" | "confirmPath" | "getNextStep" | "replanPath">,
-      codeActivity: codeActivity as unknown as Pick<LearningRuntimeFacade, "openActivity" | "saveActivityDraft" | "prepareActivityRun" | "submitActivity" | "getActivityAttempt" | "recoverActivity">,
-      quizActivity: quizActivity as unknown as Pick<LearningRuntimeFacade, "openActivity" | "submitActivity" | "getActivityAttempt">,
+      codeActivity: codeActivity as unknown as Pick<LearningRuntimeFacade, "openActivity" | "saveActivityDraft" | "prepareActivityRun" | "submitActivity" | "continueActivityWithGap" | "getActivityAttempt" | "recoverActivity">,
+      quizActivity: quizActivity as unknown as Pick<LearningRuntimeFacade, "openActivity" | "submitActivity" | "getActivityAttempt" | "continueActivityWithGap">,
       sessions,
       profile,
       resolveActivityKind: async ({ activityId }) => activityId === "quiz" ? "quiz" : "code",
@@ -46,6 +46,8 @@ describe("ComposedLearningRuntimeFacade", () => {
     await expect(facade.getActivityAttempt({ activityId: "code" } as never)).resolves.toEqual({ operation: "attempt-code" });
     await expect(facade.getActivityAttempt({ activityId: "quiz" } as never)).resolves.toEqual({ operation: "attempt-quiz" });
     await expect(facade.recoverActivity({} as never)).resolves.toEqual({ operation: "recover-code" });
+    await expect(facade.continueActivityWithGap({ activityId: "code" } as never)).resolves.toEqual({ operation: "continue-code-gap" });
+    await expect(facade.continueActivityWithGap({ activityId: "quiz" } as never)).resolves.toEqual({ operation: "continue-gap" });
   });
 
   it("completes after a formal practical fail, summarizes issues, and returns a fixed safe context fallback", async () => {

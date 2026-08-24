@@ -4,8 +4,9 @@ import { resolve } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AdaptiveContentService } from "../src/application/adaptive-content-service.js";
 import { selectDeterministicCard, selectDeterministicQuizContent } from "../src/application/deterministic-content-policy.js";
+import { projectLearningCardForSession } from "../src/application/rich-lesson-selection.js";
 import { ProfileFamilyQuizActivityAssetResolver } from "../src/application/quiz-activity-runtime.js";
-import type { LearningCardSafeView } from "../src/contracts/index.js";
+import type { LearningCardAsset } from "../src/contracts/index.js";
 import { calculateRevisionSeal, validateRevisionSeal } from "../src/domain/profile-revision-seal.js";
 import type { ModelExecutionPort } from "../src/infrastructure/model-execution-port.js";
 import { ProfileAdaptiveContentSourceProvider } from "../src/infrastructure/profile-adaptive-source-provider.js";
@@ -20,11 +21,11 @@ const profileRoot = resolve("fixtures/profiles/pandas-cleaning-revision-3-draft"
 describe("W4 D formal upstream integration", () => {
   it("independently recalculates A's revision seal entry count and B's formal tree hash", async () => {
     const calculated = await calculateRevisionSeal(profileRoot);
-    expect(calculated.entries).toHaveLength(78);
-    expect(calculated.assetTreeSha256).toBe("ccff2e2afdabaad262baeaa498b527438fcadeec1ddf5e198289f8404071e85d");
+    expect(calculated.entries).toHaveLength(84);
+    expect(calculated.assetTreeSha256).toBe("f0c009169a090de8ec9beb5afcf6aaa971f8aac847e235c96c36720f6de8d45c");
     await expect(validateRevisionSeal(profileRoot, "pandas-cleaning")).resolves.toMatchObject({
       revision: 3,
-      assetTreeSha256: "ccff2e2afdabaad262baeaa498b527438fcadeec1ddf5e198289f8404071e85d",
+      assetTreeSha256: "f0c009169a090de8ec9beb5afcf6aaa971f8aac847e235c96c36720f6de8d45c",
     });
   });
 
@@ -52,8 +53,9 @@ describe("W4 D formal upstream integration", () => {
     expect(selected).toMatchObject({ source: "fixed" });
     expect(selected.questions).toHaveLength(4);
 
-    const cards = JSON.parse(await readFile(resolve(profileRoot, "cards/learning-cards.json"), "utf8")) as { cards: LearningCardSafeView[] };
-    const fixedCard = cards.cards.find((item) => item?.knowledgePointId === "pandas.clean.read-csv");
+    const cards = JSON.parse(await readFile(resolve(profileRoot, "cards/learning-cards.json"), "utf8")) as { cards: LearningCardAsset[] };
+    const fixedAsset = cards.cards.find((item) => item?.knowledgePointId === "pandas.clean.read-csv");
+    const fixedCard = fixedAsset === undefined ? undefined : projectLearningCardForSession({ fixed: fixedAsset, preference: "step_by_step" });
     expect(selectDeterministicCard({ dynamic: undefined, fixed: fixedCard, knowledgePointId: "pandas.clean.read-csv",
       contentEstimatedMinutes: 8, allowedSourceAnchorIds: ["src-pandas-read-csv"] })).toMatchObject({ source: "fixed" });
   });

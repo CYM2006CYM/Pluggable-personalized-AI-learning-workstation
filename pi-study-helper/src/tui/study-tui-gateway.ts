@@ -1,4 +1,5 @@
 import type { DifficultyLevel, ReviewMode } from "../domain/types.js";
+import type { LearningCardSafeView, LessonContentBlock } from "../contracts/index.js";
 import type { PrepareSharedActivityResult, TuiSharedSessionEntry } from "./shared-session.js";
 
 const QUESTION_WIDGET_KEY = "pi-study-helper.question";
@@ -60,6 +61,40 @@ export interface MaterialViewModel {
   title: string;
   body: string;
   target: MaterialTargetMetadata;
+}
+
+function materialBlockLines(block: LessonContentBlock): string[] {
+  if (block.kind === "paragraph") return [block.text, ""];
+  if (block.kind === "subheading") return [`【${block.text}】`];
+  if (block.kind === "code") return [`[代码 · ${block.language}]`, ...block.code.split(/\r?\n/u), ""];
+  if (block.kind === "list") return block.items.map((item, index) => block.ordered ? `${index + 1}. ${item}` : `- ${item}`);
+  return [`[${block.title}]`, block.text, ""];
+}
+
+/** Build TUI material exclusively from the one variant already bound to the Session. */
+export function materialViewFromLearningCard(
+  card: LearningCardSafeView,
+  target: MaterialTargetMetadata,
+): MaterialViewModel {
+  const lesson = card.selectedLesson;
+  if (lesson === undefined) throw new Error("当前会话未绑定结构化教学正文");
+  const lines = [
+    `版本：${lesson.label}`,
+    "【学习目标 · 了解】",
+    ...lesson.learningObjectives.understand.map((item) => `- ${item}`),
+    "【学习目标 · 掌握】",
+    ...lesson.learningObjectives.master.map((item) => `- ${item}`),
+    "",
+  ];
+  for (const module of lesson.modules) {
+    lines.push(`【${module.title}】`, module.summary);
+    for (const block of module.blocks) lines.push(...materialBlockLines(block));
+  }
+  lines.push("【术语解释】");
+  for (const note of lesson.termNotes) lines.push(`${note.term}：${note.explanation}`);
+  lines.push("【来源依据】");
+  for (const claim of lesson.sourceClaims) lines.push(`- ${claim.statement}（${claim.sourceAnchorIds.join(" / ")}）`);
+  return { title: card.title, body: lines.join("\n"), target: structuredClone(target) };
 }
 
 /** Card-front prompt shown before the card body is revealed. */
@@ -268,6 +303,10 @@ export class StudyTuiGateway {
     } finally {
       this.clearMaterial();
     }
+  }
+
+  browseLearningCard(card: LearningCardSafeView, target: MaterialTargetMetadata): Promise<MaterialViewAction> {
+    return this.browseMaterial(materialViewFromLearningCard(card, target));
   }
 
   presentQuestion(view: QuestionViewModel): void {

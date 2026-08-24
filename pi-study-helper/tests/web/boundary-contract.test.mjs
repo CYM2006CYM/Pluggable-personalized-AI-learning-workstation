@@ -20,7 +20,8 @@ describe("W4 Web boundary contract", () => {
     expect(config).toContain('cacheDir: resolve(webRoot, "node_modules/.vite")');
     expect(config).toContain("preview:");
     expect(config).toContain("proxy: apiProxy");
-    expect(config).toContain('target: "http://127.0.0.1:4310"');
+    expect(config).toContain('process.env.PI_STUDY_API_PORT ?? "4310"');
+    expect(config).toContain('target: `http://127.0.0.1:${apiPort}`');
     expect(config).toContain("bootstrap");
     expect(config).toContain("sessions");
     expect(config).toContain("activities");

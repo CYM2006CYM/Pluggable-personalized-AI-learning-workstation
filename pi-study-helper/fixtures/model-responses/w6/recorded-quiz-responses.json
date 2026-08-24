@@ -1,0 +1,386 @@
+{
+  "recordings": [
+    {
+      "graphId": "generator",
+      "runId": "w4-521146de2e8627972b4da81c.generator",
+      "status": "ok",
+      "payload": {
+        "artifactId": "dynamic-read-csv-set-1",
+        "candidateFeedback": "{\"artifactKind\":\"quiz\",\"riskLevel\":\"low\",\"questions\":[{\"questionId\":\"ai-read-csv-1\",\"kind\":\"single_choice\",\"prompt\":\"要把CSV文件读取为DataFrame，应使用哪个函数？\",\"options\":[\"pandas.read_csv\",\"DataFrame.to_csv\",\"pandas.concat\"],\"correctAnswer\":\"pandas.read_csv\",\"explanation\":\"read_csv负责读取CSV并创建DataFrame。\",\"sourceAnchorIds\":[\"src-pandas-read-csv\"]},{\"questionId\":\"ai-read-csv-2\",\"kind\":\"single_choice\",\"prompt\":\"读取CSV成功就说明数据已经完成清洗。\",\"options\":[\"正确\",\"错误\"],\"correctAnswer\":\"错误\",\"explanation\":\"读取只是把数据装入表格，缺失值、重复值和类型仍需检查。\",\"sourceAnchorIds\":[\"src-pandas-read-csv\"]},{\"questionId\":\"ai-read-csv-3\",\"kind\":\"single_choice\",\"prompt\":\"读取后想快速查看前几行，最合适的操作是什么？\",\"options\":[\"df.head()\",\"df.to_csv()\",\"df.drop_duplicates()\"],\"correctAnswer\":\"df.head()\",\"explanation\":\"head可以先观察列名、样例值和读取结果。\",\"sourceAnchorIds\":[\"src-pandas-read-csv\"]},{\"questionId\":\"ai-read-csv-4\",\"kind\":\"single_choice\",\"prompt\":\"文件使用UTF-8编码时，哪种写法表达最清楚？\",\"options\":[\"pd.read_csv(path, encoding='utf-8')\",\"pd.to_csv(path)\",\"pd.DataFrame(path)\"],\"correctAnswer\":\"pd.read_csv(path, encoding='utf-8')\",\"explanation\":\"encoding参数明确告诉读取函数如何解释文本字节。\",\"sourceAnchorIds\":[\"src-pandas-read-csv\"]}]}",
+        "rationale": "依据公开教材中的CSV读取、初步观察和读取边界生成四道题。",
+        "citedSourceIds": [
+          "src-pandas-read-csv"
+        ],
+        "riskFlags": []
+      },
+      "sourceRefs": [
+        "src-pandas-read-csv"
+      ],
+      "traceSummary": "RECORDED_PASS:w6-read-csv-quiz",
+      "modelId": "deepseek-chat",
+      "promptVersion": "w4-d2-v1",
+      "durationMs": 136
+    },
+    {
+      "graphId": "hunter",
+      "runId": "w4-521146de2e8627972b4da81c.hunter",
+      "status": "ok",
+      "payload": {
+        "issues": [],
+        "requiresDefender": false,
+        "recommendedVerdict": "accepted"
+      },
+      "sourceRefs": [
+        "src-pandas-read-csv"
+      ],
+      "traceSummary": "RECORDED_FIXTURE:w6-read-csv-hunter",
+      "modelId": "deepseek-chat",
+      "promptVersion": "w4-d2-v1",
+      "durationMs": 72
+    },
+    {
+      "graphId": "judge",
+      "runId": "w4-521146de2e8627972b4da81c.judge",
+      "status": "ok",
+      "payload": {
+        "verdict": "accepted",
+        "finalSafeFeedback": "录制题组通过正文依据与安全边界检查。",
+        "summary": "该记录仅用于离线演示与回归。",
+        "blockedIssueIds": []
+      },
+      "sourceRefs": [
+        "src-pandas-read-csv"
+      ],
+      "traceSummary": "RECORDED_FIXTURE:w6-read-csv-judge",
+      "modelId": "deepseek-chat",
+      "promptVersion": "w4-d2-v1",
+      "durationMs": 68
+    },
+    {
+      "graphId": "generator",
+      "runId": "w4-ff11fed1f62446f284923e6e.generator",
+      "status": "ok",
+      "payload": {
+        "artifactId": "dynamic-inspect-dataframe-set-1",
+        "candidateFeedback": "{\"artifactKind\":\"quiz\",\"riskLevel\":\"low\",\"questions\":[{\"questionId\":\"ai-inspect-1\",\"kind\":\"single_choice\",\"prompt\":\"想知道DataFrame有多少行和多少列，应查看什么？\",\"options\":[\"df.shape\",\"df.columns = []\",\"df.dropna()\"],\"correctAnswer\":\"df.shape\",\"explanation\":\"shape返回行数和列数，适合先核对数据规模。\",\"sourceAnchorIds\":[\"src-pandas-dtypes\"]},{\"questionId\":\"ai-inspect-2\",\"kind\":\"single_choice\",\"prompt\":\"想检查每一列被识别成什么数据类型，应使用什么？\",\"options\":[\"df.dtypes\",\"df.tail(0)\",\"df.rename()\"],\"correctAnswer\":\"df.dtypes\",\"explanation\":\"dtypes会列出每个字段当前的数据类型。\",\"sourceAnchorIds\":[\"src-pandas-dtypes\"]},{\"questionId\":\"ai-inspect-3\",\"kind\":\"single_choice\",\"prompt\":\"金额列显示为object时，可以不检查就直接做加法。\",\"options\":[\"正确\",\"错误\"],\"correctAnswer\":\"错误\",\"explanation\":\"object可能表示混合文本，计算前应检查并转换。\",\"sourceAnchorIds\":[\"src-pandas-dtypes\"]},{\"questionId\":\"ai-inspect-4\",\"kind\":\"single_choice\",\"prompt\":\"哪一组动作更适合作为读取后的结构检查？\",\"options\":[\"查看head、shape和dtypes\",\"立即删除所有空行\",\"立即覆盖原文件\"],\"correctAnswer\":\"查看head、shape和dtypes\",\"explanation\":\"先观察样例、规模和类型，才能决定后续清洗策略。\",\"sourceAnchorIds\":[\"src-pandas-dtypes\"]}]}",
+        "rationale": "依据公开教材中的结构、规模和类型检查生成四道题。",
+        "citedSourceIds": [
+          "src-pandas-dtypes"
+        ],
+        "riskFlags": []
+      },
+      "sourceRefs": [
+        "src-pandas-dtypes"
+      ],
+      "traceSummary": "RECORDED_PASS:w6-inspect-quiz",
+      "modelId": "deepseek-chat",
+      "promptVersion": "w4-d2-v1",
+      "durationMs": 141
+    },
+    {
+      "graphId": "hunter",
+      "runId": "w4-ff11fed1f62446f284923e6e.hunter",
+      "status": "ok",
+      "payload": {
+        "issues": [],
+        "requiresDefender": false,
+        "recommendedVerdict": "accepted"
+      },
+      "sourceRefs": [
+        "src-pandas-dtypes"
+      ],
+      "traceSummary": "RECORDED_FIXTURE:w6-inspect-hunter",
+      "modelId": "deepseek-chat",
+      "promptVersion": "w4-d2-v1",
+      "durationMs": 75
+    },
+    {
+      "graphId": "judge",
+      "runId": "w4-ff11fed1f62446f284923e6e.judge",
+      "status": "ok",
+      "payload": {
+        "verdict": "accepted",
+        "finalSafeFeedback": "录制题组通过正文依据与安全边界检查。",
+        "summary": "该记录仅用于离线演示与回归。",
+        "blockedIssueIds": []
+      },
+      "sourceRefs": [
+        "src-pandas-dtypes"
+      ],
+      "traceSummary": "RECORDED_FIXTURE:w6-inspect-judge",
+      "modelId": "deepseek-chat",
+      "promptVersion": "w4-d2-v1",
+      "durationMs": 69
+    },
+    {
+      "graphId": "generator",
+      "runId": "w4-6e76acc69394bc4b63bd4b65.generator",
+      "status": "ok",
+      "payload": {
+        "artifactId": "dynamic-missing-values-set-1",
+        "candidateFeedback": "{\"artifactKind\":\"quiz\",\"riskLevel\":\"low\",\"questions\":[{\"questionId\":\"ai-missing-1\",\"kind\":\"single_choice\",\"prompt\":\"想统计每列缺失值数量，常用的写法是什么？\",\"options\":[\"df.isna().sum()\",\"df.sort_values()\",\"df.astype(str)\"],\"correctAnswer\":\"df.isna().sum()\",\"explanation\":\"isna标记缺失位置，sum按列统计数量。\",\"sourceAnchorIds\":[\"src-pandas-missing-data\"]},{\"questionId\":\"ai-missing-2\",\"kind\":\"single_choice\",\"prompt\":\"发现缺失值后，最稳妥的做法永远是删除整行。\",\"options\":[\"正确\",\"错误\"],\"correctAnswer\":\"错误\",\"explanation\":\"应先判断字段含义和缺失比例，再决定删除、填补或保留。\",\"sourceAnchorIds\":[\"src-pandas-missing-data\"]},{\"questionId\":\"ai-missing-3\",\"kind\":\"single_choice\",\"prompt\":\"订单金额缺失会影响统计时，第一步应该是什么？\",\"options\":[\"确认缺失数量和业务含义\",\"直接填成0\",\"把整列转成字符串\"],\"correctAnswer\":\"确认缺失数量和业务含义\",\"explanation\":\"先明确缺失代表什么，才能避免错误填补改变数据含义。\",\"sourceAnchorIds\":[\"src-pandas-missing-data\"]},{\"questionId\":\"ai-missing-4\",\"kind\":\"single_choice\",\"prompt\":\"只删除指定列为空的记录，可使用哪种思路？\",\"options\":[\"dropna并指定subset\",\"drop_duplicates不加参数\",\"只调用head\"],\"correctAnswer\":\"dropna并指定subset\",\"explanation\":\"subset把删除条件限制在真正关键的字段上。\",\"sourceAnchorIds\":[\"src-pandas-missing-data\"]}]}",
+        "rationale": "依据公开教材中的缺失检测、语义判断和处理边界生成四道题。",
+        "citedSourceIds": [
+          "src-pandas-missing-data"
+        ],
+        "riskFlags": []
+      },
+      "sourceRefs": [
+        "src-pandas-missing-data"
+      ],
+      "traceSummary": "RECORDED_PASS:w6-missing-quiz",
+      "modelId": "deepseek-chat",
+      "promptVersion": "w4-d2-v1",
+      "durationMs": 149
+    },
+    {
+      "graphId": "hunter",
+      "runId": "w4-6e76acc69394bc4b63bd4b65.hunter",
+      "status": "ok",
+      "payload": {
+        "issues": [],
+        "requiresDefender": false,
+        "recommendedVerdict": "accepted"
+      },
+      "sourceRefs": [
+        "src-pandas-missing-data"
+      ],
+      "traceSummary": "RECORDED_FIXTURE:w6-missing-hunter",
+      "modelId": "deepseek-chat",
+      "promptVersion": "w4-d2-v1",
+      "durationMs": 78
+    },
+    {
+      "graphId": "judge",
+      "runId": "w4-6e76acc69394bc4b63bd4b65.judge",
+      "status": "ok",
+      "payload": {
+        "verdict": "accepted",
+        "finalSafeFeedback": "录制题组通过正文依据与安全边界检查。",
+        "summary": "该记录仅用于离线演示与回归。",
+        "blockedIssueIds": []
+      },
+      "sourceRefs": [
+        "src-pandas-missing-data"
+      ],
+      "traceSummary": "RECORDED_FIXTURE:w6-missing-judge",
+      "modelId": "deepseek-chat",
+      "promptVersion": "w4-d2-v1",
+      "durationMs": 71
+    },
+    {
+      "graphId": "generator",
+      "runId": "w4-982fe61cc3ed70451f05117a.generator",
+      "status": "ok",
+      "payload": {
+        "artifactId": "dynamic-duplicate-orders-set-1",
+        "candidateFeedback": "{\"artifactKind\":\"quiz\",\"riskLevel\":\"low\",\"questions\":[{\"questionId\":\"ai-duplicate-1\",\"kind\":\"single_choice\",\"prompt\":\"判断订单是否重复时，最重要的前提是什么？\",\"options\":[\"明确业务唯一键\",\"把所有列改名\",\"先删除第一行\"],\"correctAnswer\":\"明确业务唯一键\",\"explanation\":\"重复必须相对于订单号等业务键来定义。\",\"sourceAnchorIds\":[\"src-pandas-duplicates\"]},{\"questionId\":\"ai-duplicate-2\",\"kind\":\"single_choice\",\"prompt\":\"两行完全相同才可能属于重复订单。\",\"options\":[\"正确\",\"错误\"],\"correctAnswer\":\"错误\",\"explanation\":\"同一订单号的其他字段可能更新，仍需按业务键判断重复。\",\"sourceAnchorIds\":[\"src-pandas-duplicates\"]},{\"questionId\":\"ai-duplicate-3\",\"kind\":\"single_choice\",\"prompt\":\"希望保留每个订单最新的一条记录，通常先做什么？\",\"options\":[\"按更新时间排序\",\"随机打乱数据\",\"删除更新时间列\"],\"correctAnswer\":\"按更新时间排序\",\"explanation\":\"先明确时间顺序，再配合去重保留最新记录。\",\"sourceAnchorIds\":[\"src-pandas-sort-values\"]},{\"questionId\":\"ai-duplicate-4\",\"kind\":\"single_choice\",\"prompt\":\"按订单号去重并保留最后一条，核心参数组合是什么？\",\"options\":[\"subset指定订单号且keep='last'\",\"只设置ascending=True\",\"只调用reset_index\"],\"correctAnswer\":\"subset指定订单号且keep='last'\",\"explanation\":\"subset定义重复键，keep决定保留哪一条。\",\"sourceAnchorIds\":[\"src-pandas-duplicates\",\"src-pandas-sort-values\"]}]}",
+        "rationale": "依据公开教材中的业务键、排序和去重顺序生成四道题。",
+        "citedSourceIds": [
+          "src-pandas-duplicates",
+          "src-pandas-sort-values"
+        ],
+        "riskFlags": []
+      },
+      "sourceRefs": [
+        "src-pandas-duplicates",
+        "src-pandas-sort-values"
+      ],
+      "traceSummary": "RECORDED_PASS:w6-duplicates-quiz",
+      "modelId": "deepseek-chat",
+      "promptVersion": "w4-d2-v1",
+      "durationMs": 157
+    },
+    {
+      "graphId": "hunter",
+      "runId": "w4-982fe61cc3ed70451f05117a.hunter",
+      "status": "ok",
+      "payload": {
+        "issues": [],
+        "requiresDefender": false,
+        "recommendedVerdict": "accepted"
+      },
+      "sourceRefs": [
+        "src-pandas-duplicates",
+        "src-pandas-sort-values"
+      ],
+      "traceSummary": "RECORDED_FIXTURE:w6-duplicates-hunter",
+      "modelId": "deepseek-chat",
+      "promptVersion": "w4-d2-v1",
+      "durationMs": 81
+    },
+    {
+      "graphId": "judge",
+      "runId": "w4-982fe61cc3ed70451f05117a.judge",
+      "status": "ok",
+      "payload": {
+        "verdict": "accepted",
+        "finalSafeFeedback": "录制题组通过正文依据与安全边界检查。",
+        "summary": "该记录仅用于离线演示与回归。",
+        "blockedIssueIds": []
+      },
+      "sourceRefs": [
+        "src-pandas-duplicates",
+        "src-pandas-sort-values"
+      ],
+      "traceSummary": "RECORDED_FIXTURE:w6-duplicates-judge",
+      "modelId": "deepseek-chat",
+      "promptVersion": "w4-d2-v1",
+      "durationMs": 74
+    },
+    {
+      "graphId": "generator",
+      "runId": "w4-edc7e7b17af5b6d80293e8b0.generator",
+      "status": "ok",
+      "payload": {
+        "artifactId": "dynamic-type-format-set-1",
+        "candidateFeedback": "{\"artifactKind\":\"quiz\",\"riskLevel\":\"low\",\"questions\":[{\"questionId\":\"ai-type-1\",\"kind\":\"single_choice\",\"prompt\":\"金额列混有无法转换的文本时，哪种转换更便于后续检查？\",\"options\":[\"pd.to_numeric并设置errors='coerce'\",\"直接乘以字符串\",\"删除列名\"],\"correctAnswer\":\"pd.to_numeric并设置errors='coerce'\",\"explanation\":\"无法转换的值会变成缺失值，之后可统计并处理。\",\"sourceAnchorIds\":[\"src-pandas-to-numeric\"]},{\"questionId\":\"ai-type-2\",\"kind\":\"single_choice\",\"prompt\":\"把日期文本转换为日期类型，应优先使用什么？\",\"options\":[\"pd.to_datetime\",\"pd.to_numeric\",\"df.duplicated\"],\"correctAnswer\":\"pd.to_datetime\",\"explanation\":\"to_datetime专门负责解析日期和时间文本。\",\"sourceAnchorIds\":[\"src-pandas-to-datetime\"]},{\"questionId\":\"ai-type-3\",\"kind\":\"single_choice\",\"prompt\":\"字符串字段中的前后空格可能导致分类和去重结果不准确。\",\"options\":[\"正确\",\"错误\"],\"correctAnswer\":\"正确\",\"explanation\":\"肉眼相同的文本可能因空格被识别为不同值。\",\"sourceAnchorIds\":[\"src-pandas-string\"]},{\"questionId\":\"ai-type-4\",\"kind\":\"single_choice\",\"prompt\":\"清理字符串前后空格的常见写法是什么？\",\"options\":[\"series.str.strip()\",\"series.shape()\",\"series.drop_duplicates = False\"],\"correctAnswer\":\"series.str.strip()\",\"explanation\":\"str.strip会删除每个字符串两端的空白字符。\",\"sourceAnchorIds\":[\"src-pandas-string\"]}]}",
+        "rationale": "依据公开教材中的数值、日期和字符串规范化生成四道题。",
+        "citedSourceIds": [
+          "src-pandas-to-numeric",
+          "src-pandas-to-datetime",
+          "src-pandas-string"
+        ],
+        "riskFlags": []
+      },
+      "sourceRefs": [
+        "src-pandas-to-numeric",
+        "src-pandas-to-datetime",
+        "src-pandas-string"
+      ],
+      "traceSummary": "RECORDED_PASS:w6-types-quiz",
+      "modelId": "deepseek-chat",
+      "promptVersion": "w4-d2-v1",
+      "durationMs": 162
+    },
+    {
+      "graphId": "hunter",
+      "runId": "w4-edc7e7b17af5b6d80293e8b0.hunter",
+      "status": "ok",
+      "payload": {
+        "issues": [],
+        "requiresDefender": false,
+        "recommendedVerdict": "accepted"
+      },
+      "sourceRefs": [
+        "src-pandas-to-numeric",
+        "src-pandas-to-datetime",
+        "src-pandas-string"
+      ],
+      "traceSummary": "RECORDED_FIXTURE:w6-types-hunter",
+      "modelId": "deepseek-chat",
+      "promptVersion": "w4-d2-v1",
+      "durationMs": 84
+    },
+    {
+      "graphId": "judge",
+      "runId": "w4-edc7e7b17af5b6d80293e8b0.judge",
+      "status": "ok",
+      "payload": {
+        "verdict": "accepted",
+        "finalSafeFeedback": "录制题组通过正文依据与安全边界检查。",
+        "summary": "该记录仅用于离线演示与回归。",
+        "blockedIssueIds": []
+      },
+      "sourceRefs": [
+        "src-pandas-to-numeric",
+        "src-pandas-to-datetime",
+        "src-pandas-string"
+      ],
+      "traceSummary": "RECORDED_FIXTURE:w6-types-judge",
+      "modelId": "deepseek-chat",
+      "promptVersion": "w4-d2-v1",
+      "durationMs": 76
+    },
+    {
+      "graphId": "generator",
+      "runId": "w4-368e21449e088049a41e197f.generator",
+      "status": "ok",
+      "payload": {
+        "artifactId": "dynamic-validate-result-set-1",
+        "candidateFeedback": "{\"artifactKind\":\"quiz\",\"riskLevel\":\"high\",\"questions\":[{\"questionId\":\"ai-validate-1\",\"kind\":\"single_choice\",\"prompt\":\"清洗结束后，哪种做法最能证明结果可靠？\",\"options\":[\"运行明确的结果断言\",\"只看最后五行\",\"只保存文件\"],\"correctAnswer\":\"运行明确的结果断言\",\"explanation\":\"断言把无缺失、无重复和类型正确等要求变成可复验条件。\",\"sourceAnchorIds\":[\"src-pandas-testing\"]},{\"questionId\":\"ai-validate-2\",\"kind\":\"single_choice\",\"prompt\":\"代码没有报错就足以证明清洗结果正确。\",\"options\":[\"正确\",\"错误\"],\"correctAnswer\":\"错误\",\"explanation\":\"程序能运行不代表业务条件满足，仍需验证关键结果。\",\"sourceAnchorIds\":[\"src-pandas-testing\"]},{\"questionId\":\"ai-validate-3\",\"kind\":\"single_choice\",\"prompt\":\"验证订单号不存在重复，可检查什么？\",\"options\":[\"订单号duplicated后的数量为0\",\"文件名长度大于0\",\"DataFrame至少有一列\"],\"correctAnswer\":\"订单号duplicated后的数量为0\",\"explanation\":\"该检查直接对应订单号唯一这一业务要求。\",\"sourceAnchorIds\":[\"src-pandas-duplicates\",\"src-pandas-testing\"]},{\"questionId\":\"ai-validate-4\",\"kind\":\"single_choice\",\"prompt\":\"哪种验证顺序更合理？\",\"options\":[\"先明确验收条件，再逐项断言并记录结果\",\"先删除失败记录，再决定标准\",\"只依赖人工目测\"],\"correctAnswer\":\"先明确验收条件，再逐项断言并记录结果\",\"explanation\":\"先定义标准才能让验证结果稳定、可复算。\",\"sourceAnchorIds\":[\"src-pandas-testing\"]}]}",
+        "rationale": "综合验证题可能影响最终学习判断，因此请求完整多智能体审核。",
+        "citedSourceIds": [
+          "src-pandas-testing",
+          "src-pandas-duplicates"
+        ],
+        "riskFlags": [
+          "综合验证"
+        ]
+      },
+      "sourceRefs": [
+        "src-pandas-testing",
+        "src-pandas-duplicates"
+      ],
+      "traceSummary": "RECORDED_PASS:w6-validation-generator",
+      "modelId": "deepseek-chat",
+      "promptVersion": "w4-d2-v1",
+      "durationMs": 178
+    },
+    {
+      "graphId": "hunter",
+      "runId": "w4-368e21449e088049a41e197f.hunter",
+      "status": "ok",
+      "payload": {
+        "issues": [
+          {
+            "issueId": "validation-scope",
+            "severity": "medium",
+            "message": "检查题目是否把程序运行与结果正确混为一谈。",
+            "disputed": true
+          }
+        ],
+        "requiresDefender": true,
+        "recommendedVerdict": "revise"
+      },
+      "sourceRefs": [
+        "src-pandas-testing",
+        "src-pandas-duplicates"
+      ],
+      "traceSummary": "RECORDED_PASS:w6-validation-hunter",
+      "modelId": "deepseek-chat",
+      "promptVersion": "w4-d2-v1",
+      "durationMs": 94
+    },
+    {
+      "graphId": "defender",
+      "runId": "w4-368e21449e088049a41e197f.defender",
+      "status": "ok",
+      "payload": {
+        "defenseSummary": "题目明确区分了运行成功与业务结果验证，并绑定公开来源。",
+        "acceptedIssueIds": [],
+        "rebuttedIssueIds": [
+          "validation-scope"
+        ],
+        "residualRisks": []
+      },
+      "sourceRefs": [
+        "src-pandas-testing",
+        "src-pandas-duplicates"
+      ],
+      "traceSummary": "RECORDED_PASS:w6-validation-defender",
+      "modelId": "deepseek-chat",
+      "promptVersion": "w4-d2-v1",
+      "durationMs": 88
+    },
+    {
+      "graphId": "judge",
+      "runId": "w4-368e21449e088049a41e197f.judge",
+      "status": "ok",
+      "payload": {
+        "verdict": "accepted",
+        "finalSafeFeedback": "题组通过公开来源和风险边界审核。",
+        "summary": "问题均围绕可复验的清洗结果，不替代确定性判分。",
+        "blockedIssueIds": []
+      },
+      "sourceRefs": [
+        "src-pandas-testing",
+        "src-pandas-duplicates"
+      ],
+      "traceSummary": "RECORDED_PASS:w6-validation-judge",
+      "modelId": "deepseek-chat",
+      "promptVersion": "w4-d2-v1",
+      "durationMs": 91
+    }
+  ]
+}

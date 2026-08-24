@@ -1,6 +1,9 @@
 node_modules/
 dist/
 dist-web/
+.demo-build/
+.demo-data/
+.demo-data-*/
 log/
 *.log
 

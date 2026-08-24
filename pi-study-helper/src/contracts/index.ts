@@ -8,7 +8,80 @@ export interface Revision3KnowledgePointFields {
   contentEstimatedMinutes?: number;
 }
 
-export interface LearningCardSafeView {
+export type LessonVariantId = "guided" | "concise" | "practice";
+export type LessonModuleId = "intuition" | "concepts" | "walkthrough" | "mistakes" | "final-task" | "terms-sources";
+
+export type LessonContentBlock =
+  | { blockId: string; kind: "paragraph"; text: string }
+  | { blockId: string; kind: "subheading"; text: string }
+  | { blockId: string; kind: "code"; language: "python" | "csv" | "text"; code: string }
+  | { blockId: string; kind: "list"; ordered: boolean; items: string[] }
+  | { blockId: string; kind: "callout"; tone: "info" | "warning" | "term"; title: string; text: string };
+
+export interface LessonModule {
+  moduleId: LessonModuleId;
+  title: string;
+  summary: string;
+  blocks: LessonContentBlock[];
+}
+
+export interface LessonLearningObjectives {
+  understand: string[];
+  master: string[];
+}
+
+export interface LessonCanonicalRule {
+  ruleId: string;
+  statement: string;
+  sourceClaimIds: string[];
+}
+
+export interface LessonSourceClaim {
+  claimId: string;
+  statement: string;
+  sourceAnchorIds: string[];
+}
+
+export interface LessonTermNote {
+  term: string;
+  explanation: string;
+}
+
+export interface LessonVariantAsset {
+  variantId: LessonVariantId;
+  label: string;
+  learningObjectives: LessonLearningObjectives;
+  modules: LessonModule[];
+  termNotes: LessonTermNote[];
+  coveredRuleIds: string[];
+  chineseCharacterCount: number;
+}
+
+export interface RichLessonAsset {
+  sourceDocument: string;
+  sourceDocumentSha256: string;
+  canonicalRules: LessonCanonicalRule[];
+  sourceClaims: LessonSourceClaim[];
+  variants: Record<LessonVariantId, LessonVariantAsset>;
+}
+
+export interface SelectedLessonSafeView {
+  variantId: LessonVariantId;
+  label: string;
+  learningObjectives: LessonLearningObjectives;
+  modules: LessonModule[];
+  termNotes: LessonTermNote[];
+  canonicalRules: LessonCanonicalRule[];
+  sourceClaims: LessonSourceClaim[];
+  coveredRuleIds: string[];
+}
+
+export interface PersonalizedLessonTip {
+  text: string;
+  sourceAnchorIds: string[];
+}
+
+export interface LearningCardBase {
   cardId: string;
   knowledgePointId: string;
   title: string;
@@ -18,6 +91,17 @@ export interface LearningCardSafeView {
   commonMistake: string;
   sourceAnchorIds: string[];
   estimatedMinutes: number;
+}
+
+/** Profile-only card asset. All variants stay server-side. */
+export interface LearningCardAsset extends LearningCardBase {
+  richLesson?: RichLessonAsset;
+}
+
+/** Public/session-safe card. It contains at most one selected lesson variant. */
+export interface LearningCardSafeView extends LearningCardBase {
+  selectedLesson?: SelectedLessonSafeView;
+  personalizedTip?: PersonalizedLessonTip;
 }
 
 export interface QuizQuestionSafeView {
@@ -36,7 +120,8 @@ export interface QuizQuestionPrivate extends QuizQuestionSafeView {
 export interface QuizActivitySafeView extends ActivitySafeViewBase {
   kind: "mcq";
   questions: QuizQuestionSafeView[];
-  retryNumber: 0 | 1;
+  retryNumber: number;
+  questionSource?: "ai_recorded" | "ai_live" | "ai_supplemented" | "profile_fixed" | "insufficient";
 }
 
 export interface QuizQuestionGroupAsset {
@@ -99,11 +184,32 @@ export interface QuizActivityResult {
   safeFeedback: string;
   answerReview?: Array<{
     questionId: string;
+    prompt: string;
     correct: boolean;
     correctAnswer: string | boolean;
     explanation: string;
     sourceAnchorIds: string[];
   }>;
+}
+
+export interface ContinueActivityWithGapInput {
+  requestId: string;
+  sessionId: string;
+  sessionVersion: number;
+  profileRevision: number;
+  activityId: string;
+  attemptId: string;
+}
+
+export interface ContinueActivityWithGapOutput {
+  requestId: string;
+  sessionId: string;
+  sessionVersion: number;
+  profileRevision: number;
+  activityId: string;
+  status: "insufficient";
+  result: "partial" | "fail" | "insufficient";
+  attemptCount: number;
 }
 
 export interface QuizSubmitActivityInput {
@@ -125,7 +231,9 @@ export interface ActivityProgressEntry {
   status: ActivityProgressStatus;
   attemptIds: string[];
   result?: "pass" | "partial" | "fail" | "insufficient";
-  quizRetryCount: 0 | 1;
+  quizRetryCount: number;
+  bestResult?: "pass" | "partial" | "fail" | "insufficient";
+  continuedWithGap?: boolean;
   updatedAt: string;
 }
 
@@ -169,20 +277,30 @@ export interface DiagnosticDraftSafeView {
   background?: BackgroundQuestionnaire;
   currentQuestionId?: string;
   processedQuestionIds: string[];
+  answers?: Array<{
+    questionId: string;
+    status: "answered" | "skipped";
+    submittedAnswer?: string | boolean;
+  }>;
 }
 
 export type CurrentAttemptSafeReference =
   | { kind: "code"; activityId: string; attemptId: string; status: "draft" | "submitted" | "evaluator_error"; draftVersion: number }
-  | { kind: "quiz"; activityId: string; attemptId: string; status: "draft" | "submitted" | "evaluator_error"; retryNumber: 0 | 1 };
+  | { kind: "quiz"; activityId: string; attemptId: string; status: "draft" | "submitted" | "evaluator_error"; retryNumber: number };
 
 export interface AdaptiveContentPort {
-  prepareCard(input: { profileRevision: number; knowledgePointId: string; excludedArtifactIds: string[] }): Promise<{
+  prepareCard(input: { profileRevision: number; knowledgePointId: string; excludedArtifactIds: string[]; lessonVariantId?: LessonVariantId }): Promise<{
     status: "accepted" | "unavailable";
     card?: LearningCardSafeView;
   }>;
-  prepareQuiz(input: { profileRevision: number; activityId: string; retryNumber: 0 | 1; excludedQuestionIds: string[] }): Promise<{
+  prepareQuiz(input: { profileRevision: number; activityId: string; retryNumber: number; excludedQuestionIds: string[]; lessonVariantId?: LessonVariantId }): Promise<{
     status: "accepted" | "unavailable";
     questions?: QuizQuestionPrivate[];
+    origin?: "recorded_response" | "live_model";
+    reviewBinding?: {
+      generationRunId: string;
+      acceptedQuestionSetSha256: string;
+    };
   }>;
 }
 

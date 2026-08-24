@@ -21,6 +21,7 @@ export interface LearningRuntimeFacade {
   saveActivityDraft(input: SaveActivityDraftInput): Promise<ActivityDraftOutput>;
   prepareActivityRun(input: PrepareActivityRunInput): Promise<PreparedActivityOutput>;
   submitActivity(input: SubmitActivityInput): Promise<ActivitySubmissionOutput>;
+  continueActivityWithGap(input: import("./index.js").ContinueActivityWithGapInput): Promise<import("./index.js").ContinueActivityWithGapOutput>;
   getActivityAttempt(input: GetActivityAttemptInput): Promise<ActivityAttemptSafeView>;
   recoverActivity(input: RecoverActivityInput): Promise<ActivityRecoveryOutput>;
   askContextQuestion(input: ContextQuestionInput): Promise<ContextAnswerOutput>;
@@ -94,6 +95,9 @@ export interface SessionRecoverySafeView extends FacadeResponseMeta {
   diagnosticDraft?: import("./index.js").DiagnosticDraftSafeView;
   activityProgress: import("./index.js").NodeActivityProgress[];
   currentAttempt?: import("./index.js").CurrentAttemptSafeReference;
+  evidenceVersion?: number;
+  knowledgeStates?: KnowledgeState[];
+  learningCards?: Array<{ nodeId: string; card: import("./index.js").LearningCardSafeView }>;
   path?: {
     pathId: string;
     pathVersion: number;
@@ -272,9 +276,36 @@ export interface ActivitySafeViewBase {
   supportingKnowledgePointIds: string[];
 }
 
+export interface CodeProblemStatementSafeView {
+  background: string;
+  inputDescription: string;
+  outputDescription: string;
+  rules: string[];
+  prohibitedActions: string[];
+  sample: {
+    inputFileName: string;
+    inputCsv: string;
+    outputFileName: string;
+    outputCsv: string;
+    explanation: string;
+  };
+}
+
 export interface CodeActivitySafeView extends ActivitySafeViewBase {
   kind: "code_completion" | "coding_practical" | "explain" | "debug";
   starterCode?: string;
+  entryPoint?: string;
+  outputContract?: string;
+  editableRegions?: Array<{
+    regionId: string;
+    startMarker: string;
+    endMarker: string;
+    maxCharacters: number;
+  }>;
+  allowedLibraries?: string[];
+  publicTestIds?: string[];
+  publicAcceptanceCriteria?: string[];
+  problemStatement?: CodeProblemStatementSafeView;
 }
 
 /** Revision 2 keeps its single-question projection unchanged. */
@@ -410,7 +441,7 @@ export interface CodeActivityAttemptSafeView extends ActivityAttemptSafeViewBase
 
 export interface QuizActivityAttemptSafeView extends ActivityAttemptSafeViewBase {
   kind: "quiz";
-  retryNumber: 0 | 1;
+  retryNumber: number;
   result?: import("./index.js").QuizActivityResult;
 }
 

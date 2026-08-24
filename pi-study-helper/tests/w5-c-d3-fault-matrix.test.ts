@@ -92,12 +92,17 @@ describe("W5 D3 C fault matrix", () => {
       return { errorCode: result.errorCode, verdict: result.verdict, terminationPath: process.platform === "win32" ? "taskkill /T /F" : "SIGKILL" };
     });
     await measure("temporary_directory_cleanup", async () => {
-      const before = new Set((await readdir(tmpdir())).filter((name) => name.startsWith("pi-w3-evaluation-")));
-      const { adapter: evaluation, input: request } = await adapter();
-      const prepared = await evaluation.prepare(request);
-      await evaluation.run({ requestId: "d3-cleanup", attemptId: "d3-cleanup", prepared, code: "def clean_orders(df):\n    return df\n" }, new AbortController().signal);
-      const after = new Set((await readdir(tmpdir())).filter((name) => name.startsWith("pi-w3-evaluation-")));
-      return { beforeCount: before.size, afterCount: after.size, unchanged: [...after].every((name) => before.has(name)) };
+      const temporaryRoot = await mkdtemp(resolve(tmpdir(), "w5-d3-cleanup-probe-"));
+      try {
+        const before = new Set(await readdir(temporaryRoot));
+        const { adapter: evaluation, input: request } = await adapter({ temporaryRoot });
+        const prepared = await evaluation.prepare(request);
+        await evaluation.run({ requestId: "d3-cleanup", attemptId: "d3-cleanup", prepared, code: "def clean_orders(df):\n    return df\n" }, new AbortController().signal);
+        const after = new Set(await readdir(temporaryRoot));
+        return { beforeCount: before.size, afterCount: after.size, unchanged: [...after].every((name) => before.has(name)) };
+      } finally {
+        await rm(temporaryRoot, { recursive: true, force: true });
+      }
     });
     await measure("disk_write_failure_boundary", async () => {
       const dataRoot = await mkdtemp(resolve(tmpdir(), "w5-d3-disk-fault-"));

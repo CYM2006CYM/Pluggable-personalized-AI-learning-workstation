@@ -12,7 +12,7 @@ import { ProfileBoundSessionRuntime } from "../application/profile-bound-session
 import { ProfileFamilyPathResolver, createPathRuntimeMethods } from "../application/path-learning-facade.js";
 import { ProfileFamilyQuizActivityAssetResolver, QuizActivityRuntime } from "../application/quiz-activity-runtime.js";
 import { parseDiagnosticAnswerKey, parseDiagnosticBlueprint } from "../domain/diagnostic.js";
-import { createW4DModelGraphs } from "../graphs/w4-d-graph-factory.js";
+import { createW4DModelGraphs, W4_D_LIVE_PROMPT_VERSION } from "../graphs/w4-d-graph-factory.js";
 import { loadRecordedModelResponseFixtures, RecordedModelExecutionAdapter } from "../infrastructure/model-execution-port.js";
 import { createLiveModelExecutionPort } from "../infrastructure/live-model-execution-port.js";
 import { ProfileAdaptiveContentSourceProvider } from "../infrastructure/profile-adaptive-source-provider.js";
@@ -59,12 +59,20 @@ export async function createDemoRuntime(options: DemoRuntimeOptions): Promise<De
   const pathProfile = new ProfileFamilyPathResolver(profiles);
   const pathSuffix = createActivityPathSuffixReplanner({ sessions, profile: pathProfile, now: options.now });
   const privateStore = new FileProfileUserRuntimeStore(profiles.familyDirectory("pandas-cleaning"));
+  const [historicalRecordings, currentQuizRecordings] = await Promise.all([
+    readFile(resolve(options.fixturesRoot, "../model-responses/w4/recorded-responses.json"), "utf8").then(loadRecordedModelResponseFixtures),
+    readFile(resolve(options.fixturesRoot, "../model-responses/w6/recorded-quiz-responses.json"), "utf8").then(loadRecordedModelResponseFixtures),
+  ]);
+  const currentRunIds = new Set(currentQuizRecordings.map((recording) => recording.runId));
   const recorded = new RecordedModelExecutionAdapter({
-    fixtures: loadRecordedModelResponseFixtures(await readFile(resolve(options.fixturesRoot, "../model-responses/w4/recorded-responses.json"), "utf8")),
+    fixtures: [...historicalRecordings.filter((recording) => !currentRunIds.has(recording.runId)), ...currentQuizRecordings],
     defaultModelId: "deepseek-chat",
   });
   const graphs = createW4DModelGraphs();
   if (graphs.length !== 5) throw new Error("D graph registry binding is incomplete");
+  const configuredModelId = options.liveConfig?.model ?? "deepseek-chat";
+  // Recorded fixtures remain bound to v1; live requests use the revised prompt contract.
+  const configuredPromptVersion = options.liveConfig === undefined ? "w4-d2-v1" : W4_D_LIVE_PROMPT_VERSION;
   const modelExecutionPort = options.liveConfig === undefined
     ? recorded
     : createLiveModelExecutionPort({
@@ -81,15 +89,19 @@ export async function createDemoRuntime(options: DemoRuntimeOptions): Promise<De
     modelExecutionPort,
     sourceProvider,
     privateStore,
-    modelId: "deepseek-chat",
-    promptVersion: "w4-d2-v1",
+    modelId: configuredModelId,
+    promptVersion: configuredPromptVersion,
+    executionMode: options.liveConfig === undefined ? "recorded_response" : "live_model",
+    ...(options.liveConfig === undefined
+      ? {}
+      : { fallbackAfterMs: 60_000, discardAfterMs: 90_000 }),
   });
   const capability = new CapabilityTaskService({
     modelExecutionPort,
     evidenceProvider: new SessionCapabilityEvidenceProvider({ sessions }),
     privateStore,
-    modelId: "deepseek-chat",
-    promptVersion: "w4-d2-v1",
+    modelId: configuredModelId,
+    promptVersion: configuredPromptVersion,
     now: options.now,
   });
   const profileBound = new ProfileBoundSessionRuntime({ profiles, sessions });
@@ -135,6 +147,7 @@ export async function createDemoRuntime(options: DemoRuntimeOptions): Promise<De
       submitActivity: quiz.submitActivity.bind(quiz),
       submitActivityWithContext: quiz.submitActivityWithContext.bind(quiz),
       getActivityAttempt: quiz.getAttempt.bind(quiz),
+      continueActivityWithGap: quiz.continueActivityWithGap.bind(quiz),
     },
     sessions,
     profile: pathProfile,

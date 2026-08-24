@@ -39,6 +39,7 @@
       "profileRevision": 3,
       "kind": "mcq",
       "allowedSources": [
+        "ai_generated",
         "profile_fixed"
       ],
       "primaryKnowledgePointId": "pandas.clean.read-csv",
@@ -48,8 +49,8 @@
       "goalIds": [
         "goal-clean-orders"
       ],
-      "title": "Fixed quiz: 读取 CSV",
-      "prompt": "Complete the fixed question group for this knowledge point.",
+      "title": "理解检查：读取 CSV",
+      "prompt": "完成基于本节教学正文生成并审核的题组；AI不可用时由固定题保障。",
       "difficulty": "S-U",
       "estimatedMinutes": 8,
       "sourceAnchorIds": [
@@ -64,6 +65,94 @@
       "fixedQuestionGroupId": "w4-fixed-read-csv-v1",
       "supplementalQuestionGroupId": "w4-supplemental-read-csv-v1",
       "evaluatorRef": "private/quiz-answer-key.json#w4-fixed-read-csv-v1"
+    },
+    {
+      "activityId": "act-load-csv",
+      "profileRevision": 3,
+      "kind": "code_completion",
+      "allowedSources": [
+        "profile_fixed"
+      ],
+      "primaryKnowledgePointId": "pandas.clean.read-csv",
+      "supportingKnowledgePointIds": [
+        "basic-python"
+      ],
+      "goalIds": [
+        "goal-clean-orders"
+      ],
+      "title": "补全可靠的 CSV 读取函数",
+      "prompt": "实现 load_orders(csv_path)，按本资料包约定把 UTF-8 订单 CSV 读取为保持原始文本的 DataFrame。",
+      "difficulty": "S-U",
+      "estimatedMinutes": 15,
+      "sourceAnchorIds": [
+        "src-pandas-read-csv"
+      ],
+      "templateVersion": "3.0.0-draft",
+      "leakagePolicyId": "policy-no-private-assets",
+      "runtimePolicyId": "python-pandas-candidate",
+      "allowedScaffolds": [
+        "hint",
+        "worked_example"
+      ],
+      "starterCode": "import pandas as pd\n\ndef load_orders(csv_path):\n    # TODO_BEGIN\n    pass\n    # TODO_END\n",
+      "editableRegions": [
+        {
+          "regionId": "region-main",
+          "startMarker": "# TODO_BEGIN",
+          "endMarker": "# TODO_END",
+          "required": true,
+          "maxCharacters": 2000
+        }
+      ],
+      "entryPoint": "load_orders",
+      "outputContract": "返回包含原 CSV 全部行和七个合同列的 DataFrame；读取阶段保持各列为 pandas StringDtype。",
+      "publicAcceptanceCriteria": [
+        "使用函数参数 csv_path 读取文件，不依赖本机固定路径。",
+        "返回 pandas DataFrame，严格保留七个合同列、列顺序、行数和行顺序。",
+        "读取阶段使用字符串 dtype，货币、日期、状态和缺失异常留给后续章节处理。",
+        "能够处理与公开样例同结构但内容不同的 UTF-8 CSV。"
+      ],
+      "problemStatement": {
+        "background": "订单文件来自资料包提供的公开或评测数据。读取阶段的职责只是把 CSV 稳定地变成 DataFrame，并保留原始异常；如果此时擅自清洗金额、日期或状态，后续步骤就无法判断数据原貌。",
+        "inputDescription": "函数接收 csv_path，它是评测器提供的 UTF-8 CSV 文件路径。文件第一行是表头，字段依次为 order_id、customer_id、amount、city、order_date、status、note。",
+        "outputDescription": "返回一个 pandas DataFrame。必须包含输入文件的全部数据行和七个合同列，列顺序不变；七列在读取阶段统一使用 pandas StringDtype。",
+        "rules": [
+          "调用 pandas.read_csv 读取 csv_path，并显式使用字符串 dtype。",
+          "保留原文件的行数、行顺序、列名和列顺序。",
+          "金额中的货币符号、日期文本、状态大小写和缺失值在本题中保持原样。"
+        ],
+        "prohibitedActions": [
+          "不得把文件路径、订单号或输出数据硬编码在函数中。",
+          "不得在读取阶段填充缺失值、去重、改类型或改业务取值。",
+          "不得访问网络、安装依赖或读取 csv_path 之外的文件。"
+        ],
+        "sample": {
+          "inputFileName": "read-orders-input.csv",
+          "inputCsv": "order_id,customer_id,amount,city,order_date,status,note\nO001,C001,88,上海,2026-01-03,completed,首单\nO002,C002,\"¥1,200\",上海市,2026/01/04, Pending ,\n",
+          "outputFileName": "read-orders-output.csv",
+          "outputCsv": "order_id,customer_id,amount,city,order_date,status,note\nO001,C001,88,上海,2026-01-03,completed,首单\nO002,C002,\"¥1,200\",上海市,2026/01/04, Pending ,\n",
+          "explanation": "处理前后 CSV 的文字内容相同是有意设计：本题只验证可靠读取，不提前清洗。程序中的返回值是 DataFrame，后续章节再处理这些异常。"
+        }
+      },
+      "datasetRefs": [
+        "dataset-public-orders",
+        "dataset-private-variant-01"
+      ],
+      "publicTestRefs": [
+        "test-read-csv-public"
+      ],
+      "hiddenTestRefs": [
+        "test-read-csv-hidden"
+      ],
+      "rubricRef": "rubric-read-csv",
+      "referenceSolutionRef": "solution-read-csv",
+      "knownWrongSolutionRefs": [
+        "wrong-read-csv"
+      ],
+      "environmentRef": "env-python-pandas-candidate",
+      "allowedLibraries": [
+        "pandas"
+      ]
     },
     {
       "activityId": "act-inspect-dataframe",
@@ -105,6 +194,34 @@
       ],
       "entryPoint": "inspect_orders",
       "outputContract": "返回恰好七列且列序固定的 DataFrame。",
+      "publicAcceptanceCriteria": [
+        "输出只包含 order_id、customer_id、amount、city、order_date、status、note 七列。",
+        "七列严格按公开合同规定的顺序排列。",
+        "输入中的额外列被排除，行数、行序和单元格内容保持不变。",
+        "传入的原始 DataFrame 在函数调用后保持不变。"
+      ],
+      "problemStatement": {
+        "background": "订单数据常从不同系统汇总，原表可能夹带临时列或列序混乱。本题要求先建立稳定的数据结构边界，为后续清洗步骤准备可信的七列表格。",
+        "inputDescription": "函数接收一个 pandas DataFrame。输入至少包含订单合同规定的七列，也可能包含额外列；行数和每行数据应保持不变。",
+        "outputDescription": "返回一个新的 DataFrame，只保留 order_id、customer_id、amount、city、order_date、status、note，并严格按此顺序排列。",
+        "rules": [
+          "使用 df.copy() 或等价方式创建结果，不能修改传入的原始 DataFrame。",
+          "删除所有不在七列合同中的额外列。",
+          "严格保持七个目标列的名称、顺序、行数和行顺序。"
+        ],
+        "prohibitedActions": [
+          "不得修改原始 df。",
+          "不得重命名、填充或改写单元格内容。",
+          "不得依赖样例中额外列的固定名称。"
+        ],
+        "sample": {
+          "inputFileName": "inspect-orders-input.csv",
+          "inputCsv": "order_id,customer_id,amount,city,order_date,status,note,channel\nO001,C001,88,上海,2026-01-03,completed,首单,web\n",
+          "outputFileName": "inspect-orders-output.csv",
+          "outputCsv": "order_id,customer_id,amount,city,order_date,status,note\nO001,C001,88,上海,2026-01-03,completed,首单\n",
+          "explanation": "输入中的 channel 是额外列，因此输出删除它；其余七列的名称、次序和数据保持不变。"
+        }
+      },
       "datasetRefs": [
         "dataset-public-orders"
       ],
@@ -164,6 +281,34 @@
       ],
       "entryPoint": "clean_missing",
       "outputContract": "仅缺失 order_id 删除行，其余列按合同保留或转换。",
+      "publicAcceptanceCriteria": [
+        "只删除 order_id 缺失的记录，不无差别删除其他含缺失值的行。",
+        "customer_id、amount 和 order_date 缺失的记录仍被保留。",
+        "note 缺失统一转换为空字符串，其他字段不被臆造。",
+        "输出保持被保留记录的原始顺序，且原始 DataFrame 不被修改。"
+      ],
+      "problemStatement": {
+        "background": "缺失值不能一律删除或随意填充。订单主键缺失时无法追踪记录，应删除该行；客户、金额等非主键字段缺失时仍可能保留业务价值，需要按合同分别处理。",
+        "inputDescription": "函数接收包含七个订单字段的 pandas DataFrame，其中部分单元格可能为空、NaN 或 pandas 缺失值。",
+        "outputDescription": "返回新的 DataFrame：删除 order_id 缺失的行，保留 customer_id 和 amount 等允许缺失的记录，并把 note 缺失统一为可安全使用的空字符串。",
+        "rules": [
+          "只删除 order_id 缺失的整行。",
+          "customer_id、amount 和 order_date 缺失时保留该行，留给后续类型步骤处理。",
+          "note 缺失时填为空字符串，其他非合同缺失值不得自行猜测。"
+        ],
+        "prohibitedActions": [
+          "不得使用 dropna() 无差别删除所有含缺失值的行。",
+          "不得编造 customer_id、amount 或日期。",
+          "不得修改原始 df。"
+        ],
+        "sample": {
+          "inputFileName": "missing-orders-input.csv",
+          "inputCsv": "order_id,customer_id,amount,city,order_date,status,note\n,C006,66,广州,2026-01-08,completed,主键缺失\nO005,,35.5,广州,2026-01-07,pending,\nO009,C009,,北京,2026-01-11,pending,\n",
+          "outputFileName": "missing-orders-output.csv",
+          "outputCsv": "order_id,customer_id,amount,city,order_date,status,note\nO005,,35.5,广州,2026-01-07,pending,\nO009,C009,,北京,2026-01-11,pending,\n",
+          "explanation": "第一行缺少 order_id，因此被删除；后两行虽然存在非主键缺失值，但仍被保留，note 的缺失按合同表示为空字符串。"
+        }
+      },
       "datasetRefs": [
         "dataset-public-orders"
       ],
@@ -224,6 +369,34 @@
       ],
       "entryPoint": "deduplicate_orders",
       "outputContract": "order_id 唯一且保留被选记录的原始相对顺序。",
+      "publicAcceptanceCriteria": [
+        "按去除首尾空格后的 order_id 分组，输出中的非缺失订单号唯一。",
+        "同组优先选择日期可解析的记录，并在可解析记录中选择最新日期。",
+        "日期优先级相同时稳定保留原始第一条记录。",
+        "最终输出恢复被选记录的原始相对顺序，且原始 DataFrame 不被修改。"
+      ],
+      "problemStatement": {
+        "background": "同一订单可能被多次导入。简单保留第一条或最后一条会忽略日期质量，本题要求按明确优先级选择代表记录，同时保持最终结果的原始业务顺序。",
+        "inputDescription": "函数接收包含 order_id 和 order_date 的订单 DataFrame。同一 order_id 可能出现多次，日期可能可解析、不可解析或相同。",
+        "outputDescription": "每个非缺失 order_id 只保留一行：优先可解析日期，再选最新日期；仍相同时保留原始第一条。选中后按这些记录在原表中的原始位置输出。",
+        "rules": [
+          "按去除首尾空格后的 order_id 判断重复。",
+          "同组中可解析日期优先于不可解析日期，可解析日期中选择最新日期。",
+          "日期优先级仍相同时保留原始第一条，最终结果恢复被选记录的原始相对顺序。"
+        ],
+        "prohibitedActions": [
+          "不得直接 drop_duplicates() 而忽略日期优先级。",
+          "不得把最终结果永久按日期或 order_id 排序。",
+          "不得修改原始 df。"
+        ],
+        "sample": {
+          "inputFileName": "duplicate-orders-input.csv",
+          "inputCsv": "order_id,customer_id,amount,city,order_date,status,note\nO011,C011,50,上海,2026-01-12,pending,旧记录\nO012,C012,60,北京,not-a-date,pending,第一条\nO011,C011,55,上海,2026-01-13,completed,新记录\nO012,C012,61,北京,also-bad,completed,第二条\n",
+          "outputFileName": "duplicate-orders-output.csv",
+          "outputCsv": "order_id,customer_id,amount,city,order_date,status,note\nO012,C012,60,北京,not-a-date,pending,第一条\nO011,C011,55,上海,2026-01-13,completed,新记录\n",
+          "explanation": "O011 选择日期更新的记录；O012 两个日期都不可解析，因此选择原始第一条。最后按被选记录在输入中的位置输出，所以 O012 位于 O011 之前。"
+        }
+      },
       "datasetRefs": [
         "dataset-public-orders"
       ],
@@ -285,6 +458,35 @@
       ],
       "entryPoint": "normalize_types",
       "outputContract": "金额为数值、日期无时区、字符串为 StringDtype 且业务取值合法。",
+      "publicAcceptanceCriteria": [
+        "amount 去除人民币符号、千位逗号和空格后转换为数值，非法金额变为缺失值。",
+        "order_date 容错转换为无时区日期时间，非法日期变为缺失值。",
+        "五个文本列使用 pandas StringDtype，城市和状态按公开映射规范化。",
+        "未知业务取值不被擅自猜测，且原始 DataFrame 不被修改。"
+      ],
+      "problemStatement": {
+        "background": "CSV读取后的金额、日期和状态常是混合文本。只有把它们规范成稳定类型和业务取值，后续统计、筛选和验证才不会因格式差异产生错误。",
+        "inputDescription": "函数接收七列订单 DataFrame。金额可能含货币符号和千位分隔符，日期可能合法或非法，城市和状态可能存在别名、大小写及首尾空格。",
+        "outputDescription": "返回新的 DataFrame：amount 为数值，order_date 为无时区日期时间；五个文本列使用 pandas StringDtype，并按公开映射规范城市与状态。无法解析的金额或日期变为缺失值。",
+        "rules": [
+          "金额先移除人民币符号、千位逗号和空格，再用容错数值转换；非法值转为缺失。",
+          "日期使用容错解析且不附加时区；非法日期转为缺失。",
+          "城市别名映射到上海、北京、广州、深圳；状态统一小写且只保留 completed、pending、cancelled，其他值转为缺失。",
+          "order_id、customer_id、city、status、note 使用 pandas StringDtype。"
+        ],
+        "prohibitedActions": [
+          "不得因单个非法金额或日期让整个函数报错。",
+          "不得把未知城市擅自映射成已知城市。",
+          "不得修改原始 df。"
+        ],
+        "sample": {
+          "inputFileName": "normalize-orders-input.csv",
+          "inputCsv": "order_id,customer_id,amount,city,order_date,status,note\nO001,C001,\"¥1,200.50\",上海市,2026-01-03, Completed ,首单\nO004,C004,N/A,京,2026-02-30,UNKNOWN,异常值\n",
+          "outputFileName": "normalize-orders-output.csv",
+          "outputCsv": "order_id,customer_id,amount,city,order_date,status,note\nO001,C001,1200.5,上海,2026-01-03,completed,首单\nO004,C004,,北京,,,异常值\n",
+          "explanation": "第一行完成货币、城市和状态规范化；第二行金额、日期和状态无法按合同解析，因此对应字段为空，但订单记录仍保留。"
+        }
+      },
       "datasetRefs": [
         "dataset-public-orders"
       ],
@@ -353,6 +555,37 @@
       ],
       "entryPoint": "clean_orders",
       "outputContract": "返回满足七列、缺失、去重、dtype 与行序不变量的 clean_df。",
+      "publicAcceptanceCriteria": [
+        "clean_df 严格包含固定七列及规定顺序，不含额外列。",
+        "order_id 非空且唯一，重复订单按公开日期优先级稳定选择。",
+        "金额、日期和五个文本列的 dtype 与环境锁和公开合同一致。",
+        "城市、状态、缺失值和非法值按公开业务规则处理。",
+        "输出保持被选记录的原始相对顺序，且原始 DataFrame 不被修改。",
+        "实现适用于同结构新数据，不硬编码样例行号、订单号或输出。"
+      ],
+      "problemStatement": {
+        "background": "这是本单元的独立综合任务。你需要把结构检查、缺失处理、稳定去重、类型规范和结果验证连成一条可复验的清洗流程，而不是只让某一条样例看起来正确。",
+        "inputDescription": "函数接收原始订单 DataFrame，可能包含额外列、缺失主键、重复订单、货币文本、非法日期、城市别名和异常状态。正式评测还会使用不同内容但同一公开合同的数据。",
+        "outputDescription": "返回名为 clean_df 的新 DataFrame，严格包含七个目标列，order_id 非空且唯一，字段类型和业务取值符合合同，并保持被选记录的原始相对顺序。",
+        "rules": [
+          "先建立固定七列结构，再按合同处理缺失值。",
+          "对重复 order_id 使用可解析日期、最新日期、原始第一条的稳定优先级。",
+          "规范金额、日期、城市、状态和文本dtype，并对结果执行可复算的不变量检查。",
+          "函数必须适用于同结构的新数据，不能只针对公开CSV中的具体行号或订单号。"
+        ],
+        "prohibitedActions": [
+          "不得修改原始 df。",
+          "不得硬编码公开样例的输出行或订单号。",
+          "不得读取本机路径、私有数据、hidden tests、Rubric或reference solution。"
+        ],
+        "sample": {
+          "inputFileName": "clean-orders-input.csv",
+          "inputCsv": "order_id,customer_id,amount,city,order_date,status,note,channel\nO001,C001,\"¥1,200\",上海市,2026-01-03, Completed ,旧记录,web\nO001,C001,1250,沪,2026-01-04,completed,新记录,store\n,C006,66,穗,2026-01-08,completed,主键缺失,web\nO004,C004,N/A,京,2026-02-30,UNKNOWN,异常值,store\n",
+          "outputFileName": "clean-orders-output.csv",
+          "outputCsv": "order_id,customer_id,amount,city,order_date,status,note\nO001,C001,1250,上海,2026-01-04,completed,新记录\nO004,C004,,北京,,,异常值\n",
+          "explanation": "额外列被删除，缺失主键行被删除，O001保留日期更新的记录；金额、城市、日期和状态按公开规则规范化。该样例只说明合同，不是正式评测答案。"
+        }
+      },
       "datasetRefs": [
         "dataset-public-orders",
         "dataset-private-variant-01",
@@ -392,6 +625,7 @@
       "profileRevision": 3,
       "kind": "mcq",
       "allowedSources": [
+        "ai_generated",
         "profile_fixed"
       ],
       "primaryKnowledgePointId": "pandas.clean.inspect-dataframe",
@@ -399,8 +633,8 @@
       "goalIds": [
         "goal-clean-orders"
       ],
-      "title": "Fixed quiz: 检查 DataFrame 结构",
-      "prompt": "Complete the fixed question group for this knowledge point.",
+      "title": "理解检查：检查 DataFrame 结构",
+      "prompt": "完成基于本节教学正文生成并审核的题组；AI不可用时由固定题保障。",
       "difficulty": "S-U",
       "estimatedMinutes": 8,
       "sourceAnchorIds": [
@@ -421,6 +655,7 @@
       "profileRevision": 3,
       "kind": "mcq",
       "allowedSources": [
+        "ai_generated",
         "profile_fixed"
       ],
       "primaryKnowledgePointId": "pandas.clean.missing-values",
@@ -428,8 +663,8 @@
       "goalIds": [
         "goal-clean-orders"
       ],
-      "title": "Fixed quiz: 处理缺失值",
-      "prompt": "Complete the fixed question group for this knowledge point.",
+      "title": "理解检查：处理缺失值",
+      "prompt": "完成基于本节教学正文生成并审核的题组；AI不可用时由固定题保障。",
       "difficulty": "M-U",
       "estimatedMinutes": 8,
       "sourceAnchorIds": [
@@ -450,6 +685,7 @@
       "profileRevision": 3,
       "kind": "mcq",
       "allowedSources": [
+        "ai_generated",
         "profile_fixed"
       ],
       "primaryKnowledgePointId": "pandas.clean.duplicate-orders",
@@ -457,8 +693,8 @@
       "goalIds": [
         "goal-clean-orders"
       ],
-      "title": "Fixed quiz: 处理重复订单",
-      "prompt": "Complete the fixed question group for this knowledge point.",
+      "title": "理解检查：处理重复订单",
+      "prompt": "完成基于本节教学正文生成并审核的题组；AI不可用时由固定题保障。",
       "difficulty": "M-A",
       "estimatedMinutes": 8,
       "sourceAnchorIds": [
@@ -480,6 +716,7 @@
       "profileRevision": 3,
       "kind": "mcq",
       "allowedSources": [
+        "ai_generated",
         "profile_fixed"
       ],
       "primaryKnowledgePointId": "pandas.clean.type-format",
@@ -487,8 +724,8 @@
       "goalIds": [
         "goal-clean-orders"
       ],
-      "title": "Fixed quiz: 规范类型与格式",
-      "prompt": "Complete the fixed question group for this knowledge point.",
+      "title": "理解检查：规范类型与格式",
+      "prompt": "完成基于本节教学正文生成并审核的题组；AI不可用时由固定题保障。",
       "difficulty": "M-A",
       "estimatedMinutes": 8,
       "sourceAnchorIds": [
@@ -511,6 +748,7 @@
       "profileRevision": 3,
       "kind": "mcq",
       "allowedSources": [
+        "ai_generated",
         "profile_fixed"
       ],
       "primaryKnowledgePointId": "pandas.clean.validate-result",
@@ -518,8 +756,8 @@
       "goalIds": [
         "goal-clean-orders"
       ],
-      "title": "Fixed quiz: 验证清洗结果",
-      "prompt": "Complete the fixed question group for this knowledge point.",
+      "title": "理解检查：验证清洗结果",
+      "prompt": "完成基于本节教学正文生成并审核的题组；AI不可用时由固定题保障。",
       "difficulty": "C-A",
       "estimatedMinutes": 8,
       "sourceAnchorIds": [
