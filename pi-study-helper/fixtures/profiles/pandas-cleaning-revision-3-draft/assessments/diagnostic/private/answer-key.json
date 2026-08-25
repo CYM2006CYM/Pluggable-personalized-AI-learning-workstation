@@ -4,10 +4,15 @@
   "answers": [
     {"questionId":"diag-01","kind":"single_choice","correctAnswer":"df.shape"},
     {"questionId":"diag-02","kind":"single_choice","correctAnswer":"DataFrame"},
+    {"questionId":"diag-09","kind":"single_choice","correctAnswer":"指定读取时的列类型"},
     {"questionId":"diag-03","kind":"judgment","correctAnswer":true},
+    {"questionId":"diag-10","kind":"single_choice","correctAnswer":"查看 amount 列的数据类型"},
     {"questionId":"diag-04","kind":"single_choice","correctAnswer":"删除该行"},
+    {"questionId":"diag-11","kind":"single_choice","correctAnswer":"只删除 order_id 缺失的记录"},
     {"questionId":"diag-05","kind":"single_choice","correctAnswer":"日期可解析的记录"},
+    {"questionId":"diag-12","kind":"single_choice","correctAnswer":"每个订单排序后位于第一位的记录"},
     {"questionId":"diag-06","kind":"single_choice","correctAnswer":"转换为缺失时间值"},
+    {"questionId":"diag-13","kind":"single_choice","correctAnswer":"转换为缺失数值"},
     {"questionId":"diag-07","kind":"judgment","correctAnswer":true},
     {"questionId":"diag-08","kind":"single_choice","correctAnswer":"被选记录的相对行序"}
   ]

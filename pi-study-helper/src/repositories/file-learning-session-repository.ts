@@ -267,11 +267,15 @@ function validateKnowledgeStates(states: readonly KnowledgeState[], input: Commi
         || checked.validEvidenceCount !== checked.consideredEvidenceIds.length
         || checked.consideredEvidenceIds.some((id: string) => !checked.evidenceIds.includes(id))
         || !Number.isFinite(Date.parse(checked.asOf))
-        || !Number.isFinite(Date.parse(checked.lastUpdatedAt))) {
+        || !Number.isFinite(Date.parse(checked.lastUpdatedAt))
+        || (checked.diagnosticSkipEligible !== undefined && typeof checked.diagnosticSkipEligible !== "boolean")) {
       throw new LearningSessionRepositoryError("evidence_invalid", "KnowledgeState fields are not semantically valid");
     }
     if (checked.skipEligible && checked.status !== "mastered") {
       throw new LearningSessionRepositoryError("evidence_invalid", "Only mastered KnowledgeState may be skip eligible");
+    }
+    if (checked.diagnosticSkipEligible && checked.status !== "mastered") {
+      throw new LearningSessionRepositoryError("evidence_invalid", "Only mastered KnowledgeState may offer a diagnostic skip choice");
     }
   }
 }

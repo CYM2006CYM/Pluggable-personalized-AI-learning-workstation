@@ -20,6 +20,21 @@ export interface ReviewSafeContext {
   allowedSourceIds?: string[];
   /** The selected Chinese lesson body, kept separate from source metadata for the model. */
   teachingContent?: string;
+  /** Answer-free facts from the latest failed attempt and the learner profile Agent. */
+  retryContext?: {
+    previousAttemptId: string;
+    excludedQuestionIds: string[];
+    excludedQuestionPrompts: string[];
+    missedQuestions: Array<{
+      questionId: string;
+      prompt: string;
+      explanation: string;
+      sourceAnchorIds: string[];
+    }>;
+    learnerProfileSummary: string;
+    learnerProfileEvidenceRefs: string[];
+    learnerProfileSource: "agent" | "deterministic";
+  };
 }
 
 export interface GeneratorInput {
@@ -136,7 +151,7 @@ function isReviewSafeContext(value: unknown): value is ReviewSafeContext {
     "safeFeedback",
     "sourceIds",
     "sourceSummary",
-  ], ["allowedSourceIds", "teachingContent"])
+  ], ["allowedSourceIds", "teachingContent", "retryContext"])
     && isActivityContext(value.activity)
     && isNonEmptyString(value.safeFeedback)
     && isStringArray(sourceIds)
@@ -144,7 +159,40 @@ function isReviewSafeContext(value: unknown): value is ReviewSafeContext {
     && (value.allowedSourceIds === undefined || (isStringArray(value.allowedSourceIds)
       && value.allowedSourceIds.length === sourceIds.length
       && value.allowedSourceIds.every((sourceId, index) => sourceId === sourceIds[index])))
-    && (value.teachingContent === undefined || isNonEmptyString(value.teachingContent));
+    && (value.teachingContent === undefined || isNonEmptyString(value.teachingContent))
+    && (value.retryContext === undefined || isRetryContext(value.retryContext, sourceIds));
+}
+
+function isRetryContext(value: unknown, allowedSourceIds: string[]): value is NonNullable<ReviewSafeContext["retryContext"]> {
+  if (!isRecord(value) || !hasOnlyKeys(value, [
+    "previousAttemptId",
+    "excludedQuestionIds",
+    "excludedQuestionPrompts",
+    "missedQuestions",
+    "learnerProfileSummary",
+    "learnerProfileEvidenceRefs",
+    "learnerProfileSource",
+  ])) return false;
+  const excludedQuestionIds = value.excludedQuestionIds;
+  const excludedQuestionPrompts = value.excludedQuestionPrompts;
+  const missedQuestions = value.missedQuestions;
+  if (!isNonEmptyString(value.previousAttemptId)
+      || !isStringArray(excludedQuestionIds)
+      || !isStringArray(excludedQuestionPrompts)
+      || !Array.isArray(missedQuestions)
+      || missedQuestions.length === 0
+      || !isNonEmptyString(value.learnerProfileSummary)
+      || !Array.isArray(value.learnerProfileEvidenceRefs)
+      || !value.learnerProfileEvidenceRefs.every(isNonEmptyString)
+      || (value.learnerProfileSource !== "agent" && value.learnerProfileSource !== "deterministic")) return false;
+  return missedQuestions.every((item) => isRecord(item)
+    && hasOnlyKeys(item, ["questionId", "prompt", "explanation", "sourceAnchorIds"])
+    && isNonEmptyString(item.questionId)
+    && excludedQuestionIds.includes(item.questionId)
+    && isNonEmptyString(item.prompt)
+    && isNonEmptyString(item.explanation)
+    && isStringArray(item.sourceAnchorIds)
+    && item.sourceAnchorIds.every((id) => allowedSourceIds.includes(id)));
 }
 
 function isGeneratorInput(value: unknown): value is GeneratorInput {
@@ -267,6 +315,14 @@ function generatorPrompt(input: GeneratorInput): string {
     `allowedSourceIds=${JSON.stringify(context.allowedSourceIds ?? context.sourceIds)}`,
     `sourceSummary=${input.allowedSourcesSummary}`,
     `teachingContent=${context.teachingContent ?? context.sourceSummary}`,
+    ...(context.retryContext === undefined ? [] : [
+      "这是重做题组。retryContext.missedQuestions 是上一轮答错题目的安全复盘事实，learnerProfileSummary 是学情画像的辅助说明。",
+      "新题必须同时以 teachingContent 为权威依据，并逐个重复考察 missedQuestions 暴露的薄弱知识；不得只生成泛化基础题。",
+      "每个 missedQuestions 项至少要由一道新题覆盖。可以改变场景、代码片段、问法和干扰项，但不得改变正文中的正确知识。",
+      "严禁逐字复用旧题 prompt，严禁复用 excludedQuestionIds 中任何 questionId。新 questionId 应包含本轮重做标识，例如 r1、r2。",
+      "学情画像只能帮助确定练习重点，不能修改正文事实、答案、判分、路径或掌握状态。",
+      `retryContext=${JSON.stringify(context.retryContext)}`,
+    ]),
     ...(input.repairInstruction === undefined ? [] : [
       `REPAIR_ATTEMPT=${input.repairInstruction}`,
       "这是一次修复尝试。必须逐字执行失败类别对应的具体修复要求，重新输出完整五字段外层 JSON，不要解释修复过程。",
@@ -279,6 +335,10 @@ function hunterPrompt(input: HunterInput): string {
     "你是 Hunter（猎手智能体），负责对 Generator 产出的候选题做反向找错。",
     "candidateFeedback 是只供审核链使用的私有候选视图。你必须逐题读取 prompt、options、correctAnswer 和 explanation，并逐项对照 teachingContent；不能只检查题目样式或来源 ID。",
     "重点检查：题干是否清楚；选项是否互斥且只有一个正确项；correctAnswer 是否在语义上确实正确；explanation 是否与候选答案、题干和正文一致；概念、代码行为、反例与修正方法是否都有正文依据；sourceAnchorIds 是否来自 allowedSourceIds。",
+    ...(input.context.retryContext === undefined ? [] : [
+      "这是重做题组。还必须检查：所有 questionId 均未出现在 excludedQuestionIds；没有逐字复用旧题 prompt；每个 missedQuestions 暴露的薄弱知识都至少被一道新题再次考察。",
+      "若只是换了ID却复用旧题面，或遗漏任一错题知识点，必须报告非争议 issue 并建议 revise。",
+    ]),
     "服务端只会确定性检查 correctAnswer 是否属于 options，这不代表答案在知识上正确。若正文不能唯一支持候选答案、题目存在多解、答案或解析与正文冲突，必须报告具体 issue 并给出 recommendedVerdict=revise；事实错误不得标成可直接接受。",
     "不得重写题目、替换答案、补充正文没有的事实，也不得在 message 或其他输出字段中复述正确答案、解析原文、Evidence、KnowledgeState、路径或隐藏资产。",
     "只返回 issues、requiresDefender、recommendedVerdict；issueId 必须唯一。requiresDefender 必须严格等于是否存在 disputed=true 的 issue：有争议必须为 true，没有争议必须为 false。只要 issues 非空，recommendedVerdict 必须为 revise；没有问题时 issues=[]、requiresDefender=false、recommendedVerdict=accepted。",
@@ -302,6 +362,9 @@ function judgePrompt(input: JudgeInput): string {
     "你是 Judge（裁判智能体），负责依据正文、Generator 候选、Hunter 问题和必要的 Defender 辩护作最终裁决。",
     "你必须确认 Hunter 已逐题审核 prompt、options、correctAnswer 和 explanation，并结合 Hunter 问题对私有候选作最终复核；不能只检查 JSON 结构或引用格式。",
     "accepted 只表示候选通过内容与安全审查，不表示改变权威判分；候选答案无法由正文唯一支持、答案或解析存在事实错误、题目多解，或存在其他未解决的高风险时，必须 revise 或 rejected。",
+    ...(input.context.retryContext === undefined ? [] : [
+      "这是重做题组。你必须最终确认新旧题ID不同、题面未逐字复用，并且上一轮每个错题知识都在新题组中得到重复考察；任一条件不满足都不得 accepted。",
+    ]),
     "blockedIssueIds 只能引用 Hunter 已报告的 issueId；verdict=accepted 时必须为空。存在非争议 issue 时不能 accepted；若存在 disputed=true，必须使用 Defender 的逐项结论，只有全部争议均被反驳且没有 residualRisks 时才可 accepted。不能改写题目、答案、Rubric、hidden tests、reference solution、Evidence、KnowledgeState 或路径。",
     "Hunter 输出代表它已经执行了逐题审核，不要求 Hunter 在 issues 为空时复述检查过程。若 Hunter 返回 issues=[]、requiresDefender=false、recommendedVerdict=accepted，且你复核候选后没有发现新的正文、唯一答案、安全或来源问题，则必须返回 verdict=accepted、blockedIssueIds=[]。不得因为缺少额外审计说明而凭空拒绝。",
     "finalSafeFeedback 和 summary 只能是可公开的简短审查结论，不得复述正确答案、解析原文、私有评测内容、主机路径、密钥或 token。",

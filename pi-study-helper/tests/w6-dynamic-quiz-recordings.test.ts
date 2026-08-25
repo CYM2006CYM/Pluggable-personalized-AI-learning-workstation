@@ -31,7 +31,7 @@ describe("W6 dynamic quiz recorded candidates", () => {
     expect(practice.publicSourceSummary).not.toContain("deepseek");
   });
 
-  it("provides four reviewed Chinese questions for every Pandas lesson without a live key", async () => {
+  it("rejects stale recorded questions after the authoritative lesson digest changes", async () => {
     const raw = await readFile(recordingPath, "utf8");
     const adapter = new RecordedModelExecutionAdapter({
       fixtures: loadRecordedModelResponseFixtures(raw),
@@ -48,20 +48,11 @@ describe("W6 dynamic quiz recorded candidates", () => {
 
     for (const activityId of activities) {
       const result = await service.prepareQuiz({ profileRevision: 3, activityId, retryNumber: 0, excludedQuestionIds: [] });
-      expect(result).toMatchObject({ status: "accepted", origin: "recorded_response" });
-      if (result.status !== "accepted") throw new Error(`recording_not_accepted:${activityId}`);
-      expect(result.questions).toHaveLength(4);
-      expect(result.questions.every((question) => /[\u4e00-\u9fff]/u.test(`${question.prompt}${question.explanation}`))).toBe(true);
+      expect(result).toEqual({ status: "unavailable" });
     }
 
-    expect(adapter.history.map((entry) => entry.input.graphId)).toEqual([
-      "generator", "hunter", "judge",
-      "generator", "hunter", "judge",
-      "generator", "hunter", "judge",
-      "generator", "hunter", "judge",
-      "generator", "hunter", "judge",
-      "generator", "hunter", "defender", "judge",
-    ]);
+    expect(adapter.history.length).toBeGreaterThanOrEqual(activities.length);
+    expect(adapter.history.every((entry) => entry.input.graphId === "generator")).toBe(true);
     expect(raw).not.toMatch(/[A-Za-z]:\\|Authorization\s*:\s*Bearer|media_locator|hidden tests|reference solution/u);
   });
 });

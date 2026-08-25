@@ -91,7 +91,7 @@ describe("W3 D2 safe DTO mocks", () => {
     ].sort());
     expect(keys(activitySubmissionMock.result)).toEqual([
       "assetBundleHash", "dimensionResults", "durationMs", "environmentHash", "errorCode", "errorKind",
-      "evaluatorVersion", "executionStatus", "safeFeedback", "score", "verdict",
+      "evaluatorVersion", "executionStatus", "safeFeedback", "score", "testPoints", "verdict",
     ].sort());
     expect(keys(evaluatorFeedbackMock.result)).toEqual([
       "assetBundleHash", "environmentHash", "errorCode", "errorKind", "evaluatorVersion",

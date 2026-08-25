@@ -34,6 +34,9 @@ describe("W4 Vite direct-access boundary", () => {
       "/mocks/safe-dtos.ts",
       "/fixtures/profiles/pandas-cleaning-revision-3-draft/profile.json",
       "/private/answer-key.json",
+      "/datasets/private/orders-variant-03-large.csv",
+      "/datasets/private/expected/act-practical/dataset-private-variant-03-large.json",
+      "/assessments/private/code-fixture-cases.json",
       "/rubrics/rubric-practical.json",
       "/hidden/tests.py",
       "/reference-solutions/solution.py",
@@ -51,7 +54,7 @@ describe("W4 Vite direct-access boundary", () => {
         const text = await response.text();
         expect(response.headers.get("content-type"), target).toMatch(/text\/html/iu);
         expect(text, target).toContain('<div id="root"></div>');
-        expect(text, target).not.toMatch(/schemaVersion|correctAnswer|answerKey|hiddenTests|rubricRef|referenceSolution/iu);
+        expect(text, target).not.toMatch(/schemaVersion|correctAnswer|answerKey|hiddenTests|rubricRef|referenceSolution|expectedOutputSha256|dataset-private-variant-03/iu);
       }
     } finally { /* afterEach closes the development-only server. */ }
   }, 30_000);

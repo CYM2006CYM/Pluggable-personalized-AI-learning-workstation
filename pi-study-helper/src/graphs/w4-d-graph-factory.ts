@@ -1,6 +1,6 @@
 import { Type, agentNode, defineSingleAgentGraph, type Graph } from "pi-loop-graph-sdk";
 
-export const W4_D_LIVE_PROMPT_VERSION = "w4-d2-v8";
+export const W4_D_LIVE_PROMPT_VERSION = "w4-d2-v9";
 
 const ContextInput = Type.Object({
   runId: Type.String(),
@@ -129,6 +129,8 @@ function graph(id: string, goal: string, output: typeof GeneratorOutput | typeof
         "必须阅读 safeContext.context.teachingContent；sourceSummary 只用于公开来源登记，不能用模型记忆替代正文。",
         "safeContext.context.allowedSourceIds 是唯一可引用的公开来源 ID；citedSourceIds 和每道题的 sourceAnchorIds 必须逐字复制其中的字符串，禁止输出 claim 名、标题、URL 或自造 ID。",
         "当前请求为 quiz 时，只生成 artifactKind=quiz 的 4 至 6 道彼此不同的中文单选题；每题覆盖正文明确写出的概念、代码行为、反例或修正方法，不得超出正文，不得只根据活动标题猜题。",
+        "若 safeContext.context.retryContext 存在，这是重做题组：必须同时依据 teachingContent、上一轮 missedQuestions 和 learnerProfileSummary 出题。每个 missedQuestions 暴露的薄弱知识至少由一道新题重复考察；画像只用于确定重点，不能改写正文事实或判分。",
+        "重做题组必须更换题面、场景或代码片段，严禁逐字复用任何旧 prompt，严禁复用 retryContext.excludedQuestionIds 中的 questionId。新 questionId 应包含本轮重做标识，例如 r1、r2。",
         "每题必须且只能包含 questionId、kind、prompt、options、correctAnswer、explanation、sourceAnchorIds；kind 固定为 single_choice。options 为 2 至 6 个不重复字符串，correctAnswer 必须逐字等于其中一个选项，explanation 必须回扣正文。",
         "外层必须且只能包含 artifactId、candidateFeedback、rationale、citedSourceIds、riskFlags。artifactId 使用短 ASCII ID；低风险 quiz 的 riskFlags 必须为 []。",
         "riskLevel=high 只用于答案唯一性依赖多步推理、版本敏感行为、题干假设可能歧义，或你对候选答案仍有不确定性的题组；此时 riskFlags 必须列出具体风险。riskLevel=low 时 riskFlags 必须为空。不得随意升高或隐藏风险。",
@@ -137,12 +139,14 @@ function graph(id: string, goal: string, output: typeof GeneratorOutput | typeof
         GENERATOR_QUIZ_EXAMPLE,
         "不得输出 hidden tests、reference solution、Rubric、私有答案、分数、Evidence、KnowledgeState、路径、主机路径、凭据、token 或媒体位置；correctAnswer 只允许在 candidateFeedback 内部出现，后端会在公开结果中移除答案。",
         "若 safeContext.repairInstruction 存在，这是一次修复尝试：必须逐字阅读其中的失败类别和具体修复要求，重新输出完整五字段 JSON，不解释修复过程。",
+        "修复类别若为 candidate_question_id_excluded，必须逐项避开 retryContext.excludedQuestionIds；若为 candidate_question_prompt_reused，必须改写题面但保留对应薄弱知识的考察。",
       ]
     : id === "hunter"
       ? [
         "你是 Hunter（猎手智能体），负责逐题对照 safeContext.context.teachingContent 和公开 source ID 反向找错。",
         "safeContext.generator.candidateFeedback 是只供审核链使用的私有候选视图。必须逐题读取 prompt、options、correctAnswer 和 explanation，核对候选答案是否能被正文唯一支持、解析是否与题干和答案一致；不能只检查结构或来源 ID。",
         "检查题干是否清楚、选项是否互斥且只有一个正确项、是否超出正文、代码行为和反例是否准确、来源是否支持，以及是否泄漏私有评测资产。服务端只检查 correctAnswer 是否属于 options，不代表其语义正确。",
+        "若 safeContext.context.retryContext 存在，还必须检查：新题ID未出现在 excludedQuestionIds、题干未逐字复用旧题、每个 missedQuestions 的薄弱知识都至少被一道新题覆盖。只换ID、遗漏错题知识或改成无关基础题都必须报告非争议 issue 并建议 revise。",
         "正文不能唯一支持答案、题目多解、答案或解析错误时，必须报告具体 issue 并 recommendedVerdict=revise。不得重写题目、替换答案、补充正文没有的事实、在输出中复述答案或给出权威评分。没有问题时返回 issues=[]、requiresDefender=false、recommendedVerdict=accepted。",
         "只返回 issues、requiresDefender、recommendedVerdict；issueId 唯一，每个 issue 只能使用 low/medium/high、具体 message 和 disputed 布尔值。requiresDefender 必须严格等于是否存在 disputed=true 的 issue；只要 issues 非空，recommendedVerdict 必须为 revise。",
         "如果候选标记 riskLevel=high，必须把需要交叉验证的答案风险写成至少一个 disputed=true 的具体 issue，并令 requiresDefender=true；不能按无争议低风险直接放行。",
@@ -159,6 +163,7 @@ function graph(id: string, goal: string, output: typeof GeneratorOutput | typeof
               "你是 Judge（裁判智能体），依据正文、Generator 候选、Hunter 问题和必要的 Defender 辩护作最终裁决。",
               "必须确认 Hunter 已逐题审核 prompt、options、correctAnswer 和 explanation，并对私有候选作最终复核；不能只检查 JSON 结构或引用格式。",
               "accepted 只表示候选通过内容与安全审查；候选答案无法由正文唯一支持、答案或解析错误、题目多解，或存在未解决的来源与泄漏风险时必须 revise 或 rejected。",
+              "若 safeContext.context.retryContext 存在，必须最终确认新旧题ID不同、题面未逐字复用、并且上一轮每个错题知识都在新题组中得到重复考察；任一条件不满足都不得 accepted。",
               "blockedIssueIds 只能引用 Hunter 已报告的 issueId；verdict=accepted 时必须为空。存在非争议 issue 时不能 accepted；若 Hunter 存在 disputed=true，必须有 Defender 输入，且只有全部争议均被反驳并无 residualRisks 时才可 accepted。不得修改题目、答案、Rubric、hidden tests、reference solution、Evidence、KnowledgeState 或路径。",
               "Hunter 输出代表它已经执行了逐题审核，不要求 Hunter 在 issues 为空时复述检查过程。若 Hunter 返回 issues=[]、requiresDefender=false、recommendedVerdict=accepted，且你复核候选后没有发现新的正文、唯一答案、安全或来源问题，则必须返回 verdict=accepted、blockedIssueIds=[]；不得因为缺少额外审计说明而凭空拒绝。",
               "若 safeContext.reviewInstruction 存在，这是一次结构或问题闭合修复：按其中失败类别修复四字段裁决输出，不得借修复改变候选题或绕过实质风险。",

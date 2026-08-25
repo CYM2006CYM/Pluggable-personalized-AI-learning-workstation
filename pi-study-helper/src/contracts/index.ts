@@ -122,6 +122,7 @@ export interface QuizActivitySafeView extends ActivitySafeViewBase {
   questions: QuizQuestionSafeView[];
   retryNumber: number;
   questionSource?: "ai_recorded" | "ai_live" | "ai_supplemented" | "profile_fixed" | "insufficient";
+  targetKnowledgePointIds?: string[];
 }
 
 export interface QuizQuestionGroupAsset {
@@ -172,6 +173,24 @@ export type McqActivityAsset = LegacySingleQuestionActivityAsset | W4QuestionGro
 export interface QuizAnswerInput {
   questionId: string;
   answer: string | boolean;
+}
+
+export interface QuizRemediationMissedQuestion {
+  questionId: string;
+  prompt: string;
+  explanation: string;
+  sourceAnchorIds: string[];
+}
+
+/** Private, answer-free retry context sent only to the reviewed generation chain. */
+export interface QuizRemediationContext {
+  previousAttemptId: string;
+  excludedQuestionIds: string[];
+  excludedQuestionPrompts: string[];
+  missedQuestions: QuizRemediationMissedQuestion[];
+  learnerProfileSummary: string;
+  learnerProfileEvidenceRefs: string[];
+  learnerProfileSource: "agent" | "deterministic";
 }
 
 export interface QuizActivityResult {
@@ -263,6 +282,7 @@ export interface DiagnosticQuestionSafeView {
   prompt: string;
   options?: string[];
   required: boolean;
+  evidenceForm?: "selected_response" | "code_reasoning";
 }
 
 export interface DiagnosticSafeEnvelope {
@@ -293,7 +313,7 @@ export interface AdaptiveContentPort {
     status: "accepted" | "unavailable";
     card?: LearningCardSafeView;
   }>;
-  prepareQuiz(input: { profileRevision: number; activityId: string; retryNumber: number; excludedQuestionIds: string[]; lessonVariantId?: LessonVariantId }): Promise<{
+  prepareQuiz(input: { profileRevision: number; activityId: string; retryNumber: number; excludedQuestionIds: string[]; lessonVariantId?: LessonVariantId; targetKnowledgePointIds?: string[]; remediationContext?: QuizRemediationContext }): Promise<{
     status: "accepted" | "unavailable";
     questions?: QuizQuestionPrivate[];
     origin?: "recorded_response" | "live_model";

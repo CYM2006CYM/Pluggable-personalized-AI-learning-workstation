@@ -15,6 +15,7 @@ export interface QuizActivityDefinition {
   prompt: string;
   primaryKnowledgePointId: string;
   supportingKnowledgePointIds: string[];
+  targetKnowledgePointIds?: string[];
 }
 
 export interface QuizAttemptSnapshot {
@@ -27,6 +28,7 @@ export interface QuizAttemptSnapshot {
   prompt: string;
   primaryKnowledgePointId: string;
   supportingKnowledgePointIds: string[];
+  targetKnowledgePointIds?: string[];
   retryNumber: number;
   questionSource?: NonNullable<QuizActivitySafeView["questionSource"]>;
   gradingBinding?: QuizGradingBinding;
@@ -139,6 +141,7 @@ export class DeterministicQuizRuntime {
     questionSource?: NonNullable<QuizActivitySafeView["questionSource"]>;
     gradingBinding?: QuizGradingBinding;
     legacySubtype?: "single_choice" | "judgment";
+    targetKnowledgePointIds?: string[];
     excludedQuestionIds?: string[];
     requestId?: string;
   }): { attemptId: string; activity: QuizActivitySafeView } {
@@ -160,6 +163,7 @@ export class DeterministicQuizRuntime {
       prompt: input.activity.prompt,
       primaryKnowledgePointId: input.activity.primaryKnowledgePointId,
       supportingKnowledgePointIds: [...input.activity.supportingKnowledgePointIds],
+      ...(input.targetKnowledgePointIds === undefined ? {} : { targetKnowledgePointIds: [...new Set(input.targetKnowledgePointIds)] }),
       retryNumber: input.retryNumber,
       questionSource: input.questionSource ?? "profile_fixed",
       ...(input.gradingBinding === undefined ? {} : { gradingBinding: structuredClone(input.gradingBinding) }),
@@ -179,6 +183,7 @@ export class DeterministicQuizRuntime {
         prompt: input.activity.prompt,
         primaryKnowledgePointId: input.activity.primaryKnowledgePointId,
         supportingKnowledgePointIds: [...input.activity.supportingKnowledgePointIds],
+        ...(input.targetKnowledgePointIds === undefined ? {} : { targetKnowledgePointIds: [...new Set(input.targetKnowledgePointIds)] }),
         questions: questions.map(safeQuestion),
         retryNumber: input.retryNumber,
         questionSource: input.questionSource ?? "profile_fixed",

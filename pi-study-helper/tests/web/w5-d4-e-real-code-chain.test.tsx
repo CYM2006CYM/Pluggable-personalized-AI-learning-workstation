@@ -110,6 +110,8 @@ async function submitCodeThroughPage(baseUrl: string, opened: any, code: string)
     throw new Error(`formal_result_missing:${host.textContent?.slice(-800)}`);
   }
   expect(host.textContent).toContain("通过");
+  expect(host.textContent).toContain("5 / 5");
+  expect(host.textContent).toContain("#5");
   act(() => root?.unmount());
   root = undefined;
   vi.unstubAllGlobals();

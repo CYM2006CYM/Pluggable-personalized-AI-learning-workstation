@@ -19,19 +19,30 @@
         "activityId": "act-load-csv",
         "profileRevision": 3,
         "kind": "code_completion",
-        "allowedSources": ["profile_fixed"],
+        "allowedSources": [
+          "profile_fixed"
+        ],
         "primaryKnowledgePointId": "pandas.clean.read-csv",
-        "supportingKnowledgePointIds": ["basic-python"],
-        "goalIds": ["goal-clean-orders"],
+        "supportingKnowledgePointIds": [
+          "basic-python"
+        ],
+        "goalIds": [
+          "goal-clean-orders"
+        ],
         "title": "补全可靠的 CSV 读取函数",
         "prompt": "实现 load_orders(csv_path)，按本资料包约定把 UTF-8 订单 CSV 读取为保持原始文本的 DataFrame。",
         "difficulty": "S-U",
         "estimatedMinutes": 15,
-        "sourceAnchorIds": ["src-pandas-read-csv"],
+        "sourceAnchorIds": [
+          "src-pandas-read-csv"
+        ],
         "templateVersion": "3.0.0-draft",
         "leakagePolicyId": "policy-no-private-assets",
         "runtimePolicyId": "python-pandas-candidate",
-        "allowedScaffolds": ["hint", "worked_example"],
+        "allowedScaffolds": [
+          "hint",
+          "worked_example"
+        ],
         "starterCode": "import pandas as pd\n\ndef load_orders(csv_path):\n    # TODO_BEGIN\n    pass\n    # TODO_END\n",
         "editableRegions": [
           {
@@ -44,20 +55,68 @@
         ],
         "entryPoint": "load_orders",
         "outputContract": "返回包含原 CSV 全部行和七个合同列的 DataFrame；读取阶段保持各列为 pandas StringDtype。",
-        "datasetRefs": ["dataset-public-orders", "dataset-private-variant-01"],
-        "publicTestRefs": ["test-read-csv-public"],
-        "hiddenTestRefs": ["test-read-csv-hidden"],
+        "publicAcceptanceCriteria": [
+          "使用函数参数 csv_path 读取文件，不依赖本机固定路径。",
+          "返回 pandas DataFrame，严格保留七个合同列、列顺序、行数和行顺序。",
+          "读取阶段使用字符串 dtype，货币、日期、状态和缺失异常留给后续章节处理。",
+          "能够处理与公开样例同结构但内容不同的 UTF-8 CSV。"
+        ],
+        "problemStatement": {
+          "background": "订单文件来自资料包提供的公开或评测数据。读取阶段的职责只是把 CSV 稳定地变成 DataFrame，并保留原始异常；如果此时擅自清洗金额、日期或状态，后续步骤就无法判断数据原貌。",
+          "inputDescription": "函数接收 csv_path，它是评测器提供的 UTF-8 CSV 文件路径。文件第一行是表头，字段依次为 order_id、customer_id、amount、city、order_date、status、note。",
+          "outputDescription": "返回一个 pandas DataFrame。必须包含输入文件的全部数据行和七个合同列，列顺序不变；七列在读取阶段统一使用 pandas StringDtype。",
+          "rules": [
+            "调用 pandas.read_csv 读取 csv_path，并显式使用字符串 dtype。",
+            "保留原文件的行数、行顺序、列名和列顺序。",
+            "金额中的货币符号、日期文本、状态大小写和缺失值在本题中保持原样。"
+          ],
+          "prohibitedActions": [
+            "不得把文件路径、订单号或输出数据硬编码在函数中。",
+            "不得在读取阶段填充缺失值、去重、改类型或改业务取值。",
+            "不得访问网络、安装依赖或读取 csv_path 之外的文件。"
+          ],
+          "sample": {
+            "inputFileName": "read-orders-input.csv",
+            "inputCsv": "order_id,customer_id,amount,city,order_date,status,note\nO001,C001,88,上海,2026-01-03,completed,首单\nO002,C002,\"¥1,200\",上海市,2026/01/04, Pending ,\n",
+            "outputFileName": "read-orders-output.csv",
+            "outputCsv": "order_id,customer_id,amount,city,order_date,status,note\nO001,C001,88,上海,2026-01-03,completed,首单\nO002,C002,\"¥1,200\",上海市,2026/01/04, Pending ,\n",
+            "explanation": "处理前后 CSV 的文字内容相同是有意设计：本题只验证可靠读取，不提前清洗。程序中的返回值是 DataFrame，后续章节再处理这些异常。"
+          }
+        },
+        "datasetRefs": [
+          "dataset-public-orders",
+          "dataset-private-variant-01",
+          "dataset-private-variant-02",
+          "dataset-private-variant-03-large",
+          "dataset-private-variant-04-edge"
+        ],
+        "publicTestRefs": [
+          "test-read-csv-public"
+        ],
+        "hiddenTestRefs": [
+          "test-read-csv-hidden"
+        ],
         "rubricRef": "rubric-read-csv",
         "referenceSolutionRef": "solution-read-csv",
-        "knownWrongSolutionRefs": ["wrong-read-csv"],
+        "knownWrongSolutionRefs": [
+          "wrong-read-csv"
+        ],
         "environmentRef": "env-python-pandas-candidate",
-        "allowedLibraries": ["pandas"]
+        "allowedLibraries": [
+          "pandas"
+        ]
       },
       "contract": {
         "entryPoint": {
           "kind": "function",
           "name": "load_orders",
-          "argumentFixtureIds": ["dataset-public-orders", "dataset-private-variant-01"],
+          "argumentFixtureIds": [
+            "dataset-public-orders",
+            "dataset-private-variant-01",
+            "dataset-private-variant-02",
+            "dataset-private-variant-03-large",
+            "dataset-private-variant-04-edge"
+          ],
           "fixtureArgumentMode": "path"
         },
         "inputDescription": "评测器提供的UTF-8订单CSV安全临时路径。",
@@ -67,15 +126,26 @@
           "includeIndex": false
         },
         "outputDescription": "返回保持原始文本和七列顺序的DataFrame。",
-        "invariants": ["固定七列和顺序", "读取阶段保持StringDtype", "行数、行序和内容不变"],
-        "prohibitedBehaviors": ["硬编码路径或数据", "提前清洗", "访问网络", "运行时安装依赖"]
+        "invariants": [
+          "固定七列和顺序",
+          "读取阶段保持StringDtype",
+          "行数、行序和内容不变"
+        ],
+        "prohibitedBehaviors": [
+          "硬编码路径或数据",
+          "提前清洗",
+          "访问网络",
+          "运行时安装依赖"
+        ]
       },
       "publicTests": [
         {
           "testId": "test-read-csv-public",
           "visibility": "public",
           "fileRef": "assessments/public/tests/test-read-csv-public.py",
-          "fixtureRefs": ["dataset-public-orders"],
+          "fixtureRefs": [
+            "dataset-public-orders"
+          ],
           "dimensionId": "read_csv",
           "blocking": true,
           "assetHash": "sha256:aee18e579c821de88badc4e8f2072d68ed8dab2ea9d301d6798e467c8f9cd183"
@@ -86,7 +156,12 @@
           "testId": "test-read-csv-hidden",
           "visibility": "hidden",
           "fileRef": "assessments/private/tests/test-read-csv-hidden.py",
-          "fixtureRefs": ["dataset-private-variant-01"],
+          "fixtureRefs": [
+            "dataset-private-variant-01",
+            "dataset-private-variant-02",
+            "dataset-private-variant-03-large",
+            "dataset-private-variant-04-edge"
+          ],
           "dimensionId": "read_csv",
           "blocking": true,
           "assetHash": "sha256:1186331b2374c62c5a480880e4de1c06d651ded268735e0028c2449f46883b93"
@@ -103,15 +178,23 @@
             "weight": 1.0,
             "scoringMethod": "tests",
             "blocking": true,
-            "safeFeedbackCodes": ["dataframe_required", "columns_invalid", "dtype_invalid", "content_changed"]
+            "safeFeedbackCodes": [
+              "dataframe_required",
+              "columns_invalid",
+              "dtype_invalid",
+              "content_changed"
+            ]
           }
         ],
         "dimensionTestMap": {
-          "read_csv": ["test-read-csv-public", "test-read-csv-hidden"]
+          "read_csv": [
+            "test-read-csv-public",
+            "test-read-csv-hidden"
+          ]
         }
       },
       "environmentRef": "env-python-pandas-candidate",
-      "assetBundleHash": "5e1b444472c136364809b926adc8b9ec0f7eaff29a2b6715605c062db2eebe7d"
+      "assetBundleHash": "4f05be4b973dc1a92987c18d078194904b75782d2bb1bec4ed84466c016ab338"
     },
     {
       "bundleId": "bundle-act-inspect-dataframe-v2",
@@ -130,8 +213,8 @@
         "goalIds": [
           "goal-clean-orders"
         ],
-        "title": "\u8865\u5168\u5217\u7ed3\u6784\u68c0\u67e5",
-        "prompt": "\u8865\u5168\u56fa\u5b9a\u4e03\u5217\u9009\u62e9\u4e0e\u5217\u5e8f\u68c0\u67e5\u6b65\u9aa4\u3002",
+        "title": "补全列结构检查",
+        "prompt": "补全固定七列选择与列序检查步骤。",
         "difficulty": "S-U",
         "estimatedMinutes": 15,
         "sourceAnchorIds": [
@@ -155,9 +238,41 @@
           }
         ],
         "entryPoint": "inspect_orders",
-        "outputContract": "\u8fd4\u56de\u6070\u597d\u4e03\u5217\u4e14\u5217\u5e8f\u56fa\u5b9a\u7684 DataFrame\u3002",
+        "outputContract": "返回恰好七列且列序固定的 DataFrame。",
+        "publicAcceptanceCriteria": [
+          "输出只包含 order_id、customer_id、amount、city、order_date、status、note 七列。",
+          "七列严格按公开合同规定的顺序排列。",
+          "输入中的额外列被排除，行数、行序和单元格内容保持不变。",
+          "传入的原始 DataFrame 在函数调用后保持不变。"
+        ],
+        "problemStatement": {
+          "background": "订单数据常从不同系统汇总，原表可能夹带临时列或列序混乱。本题要求先建立稳定的数据结构边界，为后续清洗步骤准备可信的七列表格。",
+          "inputDescription": "函数接收一个 pandas DataFrame。输入至少包含订单合同规定的七列，也可能包含额外列；行数和每行数据应保持不变。",
+          "outputDescription": "返回一个新的 DataFrame，只保留 order_id、customer_id、amount、city、order_date、status、note，并严格按此顺序排列。",
+          "rules": [
+            "使用 df.copy() 或等价方式创建结果，不能修改传入的原始 DataFrame。",
+            "删除所有不在七列合同中的额外列。",
+            "严格保持七个目标列的名称、顺序、行数和行顺序。"
+          ],
+          "prohibitedActions": [
+            "不得修改原始 df。",
+            "不得重命名、填充或改写单元格内容。",
+            "不得依赖样例中额外列的固定名称。"
+          ],
+          "sample": {
+            "inputFileName": "inspect-orders-input.csv",
+            "inputCsv": "order_id,customer_id,amount,city,order_date,status,note,channel\nO001,C001,88,上海,2026-01-03,completed,首单,web\n",
+            "outputFileName": "inspect-orders-output.csv",
+            "outputCsv": "order_id,customer_id,amount,city,order_date,status,note\nO001,C001,88,上海,2026-01-03,completed,首单\n",
+            "explanation": "输入中的 channel 是额外列，因此输出删除它；其余七列的名称、次序和数据保持不变。"
+          }
+        },
         "datasetRefs": [
-          "dataset-public-orders"
+          "dataset-public-orders",
+          "dataset-private-variant-01",
+          "dataset-private-variant-02",
+          "dataset-private-variant-03-large",
+          "dataset-private-variant-04-edge"
         ],
         "publicTestRefs": [
           "test-structure-public"
@@ -180,25 +295,29 @@
           "kind": "function",
           "name": "inspect_orders",
           "argumentFixtureIds": [
-            "dataset-public-orders"
+            "dataset-public-orders",
+            "dataset-private-variant-01",
+            "dataset-private-variant-02",
+            "dataset-private-variant-03-large",
+            "dataset-private-variant-04-edge"
           ]
         },
-        "inputDescription": "\u56fa\u5b9a\u4e03\u5217\u8ba2\u5355DataFrame\uff1b\u6d4b\u8bd5\u53ef\u9644\u52a0\u672a\u58f0\u660e\u5217\u9a8c\u8bc1\u7cbe\u786e\u5217\u9009\u62e9\u3002",
+        "inputDescription": "固定七列订单DataFrame；测试可附加未声明列验证精确列选择。",
         "output": {
           "kind": "dataframe",
           "comparisonRef": "dfcmp-orders-seven-columns",
           "includeIndex": false
         },
-        "outputDescription": "\u8fd4\u56de\u6070\u597d\u4e03\u5217\u4e14\u4e0d\u4fee\u6539\u8f93\u5165\u7684DataFrame\u3002",
+        "outputDescription": "返回恰好七列且不修改输入的DataFrame。",
         "invariants": [
-          "\u56fa\u5b9a\u4e03\u5217\u548c\u987a\u5e8f",
-          "\u8f93\u5165DataFrame\u4e0d\u88ab\u4fee\u6539"
+          "固定七列和顺序",
+          "输入DataFrame不被修改"
         ],
         "prohibitedBehaviors": [
-          "\u4fee\u6539\u8f93\u5165DataFrame",
-          "\u5199\u5bbf\u4e3b\u6587\u4ef6",
-          "\u8bbf\u95ee\u7f51\u7edc",
-          "\u8fd0\u884c\u65f6\u5b89\u88c5\u4f9d\u8d56"
+          "修改输入DataFrame",
+          "写宿主文件",
+          "访问网络",
+          "运行时安装依赖"
         ]
       },
       "publicTests": [
@@ -220,7 +339,10 @@
           "visibility": "hidden",
           "fileRef": "assessments/private/tests/test-structure-hidden.py",
           "fixtureRefs": [
-            "dataset-public-orders"
+            "dataset-private-variant-01",
+            "dataset-private-variant-02",
+            "dataset-private-variant-03-large",
+            "dataset-private-variant-04-edge"
           ],
           "dimensionId": "structure",
           "blocking": true,
@@ -234,7 +356,7 @@
         "dimensions": [
           {
             "dimensionId": "structure",
-            "label": "\u5217\u7ed3\u6784",
+            "label": "列结构",
             "weight": 1.0,
             "scoringMethod": "tests",
             "blocking": true,
@@ -253,7 +375,7 @@
         }
       },
       "environmentRef": "env-python-pandas-candidate",
-      "assetBundleHash": "737b0d6ae618f98b5c3e7bd5b67c2f5342559decd7436dbed57a046ef4c97be6"
+      "assetBundleHash": "d6e1114a8be5ce2c8075fd7cc81dfcd02f9fb86798ce2830bdf1ff6ea2fae1a8"
     },
     {
       "bundleId": "bundle-act-missing-v2",
@@ -272,8 +394,8 @@
         "goalIds": [
           "goal-clean-orders"
         ],
-        "title": "\u8865\u5168\u6309\u5217\u7f3a\u5931\u5904\u7406",
-        "prompt": "\u6309\u51bb\u7ed3\u89c4\u5219\u5904\u7406 order_id\u3001customer_id\u3001amount\u3001order_date \u548c note \u7f3a\u5931\u3002",
+        "title": "补全按列缺失处理",
+        "prompt": "按冻结规则处理 order_id、customer_id、amount、order_date 和 note 缺失。",
         "difficulty": "M-U",
         "estimatedMinutes": 20,
         "sourceAnchorIds": [
@@ -297,9 +419,41 @@
           }
         ],
         "entryPoint": "clean_missing",
-        "outputContract": "\u4ec5\u7f3a\u5931 order_id \u5220\u9664\u884c\uff0c\u5176\u4f59\u5217\u6309\u5408\u540c\u4fdd\u7559\u6216\u8f6c\u6362\u3002",
+        "outputContract": "仅缺失 order_id 删除行，其余列按合同保留或转换。",
+        "publicAcceptanceCriteria": [
+          "只删除 order_id 缺失的记录，不无差别删除其他含缺失值的行。",
+          "customer_id、amount 和 order_date 缺失的记录仍被保留。",
+          "note 缺失统一转换为空字符串，其他字段不被臆造。",
+          "输出保持被保留记录的原始顺序，且原始 DataFrame 不被修改。"
+        ],
+        "problemStatement": {
+          "background": "缺失值不能一律删除或随意填充。订单主键缺失时无法追踪记录，应删除该行；客户、金额等非主键字段缺失时仍可能保留业务价值，需要按合同分别处理。",
+          "inputDescription": "函数接收包含七个订单字段的 pandas DataFrame，其中部分单元格可能为空、NaN 或 pandas 缺失值。",
+          "outputDescription": "返回新的 DataFrame：删除 order_id 缺失的行，保留 customer_id 和 amount 等允许缺失的记录，并把 note 缺失统一为可安全使用的空字符串。",
+          "rules": [
+            "只删除 order_id 缺失的整行。",
+            "customer_id、amount 和 order_date 缺失时保留该行，留给后续类型步骤处理。",
+            "note 缺失时填为空字符串，其他非合同缺失值不得自行猜测。"
+          ],
+          "prohibitedActions": [
+            "不得使用 dropna() 无差别删除所有含缺失值的行。",
+            "不得编造 customer_id、amount 或日期。",
+            "不得修改原始 df。"
+          ],
+          "sample": {
+            "inputFileName": "missing-orders-input.csv",
+            "inputCsv": "order_id,customer_id,amount,city,order_date,status,note\n,C006,66,广州,2026-01-08,completed,主键缺失\nO005,,35.5,广州,2026-01-07,pending,\nO009,C009,,北京,2026-01-11,pending,\n",
+            "outputFileName": "missing-orders-output.csv",
+            "outputCsv": "order_id,customer_id,amount,city,order_date,status,note\nO005,,35.5,广州,2026-01-07,pending,\nO009,C009,,北京,2026-01-11,pending,\n",
+            "explanation": "第一行缺少 order_id，因此被删除；后两行虽然存在非主键缺失值，但仍被保留，note 的缺失按合同表示为空字符串。"
+          }
+        },
         "datasetRefs": [
-          "dataset-public-orders"
+          "dataset-public-orders",
+          "dataset-private-variant-01",
+          "dataset-private-variant-02",
+          "dataset-private-variant-03-large",
+          "dataset-private-variant-04-edge"
         ],
         "publicTestRefs": [
           "test-missing-public"
@@ -322,26 +476,30 @@
           "kind": "function",
           "name": "clean_missing",
           "argumentFixtureIds": [
-            "dataset-public-orders"
+            "dataset-public-orders",
+            "dataset-private-variant-01",
+            "dataset-private-variant-02",
+            "dataset-private-variant-03-large",
+            "dataset-private-variant-04-edge"
           ]
         },
-        "inputDescription": "\u56fa\u5b9a\u4e03\u5217\u8ba2\u5355DataFrame\uff0c\u5305\u542b\u4e3b\u952e\u3001\u5ba2\u6237\u3001\u91d1\u989d\u3001\u65e5\u671f\u548c\u5907\u6ce8\u7f3a\u5931\u6837\u4f8b\u3002",
+        "inputDescription": "固定七列订单DataFrame，包含主键、客户、金额、日期和备注缺失样例。",
         "output": {
           "kind": "dataframe",
           "comparisonRef": "dfcmp-orders-missing",
           "includeIndex": false
         },
-        "outputDescription": "\u4ec5\u5220\u9664\u7f3a\u5931order_id\u884c\uff0c\u4fdd\u7559\u5ba2\u6237\u7f3a\u5931\u5e76\u5c06note\u7f3a\u5931\u53d8\u4e3a\u7a7a\u5b57\u7b26\u4e32\u3002",
+        "outputDescription": "仅删除缺失order_id行，保留客户缺失并将note缺失变为空字符串。",
         "invariants": [
-          "order_id\u975e\u7a7a",
-          "customer_id\u7f3a\u5931\u884c\u4fdd\u7559",
-          "note\u65e0\u7f3a\u5931"
+          "order_id非空",
+          "customer_id缺失行保留",
+          "note无缺失"
         ],
         "prohibitedBehaviors": [
-          "\u4fee\u6539\u8f93\u5165DataFrame",
-          "\u5220\u9664\u975eorder_id\u7f3a\u5931\u884c",
-          "\u5199\u5bbf\u4e3b\u6587\u4ef6",
-          "\u8bbf\u95ee\u7f51\u7edc"
+          "修改输入DataFrame",
+          "删除非order_id缺失行",
+          "写宿主文件",
+          "访问网络"
         ]
       },
       "publicTests": [
@@ -363,7 +521,10 @@
           "visibility": "hidden",
           "fileRef": "assessments/private/tests/test-missing-hidden.py",
           "fixtureRefs": [
-            "dataset-public-orders"
+            "dataset-private-variant-01",
+            "dataset-private-variant-02",
+            "dataset-private-variant-03-large",
+            "dataset-private-variant-04-edge"
           ],
           "dimensionId": "missing",
           "blocking": true,
@@ -377,7 +538,7 @@
         "dimensions": [
           {
             "dimensionId": "missing",
-            "label": "\u7f3a\u5931\u5904\u7406",
+            "label": "缺失处理",
             "weight": 1,
             "scoringMethod": "tests",
             "blocking": true,
@@ -395,7 +556,7 @@
         }
       },
       "environmentRef": "env-python-pandas-candidate",
-      "assetBundleHash": "1a42dfe66391ea56d11b7c8b525ac2da19146c3fc7d4401a3439e6b7b793125b"
+      "assetBundleHash": "4bd182db5673a5ffab3b40820de022254207651abaf718c7fabf40e0e9c828f1"
     },
     {
       "bundleId": "bundle-act-duplicates-v2",
@@ -414,8 +575,8 @@
         "goalIds": [
           "goal-clean-orders"
         ],
-        "title": "\u8865\u5168\u7a33\u5b9a\u53bb\u91cd",
-        "prompt": "\u6309\u53ef\u89e3\u6790\u65e5\u671f\u3001\u6700\u65b0\u65e5\u671f\u3001\u539f\u59cb\u7b2c\u4e00\u6761\u7684\u56fa\u5b9a\u4f18\u5148\u7ea7\u9009\u62e9\u91cd\u590d\u8ba2\u5355\u3002",
+        "title": "补全稳定去重",
+        "prompt": "按可解析日期、最新日期、原始第一条的固定优先级选择重复订单。",
         "difficulty": "M-A",
         "estimatedMinutes": 25,
         "sourceAnchorIds": [
@@ -440,9 +601,41 @@
           }
         ],
         "entryPoint": "deduplicate_orders",
-        "outputContract": "order_id \u552f\u4e00\u4e14\u4fdd\u7559\u88ab\u9009\u8bb0\u5f55\u7684\u539f\u59cb\u76f8\u5bf9\u987a\u5e8f\u3002",
+        "outputContract": "order_id 唯一且保留被选记录的原始相对顺序。",
+        "publicAcceptanceCriteria": [
+          "按去除首尾空格后的 order_id 分组，输出中的非缺失订单号唯一。",
+          "同组优先选择日期可解析的记录，并在可解析记录中选择最新日期。",
+          "日期优先级相同时稳定保留原始第一条记录。",
+          "最终输出恢复被选记录的原始相对顺序，且原始 DataFrame 不被修改。"
+        ],
+        "problemStatement": {
+          "background": "同一订单可能被多次导入。简单保留第一条或最后一条会忽略日期质量，本题要求按明确优先级选择代表记录，同时保持最终结果的原始业务顺序。",
+          "inputDescription": "函数接收包含 order_id 和 order_date 的订单 DataFrame。同一 order_id 可能出现多次，日期可能可解析、不可解析或相同。",
+          "outputDescription": "每个非缺失 order_id 只保留一行：优先可解析日期，再选最新日期；仍相同时保留原始第一条。选中后按这些记录在原表中的原始位置输出。",
+          "rules": [
+            "按去除首尾空格后的 order_id 判断重复。",
+            "同组中可解析日期优先于不可解析日期，可解析日期中选择最新日期。",
+            "日期优先级仍相同时保留原始第一条，最终结果恢复被选记录的原始相对顺序。"
+          ],
+          "prohibitedActions": [
+            "不得直接 drop_duplicates() 而忽略日期优先级。",
+            "不得把最终结果永久按日期或 order_id 排序。",
+            "不得修改原始 df。"
+          ],
+          "sample": {
+            "inputFileName": "duplicate-orders-input.csv",
+            "inputCsv": "order_id,customer_id,amount,city,order_date,status,note\nO011,C011,50,上海,2026-01-12,pending,旧记录\nO012,C012,60,北京,not-a-date,pending,第一条\nO011,C011,55,上海,2026-01-13,completed,新记录\nO012,C012,61,北京,also-bad,completed,第二条\n",
+            "outputFileName": "duplicate-orders-output.csv",
+            "outputCsv": "order_id,customer_id,amount,city,order_date,status,note\nO012,C012,60,北京,not-a-date,pending,第一条\nO011,C011,55,上海,2026-01-13,completed,新记录\n",
+            "explanation": "O011 选择日期更新的记录；O012 两个日期都不可解析，因此选择原始第一条。最后按被选记录在输入中的位置输出，所以 O012 位于 O011 之前。"
+          }
+        },
         "datasetRefs": [
-          "dataset-public-orders"
+          "dataset-public-orders",
+          "dataset-private-variant-01",
+          "dataset-private-variant-02",
+          "dataset-private-variant-03-large",
+          "dataset-private-variant-04-edge"
         ],
         "publicTestRefs": [
           "test-duplicates-public"
@@ -465,27 +658,31 @@
           "kind": "function",
           "name": "deduplicate_orders",
           "argumentFixtureIds": [
-            "dataset-public-orders"
+            "dataset-public-orders",
+            "dataset-private-variant-01",
+            "dataset-private-variant-02",
+            "dataset-private-variant-03-large",
+            "dataset-private-variant-04-edge"
           ]
         },
-        "inputDescription": "\u56fa\u5b9a\u4e03\u5217\u8ba2\u5355DataFrame\uff0c\u542b\u53ef\u89e3\u6790\u65e5\u671f\u3001\u4e0d\u53ef\u89e3\u6790\u65e5\u671f\u548c\u540c\u65e5\u91cd\u590d\u5206\u652f\u3002",
+        "inputDescription": "固定七列订单DataFrame，含可解析日期、不可解析日期和同日重复分支。",
         "output": {
           "kind": "dataframe",
           "comparisonRef": "dfcmp-orders-deduplicated",
           "includeIndex": false
         },
-        "outputDescription": "\u6309\u51bb\u7ed3\u4f18\u5148\u7ea7\u9009\u62e9\u552f\u4e00order_id\u5e76\u4fdd\u6301\u88ab\u9009\u8bb0\u5f55\u539f\u59cb\u76f8\u5bf9\u987a\u5e8f\u3002",
+        "outputDescription": "按冻结优先级选择唯一order_id并保持被选记录原始相对顺序。",
         "invariants": [
-          "order_id\u552f\u4e00",
-          "\u53ef\u89e3\u6790\u4e14\u8f83\u65b0\u65e5\u671f\u4f18\u5148",
-          "\u5e73\u5c40\u4fdd\u7559\u539f\u59cb\u7b2c\u4e00\u6761",
-          "\u88ab\u9009\u8bb0\u5f55\u539f\u59cb\u76f8\u5bf9\u987a\u5e8f\u4e0d\u53d8"
+          "order_id唯一",
+          "可解析且较新日期优先",
+          "平局保留原始第一条",
+          "被选记录原始相对顺序不变"
         ],
         "prohibitedBehaviors": [
-          "\u4fee\u6539\u8f93\u5165DataFrame",
-          "\u6309order_id\u91cd\u6392\u6700\u7ec8\u7ed3\u679c",
-          "\u5199\u5bbf\u4e3b\u6587\u4ef6",
-          "\u8bbf\u95ee\u7f51\u7edc"
+          "修改输入DataFrame",
+          "按order_id重排最终结果",
+          "写宿主文件",
+          "访问网络"
         ]
       },
       "publicTests": [
@@ -507,7 +704,10 @@
           "visibility": "hidden",
           "fileRef": "assessments/private/tests/test-duplicates-hidden.py",
           "fixtureRefs": [
-            "dataset-public-orders"
+            "dataset-private-variant-01",
+            "dataset-private-variant-02",
+            "dataset-private-variant-03-large",
+            "dataset-private-variant-04-edge"
           ],
           "dimensionId": "duplicates",
           "blocking": true,
@@ -521,7 +721,7 @@
         "dimensions": [
           {
             "dimensionId": "duplicates",
-            "label": "\u91cd\u590d\u5904\u7406",
+            "label": "重复处理",
             "weight": 1,
             "scoringMethod": "tests",
             "blocking": true,
@@ -540,7 +740,7 @@
         }
       },
       "environmentRef": "env-python-pandas-candidate",
-      "assetBundleHash": "dd88d60ef3320f7eba10fbba7cddc76ee96859e3f7fd7f7a9139fe9ed96d4886"
+      "assetBundleHash": "c5047dc99d6c3443e1f67302a8c63f374d2f0371aa5c6e37b6e49e7beedecd3e"
     },
     {
       "bundleId": "bundle-act-types-v2",
@@ -559,8 +759,8 @@
         "goalIds": [
           "goal-clean-orders"
         ],
-        "title": "\u8865\u5168\u7c7b\u578b\u548c\u683c\u5f0f\u89c4\u8303\u5316",
-        "prompt": "\u89c4\u8303\u91d1\u989d\u3001\u57ce\u5e02\u3001\u65e5\u671f\u3001\u72b6\u6001\u4e0e\u5b57\u7b26\u4e32\u5217\u3002",
+        "title": "补全类型和格式规范化",
+        "prompt": "规范金额、城市、日期、状态与字符串列。",
         "difficulty": "M-A",
         "estimatedMinutes": 30,
         "sourceAnchorIds": [
@@ -586,9 +786,42 @@
           }
         ],
         "entryPoint": "normalize_types",
-        "outputContract": "\u91d1\u989d\u4e3a\u6570\u503c\u3001\u65e5\u671f\u65e0\u65f6\u533a\u3001\u5b57\u7b26\u4e32\u4e3a StringDtype \u4e14\u4e1a\u52a1\u53d6\u503c\u5408\u6cd5\u3002",
+        "outputContract": "金额为数值、日期无时区、字符串为 StringDtype 且业务取值合法。",
+        "publicAcceptanceCriteria": [
+          "amount 去除人民币符号、千位逗号和空格后转换为数值，非法金额变为缺失值。",
+          "order_date 容错转换为无时区日期时间，非法日期变为缺失值。",
+          "五个文本列使用 pandas StringDtype，城市和状态按公开映射规范化。",
+          "未知业务取值不被擅自猜测，且原始 DataFrame 不被修改。"
+        ],
+        "problemStatement": {
+          "background": "CSV读取后的金额、日期和状态常是混合文本。只有把它们规范成稳定类型和业务取值，后续统计、筛选和验证才不会因格式差异产生错误。",
+          "inputDescription": "函数接收七列订单 DataFrame。金额可能含货币符号和千位分隔符，日期可能合法或非法，城市和状态可能存在别名、大小写及首尾空格。",
+          "outputDescription": "返回新的 DataFrame：amount 为数值，order_date 为无时区日期时间；五个文本列使用 pandas StringDtype，并按公开映射规范城市与状态。无法解析的金额或日期变为缺失值。",
+          "rules": [
+            "金额先移除人民币符号、千位逗号和空格，再用容错数值转换；非法值转为缺失。",
+            "日期使用容错解析且不附加时区；非法日期转为缺失。",
+            "城市别名映射到上海、北京、广州、深圳；状态统一小写且只保留 completed、pending、cancelled，其他值转为缺失。",
+            "order_id、customer_id、city、status、note 使用 pandas StringDtype。"
+          ],
+          "prohibitedActions": [
+            "不得因单个非法金额或日期让整个函数报错。",
+            "不得把未知城市擅自映射成已知城市。",
+            "不得修改原始 df。"
+          ],
+          "sample": {
+            "inputFileName": "normalize-orders-input.csv",
+            "inputCsv": "order_id,customer_id,amount,city,order_date,status,note\nO001,C001,\"¥1,200.50\",上海市,2026-01-03, Completed ,首单\nO004,C004,N/A,京,2026-02-30,UNKNOWN,异常值\n",
+            "outputFileName": "normalize-orders-output.csv",
+            "outputCsv": "order_id,customer_id,amount,city,order_date,status,note\nO001,C001,1200.5,上海,2026-01-03,completed,首单\nO004,C004,,北京,,,异常值\n",
+            "explanation": "第一行完成货币、城市和状态规范化；第二行金额、日期和状态无法按合同解析，因此对应字段为空，但订单记录仍保留。"
+          }
+        },
         "datasetRefs": [
-          "dataset-public-orders"
+          "dataset-public-orders",
+          "dataset-private-variant-01",
+          "dataset-private-variant-02",
+          "dataset-private-variant-03-large",
+          "dataset-private-variant-04-edge"
         ],
         "publicTestRefs": [
           "test-types-public"
@@ -611,30 +844,34 @@
           "kind": "function",
           "name": "normalize_types",
           "argumentFixtureIds": [
-            "dataset-public-orders"
+            "dataset-public-orders",
+            "dataset-private-variant-01",
+            "dataset-private-variant-02",
+            "dataset-private-variant-03-large",
+            "dataset-private-variant-04-edge"
           ]
         },
-        "inputDescription": "\u56fa\u5b9a\u4e03\u5217\u8ba2\u5355DataFrame\uff0c\u5305\u542b\u91d1\u989d\u3001\u57ce\u5e02\u3001\u65e5\u671f\u3001\u72b6\u6001\u548c\u5b57\u7b26\u4e32\u5f02\u5e38\u3002",
+        "inputDescription": "固定七列订单DataFrame，包含金额、城市、日期、状态和字符串异常。",
         "output": {
           "kind": "dataframe",
           "comparisonRef": "dfcmp-orders-types",
           "includeIndex": false
         },
-        "outputDescription": "\u8fd4\u56de\u91d1\u989d\u6570\u503c\u5316\u3001\u65e5\u671f\u65e0\u65f6\u533a\u3001\u5b57\u7b26\u4e32\u4e3aPandas StringDtype\u7684DataFrame\u3002",
+        "outputDescription": "返回金额数值化、日期无时区、字符串为Pandas StringDtype的DataFrame。",
         "invariants": [
-          "\u975e\u6cd5\u7a7a\u503c\u548c\u65e0\u7a77\u91d1\u989d\u8f6c\u7f3a\u5931",
-          "\u975eYYYY-MM-DD\u65e5\u671f\u8f6c\u7f3a\u5931",
-          "\u516d\u9879\u57ce\u5e02\u6620\u5c04\u751f\u6548",
-          "\u672a\u77e5\u57ce\u5e02\u4fdd\u7559",
-          "\u72b6\u6001\u4ec5\u9650\u51bb\u7ed3\u96c6\u5408",
-          "\u5b57\u7b26\u4e32\u5217\u4f7f\u7528StringDtype"
+          "非法空值和无穷金额转缺失",
+          "非YYYY-MM-DD日期转缺失",
+          "六项城市映射生效",
+          "未知城市保留",
+          "状态仅限冻结集合",
+          "字符串列使用StringDtype"
         ],
         "prohibitedBehaviors": [
-          "\u4fee\u6539\u8f93\u5165DataFrame",
-          "\u65b0\u589e\u672a\u6279\u51c6\u57ce\u5e02\u6620\u5c04",
-          "\u5bbd\u677e\u89e3\u6790\u975e\u6807\u51c6\u65e5\u671f",
-          "\u5199\u5bbf\u4e3b\u6587\u4ef6",
-          "\u8bbf\u95ee\u7f51\u7edc"
+          "修改输入DataFrame",
+          "新增未批准城市映射",
+          "宽松解析非标准日期",
+          "写宿主文件",
+          "访问网络"
         ]
       },
       "publicTests": [
@@ -656,7 +893,10 @@
           "visibility": "hidden",
           "fileRef": "assessments/private/tests/test-types-hidden.py",
           "fixtureRefs": [
-            "dataset-public-orders"
+            "dataset-private-variant-01",
+            "dataset-private-variant-02",
+            "dataset-private-variant-03-large",
+            "dataset-private-variant-04-edge"
           ],
           "dimensionId": "types",
           "blocking": true,
@@ -670,7 +910,7 @@
         "dimensions": [
           {
             "dimensionId": "types",
-            "label": "\u7c7b\u578b\u4e0e\u683c\u5f0f",
+            "label": "类型与格式",
             "weight": 1,
             "scoringMethod": "tests",
             "blocking": true,
@@ -691,7 +931,7 @@
         }
       },
       "environmentRef": "env-python-pandas-candidate",
-      "assetBundleHash": "cfa703b189cb49cfa2e56ce3b0790a0412e58c996c82aa93ca459596d71c1880"
+      "assetBundleHash": "961537a84d162ee575da4348647553dafa916c2de048e6405e0c894b7f70bca7"
     },
     {
       "bundleId": "bundle-act-practical-v2",
@@ -714,8 +954,8 @@
         "goalIds": [
           "goal-clean-orders"
         ],
-        "title": "\u72ec\u7acb\u5b8c\u6210\u8ba2\u5355\u6e05\u6d17",
-        "prompt": "\u5b9e\u73b0 clean_orders \u5e76\u6ee1\u8db3\u5b8c\u6574\u4e03\u5217\u4e1a\u52a1\u5408\u540c\u548c\u7ed3\u679c\u4e0d\u53d8\u91cf\u3002",
+        "title": "独立完成订单清洗",
+        "prompt": "实现 clean_orders 并满足完整七列业务合同和结果不变量。",
         "difficulty": "C-A",
         "estimatedMinutes": 60,
         "sourceAnchorIds": [
@@ -744,11 +984,44 @@
           }
         ],
         "entryPoint": "clean_orders",
-        "outputContract": "\u8fd4\u56de\u6ee1\u8db3\u4e03\u5217\u3001\u7f3a\u5931\u3001\u53bb\u91cd\u3001dtype \u4e0e\u884c\u5e8f\u4e0d\u53d8\u91cf\u7684 clean_df\u3002",
+        "outputContract": "返回满足七列、缺失、去重、dtype 与行序不变量的 clean_df。",
+        "publicAcceptanceCriteria": [
+          "clean_df 严格包含固定七列及规定顺序，不含额外列。",
+          "order_id 非空且唯一，重复订单按公开日期优先级稳定选择。",
+          "金额、日期和五个文本列的 dtype 与环境锁和公开合同一致。",
+          "城市、状态、缺失值和非法值按公开业务规则处理。",
+          "输出保持被选记录的原始相对顺序，且原始 DataFrame 不被修改。",
+          "实现适用于同结构新数据，不硬编码样例行号、订单号或输出。"
+        ],
+        "problemStatement": {
+          "background": "这是本单元的独立综合任务。你需要把结构检查、缺失处理、稳定去重、类型规范和结果验证连成一条可复验的清洗流程，而不是只让某一条样例看起来正确。",
+          "inputDescription": "函数接收原始订单 DataFrame，可能包含额外列、缺失主键、重复订单、货币文本、非法日期、城市别名和异常状态。正式评测还会使用不同内容但同一公开合同的数据。",
+          "outputDescription": "返回名为 clean_df 的新 DataFrame，严格包含七个目标列，order_id 非空且唯一，字段类型和业务取值符合合同，并保持被选记录的原始相对顺序。",
+          "rules": [
+            "先建立固定七列结构，再按合同处理缺失值。",
+            "对重复 order_id 使用可解析日期、最新日期、原始第一条的稳定优先级。",
+            "规范金额、日期、城市、状态和文本dtype，并对结果执行可复算的不变量检查。",
+            "函数必须适用于同结构的新数据，不能只针对公开CSV中的具体行号或订单号。"
+          ],
+          "prohibitedActions": [
+            "不得修改原始 df。",
+            "不得硬编码公开样例的输出行或订单号。",
+            "不得读取本机路径、私有数据、hidden tests、Rubric或reference solution。"
+          ],
+          "sample": {
+            "inputFileName": "clean-orders-input.csv",
+            "inputCsv": "order_id,customer_id,amount,city,order_date,status,note,channel\nO001,C001,\"¥1,200\",上海市,2026-01-03, Completed ,旧记录,web\nO001,C001,1250,沪,2026-01-04,completed,新记录,store\n,C006,66,穗,2026-01-08,completed,主键缺失,web\nO004,C004,N/A,京,2026-02-30,UNKNOWN,异常值,store\n",
+            "outputFileName": "clean-orders-output.csv",
+            "outputCsv": "order_id,customer_id,amount,city,order_date,status,note\nO001,C001,1250,上海,2026-01-04,completed,新记录\nO004,C004,,北京,,,异常值\n",
+            "explanation": "额外列被删除，缺失主键行被删除，O001保留日期更新的记录；金额、城市、日期和状态按公开规则规范化。该样例只说明合同，不是正式评测答案。"
+          }
+        },
         "datasetRefs": [
           "dataset-public-orders",
           "dataset-private-variant-01",
-          "dataset-private-variant-02"
+          "dataset-private-variant-02",
+          "dataset-private-variant-03-large",
+          "dataset-private-variant-04-edge"
         ],
         "publicTestRefs": [
           "test-practical-public"
@@ -772,11 +1045,11 @@
           "pandas"
         ],
         "businessAcceptanceCriteria": [
-          "\u56fa\u5b9a\u4e03\u5217\u548c\u987a\u5e8f",
-          "order_id \u975e\u7a7a\u4e14\u552f\u4e00",
-          "\u91d1\u989d\u548c\u65e5\u671f dtype \u7b26\u5408\u73af\u5883\u9501",
-          "\u5b57\u7b26\u4e32\u5217\u4f7f\u7528 StringDtype",
-          "\u4fdd\u6301\u88ab\u9009\u8bb0\u5f55\u539f\u59cb\u76f8\u5bf9\u987a\u5e8f"
+          "固定七列和顺序",
+          "order_id 非空且唯一",
+          "金额和日期 dtype 符合环境锁",
+          "字符串列使用 StringDtype",
+          "保持被选记录原始相对顺序"
         ]
       },
       "contract": {
@@ -786,30 +1059,32 @@
           "argumentFixtureIds": [
             "dataset-public-orders",
             "dataset-private-variant-01",
-            "dataset-private-variant-02"
+            "dataset-private-variant-02",
+            "dataset-private-variant-03-large",
+            "dataset-private-variant-04-edge"
           ]
         },
-        "inputDescription": "\u56fa\u5b9a\u4e03\u5217\u516c\u5f00\u8ba2\u5355\u6570\u636e\u53ca\u4e24\u4efd\u79c1\u6709\u53d8\u4f53\uff0c\u7531\u6d4b\u8bd5fixtureRefs\u51b3\u5b9a\u5f53\u524d\u9636\u6bb5\u8f93\u5165\u3002",
+        "inputDescription": "固定七列公开订单数据及两份私有变体，由测试fixtureRefs决定当前阶段输入。",
         "output": {
           "kind": "dataframe",
           "comparisonRef": "dfcmp-orders-clean-final",
           "includeIndex": false
         },
-        "outputDescription": "\u8fd4\u56de\u6ee1\u8db3\u5b8c\u6574\u4e03\u5217\u4e1a\u52a1\u5408\u540c\u3001dtype\u548c\u884c\u5e8f\u4e0d\u53d8\u91cf\u7684clean_df\u3002",
+        "outputDescription": "返回满足完整七列业务合同、dtype和行序不变量的clean_df。",
         "invariants": [
-          "\u56fa\u5b9a\u4e03\u5217\u548c\u987a\u5e8f",
-          "order_id\u975e\u7a7a\u4e14\u552f\u4e00",
-          "\u91d1\u989d\u4e0e\u65e5\u671f\u9075\u5faa\u51bb\u7ed3\u8f6c\u6362",
-          "\u5b57\u7b26\u4e32\u5217\u4f7f\u7528StringDtype",
-          "\u88ab\u9009\u8bb0\u5f55\u539f\u59cb\u76f8\u5bf9\u987a\u5e8f\u4e0d\u53d8",
-          "\u8f93\u5165DataFrame\u4e0d\u88ab\u4fee\u6539"
+          "固定七列和顺序",
+          "order_id非空且唯一",
+          "金额与日期遵循冻结转换",
+          "字符串列使用StringDtype",
+          "被选记录原始相对顺序不变",
+          "输入DataFrame不被修改"
         ],
         "prohibitedBehaviors": [
-          "\u4fee\u6539\u8f93\u5165DataFrame",
-          "\u5199\u5bbf\u4e3b\u6587\u4ef6",
-          "\u8bbf\u95ee\u7f51\u7edc",
-          "\u542f\u52a8\u5b50\u8fdb\u7a0b",
-          "\u8fd0\u884c\u65f6\u5b89\u88c5\u4f9d\u8d56"
+          "修改输入DataFrame",
+          "写宿主文件",
+          "访问网络",
+          "启动子进程",
+          "运行时安装依赖"
         ]
       },
       "publicTests": [
@@ -831,7 +1106,10 @@
           "visibility": "hidden",
           "fileRef": "assessments/private/tests/test-practical-hidden-01.py",
           "fixtureRefs": [
-            "dataset-private-variant-01"
+            "dataset-private-variant-01",
+            "dataset-private-variant-02",
+            "dataset-private-variant-03-large",
+            "dataset-private-variant-04-edge"
           ],
           "dimensionId": "invariants",
           "blocking": true,
@@ -911,7 +1189,7 @@
         "dimensions": [
           {
             "dimensionId": "structure",
-            "label": "\u8bfb\u53d6\u4e0e\u5217\u7ed3\u6784",
+            "label": "读取与列结构",
             "weight": 0.1,
             "scoringMethod": "tests",
             "blocking": true,
@@ -922,7 +1200,7 @@
           },
           {
             "dimensionId": "missing",
-            "label": "\u7f3a\u5931\u5904\u7406",
+            "label": "缺失处理",
             "weight": 0.2,
             "scoringMethod": "tests",
             "blocking": true,
@@ -932,7 +1210,7 @@
           },
           {
             "dimensionId": "duplicates",
-            "label": "\u91cd\u590d\u5904\u7406",
+            "label": "重复处理",
             "weight": 0.15,
             "scoringMethod": "tests",
             "blocking": true,
@@ -943,7 +1221,7 @@
           },
           {
             "dimensionId": "types",
-            "label": "\u7c7b\u578b\u4e0e\u683c\u5f0f",
+            "label": "类型与格式",
             "weight": 0.25,
             "scoringMethod": "tests",
             "blocking": true,
@@ -954,7 +1232,7 @@
           },
           {
             "dimensionId": "invariants",
-            "label": "\u7ed3\u679c\u4e0d\u53d8\u91cf",
+            "label": "结果不变量",
             "weight": 0.2,
             "scoringMethod": "tests",
             "blocking": true,
@@ -964,7 +1242,7 @@
           },
           {
             "dimensionId": "engineering",
-            "label": "\u53ef\u8bfb\u4e0e\u5b89\u5168",
+            "label": "可读与安全",
             "weight": 0.1,
             "scoringMethod": "static_check",
             "blocking": false,
@@ -1005,7 +1283,7 @@
         }
       },
       "environmentRef": "env-python-pandas-candidate",
-      "assetBundleHash": "7731912ed0f6ec7596cbfbf3b7d029a3d354503c4b28a6ddcf623493df9c74a9"
+      "assetBundleHash": "9b2e23b14653273873896cfdcac01a7d39d57928d25901ce80ba072ea9ebb4ec"
     }
   ]
 }

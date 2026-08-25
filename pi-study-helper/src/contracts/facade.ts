@@ -97,6 +97,7 @@ export interface SessionRecoverySafeView extends FacadeResponseMeta {
   currentAttempt?: import("./index.js").CurrentAttemptSafeReference;
   evidenceVersion?: number;
   knowledgeStates?: KnowledgeState[];
+  learningProfile?: import("./domain.js").LearnerProfileSafeView;
   learningCards?: Array<{ nodeId: string; card: import("./index.js").LearningCardSafeView }>;
   path?: {
     pathId: string;
@@ -113,6 +114,7 @@ export interface CompleteSessionOutput extends FacadeResponseMeta {
   completedAt?: IsoDateTime;
   summary: string;
   nextRecommendation?: string;
+  learningProfile?: import("./domain.js").LearnerProfileSafeView;
 }
 
 export interface SaveDiagnosticDraftInput extends WriteRequestMeta {
@@ -189,6 +191,7 @@ export interface BuildPathInput extends WriteRequestMeta {
   availableMinutes: number;
   evidenceVersion: number;
   selectedKnowledgePointIds: string[];
+  diagnosticSkipKnowledgePointIds?: string[];
   lockedNodeIds: string[];
 }
 
@@ -253,6 +256,7 @@ export interface ReplanPathInput extends WriteRequestMeta {
   trigger: ReplanTrigger;
   availableMinutes: number;
   selectedKnowledgePointIds: string[];
+  diagnosticSkipKnowledgePointIds?: string[];
   lockedNodeIds: string[];
 }
 

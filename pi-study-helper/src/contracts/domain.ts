@@ -53,6 +53,8 @@ export interface KnowledgeState {
   consideredEvidenceIds: string[];
   asOf: string;
   skipEligible: boolean;
+  /** Two independent objective diagnostic forms allow an explicit learner skip choice. */
+  diagnosticSkipEligible?: boolean;
   lastUpdatedAt: string;
 }
 
@@ -70,6 +72,8 @@ export interface LearnerDiagnostic {
   agentExplanation?: string;
   createdAt: string;
 }
+
+export type { LearnerProfileAgentStatus, LearnerProfileActivityItem, LearnerProfileProgressItem, LearnerProfileSafeView } from "../domain/learner-profile.js";
 
 export type CapabilityDimensionId =
   | "syntax_api" | "data_abstraction" | "cleaning_reasoning"
@@ -93,6 +97,12 @@ export interface CapabilityProfileRevision {
   createdAt: string;
 }
 
+export interface ActivityTestPointResult {
+  pointNumber: number;
+  scope: "public" | "sealed";
+  status: "passed" | "failed" | "not_run";
+}
+
 export interface ActivityResult {
   executionStatus: "not_started" | "running" | "completed" | "failed" | "cancelled";
   verdict: "pass" | "partial" | "fail" | "not_graded";
@@ -100,6 +110,7 @@ export interface ActivityResult {
   errorCode?: LearningRuntimeErrorCode;
   score?: number;
   dimensionResults?: Record<string, number>;
+  testPoints?: ActivityTestPointResult[];
   safeFeedback: string;
   durationMs?: number;
   evaluatorVersion: string;

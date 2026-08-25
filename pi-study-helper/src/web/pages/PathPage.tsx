@@ -30,15 +30,28 @@ const REASON_LABELS: Record<string, string> = {
   error_remediation: "根据错误安排重做",
   time_compressed: "已压缩为必要活动",
   evidence_insufficient: "现有证据不足以安全跳过",
+  diagnostic_skip_selected: "你选择依据两类诊断证据跳过本节教学",
 };
 
 function arrangementText(node: PathCandidateOutput["nodes"][number], states: readonly KnowledgeState[]): string {
-  if (node.status === "skipped") return "多种学习证据已满足跳过条件，本节不重复安排。";
+  if (node.status === "skipped" && node.reasonCodes.includes("diagnostic_skip_selected")) return "你已选择跳过本节教学和普通练习；系统保留这项诊断事实。";
+  if (node.reasonCodes.includes("diagnostic_skip_selected")) return "你已选择跳过本节教学；本节点只保留不可跳过的最终综合实操。";
+  if (node.status === "skipped") return "多种正式学习证据已满足自动跳过条件，本节不重复安排。";
   const state = states.find((item) => item.knowledgePointId === node.knowledgePointId);
   if (state?.status === "ready" || state?.status === "mastered") {
     return "当前掌握度较高，但还没有满足安全跳过条件；系统保留必要验证，并减少脚手架。";
   }
   return node.reasonCodes.map((code) => REASON_LABELS[code] ?? code).join("；") || "按知识先修顺序安排。";
+}
+
+function diagnosticPathNotice(states: readonly KnowledgeState[], nodes: readonly PathCandidateOutput["nodes"][number][]): string {
+  if (states.length === 0) return "本次没有形成诊断知识状态，系统按未验证处理。";
+  const supportNeeded = states.filter((state) => state.status === "support_needed" || state.status === "learning" || state.status === "unverified").length;
+  const ready = states.filter((state) => state.status === "ready").length;
+  const mastered = states.filter((state) => state.status === "mastered").length;
+  const skipped = nodes.filter((node) => node.status === "skipped").length;
+  const optional = states.filter((state) => state.diagnosticSkipEligible === true).length;
+  return `本次诊断形成 ${states.length} 个知识状态：${supportNeeded} 个需要支持，${ready} 个已有基础，${mastered} 个已充分掌握；${optional} 个模块通过两类客观诊断证据，可由你决定是否跳过；当前路径跳过 ${skipped} 个节点。`;
 }
 
 export function PathPage() {
@@ -106,6 +119,7 @@ export function PathPage() {
         pathVersion: path.pathVersion, evidenceVersion,
         trigger: "user_constraint_changed", availableMinutes: session.view.availableMinutes,
         selectedKnowledgePointIds: [], lockedNodeIds: path.nodes.filter((node) => node.positionLocked).map((node) => node.nodeId),
+        diagnosticSkipKnowledgePointIds: path.nodes.filter((node) => node.reasonCodes.includes("diagnostic_skip_selected")).map((node) => node.knowledgePointId),
       });
       setReplanned(output);
     } catch (error) { setActionError(error instanceof Error ? error : new Error("path_replan_failed")); }
@@ -130,6 +144,76 @@ export function PathPage() {
     {bootstrap.loading ? <PageStatePanel page="path" state="loading" /> : null}
     {!bootstrap.loading && error ? <PageStatePanel page="path" state={isApiError(error) && error.status === 409 ? "conflict" : "error"} code={isApiError(error) ? error.code : error.message} onRetry={() => { setActionError(undefined); setConfirmed(undefined); setReplanned(undefined); void bootstrap.reload(); }} /> : null}
     {!bootstrap.loading && error === undefined && (session === undefined || path === undefined) ? <PageStatePanel page="path" state="empty" detail="当前安全快照没有可展示的路径。" /> : null}
-    {!bootstrap.loading && error === undefined && session !== undefined && path !== undefined ? <div className="path-layout" data-page="path"><section className="work-section path-section"><div className="section-heading"><div><p className="section-kicker">路径版本 {path.pathVersion}</p><h2>系统推荐学习路径</h2></div><span className="status-tag success">{active ? "已确认" : "待确认"}</span></div><ol className="path-list">{path.nodes.map((node, index) => <li className={`path-node ${node.status}`} key={node.nodeId} style={{ minHeight: STABLE_LAYOUT.pathNodeMinHeight }}><span className="path-sequence">{String(index + 1).padStart(2, "0")}</span><div className="path-node-main"><strong>{titleByNode.get(node.nodeId) ?? knowledgePointLabel(node.knowledgePointId)}</strong><span>{arrangementText(node, knowledgeStates)}</span><small>{difficultyLabel(node.difficulty)} · {SCAFFOLD_LABELS[node.scaffold]} · {node.required ? "本次目标要求" : "可选巩固"}</small></div><div className="path-node-meta"><span>{node.estimatedMinutes}分钟</span><strong>{STATUS_LABELS[node.status]}</strong></div></li>)}</ol>{replanned === undefined ? null : <section className="replan-result" aria-live="polite"><h2>重算结果</h2><dl className="metric-list horizontal"><div><dt>路径变化</dt><dd>{replanned.changed ? "是" : "否"}</dd></div><div><dt>沿用旧路径</dt><dd>{replanned.fallbackToPrevious ? "是" : "否"}</dd></div></dl><ul>{replanned.changeReasons.length === 0 ? <li>学习安排没有变化</li> : replanned.changeReasons.map((reason) => <li key={reason}>{REASON_LABELS[reason] ?? reason}</li>)}</ul></section>}{actionProgress.active ? <p className="async-action-status" role="status" aria-live="polite">{actionProgress.text}</p> : null}<div className="section-footer"><span className="quiet-label">{candidate?.status === "infeasible" ? "当前路径不可行" : `${path.nodes.length} 个章节 · 预计 ${systemEstimatedMinutes} 分钟`}</span><div className="button-row">{active ? <><button type="button" className="button secondary async-action-button" disabled={busy || !canReplan} onClick={() => void replan()}>{pendingAction === "replan" ? actionProgress.text : "按最新诊断重算"}</button><button type="button" className="button primary async-action-button" disabled={busy} onClick={() => void enterLearning()}>{pendingAction === "enter" ? actionProgress.text : "进入学习"}</button></> : <button type="button" className="button primary async-action-button" disabled={busy || path.status === "infeasible"} onClick={() => void confirm()}>{pendingAction === "confirm" ? actionProgress.text : "确认学习路径"}</button>}</div></div></section><aside className="work-section budget-panel"><p className="section-kicker">系统计算</p><h2>时间与诊断依据</h2><dl className="metric-list"><div><dt>预计学习时长</dt><dd>{systemEstimatedMinutes}分钟</dd></div><div><dt>最低需要</dt><dd>{candidate?.minimumRequiredMinutes ?? "已满足"}</dd></div><div><dt>缺失先修</dt><dd>{candidate?.missingPrerequisiteIds.length ?? 0}项</dd></div><div><dt>会话版本</dt><dd>{(replanned ?? confirmed)?.sessionVersion ?? session.view.sessionVersion}</dd></div><div><dt>能力画像修订</dt><dd>{routeState.capabilityProfileRevision ?? "当前会话"}</dd></div></dl><h2>诊断画像</h2>{knowledgeStates.length === 0 ? <p className="notice-line">本次没有形成可展示的知识状态，系统按未验证处理。</p> : <dl className="metric-list">{knowledgeStates.map((state) => <div key={state.knowledgePointId}><dt>{knowledgePointLabel(state.knowledgePointId)}</dt><dd>{state.mastery === null ? "未验证" : state.mastery.toFixed(2)} · {knowledgeStatusLabel(state.status)}</dd></div>)}</dl>}<p className="notice-line">掌握度达到 1.00 也不一定能直接跳过：代码类知识还需要足够独立、不同形式的证据。未满足时只保留必要验证，并减少提示。</p></aside></div> : null}
+    {!bootstrap.loading && error === undefined && session !== undefined && path !== undefined ? (
+      <div className="path-layout" data-page="path">
+        <section className="work-section path-section">
+          <div className="section-heading">
+            <div><p className="section-kicker">路径版本 {path.pathVersion}</p><h2>系统推荐学习路径</h2></div>
+            <span className="status-tag success">{active ? "已确认" : "待确认"}</span>
+          </div>
+          <p className="notice-line diagnostic-path-notice">{diagnosticPathNotice(knowledgeStates, path.nodes)}</p>
+          <ol className="path-list">
+            {path.nodes.map((node, index) => (
+              <li className={`path-node ${node.status}`} key={node.nodeId} style={{ minHeight: STABLE_LAYOUT.pathNodeMinHeight }}>
+                <span className="path-sequence">{String(index + 1).padStart(2, "0")}</span>
+                <div className="path-node-main">
+                  <strong>{titleByNode.get(node.nodeId) ?? knowledgePointLabel(node.knowledgePointId)}</strong>
+                  <span>{arrangementText(node, knowledgeStates)}</span>
+                  <small>{difficultyLabel(node.difficulty)} · {SCAFFOLD_LABELS[node.scaffold]} · {node.required ? "本次目标要求" : "可选巩固"}</small>
+                </div>
+                <div className="path-node-meta"><span>{node.estimatedMinutes}分钟</span><strong>{STATUS_LABELS[node.status]}</strong></div>
+              </li>
+            ))}
+          </ol>
+          {replanned === undefined ? null : (
+            <section className="replan-result" aria-live="polite">
+              <h2>重算结果</h2>
+              <dl className="metric-list horizontal">
+                <div><dt>路径变化</dt><dd>{replanned.changed ? "是" : "否"}</dd></div>
+                <div><dt>沿用旧路径</dt><dd>{replanned.fallbackToPrevious ? "是" : "否"}</dd></div>
+              </dl>
+              <ul>{replanned.changeReasons.length === 0 ? <li>学习安排没有变化</li> : replanned.changeReasons.map((reason) => <li key={reason}>{REASON_LABELS[reason] ?? reason}</li>)}</ul>
+            </section>
+          )}
+          {actionProgress.active ? <p className="async-action-status" role="status" aria-live="polite">{actionProgress.text}</p> : null}
+          <div className="section-footer">
+            <span className="quiet-label">{candidate?.status === "infeasible" ? "当前路径不可行" : `${path.nodes.length} 个章节 · 预计 ${systemEstimatedMinutes} 分钟`}</span>
+            <div className="button-row">
+              {active ? (
+                <>
+                  <button type="button" className="button secondary async-action-button" disabled={busy || !canReplan} onClick={() => void replan()}>{pendingAction === "replan" ? actionProgress.text : "按最新诊断重算"}</button>
+                  <button type="button" className="button primary async-action-button" disabled={busy} onClick={() => void enterLearning()}>{pendingAction === "enter" ? actionProgress.text : "进入学习"}</button>
+                </>
+              ) : (
+                <button type="button" className="button primary async-action-button" disabled={busy || path.status === "infeasible"} onClick={() => void confirm()}>{pendingAction === "confirm" ? actionProgress.text : "确认学习路径"}</button>
+              )}
+            </div>
+          </div>
+        </section>
+        <aside className="work-section budget-panel">
+          <p className="section-kicker">系统计算</p>
+          <h2>时间与诊断依据</h2>
+          <dl className="metric-list">
+            <div><dt>预计学习时长</dt><dd>{systemEstimatedMinutes}分钟</dd></div>
+            <div><dt>最低需要</dt><dd>{candidate?.minimumRequiredMinutes ?? "已满足"}</dd></div>
+            <div><dt>缺失先修</dt><dd>{candidate?.missingPrerequisiteIds.length ?? 0}项</dd></div>
+            <div><dt>会话版本</dt><dd>{(replanned ?? confirmed)?.sessionVersion ?? session.view.sessionVersion}</dd></div>
+            <div><dt>能力画像修订</dt><dd>{routeState.capabilityProfileRevision ?? "当前会话"}</dd></div>
+          </dl>
+          <h2>诊断画像</h2>
+          {knowledgeStates.length === 0 ? <p className="notice-line">本次没有形成可展示的知识状态，系统按未验证处理。</p> : (
+            <dl className="metric-list">
+              {knowledgeStates.map((state) => (
+                <div key={state.knowledgePointId}>
+                  <dt>{knowledgePointLabel(state.knowledgePointId)}</dt>
+                  <dd>{state.mastery === null ? "未验证" : state.mastery.toFixed(2)} · {knowledgeStatusLabel(state.status)}</dd>
+                </div>
+              ))}
+            </dl>
+          )}
+          <p className="notice-line">{diagnosticPathNotice(knowledgeStates, path.nodes)}</p>
+        </aside>
+      </div>
+    ) : null}
   </PageFrame>;
 }

@@ -19,6 +19,8 @@ function findPython(): string {
 async function input() {
   const activities = JSON.parse(await readFile(resolve(profileRoot, "activities/learning-activities.json"), "utf8")) as { activities: any[] };
   const activity = activities.activities.find((item) => item.activityId === "act-practical");
+  const bundles = JSON.parse(await readFile(resolve(profileRoot, "assessments/private/task-bundles.json"), "utf8")) as { bundles: any[] };
+  const bundle = bundles.bundles.find((item) => item.activity.activityId === "act-practical");
   const environment = JSON.parse(await readFile(resolve(profileRoot, "environments/environment-lock.json"), "utf8"));
   return {
     activity: { activityId: activity.activityId, kind: activity.kind, profileRevision: activity.profileRevision, templateVersion: activity.templateVersion, environmentRef: activity.environmentRef },
@@ -31,7 +33,7 @@ async function input() {
       environmentHash: environment.environmentHash,
       prototypeEvidenceRef: environment.prototypeEvidenceRef,
     },
-    assetBundleHash: "7731912ed0f6ec7596cbfbf3b7d029a3d354503c4b28a6ddcf623493df9c74a9",
+    assetBundleHash: bundle.assetBundleHash,
   };
 }
 

@@ -27,7 +27,7 @@ describe("W4 D recorded response set", () => {
     expect(raw).not.toContain("demo-evidence-1");
   });
 
-  it("keeps the historical one-question candidate frozen and rejects it under the strengthened quiz contract", async () => {
+  it("keeps historical candidates frozen and rejects them after the authoritative lesson digest changes", async () => {
     const fixtures = loadRecordedModelResponseFixtures(await readFile(recordingsPath, "utf8"));
     const adapter = new RecordedModelExecutionAdapter({ fixtures, defaultModelId: "deepseek-chat" });
     const provider = new ProfileAdaptiveContentSourceProvider({ resolveProfileRoot: () => profileRoot });
@@ -36,8 +36,9 @@ describe("W4 D recorded response set", () => {
     await expect(service.prepareQuiz({ profileRevision: 3, activityId: "act-read-csv", retryNumber: 0, excludedQuestionIds: [] }))
       .resolves.toEqual({ status: "unavailable" });
     await expect(service.prepareCard({ profileRevision: 3, knowledgePointId: "pandas.clean.read-csv", excludedArtifactIds: ["card-w4-read-csv"] }))
-      .resolves.toMatchObject({ status: "accepted", card: { cardId: "dynamic-card-read-csv" } });
-    expect(adapter.history.map((item) => item.input.graphId)).toEqual(["generator", "generator", "generator", "hunter", "judge"]);
+      .resolves.toEqual({ status: "unavailable" });
+    expect(adapter.history.length).toBeGreaterThanOrEqual(2);
+    expect(adapter.history.every((item) => item.input.graphId === "generator")).toBe(true);
   });
 
   it("replays the six required no-key trajectory classes through ModelExecutionPort", async () => {

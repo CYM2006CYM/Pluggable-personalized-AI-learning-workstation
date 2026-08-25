@@ -13,7 +13,7 @@ import {
 import { tmpdir } from "node:os";
 import { basename, dirname, isAbsolute, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
-import type { ActivityResult, LearningRuntimeErrorCode } from "../domain/v2-types.js";
+import type { ActivityResult, ActivityTestPointResult, LearningRuntimeErrorCode } from "../domain/v2-types.js";
 import {
   EvaluationPreparationError,
   EvaluationRunError,
@@ -115,15 +115,29 @@ interface RunRecord {
   result: ActivityResult;
 }
 
+interface HarnessPointResult {
+  pointIndex: number;
+  passed: boolean;
+}
+
+interface HarnessTestResult extends InternalTestResult {
+  pointResults: HarnessPointResult[];
+}
+
 interface HarnessResult {
   status: "ok" | "failed";
   category?: "learner" | "evaluator";
   errorCode?: LearningRuntimeErrorCode;
-  tests?: InternalTestResult[];
+  tests?: HarnessTestResult[];
+}
+
+interface StageFixtureResult {
+  fixtureId: string;
+  passed: boolean;
 }
 
 type StageOutcome =
-  | { kind: "ok"; tests: InternalTestResult[] }
+  | { kind: "ok"; tests: InternalTestResult[]; fixtureResults: StageFixtureResult[] }
   | { kind: "cancelled" }
   | { kind: "learner"; errorCode: LearningRuntimeErrorCode; feedback: string }
   | { kind: "evaluator"; errorCode: LearningRuntimeErrorCode; feedback: string };
@@ -152,12 +166,12 @@ const FORMAL_ASSET_BUNDLE_HASHES: Readonly<Record<number, Readonly<Record<string
     "act-practical": "3273308c4c9829b263a550c2d69eb40e5098b4e0802399c2334053afb3d6815c",
   },
   3: {
-    "act-load-csv": "5e1b444472c136364809b926adc8b9ec0f7eaff29a2b6715605c062db2eebe7d",
-    "act-inspect-dataframe": "737b0d6ae618f98b5c3e7bd5b67c2f5342559decd7436dbed57a046ef4c97be6",
-    "act-missing": "1a42dfe66391ea56d11b7c8b525ac2da19146c3fc7d4401a3439e6b7b793125b",
-    "act-duplicates": "dd88d60ef3320f7eba10fbba7cddc76ee96859e3f7fd7f7a9139fe9ed96d4886",
-    "act-types": "cfa703b189cb49cfa2e56ce3b0790a0412e58c996c82aa93ca459596d71c1880",
-    "act-practical": "7731912ed0f6ec7596cbfbf3b7d029a3d354503c4b28a6ddcf623493df9c74a9",
+    "act-load-csv": "4f05be4b973dc1a92987c18d078194904b75782d2bb1bec4ed84466c016ab338",
+    "act-inspect-dataframe": "d6e1114a8be5ce2c8075fd7cc81dfcd02f9fb86798ce2830bdf1ff6ea2fae1a8",
+    "act-missing": "4bd182db5673a5ffab3b40820de022254207651abaf718c7fabf40e0e9c828f1",
+    "act-duplicates": "c5047dc99d6c3443e1f67302a8c63f374d2f0371aa5c6e37b6e49e7beedecd3e",
+    "act-types": "961537a84d162ee575da4348647553dafa916c2de048e6405e0c894b7f70bca7",
+    "act-practical": "9b2e23b14653273873896cfdcac01a7d39d57928d25901ce80ba072ea9ebb4ec",
   },
 };
 
@@ -181,7 +195,20 @@ function cloneResult(result: ActivityResult): ActivityResult {
   return {
     ...result,
     ...(result.dimensionResults ? { dimensionResults: { ...result.dimensionResults } } : {}),
+    ...(result.testPoints ? { testPoints: result.testPoints.map((point) => ({ ...point })) } : {}),
   };
+}
+
+function testPointScope(bundle: TaskBundle, fixtureId: string): ActivityTestPointResult["scope"] {
+  return bundle.publicTests.some((test) => test.fixtureRefs.includes(fixtureId)) ? "public" : "sealed";
+}
+
+function notRunTestPoints(bundle: TaskBundle): ActivityTestPointResult[] {
+  return bundle.activity.datasetRefs.map((fixtureId, index) => ({
+    pointNumber: index + 1,
+    scope: testPointScope(bundle, fixtureId),
+    status: "not_run",
+  }));
 }
 
 function normalizeHash(value: string): string {
@@ -366,11 +393,17 @@ function validHarnessResult(value: unknown): value is HarnessResult {
     return Object.keys(value).sort().join(",") === "status,tests"
       && Array.isArray(value.tests)
       && value.tests.every((test) => isRecord(test)
-        && Object.keys(test).sort().join(",") === "blocking,dimensionId,passed,testId"
+        && Object.keys(test).sort().join(",") === "blocking,dimensionId,passed,pointResults,testId"
         && typeof test.testId === "string"
         && typeof test.dimensionId === "string"
         && typeof test.blocking === "boolean"
-        && typeof test.passed === "boolean");
+        && typeof test.passed === "boolean"
+        && Array.isArray(test.pointResults)
+        && test.pointResults.every((point) => isRecord(point)
+          && Object.keys(point).sort().join(",") === "passed,pointIndex"
+          && Number.isSafeInteger(point.pointIndex)
+          && (point.pointIndex as number) >= 0
+          && typeof point.passed === "boolean"));
   }
   if (Object.keys(value).sort().join(",") !== "category,errorCode,status"
     || (value.category !== "learner" && value.category !== "evaluator")
@@ -563,6 +596,7 @@ export class PythonProcessCodeEvaluationAdapter implements CodeEvaluationPort {
         evaluatorVersion: state.environment.evaluatorVersion,
         environmentHash: state.prepared.environmentHash,
         assetBundleHash: state.prepared.assetBundleHash,
+        testPoints: notRunTestPoints(state.bundle),
       });
     }
 
@@ -587,6 +621,7 @@ export class PythonProcessCodeEvaluationAdapter implements CodeEvaluationPort {
         evaluatorVersion: state.environment.evaluatorVersion,
         environmentHash: state.prepared.environmentHash,
         assetBundleHash: state.prepared.assetBundleHash,
+        testPoints: notRunTestPoints(state.bundle),
       }));
     }
 
@@ -596,6 +631,7 @@ export class PythonProcessCodeEvaluationAdapter implements CodeEvaluationPort {
       const submission = resolve(runRoot, "submission.py");
       await writeFile(submission, input.code, { encoding: "utf8", flag: "wx" });
       const allTests: InternalTestResult[] = [];
+      const fixtureResults = new Map<string, boolean>();
       for (const [stage, tests] of [
         ["user_code", []],
         ["public_tests", state.bundle.publicTests],
@@ -619,6 +655,7 @@ export class PythonProcessCodeEvaluationAdapter implements CodeEvaluationPort {
             evaluatorVersion: state.environment.evaluatorVersion,
             environmentHash: state.prepared.environmentHash,
             assetBundleHash: state.prepared.assetBundleHash,
+            testPoints: notRunTestPoints(state.bundle),
           }));
         }
         if (outcome.kind === "evaluator") {
@@ -631,13 +668,32 @@ export class PythonProcessCodeEvaluationAdapter implements CodeEvaluationPort {
           }));
         }
         allTests.push(...outcome.tests);
+        for (const fixture of outcome.fixtureResults) {
+          fixtureResults.set(fixture.fixtureId, (fixtureResults.get(fixture.fixtureId) ?? true) && fixture.passed);
+        }
       }
+      if (fixtureResults.size !== state.bundle.activity.datasetRefs.length
+        || state.bundle.activity.datasetRefs.some((fixtureId) => !fixtureResults.has(fixtureId))) {
+        return this.#recordRun(input, fingerprint, evaluatorFailure({
+          errorCode: "result_protocol_invalid",
+          safeFeedback: "The evaluator returned an incomplete test-point protocol.",
+          evaluatorVersion: state.environment.evaluatorVersion,
+          environmentHash: state.prepared.environmentHash,
+          assetBundleHash: state.prepared.assetBundleHash,
+        }));
+      }
+      const testPoints: ActivityTestPointResult[] = state.bundle.activity.datasetRefs.map((fixtureId, index) => ({
+        pointNumber: index + 1,
+        scope: testPointScope(state.bundle, fixtureId),
+        status: fixtureResults.get(fixtureId) ? "passed" : "failed",
+      }));
       const result = summarizeRubric({
         rubric: state.bundle.rubric,
         tests: allTests,
         evaluatorVersion: state.environment.evaluatorVersion,
         environmentHash: state.prepared.environmentHash,
         assetBundleHash: state.prepared.assetBundleHash,
+        testPoints,
       });
       return this.#recordRun(input, fingerprint, result);
     } catch {
@@ -810,11 +866,20 @@ export class PythonProcessCodeEvaluationAdapter implements CodeEvaluationPort {
           return !expected
             || actual.testId !== expected.testId
             || actual.dimensionId !== expected.dimensionId
-            || actual.blocking !== expected.blocking;
+            || actual.blocking !== expected.blocking
+            || actual.pointResults.length !== expected.fixtureRefs.length
+            || actual.pointResults.some((point, pointIndex) => point.pointIndex !== pointIndex);
         })) {
         return { kind: "evaluator", errorCode: "result_protocol_invalid", feedback: "The evaluator returned an invalid result protocol." };
       }
-      return { kind: "ok", tests: actualTests };
+      return {
+        kind: "ok",
+        tests: actualTests.map(({ pointResults: _pointResults, ...test }) => test),
+        fixtureResults: actualTests.flatMap((test, testIndex) => test.pointResults.map((point) => ({
+          fixtureId: tests[testIndex]!.fixtureRefs[point.pointIndex]!,
+          passed: point.passed,
+        }))),
+      };
     }
     if (result.category === "learner") {
       return { kind: "learner", errorCode: result.errorCode ?? "runtime_error", feedback: "The submitted program did not complete the deterministic evaluation." };

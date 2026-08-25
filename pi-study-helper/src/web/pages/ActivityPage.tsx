@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import type {
   ActivityDraftOutput,
   ActivitySubmissionOutput,
+  ActivityTestPointResult,
   CodeActivitySafeView,
   CodeActivityDraftOutput,
   QuizAnswerInput,
@@ -344,9 +345,48 @@ function removeBrowserDraft(attemptId: string, clearUiDraft: (attemptId: string)
 
 function ResultView({ value }: { value: SubmitResult }) {
   if (isEvaluatorFailure(value)) return <div className="evaluator-stage" role="alert"><p className="state-code">{errorLabel(value.errorCode)}</p><h2>评测服务暂时不可用</h2><p>本次没有评分，也没有推进学习状态。代码草稿仍然保留。</p></div>;
-  if (value.kind === "code") return <div className="result-stage"><div className="result-header"><div><p className="section-kicker">权威评测结果</p><h2>{verdictLabel(value.result.verdict)}</h2></div><span className="score-block">{value.result.score ?? 0} / 1</span></div><p className="feedback-copy">{safeFeedbackLabel(value.result.safeFeedback, value.result.errorCode)}</p><dl className="metric-list horizontal"><div><dt>执行状态</dt><dd>{value.result.executionStatus === "completed" ? "执行完成" : "执行失败"}</dd></div><div><dt>问题类型</dt><dd>{errorLabel(value.result.errorCode)}</dd></div><div><dt>评测版本</dt><dd>{value.result.evaluatorVersion}</dd></div></dl></div>;
+  if (value.kind === "code") {
+    const testPoints = value.result.testPoints;
+    const passedCount = testPoints?.filter((point) => point.status === "passed").length;
+    return <div className="result-stage">
+      <div className="result-header">
+        <div><p className="section-kicker">权威评测结果</p><h2>{verdictLabel(value.result.verdict)}</h2></div>
+        <span className="score-block">{testPoints === undefined ? "无逐点明细" : `${passedCount} / ${testPoints.length}`}<small>通过测试点</small></span>
+      </div>
+      <p className="feedback-copy">{safeFeedbackLabel(value.result.safeFeedback, value.result.errorCode)}</p>
+      <dl className="metric-list horizontal"><div><dt>执行状态</dt><dd>{value.result.executionStatus === "completed" ? "执行完成" : "执行失败"}</dd></div><div><dt>问题类型</dt><dd>{errorLabel(value.result.errorCode)}</dd></div><div><dt>评测版本</dt><dd>{value.result.evaluatorVersion}</dd></div></dl>
+      {testPoints === undefined
+        ? <p className="notice-line">该历史评测结果生成时尚未记录逐测试点状态，请修改代码后重新评测。</p>
+        : <TestPointTable testPoints={testPoints} />}
+    </div>;
+  }
   const score = quizScore(value.result);
   return <div className="result-stage"><div className="result-header"><div><p className="section-kicker">确定性判分结果</p><h2>{verdictLabel(value.result.verdict)}</h2></div><span className="score-block">{score === null ? "未形成" : score.toFixed(2)}</span></div><p className="feedback-copy">{value.result.safeFeedback}</p><dl className="metric-list horizontal"><div><dt>正确题数</dt><dd>{value.result.correctCount}/{value.result.totalCount}</dd></div><div><dt>通过要求</dt><dd>至少答对 {value.result.requiredCorrectCount} 题</dd></div><div><dt>学习证据</dt><dd>{value.evidenceId === undefined ? "未生成" : "已记录"}</dd></div></dl>{value.result.answerReview === undefined ? null : <section className="answer-review"><h2>提交后安全复盘</h2>{value.result.answerReview.map((item, index) => <div key={item.questionId}><p className="answer-review-prompt"><span>原题</span>{item.prompt ?? "旧版作答记录未保存原题题干"}</p><strong>第 {index + 1} 题 · {item.correct ? "回答正确" : "需要复习"}</strong><p>正确答案：{String(item.correctAnswer)}</p><p><strong>正文解释：</strong>{item.explanation}</p></div>)}</section>}</div>;
+}
+
+function testPointStatusLabel(status: ActivityTestPointResult["status"]): string {
+  if (status === "passed") return "通过";
+  if (status === "failed") return "未通过";
+  return "未运行";
+}
+
+function TestPointTable({ testPoints }: { testPoints: readonly ActivityTestPointResult[] }) {
+  return <section className="test-point-section" aria-labelledby="test-point-heading">
+    <div className="test-point-heading">
+      <div><p className="section-kicker">逐点结果</p><h3 id="test-point-heading">测试点明细</h3></div>
+      <p>公开测试使用题面样例；密封测试只显示结论，不公开输入、预期输出和判定规则。</p>
+    </div>
+    <div className="test-point-table-wrap">
+      <table className="test-point-table">
+        <thead><tr><th scope="col">测试点</th><th scope="col">类型</th><th scope="col">状态</th></tr></thead>
+        <tbody>{testPoints.map((point) => <tr key={point.pointNumber} data-status={point.status}>
+          <th scope="row">#{point.pointNumber}</th>
+          <td>{point.scope === "public" ? "公开测试点" : "密封测试点"}</td>
+          <td><span className={`test-point-status ${point.status}`}><span aria-hidden="true">{point.status === "passed" ? "✓" : point.status === "failed" ? "×" : "−"}</span>{testPointStatusLabel(point.status)}</span></td>
+        </tr>)}</tbody>
+      </table>
+    </div>
+  </section>;
 }
 
 function CodeContractView({ activity }: { activity: CodeActivitySafeView }) {

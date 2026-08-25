@@ -97,8 +97,9 @@ def run_tests(args, candidate, result_path: Path, state_path: Path | None) -> in
         except BaseException:
             return fail(result_path, "test_asset_invalid", "evaluator")
 
-        passed = True
-        for fixture_path in test["fixturePaths"]:
+        point_results = []
+        for point_index, fixture_path in enumerate(test["fixturePaths"]):
+            point_passed = True
             try:
                 if args.fixture_argument_mode == "path":
                     run_case(candidate_proxy, fixture_path)
@@ -116,14 +117,16 @@ def run_tests(args, candidate, result_path: Path, state_path: Path | None) -> in
                     # Frozen healthy tests use assertions and deterministic
                     # result lookups as their contract checks. RuntimeError,
                     # TypeError, and loader failures remain evaluator faults.
-                    passed = False
+                    point_passed = False
                 else:
                     return fail(result_path, "test_asset_invalid", "evaluator")
+            point_results.append({"pointIndex": point_index, "passed": point_passed})
         results.append({
             "testId": test["testId"],
             "dimensionId": test["dimensionId"],
             "blocking": test["blocking"],
-            "passed": passed,
+            "passed": all(point["passed"] for point in point_results),
+            "pointResults": point_results,
         })
 
     write_result(result_path, {"status": "ok", "tests": results})

@@ -20,6 +20,20 @@
       "fileRef": "datasets/private/orders-variant-02.csv",
       "format": "csv",
       "assetHash": "sha256:01655a4df5edcc5c173b3dca370135e5f2e6010bc7dfba6fc1263d2e30cc0f83"
+    },
+    {
+      "fixtureId": "dataset-private-variant-03-large",
+      "visibility": "private",
+      "fileRef": "datasets/private/orders-variant-03-large.csv",
+      "format": "csv",
+      "assetHash": "sha256:05ae6fafc7fd5457d862ef715c9f4121e0aded7453576245bd6a9d79ac0788ba"
+    },
+    {
+      "fixtureId": "dataset-private-variant-04-edge",
+      "visibility": "private",
+      "fileRef": "datasets/private/orders-variant-04-edge.csv",
+      "format": "csv",
+      "assetHash": "sha256:1029584b86dbaebbe1c48718ab62e095f9fadbd66bf1f96423b066949ed90bd6"
     }
   ]
 }

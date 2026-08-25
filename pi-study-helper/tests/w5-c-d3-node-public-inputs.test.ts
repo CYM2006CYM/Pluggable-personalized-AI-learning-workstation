@@ -16,7 +16,7 @@ const bundleDocument = JSON.parse(await readFile(resolve(profileRoot, "assessmen
   bundles: Array<Record<string, any>>;
 };
 const fixtureDocument = JSON.parse(await readFile(resolve(profileRoot, "datasets/fixtures.json"), "utf8")) as {
-  fixtures: Array<{ fixtureId: string; fileRef: string; assetHash: string }>;
+  fixtures: Array<{ fixtureId: string; fileRef: string; assetHash: string; visibility: "public" | "private" }>;
 };
 
 const activityIds = [
@@ -53,6 +53,7 @@ async function buildPublicBundle(bundle: Record<string, any>, variant: number) {
   for (const fixtureId of activity.datasetRefs) {
     const fixture = fixtureDocument.fixtures.find((item) => item.fixtureId === fixtureId);
     if (!fixture) throw new Error(`missing public fixture: ${fixtureId}`);
+    if (fixture.visibility !== "public") continue;
     const content = await readFile(resolve(profileRoot, fixture.fileRef), "utf8");
     publicDatasetFiles.push({
       name: fixture.fileRef.split("/").pop() ?? `${fixtureId}.csv`,
@@ -60,6 +61,7 @@ async function buildPublicBundle(bundle: Record<string, any>, variant: number) {
       hash: `sha256:${sha256(content)}`,
     });
   }
+  expect(publicDatasetFiles).toHaveLength(1);
   const publicTestSources = [];
   for (const test of bundle.publicTests) {
     publicTestSources.push(await readFile(resolve(profileRoot, test.fileRef), "utf8"));

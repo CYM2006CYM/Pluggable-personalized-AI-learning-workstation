@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import { posix, resolve } from "node:path";
 import { AdaptiveContentService } from "../application/adaptive-content-service.js";
 import { CapabilityTaskService } from "../application/capability-task-service.js";
+import { LearnerProfileAgentService } from "../application/learner-profile-agent-service.js";
 import { ActivityRuntimeService } from "../application/activity-runtime-service.js";
 import { createActivityPathSuffixReplanner } from "../application/activity-path-suffix.js";
 import { CodeActivityFacadeAdapter, ProfileFamilyCodeActivityAssetResolver } from "../application/code-activity-facade-adapter.js";
@@ -13,6 +14,7 @@ import { ProfileFamilyPathResolver, createPathRuntimeMethods } from "../applicat
 import { ProfileFamilyQuizActivityAssetResolver, QuizActivityRuntime } from "../application/quiz-activity-runtime.js";
 import { parseDiagnosticAnswerKey, parseDiagnosticBlueprint } from "../domain/diagnostic.js";
 import { createW4DModelGraphs, W4_D_LIVE_PROMPT_VERSION } from "../graphs/w4-d-graph-factory.js";
+import { createW6ProfileGraph, W6_PROFILE_PROMPT_VERSION } from "../graphs/w6-profile-graph-factory.js";
 import { loadRecordedModelResponseFixtures, RecordedModelExecutionAdapter } from "../infrastructure/model-execution-port.js";
 import { createLiveModelExecutionPort } from "../infrastructure/live-model-execution-port.js";
 import { ProfileAdaptiveContentSourceProvider } from "../infrastructure/profile-adaptive-source-provider.js";
@@ -70,6 +72,7 @@ export async function createDemoRuntime(options: DemoRuntimeOptions): Promise<De
   });
   const graphs = createW4DModelGraphs();
   if (graphs.length !== 5) throw new Error("D graph registry binding is incomplete");
+  const profileGraph = createW6ProfileGraph();
   const configuredModelId = options.liveConfig?.model ?? "deepseek-chat";
   // Recorded fixtures remain bound to v1; live requests use the revised prompt contract.
   const configuredPromptVersion = options.liveConfig === undefined ? "w4-d2-v1" : W4_D_LIVE_PROMPT_VERSION;
@@ -80,7 +83,7 @@ export async function createDemoRuntime(options: DemoRuntimeOptions): Promise<De
         modelId: options.liveConfig.model,
         baseUrl: options.liveConfig.baseUrl,
         apiKey: options.liveConfig.apiKey,
-        graphs,
+        graphs: [...graphs, profileGraph],
       });
   const sourceProvider = new ProfileAdaptiveContentSourceProvider({
     resolveProfileRoot: (revision) => profiles.profileV2RevisionDirectory("pandas-cleaning", revision),
@@ -104,6 +107,7 @@ export async function createDemoRuntime(options: DemoRuntimeOptions): Promise<De
     promptVersion: configuredPromptVersion,
     now: options.now,
   });
+  const profileAgent = new LearnerProfileAgentService({ modelExecutionPort, modelId: configuredModelId, promptVersion: W6_PROFILE_PROMPT_VERSION, now: options.now });
   const profileBound = new ProfileBoundSessionRuntime({ profiles, sessions });
   const diagnostic = new DiagnosticRuntime({
     repository: sessions,
@@ -118,6 +122,7 @@ export async function createDemoRuntime(options: DemoRuntimeOptions): Promise<De
     content: adaptive,
     loadAssets: (subjectId, revision, activityId) => quizAssets.loadAssets(subjectId, revision, activityId),
     pathSuffix,
+    profileAgent,
     now: options.now,
   });
   const codeAssets = new ProfileFamilyCodeActivityAssetResolver(profiles);
@@ -152,6 +157,7 @@ export async function createDemoRuntime(options: DemoRuntimeOptions): Promise<De
     sessions,
     profile: pathProfile,
     capabilityTasks: capability,
+    profileAgent,
     resolveActivityKind: async (input) => {
       const profile = await pathProfile.load(input.sessionId ? (await sessions.getBoundSnapshot(input.sessionId)).view.subjectId : "pandas-cleaning", input.profileRevision);
       const activity = profile.activities.find((item) => item.activityId === input.activityId);

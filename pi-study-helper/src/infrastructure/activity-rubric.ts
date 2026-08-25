@@ -1,4 +1,4 @@
-import type { ActivityResult, LearningRuntimeErrorCode } from "../domain/v2-types.js";
+import type { ActivityResult, ActivityTestPointResult, LearningRuntimeErrorCode } from "../domain/v2-types.js";
 
 export interface RubricDimensionDefinition {
   dimensionId: string;
@@ -29,6 +29,7 @@ export interface RubricSummaryInput {
   evaluatorVersion: string;
   environmentHash: string;
   assetBundleHash: string;
+  testPoints?: readonly ActivityTestPointResult[];
 }
 
 export interface LearnerFailureInput {
@@ -46,6 +47,7 @@ export interface LearnerFailureInput {
   environmentHash: string;
   assetBundleHash: string;
   safeFeedback: string;
+  testPoints?: readonly ActivityTestPointResult[];
 }
 
 export interface EvaluatorFailureInput {
@@ -77,6 +79,22 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 function weightSumIsOne(weights: readonly number[]): boolean {
   const sum = weights.reduce((total, weight) => total + weight, 0);
   return Math.abs(sum - 1) <= Number.EPSILON * Math.max(1, weights.length);
+}
+
+function validTestPoints(value: readonly ActivityTestPointResult[] | undefined, allowNotRun: boolean): boolean {
+  if (value === undefined) return true;
+  if (value.length === 0) return false;
+  const pointNumbers = new Set<number>();
+  return value.every((point) => {
+    if (!Number.isSafeInteger(point.pointNumber)
+      || point.pointNumber < 1
+      || pointNumbers.has(point.pointNumber)
+      || (point.scope !== "public" && point.scope !== "sealed")
+      || (point.status !== "passed" && point.status !== "failed" && point.status !== "not_run")
+      || (!allowNotRun && point.status === "not_run")) return false;
+    pointNumbers.add(point.pointNumber);
+    return true;
+  });
 }
 
 export function validateRubricDefinition(
@@ -144,7 +162,8 @@ export function validateRubricDefinition(
 
 export function summarizeRubric(input: RubricSummaryInput): ActivityResult {
   if (!validateRubricDefinition(input.rubric, input.tests)
-    || !input.tests.every((test) => typeof test.passed === "boolean")) {
+    || !input.tests.every((test) => typeof test.passed === "boolean")
+    || !validTestPoints(input.testPoints, false)) {
     throw new TypeError("invalid rubric summary input");
   }
   const dimensionResults: Record<string, number> = {};
@@ -177,6 +196,7 @@ export function summarizeRubric(input: RubricSummaryInput): ActivityResult {
     ...(passed ? {} : { errorKind: "learner" as const, errorCode: "test_failed" as const }),
     score: normalizedScore,
     dimensionResults,
+    ...(input.testPoints === undefined ? {} : { testPoints: input.testPoints.map((point) => ({ ...point })) }),
     safeFeedback: passed
       ? "All deterministic checks passed."
       : "One or more deterministic checks did not pass.",
@@ -187,12 +207,14 @@ export function summarizeRubric(input: RubricSummaryInput): ActivityResult {
 }
 
 export function learnerFailure(input: LearnerFailureInput): ActivityResult {
+  if (!validTestPoints(input.testPoints, true)) throw new TypeError("invalid learner failure test points");
   return {
     executionStatus: "completed",
     verdict: "fail",
     errorKind: "learner",
     errorCode: input.errorCode,
     score: 0,
+    ...(input.testPoints === undefined ? {} : { testPoints: input.testPoints.map((point) => ({ ...point })) }),
     safeFeedback: input.safeFeedback,
     evaluatorVersion: input.evaluatorVersion,
     environmentHash: input.environmentHash,

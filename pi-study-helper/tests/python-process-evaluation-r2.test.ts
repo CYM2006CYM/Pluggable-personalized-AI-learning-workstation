@@ -112,7 +112,13 @@ describe("W3 C R2 harness and asset gates", () => {
     const result = await runHarness("def run_case(candidate, df):\n    assert False\n");
     expect(result).toEqual({
       status: "ok",
-      tests: [{ testId: "r2-test", dimensionId: "r2", blocking: true, passed: false }],
+      tests: [{
+        testId: "r2-test",
+        dimensionId: "r2",
+        blocking: true,
+        passed: false,
+        pointResults: [{ pointIndex: 0, passed: false }],
+      }],
     });
   });
 

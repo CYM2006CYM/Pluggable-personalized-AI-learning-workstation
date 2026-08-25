@@ -43,9 +43,11 @@ describe("W5 D3 C Windows process-tree capability", () => {
       ].join("\n"), "utf8");
       const activities = JSON.parse(await readFile(resolve(profileRoot, "activities/learning-activities.json"), "utf8"));
       const activity = activities.activities.find((item: any) => item.activityId === "act-practical");
+      const bundles = JSON.parse(await readFile(resolve(profileRoot, "assessments/private/task-bundles.json"), "utf8"));
+      const bundle = bundles.bundles.find((item: any) => item.activity.activityId === "act-practical");
       const environment = JSON.parse(await readFile(resolve(profileRoot, "environments/environment-lock.json"), "utf8"));
       const adapter = new PythonProcessCodeEvaluationAdapter({ profileRoot, pythonExecutable: pythonExecutable(), runnerScript: runnerPath });
-      const prepared = await adapter.prepare({ activity: { activityId: activity.activityId, kind: activity.kind, profileRevision: 3, templateVersion: activity.templateVersion, environmentRef: activity.environmentRef }, profileRevision: 3, taskVersion: activity.templateVersion, mode: "submit", environment: { environmentId: environment.environmentId, status: "measured_node_submit", environmentHash: environment.environmentHash, prototypeEvidenceRef: environment.prototypeEvidenceRef }, assetBundleHash: "7731912ed0f6ec7596cbfbf3b7d029a3d354503c4b28a6ddcf623493df9c74a9" });
+      const prepared = await adapter.prepare({ activity: { activityId: activity.activityId, kind: activity.kind, profileRevision: 3, templateVersion: activity.templateVersion, environmentRef: activity.environmentRef }, profileRevision: 3, taskVersion: activity.templateVersion, mode: "submit", environment: { environmentId: environment.environmentId, status: "measured_node_submit", environmentHash: environment.environmentHash, prototypeEvidenceRef: environment.prototypeEvidenceRef }, assetBundleHash: bundle.assetBundleHash });
       const startedAt = new Date().toISOString();
       const result = await adapter.run({ requestId: "r2-process-tree", attemptId: "r2-process-tree", prepared, code: "def clean_orders(df):\n    return df\n" }, new AbortController().signal);
       childPid = Number((await readFile(pidPath, "ascii")).trim());

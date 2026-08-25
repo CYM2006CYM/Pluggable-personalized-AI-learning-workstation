@@ -76,4 +76,68 @@ describe.runIf(liveConfigured)("W6 live AI quiz generation", () => {
       && trace.stageOrder.includes("hunter")
       && (trace.stageOrder.at(-1) === "judge" || trace.stageOrder.at(-1) === "judge-repair"))).toBe(true);
   }, 600_000);
+
+  it("regenerates a reviewed retry from the lesson body and the previous missed concept", async () => {
+    const graphs = createW4DModelGraphs();
+    const store = new InMemoryW4PrivateRuntimeStore();
+    const service = new AdaptiveContentService({
+      modelExecutionPort: createLiveModelExecutionPort({
+        cwd: resolve("."),
+        modelId: liveConfig.model,
+        baseUrl: liveConfig.baseUrl,
+        apiKey: liveConfig.apiKey,
+        graphs,
+      }),
+      sourceProvider: new ProfileAdaptiveContentSourceProvider({
+        resolveProfileRoot: () => resolve("fixtures/profiles/pandas-cleaning-revision-3-draft"),
+      }),
+      privateStore: store,
+      modelId: liveConfig.model!,
+      promptVersion: W4_D_LIVE_PROMPT_VERSION,
+      executionMode: "live_model",
+      fallbackAfterMs: 60_000,
+      discardAfterMs: 90_000,
+    });
+    const first = await service.prepareQuiz({
+      profileRevision: 3,
+      activityId: "act-read-csv",
+      retryNumber: 0,
+      excludedQuestionIds: [],
+      lessonVariantId: "guided",
+    });
+    expect(first.status).toBe("accepted");
+    if (first.status !== "accepted" || first.questions === undefined) return;
+    const missed = first.questions[0]!;
+    const retry = await service.prepareQuiz({
+      profileRevision: 3,
+      activityId: "act-read-csv",
+      retryNumber: 1,
+      excludedQuestionIds: first.questions.map((question) => question.questionId),
+      lessonVariantId: "guided",
+      remediationContext: {
+        previousAttemptId: "attempt-live-retry-probe",
+        excludedQuestionIds: first.questions.map((question) => question.questionId),
+        excludedQuestionPrompts: first.questions.map((question) => question.prompt),
+        missedQuestions: [{
+          questionId: missed.questionId,
+          prompt: missed.prompt,
+          explanation: missed.explanation,
+          sourceAnchorIds: [...missed.sourceAnchorIds],
+        }],
+        learnerProfileSummary: "学情画像显示需要继续强化上一轮答错题目对应的读取CSV知识。",
+        learnerProfileEvidenceRefs: ["evidence-live-retry-probe"],
+        learnerProfileSource: "agent",
+      },
+    });
+    expect(retry.status).toBe("accepted");
+    if (retry.status !== "accepted" || retry.questions === undefined) return;
+    expect(retry.origin).toBe("live_model");
+    const firstIds = new Set(first.questions.map((question) => question.questionId));
+    const firstPrompts = new Set(first.questions.map((question) => question.prompt));
+    expect(retry.questions.some((question) => firstIds.has(question.questionId))).toBe(false);
+    expect(retry.questions.some((question) => firstPrompts.has(question.prompt))).toBe(false);
+    const traces = store.entries("adaptive-trace").map((entry) => entry.value as { status?: string; stageOrder?: string[] });
+    expect(traces).toHaveLength(2);
+    expect(traces.at(-1)).toMatchObject({ status: "accepted", stageOrder: expect.arrayContaining(["generator", "hunter", "judge"]) });
+  }, 240_000);
 });

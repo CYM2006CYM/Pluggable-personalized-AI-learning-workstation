@@ -49,9 +49,11 @@ async function replay(item: ShowcaseInput, dataRoot: string) {
     availableMinutes: item.entry.availableMinutes,
     diagnosticRequired: true,
   });
+  const loadAssets = createProfileDirectoryDiagnosticLoader(() => profileRoot);
+  const assets = await loadAssets(item.profileBinding.subjectId, item.profileBinding.profileRevision);
   const runtime = new DiagnosticRuntime({
     repository,
-    loadAssets: createProfileDirectoryDiagnosticLoader(() => profileRoot),
+    loadAssets,
     dataRoot,
     now: frozenNow,
   });
@@ -76,6 +78,22 @@ async function replay(item: ShowcaseInput, dataRoot: string) {
       diagnosticVersion: 1,
       diagnosticDraftVersion,
       ...answer,
+    });
+    diagnosticDraftVersion = saved.diagnosticDraftVersion;
+  }
+  const historicalQuestionIds = new Set(item.diagnostic.answers.map((answer) => answer.questionId));
+  for (const question of assets.blueprint.questions) {
+    if (historicalQuestionIds.has(question.questionId)) continue;
+    const saved = await runtime.submitDiagnosticAnswer({
+      requestId: `${item.caseId}-${question.questionId}-w6-compat-skip`,
+      sessionId: view.sessionId,
+      sessionVersion: view.sessionVersion,
+      profileRevision: item.profileBinding.profileRevision,
+      diagnosticId: item.diagnostic.blueprintId,
+      diagnosticVersion: 1,
+      diagnosticDraftVersion,
+      questionId: question.questionId,
+      action: "skip",
     });
     diagnosticDraftVersion = saved.diagnosticDraftVersion;
   }

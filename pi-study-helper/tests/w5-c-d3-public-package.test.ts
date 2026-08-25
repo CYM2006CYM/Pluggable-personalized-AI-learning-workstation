@@ -12,14 +12,6 @@ const projectRoot = resolve(import.meta.dirname, "..");
 const fixturesRoot = resolve(projectRoot, "fixtures/profiles");
 const profileRoot = resolve(fixturesRoot, "pandas-cleaning-revision-3-draft");
 const outputPath = process.env.W5_C_D3_PUBLIC_PACKAGE_OUTPUT;
-const formalHashes: Readonly<Record<string, string>> = {
-  "act-load-csv": "5e1b444472c136364809b926adc8b9ec0f7eaff29a2b6715605c062db2eebe7d",
-  "act-inspect-dataframe": "737b0d6ae618f98b5c3e7bd5b67c2f5342559decd7436dbed57a046ef4c97be6",
-  "act-missing": "1a42dfe66391ea56d11b7c8b525ac2da19146c3fc7d4401a3439e6b7b793125b",
-  "act-duplicates": "dd88d60ef3320f7eba10fbba7cddc76ee96859e3f7fd7f7a9139fe9ed96d4886",
-  "act-types": "cfa703b189cb49cfa2e56ce3b0790a0412e58c996c82aa93ca459596d71c1880",
-  "act-practical": "7731912ed0f6ec7596cbfbf3b7d029a3d354503c4b28a6ddcf623493df9c74a9",
-};
 const solutionFiles: Readonly<Record<string, string>> = {
   "act-load-csv": "solution-read-csv.py",
   "act-inspect-dataframe": "solution-structure.py",
@@ -55,6 +47,8 @@ function safeResult(result: any) {
 describe("W5 D3 C real public execution package measurement", () => {
   it("consumes two public /run packages for each of the six code activities and measures each with Node three times", async () => {
     const activities = JSON.parse(await readFile(resolve(profileRoot, "activities/learning-activities.json"), "utf8")) as { activities: any[] };
+    const taskBundles = JSON.parse(await readFile(resolve(profileRoot, "assessments/private/task-bundles.json"), "utf8")) as { bundles: any[] };
+    const formalHashes = Object.fromEntries(taskBundles.bundles.map((bundle) => [bundle.activity.activityId, bundle.assetBundleHash]));
     const environment = JSON.parse(await readFile(resolve(profileRoot, "environments/environment-lock.json"), "utf8"));
     const adapter = new PythonProcessCodeEvaluationAdapter({ profileRoot, pythonExecutable: findPython() });
     const groups: any[] = [];

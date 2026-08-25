@@ -4,7 +4,7 @@ import type {
   OpenActivityInput,
   QuizActivityDraftOutput,
 } from "../contracts/facade.js";
-import type { AdaptiveContentPort, ContinueActivityWithGapInput, ContinueActivityWithGapOutput, NodeActivityProgress, QuizQuestionPrivate, QuizSubmitActivityInput } from "../contracts/index.js";
+import type { AdaptiveContentPort, ContinueActivityWithGapInput, ContinueActivityWithGapOutput, NodeActivityProgress, QuizQuestionPrivate, QuizRemediationContext, QuizSubmitActivityInput } from "../contracts/index.js";
 import { calculateKnowledgeStates } from "../domain/knowledge-state.js";
 import {
   DeterministicQuizRuntime,
@@ -27,6 +27,8 @@ import type { ActivityPathSuffixReplanner } from "./activity-path-suffix.js";
 import { toPathSafeSnapshot } from "../repositories/internal-path-session-port.js";
 import type { RuntimeCommitContext } from "./runtime-commit-context.js";
 import { lessonVariantForPreference } from "./rich-lesson-selection.js";
+import { buildLearnerProfile } from "../domain/learner-profile.js";
+import type { LearnerProfileAgentPort } from "./learner-profile-agent-service.js";
 
 export interface QuizActivityAssets {
   activity: QuizActivityDefinition;
@@ -44,6 +46,7 @@ export interface QuizActivityRuntimeOptions {
   content: AdaptiveContentPort;
   loadAssets(subjectId: string, profileRevision: number, activityId: string): Promise<QuizActivityAssets>;
   pathSuffix: ActivityPathSuffixReplanner;
+  profileAgent?: LearnerProfileAgentPort;
   now?: () => Date;
 }
 
@@ -114,8 +117,15 @@ export class QuizActivityRuntime {
     if (assets.activity.activityVersion !== input.activityVersion) throw new LearningSessionRepositoryError("activity_version_conflict", "Activity version is stale");
     const previousAttempts = (await Promise.all(entry.attemptIds.map((attemptId) => this.options.sessions.getQuizAttempt({ ...input, attemptId }))))
       .filter((attempt): attempt is QuizAttemptSnapshot => attempt !== undefined);
-    const excludedQuestionIds = previousAttempts.at(-1)?.questions.map((question) => question.questionId) ?? [];
+    const previousAttempt = previousAttempts.at(-1);
+    const excludedQuestionIds = [...new Set(previousAttempts.flatMap((attempt) => attempt.questions.map((question) => question.questionId)))];
+    const excludedQuestionPrompts = [...new Set(previousAttempts.flatMap((attempt) => attempt.questions.map((question) => question.prompt)))];
+    const fallbackExcludedQuestionIds = previousAttempt?.questions.map((question) => question.questionId) ?? [];
     const retryNumber = entry.quizRetryCount;
+    const targetKnowledgePointIds = [assets.activity.primaryKnowledgePointId];
+    const remediationContext = retryNumber > 0 && previousAttempt?.result?.answerReview !== undefined
+      ? await this.buildRemediationContext(snapshot, previousAttempt, excludedQuestionIds, excludedQuestionPrompts)
+      : undefined;
     const dynamic = assets.legacyQuestion === undefined
       ? await this.options.content.prepareQuiz({
           profileRevision: input.profileRevision,
@@ -123,6 +133,8 @@ export class QuizActivityRuntime {
           retryNumber,
           excludedQuestionIds,
           lessonVariantId: lessonVariantForPreference(snapshot.diagnosticDraft?.background?.explanation_preference),
+          targetKnowledgePointIds,
+          ...(remediationContext === undefined ? {} : { remediationContext }),
         })
       : undefined;
     const selected = assets.legacyQuestion === undefined
@@ -130,7 +142,7 @@ export class QuizActivityRuntime {
           dynamic: dynamic?.status === "accepted" ? dynamic.questions ?? [] : [],
           supplemental: assets.supplementalQuestions,
           fixed: assets.fixedQuestions,
-          excludedQuestionIds,
+          excludedQuestionIds: fallbackExcludedQuestionIds,
           allowedSourceAnchorIds: assets.allowedSourceAnchorIds ?? assets.knowledgePoint.sourceAnchorIds,
         })
       : { source: "fixed" as const, questions: [structuredClone(assets.legacyQuestion)] };
@@ -164,6 +176,7 @@ export class QuizActivityRuntime {
       activity: assets.activity,
       questions: selected.questions,
       retryNumber,
+      targetKnowledgePointIds,
       questionSource,
       gradingBinding,
       ...(assets.legacySubtype === undefined ? {} : { legacySubtype: assets.legacySubtype }),
@@ -188,6 +201,46 @@ export class QuizActivityRuntime {
       },
     });
     return this.openOutput(input.requestId, committed, attempt);
+  }
+
+  private async buildRemediationContext(
+    snapshot: Awaited<ReturnType<LearningSessionRepository["getSnapshot"]>>,
+    previousAttempt: QuizAttemptSnapshot,
+    excludedQuestionIds: string[],
+    excludedQuestionPrompts: string[],
+  ): Promise<QuizRemediationContext> {
+    const missedQuestions = (previousAttempt.result?.answerReview ?? [])
+      .filter((item) => !item.correct)
+      .map((item) => ({
+        questionId: item.questionId,
+        prompt: item.prompt,
+        explanation: item.explanation,
+        sourceAnchorIds: [...item.sourceAnchorIds],
+      }));
+    const profile = buildLearnerProfile({
+      sessionId: snapshot.sessionId,
+      profileRevision: snapshot.profileRevision,
+      evidenceVersion: snapshot.latestCommit.evidenceVersion,
+      evidence: snapshot.evidence,
+      knowledgeStates: snapshot.knowledgeStates,
+      latestDiagnostic: snapshot.latestDiagnostic,
+      activityProgress: snapshot.activityProgress,
+    });
+    const agentResult = this.options.profileAgent === undefined
+      ? undefined
+      : await this.options.profileAgent.summarize({ profile }).catch(() => undefined);
+    const agentAccepted = agentResult?.status === "accepted"
+      && agentResult.explanation !== undefined
+      && agentResult.evidenceRefs !== undefined;
+    return {
+      previousAttemptId: previousAttempt.attemptId,
+      excludedQuestionIds: [...excludedQuestionIds],
+      excludedQuestionPrompts: [...excludedQuestionPrompts],
+      missedQuestions,
+      learnerProfileSummary: agentAccepted ? agentResult.explanation! : profile.deterministicSummary,
+      learnerProfileEvidenceRefs: agentAccepted ? [...agentResult.evidenceRefs!] : [...profile.evidenceIds],
+      learnerProfileSource: agentAccepted ? "agent" : "deterministic",
+    };
   }
 
   async submitActivity(input: QuizSubmitActivityInput): Promise<ActivitySubmissionOutput> {
@@ -380,6 +433,7 @@ export class QuizActivityRuntime {
         supportingKnowledgePointIds: [...attempt.supportingKnowledgePointIds],
         questions: [{ questionId: question.questionId, kind: question.kind, prompt: question.prompt, options: [...question.options] }],
         retryNumber: attempt.retryNumber,
+        ...(attempt.targetKnowledgePointIds === undefined ? {} : { targetKnowledgePointIds: [...attempt.targetKnowledgePointIds] }),
         questionSource: attempt.questionSource ?? "profile_fixed",
       };
     }
@@ -393,6 +447,7 @@ export class QuizActivityRuntime {
       supportingKnowledgePointIds: [...attempt.supportingKnowledgePointIds],
       questions: attempt.questions.map(({ questionId, kind, prompt, options }) => ({ questionId, kind, prompt, options: [...options] })),
       retryNumber: attempt.retryNumber,
+      ...(attempt.targetKnowledgePointIds === undefined ? {} : { targetKnowledgePointIds: [...attempt.targetKnowledgePointIds] }),
       questionSource: attempt.questionSource ?? "profile_fixed",
     };
   }

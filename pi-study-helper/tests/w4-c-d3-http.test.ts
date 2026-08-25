@@ -118,6 +118,47 @@ describe("W4 C D3 HTTP adapter", () => {
     await handle.close();
   });
 
+  it("passes objective-diagnostic skip selections through build and replan routes", async () => {
+    const received: Array<{ method: string; input: Record<string, unknown> }> = [];
+    const fake = {
+      facade: {
+        buildPath: async (input: Record<string, unknown>) => {
+          received.push({ method: "buildPath", input });
+          return { ok: true };
+        },
+        replanPath: async (input: Record<string, unknown>) => {
+          received.push({ method: "replanPath", input });
+          return { ok: true };
+        },
+      },
+      bootstrap: {},
+      close: async () => undefined,
+    } as unknown as DemoRuntime;
+    const { handle, url } = await listen(Promise.resolve(fake));
+    await handle.ready;
+    const diagnosticSkips = ["pandas.clean.read-csv", "pandas.clean.missing-values"];
+    const built = await postJson(url, "/api/sessions/session-skip/path", {
+      requestId: "path-with-diagnostic-skips", sessionVersion: 2, profileRevision: 3,
+      goalId: "goal-clean-orders", mode: "recommended", availableMinutes: 290,
+      evidenceVersion: 13, selectedKnowledgePointIds: [],
+      diagnosticSkipKnowledgePointIds: diagnosticSkips, lockedNodeIds: [],
+    });
+    const replanned = await postJson(url, "/api/sessions/session-skip/path/replan", {
+      requestId: "replan-with-diagnostic-skips", sessionVersion: 3, profileRevision: 3,
+      pathVersion: 1, evidenceVersion: 13, trigger: "user_constraint_changed",
+      availableMinutes: 290, selectedKnowledgePointIds: [],
+      diagnosticSkipKnowledgePointIds: diagnosticSkips, lockedNodeIds: [],
+    });
+
+    expect(built.response.status).toBe(200);
+    expect(replanned.response.status).toBe(200);
+    expect(received).toEqual([
+      { method: "buildPath", input: expect.objectContaining({ sessionId: "session-skip", diagnosticSkipKnowledgePointIds: diagnosticSkips }) },
+      { method: "replanPath", input: expect.objectContaining({ sessionId: "session-skip", diagnosticSkipKnowledgePointIds: diagnosticSkips }) },
+    ]);
+    await handle.close();
+  });
+
   it("returns 202 for an accepted asynchronous content state", async () => {
     const fake = {
       facade: { getNextStep: async () => ({ contentReadiness: "preparing" }) },

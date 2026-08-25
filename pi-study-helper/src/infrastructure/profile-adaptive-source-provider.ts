@@ -148,6 +148,7 @@ export class ProfileAdaptiveContentSourceProvider implements AdaptiveContentSour
       profileRevision: input.profileRevision,
       knowledgePointId: point.id,
       targetId: point.id,
+      targetKnowledgePointIds: [point.id],
       title: point.title,
       sourceAnchorIds: [...point.sourceAnchorIds],
       publicSourceSummary: teachingContext(sourceSummary(point.sourceAnchorIds, sources), cards.find((card) => card.knowledgePointId === point.id), input.lessonVariantId),
@@ -156,7 +157,7 @@ export class ProfileAdaptiveContentSourceProvider implements AdaptiveContentSour
     };
   }
 
-  async forQuiz(input: { profileRevision: number; activityId: string; lessonVariantId?: LessonVariantId }): Promise<AdaptiveContentSourceContext> {
+  async forQuiz(input: { profileRevision: number; activityId: string; lessonVariantId?: LessonVariantId; targetKnowledgePointIds?: string[] }): Promise<AdaptiveContentSourceContext> {
     const root = resolve(await this.#options.resolveProfileRoot(input.profileRevision));
     const [knowledgeRaw, activitiesRaw, sourcesRaw, cardsRaw] = await Promise.all([
       readJson(root, "knowledge/knowledge-points.json"),
@@ -173,10 +174,13 @@ export class ProfileAdaptiveContentSourceProvider implements AdaptiveContentSour
     const point = points.find((item) => item.id === activity.primaryKnowledgePointId);
     if (point === undefined) throw new Error("Activity knowledge point public projection is unavailable");
     const sourceIds = [...new Set([...activity.sourceAnchorIds, ...point.sourceAnchorIds])];
+    const declaredTargets = input.targetKnowledgePointIds?.filter((id) => points.some((candidate) => candidate.id === id)) ?? [];
+    const targetKnowledgePointIds = [...new Set([point.id, ...declaredTargets])];
     return {
       profileRevision: input.profileRevision,
       knowledgePointId: point.id,
       targetId: activity.activityId,
+      targetKnowledgePointIds,
       title: activity.title,
       sourceAnchorIds: sourceIds,
       publicSourceSummary: teachingContext(sourceSummary(sourceIds, sources), cards.find((card) => card.knowledgePointId === point.id), input.lessonVariantId),

@@ -6,20 +6,26 @@
     {
       "path": "activities/learning-activities.json",
       "hashMode": "raw-binary",
-      "sha256": "d639aca566371159a9f05212a4412fba939de407d87087a9556ce93093878f40",
-      "byteLength": 33974
+      "sha256": "b901dfdffd236b4be7c14bcf38a6d535e51b5f8099db5ba20fcdbcf1be93f48f",
+      "byteLength": 34838
     },
     {
       "path": "assessments/diagnostic/private/answer-key.json",
       "hashMode": "raw-binary",
-      "sha256": "4c9ca4b56e46d189e11475c06eb0f956207887fa7d7b3b00bcb080ea17b0099d",
-      "byteLength": 797
+      "sha256": "301e7f1c189e615c07c1b4b88db01e635d8fdbd5eb09866cbb0cf313aa541a51",
+      "byteLength": 1316
     },
     {
       "path": "assessments/diagnostic/questions.json",
       "hashMode": "raw-binary",
-      "sha256": "1c2c3bcd4b60b5280d841c553a406deba549d81c56b64f8458b4de0aa368749b",
-      "byteLength": 3370
+      "sha256": "e7dde1933492457df33b5977a015b0ef7d4529d89f450fb255efc1a4cd32afa9",
+      "byteLength": 6203
+    },
+    {
+      "path": "assessments/private/code-fixture-cases.json",
+      "hashMode": "raw-binary",
+      "sha256": "e6abf7c67f039c00cd44fa169e46867416427d3e52e3d8b2121d7ca2c26672d6",
+      "byteLength": 22637
     },
     {
       "path": "assessments/private/known-wrong/wrong-duplicates.py",
@@ -66,14 +72,14 @@
     {
       "path": "assessments/private/task-bundles.json",
       "hashMode": "raw-binary",
-      "sha256": "1dde7bf18a6ee90957044eec73ffedb19f6c975c2837c36d92ed58541e80450d",
-      "byteLength": 36806
+      "sha256": "5031e17c5c3bebf34aa317c9004c91402a6548c8ea30c7234a0d57bf7dd2bec9",
+      "byteLength": 52443
     },
     {
       "path": "assessments/private/test-cases.json",
       "hashMode": "raw-binary",
-      "sha256": "63a5436dc536f16cb39264046118c31436e519c799b7241f7b25c6904b708d7f",
-      "byteLength": 4623
+      "sha256": "a8c1fe899586551e4a63fceb5070e611334c856214a17ccd9443d7053c84e54f",
+      "byteLength": 5453
     },
     {
       "path": "assessments/private/tests/test-duplicates-hidden.py",
@@ -276,8 +282,188 @@
     {
       "path": "datasets/fixtures.json",
       "hashMode": "raw-binary",
-      "sha256": "51c8e1b47214cfb3499efba546894030834858090b171e18060aa571dc16bd34",
-      "byteLength": 818
+      "sha256": "84d529db87050bd8ac39a1a043f5a19c4847e1f4ff3726b919bad1e311c12b30",
+      "byteLength": 1376
+    },
+    {
+      "path": "datasets/private/expected/act-duplicates/dataset-private-variant-01.json",
+      "hashMode": "raw-binary",
+      "sha256": "be9afee88c557f21f65779930269fcc8bd8a63da9ca5e3f0ecc6dcc3a912fd69",
+      "byteLength": 3153
+    },
+    {
+      "path": "datasets/private/expected/act-duplicates/dataset-private-variant-02.json",
+      "hashMode": "raw-binary",
+      "sha256": "4501c11f08f106bb45f98b45f7e2ee88e766342740a8fcaf42b7115fa72b2a0b",
+      "byteLength": 3118
+    },
+    {
+      "path": "datasets/private/expected/act-duplicates/dataset-private-variant-03-large.json",
+      "hashMode": "raw-binary",
+      "sha256": "06fbf08d779cb25e2364c03fb76bf59586d82952f7377281c809177e26f9e8ce",
+      "byteLength": 24741
+    },
+    {
+      "path": "datasets/private/expected/act-duplicates/dataset-private-variant-04-edge.json",
+      "hashMode": "raw-binary",
+      "sha256": "7c6223230d92bfd2db93b31e95afc61a001a5c65cdff61d5037e36f0d1d72232",
+      "byteLength": 4767
+    },
+    {
+      "path": "datasets/private/expected/act-duplicates/dataset-public-orders.json",
+      "hashMode": "raw-binary",
+      "sha256": "3764870a0d1b2daf07c48a24a65738752f6e00bfc80d7334f406a5c139ef5a67",
+      "byteLength": 3853
+    },
+    {
+      "path": "datasets/private/expected/act-inspect-dataframe/dataset-private-variant-01.json",
+      "hashMode": "raw-binary",
+      "sha256": "533d445f6ed193f7940d358ed6eda0e9dddde8c9be8bc119c31e73ab99f2f6a8",
+      "byteLength": 3410
+    },
+    {
+      "path": "datasets/private/expected/act-inspect-dataframe/dataset-private-variant-02.json",
+      "hashMode": "raw-binary",
+      "sha256": "9c47fc503dbac3626a2b60f40cc5b58778bf33607cc9749d5857a924adc58c1b",
+      "byteLength": 3373
+    },
+    {
+      "path": "datasets/private/expected/act-inspect-dataframe/dataset-private-variant-03-large.json",
+      "hashMode": "raw-binary",
+      "sha256": "20c0065a7c1747e0d8a7b1b76552a584a0041ebc3d892ec802a64d48c3a2e728",
+      "byteLength": 32807
+    },
+    {
+      "path": "datasets/private/expected/act-inspect-dataframe/dataset-private-variant-04-edge.json",
+      "hashMode": "raw-binary",
+      "sha256": "1e984b374d9de7c8d80bfa017af49883f4f96c56c96044f2372a31041095ca22",
+      "byteLength": 8936
+    },
+    {
+      "path": "datasets/private/expected/act-inspect-dataframe/dataset-public-orders.json",
+      "hashMode": "raw-binary",
+      "sha256": "ec06edce452635d030c85642bb5e8250ab1d40c3d07aaaf146bfacf9f7f0b379",
+      "byteLength": 4246
+    },
+    {
+      "path": "datasets/private/expected/act-load-csv/dataset-private-variant-01.json",
+      "hashMode": "raw-binary",
+      "sha256": "66ca99b0c3f09fcb7656a7ad072b66e91dfb1242f4a8cfe95b5e3eebba920c41",
+      "byteLength": 3401
+    },
+    {
+      "path": "datasets/private/expected/act-load-csv/dataset-private-variant-02.json",
+      "hashMode": "raw-binary",
+      "sha256": "33401c8c25d1e00f2eb81166724cfeb2407cbf094c207a527a0df74e2ab609da",
+      "byteLength": 3364
+    },
+    {
+      "path": "datasets/private/expected/act-load-csv/dataset-private-variant-03-large.json",
+      "hashMode": "raw-binary",
+      "sha256": "0a241aa1441120ebe94019755913db884a10f62b9bfa2bdab4acaae51cbb4614",
+      "byteLength": 32798
+    },
+    {
+      "path": "datasets/private/expected/act-load-csv/dataset-private-variant-04-edge.json",
+      "hashMode": "raw-binary",
+      "sha256": "8551ae84a4e4a61806163b94d914bb220fd333919844b2b43d163fe3e5968fe8",
+      "byteLength": 8927
+    },
+    {
+      "path": "datasets/private/expected/act-load-csv/dataset-public-orders.json",
+      "hashMode": "raw-binary",
+      "sha256": "cd42af3844ee9fd2bb257bc0a6700df14761765bd093370a59250952ebec189d",
+      "byteLength": 4237
+    },
+    {
+      "path": "datasets/private/expected/act-missing/dataset-private-variant-01.json",
+      "hashMode": "raw-binary",
+      "sha256": "8bc3b34b04227c25d4340aed013452b9f639b53802f464c1c085b96547eddc36",
+      "byteLength": 3264
+    },
+    {
+      "path": "datasets/private/expected/act-missing/dataset-private-variant-02.json",
+      "hashMode": "raw-binary",
+      "sha256": "6fe02c0b91b6d3f4e0914d3808d4f8f84a1733f8465c33a4820d0ce40bf8d734",
+      "byteLength": 3236
+    },
+    {
+      "path": "datasets/private/expected/act-missing/dataset-private-variant-03-large.json",
+      "hashMode": "raw-binary",
+      "sha256": "3686507a25782032eefa72d4fcc84eef48e90d900f2f2f09680f87bad773343f",
+      "byteLength": 32358
+    },
+    {
+      "path": "datasets/private/expected/act-missing/dataset-private-variant-04-edge.json",
+      "hashMode": "raw-binary",
+      "sha256": "7d3bb4ca72b113d57cb2a0f5c113c25219fbaa82f77b4c14170f075540728f16",
+      "byteLength": 8766
+    },
+    {
+      "path": "datasets/private/expected/act-missing/dataset-public-orders.json",
+      "hashMode": "raw-binary",
+      "sha256": "866d86705cbbe73eb9f7d2fbed5de946c938d6ae1273723cfa7924bcabffb844",
+      "byteLength": 4106
+    },
+    {
+      "path": "datasets/private/expected/act-practical/dataset-private-variant-01.json",
+      "hashMode": "raw-binary",
+      "sha256": "8d8de23eef18048d6a35545f03e4f98000fc603d45d709f156c0f8446a16ed25",
+      "byteLength": 3139
+    },
+    {
+      "path": "datasets/private/expected/act-practical/dataset-private-variant-02.json",
+      "hashMode": "raw-binary",
+      "sha256": "958644f8d480d65b3fb34feac92b9ef81e8b6145562172dd9c31a6e83968ab8f",
+      "byteLength": 3079
+    },
+    {
+      "path": "datasets/private/expected/act-practical/dataset-private-variant-03-large.json",
+      "hashMode": "raw-binary",
+      "sha256": "33a1937ff02baadcf052f2149489f732990ddcf36e9708a962eb7b444f1003fd",
+      "byteLength": 25293
+    },
+    {
+      "path": "datasets/private/expected/act-practical/dataset-private-variant-04-edge.json",
+      "hashMode": "raw-binary",
+      "sha256": "903fb91756bde1e631cbfb7d15e4ec655db733aae07765d47fd2422edb03c374",
+      "byteLength": 4791
+    },
+    {
+      "path": "datasets/private/expected/act-practical/dataset-public-orders.json",
+      "hashMode": "raw-binary",
+      "sha256": "beecd922a0e9eb7a85782d8f13acfc8bbd2bdba068da8b4cf0b8aeda6f95ef28",
+      "byteLength": 3852
+    },
+    {
+      "path": "datasets/private/expected/act-types/dataset-private-variant-01.json",
+      "hashMode": "raw-binary",
+      "sha256": "134c9601a2c232421bac2cbecfd8722713c9270bb2333fa0667b880dc4c0e794",
+      "byteLength": 3530
+    },
+    {
+      "path": "datasets/private/expected/act-types/dataset-private-variant-02.json",
+      "hashMode": "raw-binary",
+      "sha256": "c8ccfea54204018719c6f2a614097a4916d8e684849f47eb259b72745f331be3",
+      "byteLength": 3455
+    },
+    {
+      "path": "datasets/private/expected/act-types/dataset-private-variant-03-large.json",
+      "hashMode": "raw-binary",
+      "sha256": "f48948792915fc3edcf81a50473ade969d5f68e728fb8a31a9d736e4d93b7c82",
+      "byteLength": 33678
+    },
+    {
+      "path": "datasets/private/expected/act-types/dataset-private-variant-04-edge.json",
+      "hashMode": "raw-binary",
+      "sha256": "9f208f9470f07cb527333e459c60d128da80bd342ce969666ffc7a049c00b7cd",
+      "byteLength": 9091
+    },
+    {
+      "path": "datasets/private/expected/act-types/dataset-public-orders.json",
+      "hashMode": "raw-binary",
+      "sha256": "30fce3bd4e3d852461f777d210eababdcf336f293c78fd6d668f022e431396b3",
+      "byteLength": 4368
     },
     {
       "path": "datasets/private/orders-variant-01.csv",
@@ -290,6 +476,18 @@
       "hashMode": "raw-binary",
       "sha256": "01655a4df5edcc5c173b3dca370135e5f2e6010bc7dfba6fc1263d2e30cc0f83",
       "byteLength": 1238
+    },
+    {
+      "path": "datasets/private/orders-variant-03-large.csv",
+      "hashMode": "raw-binary",
+      "sha256": "05ae6fafc7fd5457d862ef715c9f4121e0aded7453576245bd6a9d79ac0788ba",
+      "byteLength": 14336
+    },
+    {
+      "path": "datasets/private/orders-variant-04-edge.csv",
+      "hashMode": "raw-binary",
+      "sha256": "1029584b86dbaebbe1c48718ab62e095f9fadbd66bf1f96423b066949ed90bd6",
+      "byteLength": 4085
     },
     {
       "path": "datasets/public/orders-learning.csv",
@@ -508,5 +706,5 @@
       "byteLength": 455
     }
   ],
-  "assetTreeSha256": "f0c009169a090de8ec9beb5afcf6aaa971f8aac847e235c96c36720f6de8d45c"
+  "assetTreeSha256": "026973ff33dc69c2211ddef7d1ce9cc29a2666fba0b7d13cd8b2a70d226c132d"
 }

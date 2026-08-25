@@ -67,6 +67,7 @@ export function createActivityPathSuffixReplanner(options: ActivityPathSuffixRep
         chapterId: input.snapshot.view.chapterId,
         availableMinutes: previous.availableMinutes,
         selectedKnowledgePointIds: previous.nodes.filter((node) => node.reasonCodes.includes("user_selected")).map((node) => node.knowledgePointId),
+        diagnosticSkipKnowledgePointIds: previous.nodes.filter((node) => node.reasonCodes.includes("diagnostic_skip_selected")).map((node) => node.knowledgePointId),
         lockedNodeIds: previous.nodes.filter((node) => node.status === "completed" || node.status === "in_progress" || node.positionLocked).map((node) => node.nodeId),
         knowledgeStates: input.knowledgeStates,
         previousPath,

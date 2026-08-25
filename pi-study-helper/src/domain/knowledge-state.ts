@@ -157,6 +157,13 @@ export function calculateKnowledgeState(input: CalculateKnowledgeStateInput): Kn
   const hasRequiredCodeEvidence = !input.requiresCodeEvidence || considered.some((item) =>
     item.evidence.source === "code_submit" || item.evidence.source === "practical_rubric"
   );
+  const diagnosticForms = new Set(considered
+    .filter((item) => item.evidence.source === "fixed_diagnostic" && item.evidence.score === 1)
+    .map((item) => item.evidence.form));
+  const diagnosticSkipEligible = status === "mastered"
+    && input.nonSkippable !== true
+    && diagnosticForms.has("selected_response")
+    && diagnosticForms.has("code_reasoning");
   const skipEligible = status === "mastered"
     && input.nonSkippable !== true
     && hasRequiredCodeEvidence;
@@ -175,6 +182,7 @@ export function calculateKnowledgeState(input: CalculateKnowledgeStateInput): Kn
     consideredEvidenceIds: considered.map((item) => item.evidence.evidenceId),
     asOf: asOf.iso,
     skipEligible,
+    ...(diagnosticSkipEligible ? { diagnosticSkipEligible: true } : {}),
     lastUpdatedAt: asOf.iso,
   };
 }

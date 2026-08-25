@@ -136,7 +136,10 @@
       },
       "datasetRefs": [
         "dataset-public-orders",
-        "dataset-private-variant-01"
+        "dataset-private-variant-01",
+        "dataset-private-variant-02",
+        "dataset-private-variant-03-large",
+        "dataset-private-variant-04-edge"
       ],
       "publicTestRefs": [
         "test-read-csv-public"
@@ -223,7 +226,11 @@
         }
       },
       "datasetRefs": [
-        "dataset-public-orders"
+        "dataset-public-orders",
+        "dataset-private-variant-01",
+        "dataset-private-variant-02",
+        "dataset-private-variant-03-large",
+        "dataset-private-variant-04-edge"
       ],
       "publicTestRefs": [
         "test-structure-public"
@@ -310,7 +317,11 @@
         }
       },
       "datasetRefs": [
-        "dataset-public-orders"
+        "dataset-public-orders",
+        "dataset-private-variant-01",
+        "dataset-private-variant-02",
+        "dataset-private-variant-03-large",
+        "dataset-private-variant-04-edge"
       ],
       "publicTestRefs": [
         "test-missing-public"
@@ -398,7 +409,11 @@
         }
       },
       "datasetRefs": [
-        "dataset-public-orders"
+        "dataset-public-orders",
+        "dataset-private-variant-01",
+        "dataset-private-variant-02",
+        "dataset-private-variant-03-large",
+        "dataset-private-variant-04-edge"
       ],
       "publicTestRefs": [
         "test-duplicates-public"
@@ -488,7 +503,11 @@
         }
       },
       "datasetRefs": [
-        "dataset-public-orders"
+        "dataset-public-orders",
+        "dataset-private-variant-01",
+        "dataset-private-variant-02",
+        "dataset-private-variant-03-large",
+        "dataset-private-variant-04-edge"
       ],
       "publicTestRefs": [
         "test-types-public"
@@ -589,7 +608,9 @@
       "datasetRefs": [
         "dataset-public-orders",
         "dataset-private-variant-01",
-        "dataset-private-variant-02"
+        "dataset-private-variant-02",
+        "dataset-private-variant-03-large",
+        "dataset-private-variant-04-edge"
       ],
       "publicTestRefs": [
         "test-practical-public"

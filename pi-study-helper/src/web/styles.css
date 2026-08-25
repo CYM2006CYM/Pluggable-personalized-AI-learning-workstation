@@ -1641,6 +1641,94 @@ h3 {
   text-align: right;
 }
 
+.score-block small {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.test-point-section {
+  margin-top: 24px;
+  border-top: 1px solid var(--line);
+}
+
+.test-point-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 22px 0 14px;
+}
+
+.test-point-heading h3,
+.test-point-heading p {
+  margin: 0;
+}
+
+.test-point-heading > p {
+  max-width: 560px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+  text-align: right;
+}
+
+.test-point-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+}
+
+.test-point-table {
+  width: 100%;
+  min-width: 520px;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.test-point-table th,
+.test-point-table td {
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+}
+
+.test-point-table thead th {
+  color: var(--muted);
+  background: #f4f7f5;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.test-point-table tbody tr:last-child > * {
+  border-bottom: 0;
+}
+
+.test-point-table tbody tr[data-status="passed"] > :first-child {
+  box-shadow: inset 3px 0 0 #22965f;
+}
+
+.test-point-table tbody tr[data-status="failed"] > :first-child {
+  box-shadow: inset 3px 0 0 #b64035;
+}
+
+.test-point-table tbody tr[data-status="not_run"] > :first-child {
+  box-shadow: inset 3px 0 0 #8a918d;
+}
+
+.test-point-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-weight: 700;
+}
+
+.test-point-status.passed { color: #147a49; }
+.test-point-status.failed { color: #a0352e; }
+.test-point-status.not_run { color: #68716c; }
+
 .feedback-copy {
   min-height: 82px;
   padding: 20px 0;
@@ -2070,6 +2158,16 @@ h3 {
   .section-footer,
   .result-header {
     align-items: flex-start;
+  }
+
+  .test-point-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .test-point-heading > p {
+    text-align: left;
   }
 
   .path-node {

@@ -298,7 +298,7 @@ Python 3.13.7
 pandas 3.0.5
 网页地址 http://127.0.0.1:5173/
 默认本地 API 端口 4311
-实时模型提示词版本 w4-d2-v8
+实时模型提示词版本 w4-d2-v9
 ```
 
 > API Key 只能放在当前 PowerShell 进程的环境变量中。不要把真实 Key 写入 README、`.env`、源码、截图、聊天记录或 Git 提交。
@@ -482,7 +482,7 @@ npm.cmd run demo:live
 启动成功后，终端必须出现类似：
 
 ```text
-PI_STUDY_READY mode=live_model promptVersion=w4-d2-v8 apiPort=4311 url=http://127.0.0.1:5173/
+PI_STUDY_READY mode=live_model promptVersion=w4-d2-v9 apiPort=4311 url=http://127.0.0.1:5173/
 ```
 
 然后打开：
@@ -534,7 +534,7 @@ npm.cmd run demo
 先确认启动终端包含：
 
 ```text
-mode=live_model promptVersion=w4-d2-v8
+mode=live_model promptVersion=w4-d2-v9
 ```
 
 如果没有，说明启动方式或运行进程不正确。回到旧窗口按 `Ctrl+C`，在保留三个 `OPENAI_*` 变量的同一窗口重新执行 `npm.cmd run demo:live`，然后创建新会话。

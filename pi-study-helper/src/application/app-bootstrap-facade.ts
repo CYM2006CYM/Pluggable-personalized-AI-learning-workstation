@@ -14,6 +14,7 @@ import type { LearningSessionCatalogPort, SessionBindingReader } from "../reposi
 import type { InternalPathSessionPort } from "../repositories/internal-path-session-port.js";
 import type { ProfileFamilyRepository } from "../repositories/profile-family-repository.js";
 import { projectPathNodes } from "./path-progress-projection.js";
+import { buildLearnerProfile } from "../domain/learner-profile.js";
 
 export interface FileAppBootstrapFacadeOptions {
   profiles: Pick<ProfileFamilyRepository, "listActiveProfileV2Manifests" | "readActiveProfileV2File">;
@@ -121,6 +122,7 @@ function diagnosticEnvelope(raw: string): DiagnosticSafeEnvelope {
       prompt: question.prompt,
       ...(question.options === undefined ? {} : { options: [...question.options] }),
       required: question.required,
+      ...(question.evidenceForm === undefined ? {} : { evidenceForm: question.evidenceForm }),
     })),
   };
 }
@@ -187,6 +189,15 @@ export class FileAppBootstrapFacade implements AppBootstrapFacade {
       activityProgress: progress(recovered.activityProgress),
       evidenceVersion: recovered.latestCommit?.evidenceVersion ?? 0,
       knowledgeStates: structuredClone(recovered.knowledgeStates ?? []),
+      learningProfile: buildLearnerProfile({
+        sessionId: recovered.sessionId,
+        profileRevision: recovered.profileRevision,
+        evidenceVersion: recovered.latestCommit?.evidenceVersion ?? 0,
+        evidence: recovered.evidence,
+        knowledgeStates: recovered.knowledgeStates ?? [],
+        latestDiagnostic: recovered.latestDiagnostic,
+        activityProgress: recovered.activityProgress,
+      }),
       learningCards: boundLearningCards.map((binding) => ({
         nodeId: binding.nodeId,
         card: structuredClone(binding.card),

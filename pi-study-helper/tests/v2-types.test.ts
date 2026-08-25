@@ -149,7 +149,7 @@ describe("v2 public domain type contracts", () => {
     expectTypeOf<OptionalKeys<Evidence>>().toEqualTypeOf<
       "evidenceVersion" | "score" | "difficulty" | "activityId" | "attemptId" | "evaluatorVersion"
     >();
-    expectTypeOf<OptionalKeys<KnowledgeState>>().toEqualTypeOf<never>();
+    expectTypeOf<OptionalKeys<KnowledgeState>>().toEqualTypeOf<"diagnosticSkipEligible">();
     expectTypeOf<OptionalKeys<CapabilityDimension>>().toEqualTypeOf<"score" | "confidence" | "rationale">();
   });
 

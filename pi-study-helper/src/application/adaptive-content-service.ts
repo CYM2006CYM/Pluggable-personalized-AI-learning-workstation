@@ -3,6 +3,7 @@ import type {
   AdaptiveContentPort,
   LearningCardSafeView,
   QuizQuestionPrivate,
+  QuizRemediationContext,
   LessonVariantId,
 } from "../contracts/index.js";
 import {
@@ -25,13 +26,15 @@ export interface AdaptiveContentSourceContext {
   title: string;
   sourceAnchorIds: string[];
   publicSourceSummary: string;
+  targetKnowledgePointIds?: string[];
   estimatedMinutes?: number;
   lessonVariantId?: LessonVariantId;
+  remediationContext?: QuizRemediationContext;
 }
 
 export interface AdaptiveContentSourceProvider {
   forCard(input: { profileRevision: number; knowledgePointId: string; lessonVariantId?: LessonVariantId }): Promise<AdaptiveContentSourceContext>;
-  forQuiz(input: { profileRevision: number; activityId: string; lessonVariantId?: LessonVariantId }): Promise<AdaptiveContentSourceContext>;
+  forQuiz(input: { profileRevision: number; activityId: string; lessonVariantId?: LessonVariantId; targetKnowledgePointIds?: string[] }): Promise<AdaptiveContentSourceContext>;
 }
 
 export interface AdaptiveContentClock {
@@ -60,9 +63,11 @@ interface AdaptiveCheckpoint {
   artifactKind: AdaptiveArtifactKind;
   profileRevision: number;
   targetId: string;
+  targetKnowledgePointIds?: string[];
   modelId: string;
   promptVersion: string;
   lessonVariantId?: LessonVariantId;
+  remediationContextSha256?: string;
   stage: "generator" | "hunter" | "defender" | "judge" | "accepted" | "unavailable" | "discarded";
   stageOrder: string[];
   candidate?: AcceptedArtifact;
@@ -82,9 +87,11 @@ interface AdaptiveCacheRecord {
   artifactKind: AdaptiveArtifactKind;
   profileRevision: number;
   targetId: string;
+  targetKnowledgePointIds?: string[];
   modelId: string;
   promptVersion: string;
   lessonVariantId?: LessonVariantId;
+  remediationContextSha256?: string;
   artifact: AcceptedArtifact;
   cachedAt: string;
   source: "immediate" | "late";
@@ -136,6 +143,22 @@ function normalizedKey(value: string): string {
   return value.replace(/[^a-z]/giu, "").toLowerCase();
 }
 
+function targetKnowledgePointIds(context: AdaptiveContentSourceContext): string[] {
+  return context.targetKnowledgePointIds === undefined || context.targetKnowledgePointIds.length === 0
+    ? [context.knowledgePointId]
+    : [...context.targetKnowledgePointIds];
+}
+
+function remediationContextSha256(context: AdaptiveContentSourceContext): string | undefined {
+  return context.remediationContext === undefined
+    ? undefined
+    : createHash("sha256").update(JSON.stringify(context.remediationContext), "utf8").digest("hex");
+}
+
+function excludedQuestionPrompts(context: AdaptiveContentSourceContext): Set<string> {
+  return new Set((context.remediationContext?.excludedQuestionPrompts ?? []).map((item) => item.trim()));
+}
+
 export function containsAdaptiveAuthorityViolation(value: unknown, depth = 0): boolean {
   if (depth > 10) return true;
   if (typeof value === "string") return FORBIDDEN_TEXT.some((pattern) => pattern.test(value));
@@ -145,7 +168,12 @@ export function containsAdaptiveAuthorityViolation(value: unknown, depth = 0): b
     FORBIDDEN_AUTHORITY_KEYS.has(normalizedKey(key)) || containsAdaptiveAuthorityViolation(item, depth + 1));
 }
 
-function questionFailureDetail(value: unknown, allowedSources: ReadonlySet<string>, excluded: ReadonlySet<string>): string | undefined {
+function questionFailureDetail(
+  value: unknown,
+  allowedSources: ReadonlySet<string>,
+  excluded: ReadonlySet<string>,
+  excludedPrompts: ReadonlySet<string> = new Set(),
+): string | undefined {
   if (!isRecord(value)) return "question_not_object";
   if (!exactKeys(value, [
     "questionId", "kind", "prompt", "options", "correctAnswer", "explanation", "sourceAnchorIds",
@@ -153,6 +181,7 @@ function questionFailureDetail(value: unknown, allowedSources: ReadonlySet<strin
   if (!safeId(value.questionId)) return "question_id";
   if (excluded.has(value.questionId)) return "question_id_excluded";
   if (!safeText(value.prompt)) return "question_prompt";
+  if (excludedPrompts.has(value.prompt.trim())) return "question_prompt_reused";
   if (!safeText(value.explanation)) return "question_explanation";
   if (!safeIdList(value.sourceAnchorIds)
       || value.sourceAnchorIds.some((sourceId) => !allowedSources.has(sourceId))) return "question_sources";
@@ -165,8 +194,13 @@ function questionFailureDetail(value: unknown, allowedSources: ReadonlySet<strin
     : "question_answer";
 }
 
-function isQuestion(value: unknown, allowedSources: ReadonlySet<string>, excluded: ReadonlySet<string>): value is QuizQuestionPrivate {
-  return questionFailureDetail(value, allowedSources, excluded) === undefined;
+function isQuestion(
+  value: unknown,
+  allowedSources: ReadonlySet<string>,
+  excluded: ReadonlySet<string>,
+  excludedPrompts: ReadonlySet<string> = new Set(),
+): value is QuizQuestionPrivate {
+  return questionFailureDetail(value, allowedSources, excluded, excludedPrompts) === undefined;
 }
 
 function isCard(value: unknown, context: AdaptiveContentSourceContext, excluded: ReadonlySet<string>): value is LearningCardSafeView {
@@ -206,6 +240,7 @@ function parseGeneratorArtifact(
   if (parsed.riskLevel !== "low" && parsed.riskLevel !== "high") return { ok: false, detail: "candidate_risk_level" };
   const allowed = new Set(context.sourceAnchorIds);
   const excluded = new Set(excludedIds);
+  const excludedPrompts = excludedQuestionPrompts(context);
   if (artifactKind === "card") {
     if (!exactKeys(parsed, ["artifactKind", "riskLevel", "card"])) return { ok: false, detail: "candidate_fields" };
     if (!isCard(parsed.card, context, excluded)) return { ok: false, detail: "candidate_card" };
@@ -215,7 +250,7 @@ function parseGeneratorArtifact(
   if (!Array.isArray(parsed.questions)) return { ok: false, detail: "candidate_questions_array" };
   if (parsed.questions.length < 4 || parsed.questions.length > 6) return { ok: false, detail: "candidate_question_count" };
   for (let index = 0; index < parsed.questions.length; index += 1) {
-    const detail = questionFailureDetail(parsed.questions[index], allowed, excluded);
+    const detail = questionFailureDetail(parsed.questions[index], allowed, excluded, excludedPrompts);
     if (detail !== undefined) return { ok: false, detail: `candidate_${detail}_${index + 1}` };
   }
   const questions = parsed.questions as QuizQuestionPrivate[];
@@ -255,7 +290,7 @@ function acceptedArtifactIsValid(value: unknown, artifactKind: AdaptiveArtifactK
   if (artifactKind === "card") return isCard(value.value, context, excluded);
   const allowed = new Set(context.sourceAnchorIds);
   return Array.isArray(value.value) && value.value.length >= 4 && value.value.length <= 6
-    && value.value.every((question) => isQuestion(question, allowed, excluded))
+    && value.value.every((question) => isQuestion(question, allowed, excluded, excludedQuestionPrompts(context)))
     && new Set(value.value.map((question) => (question as QuizQuestionPrivate).questionId)).size === value.value.length;
 }
 
@@ -311,6 +346,7 @@ function generatorRepairInstruction(detail: string, artifactKind: AdaptiveArtifa
     candidate_question_id: "每道题的 questionId 必须是唯一的短 ASCII 标识符。",
     candidate_question_id_excluded: "不得复用输入中 excludedQuestionIds 已排除的 questionId。",
     candidate_question_prompt: "每道题必须提供非空、无敏感信息的中文 prompt。",
+    candidate_question_prompt_reused: "不得逐字复用上一轮错题题干；必须更换题面，但继续考察对应的薄弱知识。",
     candidate_question_explanation: "每道题必须提供基于教学正文的非空中文 explanation。",
     candidate_question_sources: "每道题的 sourceAnchorIds 必须非空，且只能逐字复制 allowedSourceIds。",
     candidate_question_options: "每道题必须提供 2 至 6 个非空字符串选项。",
@@ -386,9 +422,13 @@ export class AdaptiveContentService implements AdaptiveContentPort {
     } catch { return { status: "unavailable" as const }; }
   }
 
-  async prepareQuiz(input: { profileRevision: number; activityId: string; retryNumber: number; excludedQuestionIds: string[]; lessonVariantId?: LessonVariantId }) {
+  async prepareQuiz(input: { profileRevision: number; activityId: string; retryNumber: number; excludedQuestionIds: string[]; lessonVariantId?: LessonVariantId; targetKnowledgePointIds?: string[]; remediationContext?: QuizRemediationContext }) {
     try {
-      const context = await this.#options.sourceProvider.forQuiz(input);
+      const sourceContext = await this.#options.sourceProvider.forQuiz(input);
+      const context: AdaptiveContentSourceContext = {
+        ...sourceContext,
+        ...(input.remediationContext === undefined ? {} : { remediationContext: clone(input.remediationContext) }),
+      };
       const artifact = await this.#prepare("quiz", context, input.excludedQuestionIds, input.retryNumber);
       return artifact?.artifactKind === "quiz"
         ? {
@@ -406,8 +446,11 @@ export class AdaptiveContentService implements AdaptiveContentPort {
 
   #key(artifactKind: AdaptiveArtifactKind, context: AdaptiveContentSourceContext,
     excludedIds: readonly string[], retryNumber: number): string {
-    const keyParts: Array<string | number> = [artifactKind, context.profileRevision, context.targetId, retryNumber,
-      [...excludedIds].sort().join(","), this.#options.modelId, this.#options.promptVersion];
+    const keyParts: Array<string | number> = [artifactKind, context.profileRevision, context.targetId];
+    if (context.targetKnowledgePointIds !== undefined) keyParts.push(targetKnowledgePointIds(context).join(","));
+    const remediationHash = remediationContextSha256(context);
+    if (remediationHash !== undefined) keyParts.push(remediationHash);
+    keyParts.push(retryNumber, [...excludedIds].sort().join(","), this.#options.modelId, this.#options.promptVersion);
     if (this.#options.executionMode === "live_model" && context.lessonVariantId !== undefined) keyParts.push(context.lessonVariantId);
     return keyParts.join(":");
   }
@@ -424,14 +467,16 @@ export class AdaptiveContentService implements AdaptiveContentPort {
     if (cached !== undefined && cached.artifactKind === artifactKind
         && acceptedArtifactIsValid(cached.artifact, artifactKind, context, excludedIds)
         && cached.profileRevision === context.profileRevision && cached.targetId === context.targetId
+        && JSON.stringify(cached.targetKnowledgePointIds ?? [context.knowledgePointId]) === JSON.stringify(targetKnowledgePointIds(context))
         && cached.modelId === this.#options.modelId && cached.promptVersion === this.#options.promptVersion
-        && cached.lessonVariantId === context.lessonVariantId) {
+        && cached.lessonVariantId === context.lessonVariantId
+        && cached.remediationContextSha256 === remediationContextSha256(context)) {
       return clone(cached.artifact);
     }
     const recoverable = await this.#options.privateStore.read<AdaptiveCheckpoint>("adaptive-checkpoint", key);
     if (recoverable?.stage === "accepted"
         && acceptedArtifactIsValid(recoverable.candidate, artifactKind, context, excludedIds)) {
-      await this.#cache(key, recoverable.candidate, "immediate");
+      await this.#cache(key, recoverable.candidate, "immediate", context);
       if (recoverable.publishedAt === undefined) {
         recoverable.publishedAt = iso(this.#clock.now()); recoverable.updatedAt = recoverable.publishedAt;
         await this.#options.privateStore.write("adaptive-checkpoint", key, recoverable);
@@ -448,7 +493,7 @@ export class AdaptiveContentService implements AdaptiveContentPort {
     ]);
     if (early.type === "result") {
       if (early.artifact !== undefined) {
-        await this.#cache(key, early.artifact, "immediate");
+        await this.#cache(key, early.artifact, "immediate", context);
         const checkpoint = await this.#options.privateStore.read<AdaptiveCheckpoint>("adaptive-checkpoint", key);
         if (checkpoint !== undefined) {
           checkpoint.publishedAt = iso(this.#clock.now()); checkpoint.updatedAt = checkpoint.publishedAt;
@@ -464,7 +509,7 @@ export class AdaptiveContentService implements AdaptiveContentPort {
     ]).then(async (late) => {
       if (late.type === "result" && late.artifact !== undefined
           && this.#clock.now() - startedAt < this.#discardAfterMs) {
-        await this.#cache(key, late.artifact, "late");
+        await this.#cache(key, late.artifact, "late", context);
         const checkpoint = await this.#options.privateStore.read<AdaptiveCheckpoint>("adaptive-checkpoint", key);
         if (checkpoint !== undefined) {
           checkpoint.lateCachedAt = iso(this.#clock.now()); checkpoint.updatedAt = checkpoint.lateCachedAt;
@@ -496,11 +541,14 @@ export class AdaptiveContentService implements AdaptiveContentPort {
       && recovered.targetId === context.targetId && recovered.modelId === this.#options.modelId
       && recovered.promptVersion === this.#options.promptVersion
       && recovered.lessonVariantId === context.lessonVariantId
+      && recovered.remediationContextSha256 === remediationContextSha256(context)
       && recovered.stage !== "unavailable" && recovered.stage !== "discarded";
     const checkpoint: AdaptiveCheckpoint = boundRecovery ? clone(recovered) : {
       generationRunId, artifactKind, profileRevision: context.profileRevision, targetId: context.targetId,
+      ...(targetKnowledgePointIds(context).length === 0 ? {} : { targetKnowledgePointIds: targetKnowledgePointIds(context) }),
       modelId: this.#options.modelId, promptVersion: this.#options.promptVersion,
       ...(context.lessonVariantId === undefined ? {} : { lessonVariantId: context.lessonVariantId }),
+      ...(remediationContextSha256(context) === undefined ? {} : { remediationContextSha256: remediationContextSha256(context) }),
       stage: "generator", stageOrder: [], createdAt: iso(startedAt), updatedAt: iso(startedAt),
     };
     await this.#options.privateStore.write("adaptive-checkpoint", key, checkpoint);
@@ -516,6 +564,7 @@ export class AdaptiveContentService implements AdaptiveContentPort {
       safeFeedback: [
         `Requested artifactKind=${artifactKind}.`,
         `Target=${context.targetId}; knowledgePointId=${context.knowledgePointId}.`,
+        `Target knowledge points=${targetKnowledgePointIds(context).join(",")}.`,
         ...(context.lessonVariantId === undefined ? [] : [`Selected lessonVariant=${context.lessonVariantId}.`]),
         ...(context.estimatedMinutes === undefined ? [] : [`Required estimatedMinutes=${context.estimatedMinutes}.`]),
         "Candidate content is non-authoritative until deterministic application validation.",
@@ -526,6 +575,7 @@ export class AdaptiveContentService implements AdaptiveContentPort {
       // The legacy sourceSummary field remains for compatibility with recorded runs.
       allowedSourceIds: [...context.sourceAnchorIds],
       teachingContent: context.publicSourceSummary,
+      ...(context.remediationContext === undefined ? {} : { retryContext: clone(context.remediationContext) }),
     };
     const graphs = createStudyReviewGraphs();
     if ((checkpoint.candidate !== undefined
@@ -768,11 +818,13 @@ export class AdaptiveContentService implements AdaptiveContentPort {
     return undefined;
   }
 
-  async #cache(key: string, artifact: AcceptedArtifact, source: "immediate" | "late"): Promise<void> {
+  async #cache(key: string, artifact: AcceptedArtifact, source: "immediate" | "late", context: AdaptiveContentSourceContext): Promise<void> {
     await this.#options.privateStore.write<AdaptiveCacheRecord>("adaptive-cache", key, {
       artifactKind: artifact.artifactKind, profileRevision: Number(key.split(":")[1]), targetId: key.split(":")[2] ?? "unknown",
+      ...(context.targetKnowledgePointIds === undefined ? {} : { targetKnowledgePointIds: targetKnowledgePointIds(context) }),
       modelId: this.#options.modelId, promptVersion: this.#options.promptVersion,
-      ...(key.split(":")[7] === undefined || key.split(":")[7] === "" ? {} : { lessonVariantId: key.split(":")[7] as LessonVariantId }),
+      ...(context.lessonVariantId === undefined ? {} : { lessonVariantId: context.lessonVariantId }),
+      ...(remediationContextSha256(context) === undefined ? {} : { remediationContextSha256: remediationContextSha256(context) }),
       artifact: clone(artifact), cachedAt: iso(this.#clock.now()), source,
     });
   }
@@ -795,8 +847,30 @@ export class AdaptiveContentService implements AdaptiveContentPort {
   #validateContext(context: AdaptiveContentSourceContext, artifactKind: AdaptiveArtifactKind): void {
     if (!Number.isInteger(context.profileRevision) || context.profileRevision < 1 || !safeId(context.knowledgePointId)
         || !safeId(context.targetId) || !safeText(context.title, 240) || !safeIdList(context.sourceAnchorIds)
+        || (context.targetKnowledgePointIds !== undefined && !safeIdList(context.targetKnowledgePointIds, true))
+        || (context.remediationContext !== undefined && !this.#validRemediationContext(context.remediationContext, context.sourceAnchorIds))
         || !safeText(context.publicSourceSummary, 16_000) || containsAdaptiveAuthorityViolation(context)) {
       throw new Error(`Unsafe ${artifactKind} source context`);
     }
+  }
+
+  #validRemediationContext(context: QuizRemediationContext, allowedSources: readonly string[]): boolean {
+    return safeId(context.previousAttemptId)
+      && safeIdList(context.excludedQuestionIds, true)
+      && context.excludedQuestionPrompts.length > 0
+      && context.excludedQuestionPrompts.length <= 32
+      && context.excludedQuestionPrompts.every((prompt) => safeText(prompt))
+      && new Set(context.excludedQuestionPrompts).size === context.excludedQuestionPrompts.length
+      && context.missedQuestions.length > 0
+      && context.missedQuestions.length <= 6
+      && context.missedQuestions.every((item) => safeId(item.questionId)
+        && context.excludedQuestionIds.includes(item.questionId)
+        && safeText(item.prompt)
+        && safeText(item.explanation)
+        && safeIdList(item.sourceAnchorIds)
+        && item.sourceAnchorIds.every((id) => allowedSources.includes(id)))
+      && safeText(context.learnerProfileSummary)
+      && safeIdList(context.learnerProfileEvidenceRefs, true)
+      && (context.learnerProfileSource === "agent" || context.learnerProfileSource === "deterministic");
   }
 }

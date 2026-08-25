@@ -20,6 +20,8 @@ import type { CapabilityTaskPort, ContinueActivityWithGapInput, ContinueActivity
 import { LearningSessionRepositoryError, type LearningSessionRepository } from "../repositories/learning-session-repository.js";
 import type { PathEngineProfile } from "../domain/path-engine.js";
 import type { RuntimeCommitContext, RuntimeCommitSnapshot } from "./runtime-commit-context.js";
+import { attachLearnerProfileAgentResult, buildLearnerProfile } from "../domain/learner-profile.js";
+import type { LearnerProfileAgentPort } from "./learner-profile-agent-service.js";
 
 type SessionMethods = Pick<LearningRuntimeFacade, "startSession">;
 type DiagnosticMethods = Pick<LearningRuntimeFacade, "saveDiagnosticDraft" | "submitDiagnosticAnswer" | "completeDiagnostic"> & {
@@ -40,6 +42,7 @@ export interface ComposedLearningRuntimeFacadeOptions {
   sessions: LearningSessionRepository;
   profile: { load(subjectId: string, profileRevision: number): Promise<PathEngineProfile> };
   capabilityTasks?: CapabilityTaskPort;
+  profileAgent?: LearnerProfileAgentPort;
   resolveActivityKind(input: { sessionId: string; profileRevision: number; activityId: string }): Promise<"code" | "quiz">;
   now?: () => Date;
 }
@@ -151,9 +154,23 @@ export class ComposedLearningRuntimeFacade implements LearningRuntimeFacade {
       if (item.result === "fail" || item.result === "partial" || item.result === "insufficient") issues.add(`${item.activityId}:${item.result}`);
     }
     for (const state of snapshot.knowledgeStates) if (state.status === "unverified" || state.status === "support_needed") issues.add(`${state.knowledgePointId}:${state.status}`);
-    const summary = issues.size === 0
+    const learningProfile = buildLearnerProfile({
+      sessionId: snapshot.sessionId,
+      profileRevision: snapshot.profileRevision,
+      evidenceVersion: snapshot.latestCommit?.evidenceVersion ?? snapshot.knowledgeStates[0]?.evidenceVersion ?? snapshot.evidence.length,
+      evidence: snapshot.evidence,
+      knowledgeStates: snapshot.knowledgeStates,
+      latestDiagnostic: snapshot.latestDiagnostic,
+      activityProgress: snapshot.activityProgress,
+    });
+    const agentResult = this.options.profileAgent === undefined ? undefined : await this.options.profileAgent.summarize({ profile: learningProfile }).catch(() => undefined);
+    const enrichedProfile = agentResult?.status === "accepted" && agentResult.explanation !== undefined && agentResult.evidenceRefs !== undefined
+      ? attachLearnerProfileAgentResult(learningProfile, { explanation: agentResult.explanation, evidenceRefs: agentResult.evidenceRefs, runId: agentResult.runId })
+      : learningProfile;
+    const unresolvedSummary = issues.size === 0
       ? "Session completed. No unresolved deterministic result was recorded."
       : `Session completed with unresolved items: ${[...issues].sort((left, right) => left.localeCompare(right, "en")).join(", ")}.`;
+    const summary = `${enrichedProfile.deterministicSummary}${enrichedProfile.agentExplanation === undefined ? "" : `\n\n画像 Agent：${enrichedProfile.agentExplanation}`}\n\n${unresolvedSummary}`;
     const committed = await this.options.sessions.commit({
       ...input,
       candidate: { requestId: input.requestId, knowledgeStates: snapshot.knowledgeStates, nextStage: "completed" },
@@ -165,6 +182,7 @@ export class ComposedLearningRuntimeFacade implements LearningRuntimeFacade {
       profileRevision: committed.profileRevision,
       completedAt: this.now().toISOString(),
       summary,
+      learningProfile: enrichedProfile,
       ...(issues.size === 0 ? {} : { nextRecommendation: "Review the unresolved items before starting a new goal." }),
     };
   }

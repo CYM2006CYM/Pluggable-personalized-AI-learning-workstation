@@ -83,6 +83,22 @@ async function replay(item: ShowcaseInput, binding: InputBinding, dataRoot: stri
       });
       diagnosticDraftVersion = saved.diagnosticDraftVersion;
     }
+    const historicalQuestionIds = new Set(item.diagnostic.answers.map((answer) => answer.questionId));
+    for (const question of bootstrap.diagnostic.questions) {
+      if (historicalQuestionIds.has(question.questionId)) continue;
+      const saved = await runtime.facade.submitDiagnosticAnswer({
+        requestId: `${item.caseId}-${question.questionId}-w6-compat-skip`,
+        sessionId: started.sessionId,
+        sessionVersion: started.sessionVersion,
+        profileRevision: started.profileRevision,
+        diagnosticId: item.diagnostic.blueprintId,
+        diagnosticVersion: bootstrap.diagnostic.diagnosticVersion,
+        diagnosticDraftVersion,
+        questionId: question.questionId,
+        action: "skip",
+      });
+      diagnosticDraftVersion = saved.diagnosticDraftVersion;
+    }
     const completed = await runtime.facade.completeDiagnostic({
       requestId: `complete-${item.caseId}`,
       sessionId: started.sessionId,

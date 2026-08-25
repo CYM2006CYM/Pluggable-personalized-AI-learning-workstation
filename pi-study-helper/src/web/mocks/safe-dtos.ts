@@ -324,6 +324,13 @@ export const activitySubmissionMock = {
     errorCode: "test_failed",
     score: 0.78,
     dimensionResults: { structure: 1, missing_values: 0.7, stability: 0.6 },
+    testPoints: [
+      { pointNumber: 1, scope: "public", status: "passed" },
+      { pointNumber: 2, scope: "sealed", status: "passed" },
+      { pointNumber: 3, scope: "sealed", status: "passed" },
+      { pointNumber: 4, scope: "sealed", status: "failed" },
+      { pointNumber: 5, scope: "sealed", status: "failed" },
+    ],
     safeFeedback: "关键标识缺失处理正确；请再检查说明字段的规范化结果。",
     durationMs: 824,
     evaluatorVersion: "node-pandas-v1",

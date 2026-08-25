@@ -155,6 +155,60 @@ describe("AdaptiveContentService", () => {
     expect(JSON.stringify(port.calls)).not.toMatch(/KnowledgeState|activityProgress|mastery|Evidence/u);
   });
 
+  it("passes retry misses and learner-profile guidance to every review Agent and rejects an unchanged old prompt", async () => {
+    const remediatedQuestions = questions.map((item, index) => ({
+      ...item,
+      questionId: `dynamic-read-r1-${index + 1}`,
+      prompt: `重做新题面${index + 1}：继续检查读取CSV的对应知识。`,
+    }));
+    const reusedPromptQuestions = remediatedQuestions.map((item, index) => index === 0
+      ? { ...item, prompt: questions[0]!.prompt }
+      : item);
+    let generatorCalls = 0;
+    const port = providerByGraph(generator({ artifactKind: "quiz", riskLevel: "low", questions: remediatedQuestions }), cleanHunter);
+    port.execute = vi.fn(async (input): Promise<ModelExecutionResult> => {
+      port.calls.push({ graphId: input.graphId, safeContext: structuredClone(input.safeContext) });
+      if (input.graphId === "generator") {
+        generatorCalls += 1;
+        return generator({ artifactKind: "quiz", riskLevel: "low", questions: generatorCalls === 1 ? reusedPromptQuestions : remediatedQuestions });
+      }
+      if (input.graphId === "hunter") return cleanHunter;
+      if (input.graphId === "judge") return judge;
+      return { status: "provider_error", sourceRefs: [], traceSummary: "unexpected", modelId: "deepseek-chat", promptVersion: "w4-d2-v1" };
+    });
+    const { instance } = service(port);
+    const remediationContext = {
+      previousAttemptId: "attempt-old",
+      excludedQuestionIds: ["old-question-1"],
+      excludedQuestionPrompts: [questions[0]!.prompt],
+      missedQuestions: [{
+        questionId: "old-question-1",
+        prompt: questions[0]!.prompt,
+        explanation: questions[0]!.explanation,
+        sourceAnchorIds: ["src-pandas-read-csv"],
+      }],
+      learnerProfileSummary: "画像Agent确认读取CSV知识仍需强化。",
+      learnerProfileEvidenceRefs: ["evidence-1"],
+      learnerProfileSource: "agent" as const,
+    };
+
+    await expect(instance.prepareQuiz({
+      profileRevision: 3,
+      activityId: "act-read-csv",
+      retryNumber: 1,
+      excludedQuestionIds: ["old-question-1"],
+      remediationContext,
+    })).resolves.toMatchObject({ status: "accepted", questions: remediatedQuestions });
+    expect(generatorCalls).toBe(2);
+    expect(port.calls[0]?.safeContext).toMatchObject({ context: { retryContext: remediationContext } });
+    expect(port.calls[1]?.safeContext).toMatchObject({
+      context: { retryContext: remediationContext },
+      repairInstruction: expect.stringMatching(/candidate_question_prompt_reused_1.*更换题面/u),
+    });
+    expect(port.calls.filter((call) => call.graphId === "hunter" || call.graphId === "judge")
+      .every((call) => JSON.stringify(call.safeContext).includes("missedQuestions"))).toBe(true);
+  });
+
   it("gives Generator one explicit repair attempt when candidateFeedback is structurally invalid", async () => {
     const invalidCandidate = { artifactKind: "quiz", riskLevel: "low", questions: questions.slice(0, 1) };
     let generatorCalls = 0;

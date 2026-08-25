@@ -155,6 +155,9 @@ function cloneResult(result: ActivityResult): ActivityResult {
     ...(result.dimensionResults
       ? { dimensionResults: { ...result.dimensionResults } }
       : {}),
+    ...(result.testPoints
+      ? { testPoints: result.testPoints.map((point) => ({ ...point })) }
+      : {}),
   };
 }
 

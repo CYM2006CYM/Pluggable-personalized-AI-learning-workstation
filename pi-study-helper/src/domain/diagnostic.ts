@@ -1,4 +1,4 @@
-import type { Difficulty, JsonValue, LearningRuntimeErrorCode } from "./v2-types.js";
+import type { Difficulty, EvidenceForm, JsonValue, LearningRuntimeErrorCode } from "./v2-types.js";
 
 export type DiagnosticQuestionKind = "single_choice" | "judgment";
 
@@ -24,6 +24,7 @@ export interface DiagnosticQuestionAsset {
   required: boolean;
   evaluatorRef: string;
   sourceAnchorIds: string[];
+  evidenceForm?: Extract<EvidenceForm, "selected_response" | "code_reasoning">;
 }
 
 export interface DiagnosticAnswerKeyAsset {
@@ -110,7 +111,7 @@ export function parseDiagnosticBlueprint(value: unknown): DiagnosticBlueprintAss
   for (const [index, raw] of value.questions.entries()) {
     if (!isRecord(raw)) throw new DiagnosticValidationError("invalid_profile", `diagnostic.questions[${index}] must be an object`);
     assertKeys(raw, [
-      "questionId", "knowledgePointId", "kind", "difficulty", "prompt", "options", "maxScore", "required", "evaluatorRef", "sourceAnchorIds",
+      "questionId", "knowledgePointId", "kind", "difficulty", "prompt", "options", "maxScore", "required", "evaluatorRef", "sourceAnchorIds", "evidenceForm",
     ], `diagnostic.questions[${index}]`);
     stableId(raw.questionId, `diagnostic.questions[${index}].questionId`);
     stableId(raw.knowledgePointId, `diagnostic.questions[${index}].knowledgePointId`);
@@ -140,6 +141,9 @@ export function parseDiagnosticBlueprint(value: unknown): DiagnosticBlueprintAss
       throw new DiagnosticValidationError("invalid_profile", "Diagnostic evaluatorRef must use the private answer key");
     }
     uniqueStrings(raw.sourceAnchorIds, `diagnostic.questions[${index}].sourceAnchorIds`, true);
+    if (raw.evidenceForm !== undefined && raw.evidenceForm !== "selected_response" && raw.evidenceForm !== "code_reasoning") {
+      throw new DiagnosticValidationError("invalid_profile", `diagnostic.questions[${index}].evidenceForm is unsupported`);
+    }
   }
   return value as unknown as DiagnosticBlueprintAsset;
 }

@@ -321,7 +321,7 @@ export class DiagnosticRuntime implements Pick<
       profileRevision: input.profileRevision,
       kind: "diagnostic",
       source: "fixed_diagnostic",
-      form: "selected_response",
+      form: question.evidenceForm ?? "selected_response",
       impact: "mastery",
       outcome: correct ? "correct" : "incorrect",
       score: correct ? 1 : 0,

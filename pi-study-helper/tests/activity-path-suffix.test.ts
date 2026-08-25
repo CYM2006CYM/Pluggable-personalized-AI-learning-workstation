@@ -62,4 +62,35 @@ describe("activity path suffix replanner", () => {
     expect(result.changeReasons).toContain("low_mastery");
     expect(result.path?.nodes[0]).toMatchObject({ nodeId: "node-prerequisite", status: "completed", positionLocked: true });
   });
+
+  it("preserves an explicit qualified diagnostic skip during automatic suffix replanning", async () => {
+    const root = await mkdtemp(resolve(tmpdir(), "activity-path-diagnostic-skip-")); roots.push(root);
+    const sessions = new FileLearningSessionRepository({ dataRoot: root, now: () => new Date("2026-08-12T00:00:00.000Z") });
+    const view = await sessions.create({ requestId: "create-skip", subjectId: "subject", mode: "recommended", goalId: "goal", availableMinutes: 10, profileRevision: 3, diagnosticRequired: false });
+    const path = activePath(view.sessionId);
+    path.nodes[0] = {
+      ...path.nodes[0]!, status: "skipped", positionLocked: false, required: false,
+      reasonCodes: ["diagnostic_skip_selected"],
+    };
+    path.positionLockedNodeIds = [];
+    path.estimatedMinutes = 1;
+    await sessions.commitInternalPath({ requestId: "path-skip", sessionId: view.sessionId, sessionVersion: 1, profileRevision: 3, candidate: { requestId: "path-skip", knowledgeStates: [], pathCandidate: toPathSafeSnapshot({ ...path, status: "candidate" }) } }, { ...path, status: "candidate" });
+    await sessions.commitInternalPath({ requestId: "confirm-skip", sessionId: view.sessionId, sessionVersion: 2, profileRevision: 3, candidate: { requestId: "confirm-skip", knowledgeStates: [], pathCandidate: toPathSafeSnapshot(path) } }, path);
+    const snapshot = await sessions.getSnapshot({ sessionId: view.sessionId, sessionVersion: 3, profileRevision: 3 });
+    const replanner = createActivityPathSuffixReplanner({ sessions, profile: { load: async () => structuredClone(profile) }, now: () => new Date("2026-08-12T00:00:00.000Z") });
+    const result = await replanner.replan({
+      snapshot,
+      knowledgeStates: [
+        state("prerequisite", { status: "mastered", mastery: 1, confidence: 1, diagnosticSkipEligible: true }),
+        state("target", { status: "support_needed", mastery: 0.2, confidence: 0.4 }),
+      ],
+      evidenceVersion: 1,
+      trigger: "knowledge_state_changed",
+    });
+
+    expect(result.path?.nodes[0]).toMatchObject({
+      nodeId: "node-prerequisite", status: "skipped", reasonCodes: expect.arrayContaining(["diagnostic_skip_selected"]),
+    });
+    expect(result.path?.estimatedMinutes).toBe(1);
+  });
 });

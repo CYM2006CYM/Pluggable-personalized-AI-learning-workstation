@@ -140,6 +140,13 @@ describe("W5 formal task bundle revision binding", () => {
         }, new AbortController().signal));
       }
       expect(results[0]).toMatchObject({ executionStatus: "completed", verdict: "pass", score: 1 });
+      expect(results[0]!.testPoints).toEqual([
+        { pointNumber: 1, scope: "public", status: "passed" },
+        { pointNumber: 2, scope: "sealed", status: "passed" },
+        { pointNumber: 3, scope: "sealed", status: "passed" },
+        { pointNumber: 4, scope: "sealed", status: "passed" },
+        { pointNumber: 5, scope: "sealed", status: "passed" },
+      ]);
       expect(results[1]).toEqual(results[0]);
       expect(results[2]).toEqual(results[0]);
       expect(JSON.stringify(results)).not.toMatch(/private|hidden|reference-solutions|[A-Za-z]:[\\/]|AppData/u);

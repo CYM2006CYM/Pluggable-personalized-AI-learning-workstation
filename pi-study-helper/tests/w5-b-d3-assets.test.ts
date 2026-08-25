@@ -50,8 +50,8 @@ describe("W5-D3 B environment lock, seal and showcase inputs", () => {
 
   it("recalculates the current revision 3 seal", () => {
     expect(result.revision3).toEqual({
-      entryCount: 84,
-      assetTreeSha256: "f0c009169a090de8ec9beb5afcf6aaa971f8aac847e235c96c36720f6de8d45c",
+      entryCount: 117,
+      assetTreeSha256: "026973ff33dc69c2211ddef7d1ce9cc29a2666fba0b7d13cd8b2a70d226c132d",
       storedSealMatches: true,
     });
   });

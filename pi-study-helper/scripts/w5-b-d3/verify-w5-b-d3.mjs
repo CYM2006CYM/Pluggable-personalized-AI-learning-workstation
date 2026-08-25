@@ -16,7 +16,7 @@ const showcaseRoot = resolve(workspaceRoot, "evaluation/showcases");
 const EXPECTED_LOCK_SHA256 = "59917d1528d031f46a1e76359d99628e810f2dfa78a92d66e03386c860fbaf43";
 const EXPECTED_ENVIRONMENT_HASH = "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76";
 const HISTORICAL_W5_SEAL = "ccff2e2afdabaad262baeaa498b527438fcadeec1ddf5e198289f8404071e85d";
-const CURRENT_PROFILE_SEAL = "f0c009169a090de8ec9beb5afcf6aaa971f8aac847e235c96c36720f6de8d45c";
+const CURRENT_PROFILE_SEAL = "026973ff33dc69c2211ddef7d1ce9cc29a2666fba0b7d13cd8b2a70d226c132d";
 const EXPECTED_REVISION2_TREE = "2a4538272cc47a3451b434999d620f429e5deaa0eb0f2c3f95fa76e53d80786d";
 const EXPECTED_UPSTREAM = "6acc56fa03986797be54156af639a905c2e74a64";
 
@@ -124,6 +124,7 @@ const caseFiles = [
 ];
 const cases = await Promise.all(caseFiles.map((path) => json(resolve(showcaseRoot, path))));
 const questionById = new Map(diagnostic.questions.map((question) => [question.questionId, question]));
+const historicalDiagnosticIds = new Set(["diag-01", "diag-02", "diag-03", "diag-04", "diag-05", "diag-06", "diag-07", "diag-08"]);
 const allowedExperience = new Set(["none", "basic", "comfortable", "uncertain"]);
 const allowedPreference = new Set(["concise", "step_by_step", "example_first", "uncertain"]);
 const caseIds = new Set();
@@ -139,11 +140,12 @@ for (let index = 0; index < cases.length; index += 1) {
   ensure(allowedExperience.has(item.background.python_experience) && allowedExperience.has(item.background.pandas_experience), `case experience value is invalid: ${item.caseId}`);
   ensure(allowedPreference.has(item.background.explanation_preference), `case explanation preference is invalid: ${item.caseId}`);
   ensure(item.diagnostic.blueprintId === diagnostic.blueprintId, `case diagnostic blueprint changed: ${item.caseId}`);
-  ensure(item.diagnostic.answers.length === diagnostic.questions.length, `case does not cover every diagnostic question: ${item.caseId}`);
+  ensure(item.diagnostic.answers.length === historicalDiagnosticIds.size, `historical case diagnostic coverage changed: ${item.caseId}`);
   const answered = new Set();
   for (const answer of item.diagnostic.answers) {
     ensure(!answered.has(answer.questionId), `case repeats a diagnostic question: ${item.caseId}/${answer.questionId}`);
     answered.add(answer.questionId);
+    ensure(historicalDiagnosticIds.has(answer.questionId), `historical case references a post-W5 question: ${item.caseId}/${answer.questionId}`);
     const question = questionById.get(answer.questionId);
     ensure(question !== undefined, `case references an unknown public question: ${item.caseId}/${answer.questionId}`);
     ensure(answer.action === "answer" || answer.action === "skip", `case action is invalid: ${item.caseId}/${answer.questionId}`);
@@ -151,6 +153,7 @@ for (let index = 0; index < cases.length; index += 1) {
     if (answer.action === "answer" && question.kind === "single_choice") ensure(question.options.includes(answer.answer), `answer is not a public option: ${item.caseId}/${answer.questionId}`);
     if (answer.action === "answer" && question.kind === "judgment") ensure(typeof answer.answer === "boolean", `judgment answer must be boolean: ${item.caseId}/${answer.questionId}`);
   }
+  ensure([...historicalDiagnosticIds].every((questionId) => answered.has(questionId)), `historical case is missing a W5 diagnostic question: ${item.caseId}`);
   const raw = await readFile(resolve(showcaseRoot, caseFiles[index]));
   inputBindings.push({ caseId: item.caseId, path: `evaluation/showcases/${caseFiles[index]}`, sha256: digest(raw), byteLength: raw.byteLength });
 }

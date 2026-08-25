@@ -20,7 +20,8 @@ export type PathReasonCode =
   | "user_selected"
   | "error_remediation"
   | "time_compressed"
-  | "evidence_insufficient";
+  | "evidence_insufficient"
+  | "diagnostic_skip_selected";
 
 export interface PathActivityDefinition extends ActivityReferenceDefinition {
   title?: string;
@@ -94,6 +95,7 @@ export interface PathEngineInput {
   chapterId?: string;
   availableMinutes: number;
   selectedKnowledgePointIds: string[];
+  diagnosticSkipKnowledgePointIds?: string[];
   lockedNodeIds: string[];
   knowledgeStates: KnowledgeState[];
   pathVersion?: number;
@@ -298,18 +300,25 @@ export class PathEngine {
     for (const activityId of requiredActivityIds) targetIds.add(activities.get(activityId)!.primaryKnowledgePointId);
     const closure = this.prerequisiteClosure(targetIds, points);
     const selectedIds = new Set(input.selectedKnowledgePointIds);
+    const diagnosticSkipIds = new Set(input.diagnosticSkipKnowledgePointIds ?? []);
     const unsupportedSelections = [...selectedIds].filter((id) => !closure.has(id));
     if (unsupportedSelections.length > 0) return this.failure(unsupportedSelections, 0, "change_goal");
     const states = new Map(input.knowledgeStates.map((state) => [state.knowledgePointId, state]));
+    const unsupportedDiagnosticSkips = [...diagnosticSkipIds].filter((id) => {
+      const state = states.get(id);
+      return !closure.has(id) || state?.diagnosticSkipEligible !== true;
+    });
+    if (unsupportedDiagnosticSkips.length > 0) return this.failure(unsupportedDiagnosticSkips, 0, "change_goal");
     const missingPrerequisiteIds = [...closure].filter((id) => !targetIds.has(id) && !this.isPrerequisiteSatisfied(id, states, points, completedIds));
     const orderedIds = this.stableTopologicalOrder([...closure], points, targetIds, new Set(missingPrerequisiteIds));
     const nodes: LearningPathNode[] = [];
     for (const pointId of orderedIds) {
       const point = points.get(pointId)!;
       const state = states.get(pointId);
-      const required = targetIds.has(pointId) || selectedIds.has(pointId) || (!canSkip(point, state) && this.isRequiredForTarget(pointId, targetIds, points));
+      const diagnosticSkipSelected = diagnosticSkipIds.has(pointId);
+      const requiredByGoal = targetIds.has(pointId) || selectedIds.has(pointId) || (!canSkip(point, state) && this.isRequiredForTarget(pointId, targetIds, points));
       const pointActivityIds = point.activityIds.filter((id) => activities.has(id));
-      const nodeActivities = this.selectNodeActivities(
+      const selectedActivities = this.selectNodeActivities(
         pointId,
         pointActivityIds,
         requiredActivityIds,
@@ -317,14 +326,20 @@ export class PathEngine {
         state,
         targetIds.has(pointId) || selectedIds.has(pointId),
       );
-      if (nodeActivities.length === 0) throw new PathEngineError("invalid_profile", `Knowledge point ${pointId} has no usable activity`);
+      if (selectedActivities.length === 0) throw new PathEngineError("invalid_profile", `Knowledge point ${pointId} has no usable activity`);
+      const mandatoryActivities = selectedActivities.filter((activity) => requiredActivityIds.includes(activity.activityId));
+      const nodeActivities = diagnosticSkipSelected && mandatoryActivities.length > 0 ? mandatoryActivities : selectedActivities;
+      const required = diagnosticSkipSelected ? mandatoryActivities.length > 0 : requiredByGoal;
       const reasons: PathReasonCode[] = [];
       if (required) addReasons(reasons, "goal_required");
       if (missingPrerequisiteIds.includes(pointId)) addReasons(reasons, "prerequisite_gap");
       if (isLowMastery(state)) addReasons(reasons, "low_mastery");
       if (!state || state.status === "unverified") addReasons(reasons, "evidence_insufficient");
       if (selectedIds.has(pointId)) addReasons(reasons, "user_selected");
-      const skipped = !required && canSkip(point, state);
+      if (diagnosticSkipSelected) addReasons(reasons, "diagnostic_skip_selected");
+      const skipped = diagnosticSkipSelected && mandatoryActivities.length === 0
+        ? true
+        : !required && canSkip(point, state);
       const status: PathNodeStatus = skipped ? "skipped" : completedIds.has(pointId) ? "completed" : this.initialStatus(point, closure, states, points, completedIds);
       nodes.push({
         nodeId: `node-${pointId}`, knowledgePointId: pointId,
@@ -332,7 +347,7 @@ export class PathEngine {
         positionLocked: input.lockedNodeIds.includes(`node-${pointId}`) || input.lockedNodeIds.includes(pointId),
         required, difficulty: nodeActivities.map(activityDifficulty).sort((left, right) => DIFFICULTIES.indexOf(right) - DIFFICULTIES.indexOf(left))[0]!,
         scaffold: this.chooseNodeScaffold(nodeActivities, state),
-        estimatedMinutes: contentMinutes(point) + nodeActivities.reduce((total, activity) => total + activityMinutes(activity), 0), reasonCodes: reasons,
+        estimatedMinutes: (diagnosticSkipSelected ? 0 : contentMinutes(point)) + nodeActivities.reduce((total, activity) => total + activityMinutes(activity), 0), reasonCodes: reasons,
       });
     }
     let estimatedMinutes = nodes.filter((node) => node.status !== "skipped").reduce((total, node) => total + node.estimatedMinutes, 0);
@@ -361,7 +376,7 @@ export class PathEngine {
       }
     }
     if (estimatedMinutes > input.availableMinutes) return this.failure(missingPrerequisiteIds, estimatedMinutes, "increase_time");
-    const canonicalInput = { sessionId: input.sessionId, profileRevision: input.profileRevision, evidenceVersion: input.evidenceVersion, goalId: input.goalId, mode: input.mode, chapterId: input.chapterId, availableMinutes: input.availableMinutes, selectedKnowledgePointIds: [...input.selectedKnowledgePointIds].sort(compareIds), lockedNodeIds: [...input.lockedNodeIds].sort(compareIds), knowledgeStates: [...input.knowledgeStates].map((state) => ({ knowledgePointId: state.knowledgePointId, mastery: state.mastery, status: state.status, skipEligible: state.skipEligible, evidenceVersion: state.evidenceVersion })).sort((a, b) => compareIds(a.knowledgePointId, b.knowledgePointId)) };
+    const canonicalInput = { sessionId: input.sessionId, profileRevision: input.profileRevision, evidenceVersion: input.evidenceVersion, goalId: input.goalId, mode: input.mode, chapterId: input.chapterId, availableMinutes: input.availableMinutes, selectedKnowledgePointIds: [...input.selectedKnowledgePointIds].sort(compareIds), ...(input.diagnosticSkipKnowledgePointIds === undefined ? {} : { diagnosticSkipKnowledgePointIds: [...diagnosticSkipIds].sort(compareIds) }), lockedNodeIds: [...input.lockedNodeIds].sort(compareIds), knowledgeStates: [...input.knowledgeStates].map((state) => ({ knowledgePointId: state.knowledgePointId, mastery: state.mastery, status: state.status, skipEligible: state.skipEligible, ...(state.diagnosticSkipEligible === undefined ? {} : { diagnosticSkipEligible: state.diagnosticSkipEligible }), evidenceVersion: state.evidenceVersion })).sort((a, b) => compareIds(a.knowledgePointId, b.knowledgePointId)) };
     return { status: "ok", path: { pathId: `path-${hash(canonicalInput)}`, sessionId: input.sessionId, profileRevision: input.profileRevision, evidenceVersion: input.evidenceVersion, pathVersion: input.pathVersion ?? 1, engineVersion: "path-engine-v1", status: "draft", mode: input.mode, goalId: input.goalId, availableMinutes: input.availableMinutes, estimatedMinutes, nodes, positionLockedNodeIds: nodes.filter((node) => node.positionLocked).map((node) => node.nodeId), changeReasons: [], createdAt: input.createdAt ?? "1970-01-01T00:00:00.000Z" } };
   }
 
@@ -377,7 +392,7 @@ export class PathEngine {
       throw new PathEngineError("invalid_profile", "chapterId is not present in the bound Profile");
     }
     const points = new Set(this.profile.knowledgePoints.map((point) => point.id));
-    for (const id of [...input.selectedKnowledgePointIds, ...input.lockedNodeIds.map((item) => item.replace(/^node-/u, ""))]) {
+    for (const id of [...input.selectedKnowledgePointIds, ...(input.diagnosticSkipKnowledgePointIds ?? []), ...input.lockedNodeIds.map((item) => item.replace(/^node-/u, ""))]) {
       if (!points.has(id)) throw new PathEngineError("invalid_profile", `Unknown knowledge point constraint: ${id}`);
     }
   }
@@ -520,7 +535,7 @@ export class PathEngine {
   }
 
   private isPrerequisiteSatisfied(id: string, states: Map<string, KnowledgeState>, points: Map<string, KnowledgePointDefinition>, completedIds: ReadonlySet<string>): boolean {
-    return completedIds.has(id) || canSkip(points.get(id)!, states.get(id));
+    return completedIds.has(id) || canSkip(points.get(id)!, states.get(id)) || states.get(id)?.diagnosticSkipEligible === true;
   }
 
   private validateReplannedPath(
@@ -548,7 +563,8 @@ export class PathEngine {
       if (selected.some((activity) => activity === undefined || activity.primaryKnowledgePointId !== node.knowledgePointId)) {
         return this.failureDetails([], path.estimatedMinutes, "change_goal");
       }
-      const actualMinutes = contentMinutes(point) + selected.reduce((total, activity) => total + activityMinutes(activity!), 0);
+      const actualMinutes = (node.reasonCodes.includes("diagnostic_skip_selected") ? 0 : contentMinutes(point))
+        + selected.reduce((total, activity) => total + activityMinutes(activity!), 0);
       if (node.estimatedMinutes !== actualMinutes) return this.failureDetails([], path.estimatedMinutes, "change_goal");
       if (node.status !== "skipped") estimatedMinutes += node.estimatedMinutes;
       if (point.prerequisiteIds.some((id) => (positions.get(id) ?? Number.MAX_SAFE_INTEGER) >= index)) {
@@ -573,7 +589,10 @@ export class PathEngine {
       if ((node.status === "available" || node.status === "in_progress") && !prerequisitesSatisfied) {
         return this.failureDetails([], path.estimatedMinutes, "change_goal");
       }
-      if (node.status === "skipped" && !canSkip(point, states.get(point.id)) && !completed.has(point.id)) {
+      if (node.status === "skipped"
+          && !canSkip(point, states.get(point.id))
+          && !(node.reasonCodes.includes("diagnostic_skip_selected") && states.get(point.id)?.diagnosticSkipEligible === true)
+          && !completed.has(point.id)) {
         return this.failureDetails([], path.estimatedMinutes, "change_goal");
       }
     }
@@ -612,6 +631,7 @@ export class PathEngine {
       ["error_remediation", input.trigger === "error_remediation" && pathChanged],
       ["time_compressed", actualBudgetCompression],
       ["user_selected", symmetric("user_selected")],
+      ["diagnostic_skip_selected", symmetric("diagnostic_skip_selected")],
       ["evidence_insufficient", symmetric("evidence_insufficient")],
       ["low_mastery", symmetric("low_mastery")],
       ["prerequisite_gap", symmetric("prerequisite_gap") || prerequisiteAvailabilityChanged],

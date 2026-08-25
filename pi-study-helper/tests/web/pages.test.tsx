@@ -115,9 +115,80 @@ describe("W4 real API pages", () => {
 
   it("renders the recommended diagnostic from the safe envelope", async () => {
     const session = recovery({ stage: "diagnostic" });
-    const { host } = await renderRoute("/diagnostic/session-w4", vi.fn().mockResolvedValue(ok(bootstrap(session))));
+    const payload = bootstrap(session);
+    payload.diagnostic.questions[0]!.evidenceForm = "selected_response";
+    const { host } = await renderRoute("/diagnostic/session-w4", vi.fn().mockResolvedValue(ok(payload)));
     expect(host.textContent).toContain("哪个表达式创建列表");
     expect(host.textContent).toContain("草稿 v1");
+    expect(host.textContent).toContain("概念理解");
+  });
+
+  it("offers qualified objective-diagnostic skips without selecting them by default", async () => {
+    const session = recovery({ stage: "path", pathVersion: undefined });
+    session.path = undefined;
+    session.evidenceVersion = 13;
+    session.knowledgeStates = [{
+      knowledgePointId: "pandas.clean.read-csv", profileRevision: 3, evidenceVersion: 13,
+      aggregationVersion: "knowledge-state-v1", mastery: 1, confidence: 0.49, status: "mastered",
+      validEvidenceCount: 2, evidenceFormCount: 2, evidenceIds: ["ev-concept", "ev-application"],
+      consideredEvidenceIds: ["ev-concept", "ev-application"], asOf: "2026-08-25T00:00:00.000Z",
+      skipEligible: true, diagnosticSkipEligible: true, lastUpdatedAt: "2026-08-25T00:00:00.000Z",
+    }];
+    const candidate = {
+      requestId: "candidate-skip", sessionId: "session-w4", sessionVersion: 3, profileRevision: 3,
+      status: "candidate" as const, pathId: "path-skip", pathVersion: 1, nodes: pathNodes,
+      missingPrerequisiteIds: [],
+    };
+    const fetchMock = vi.fn().mockResolvedValueOnce(ok(bootstrap(session))).mockResolvedValueOnce(ok(candidate));
+    const { host, router } = await renderRoute("/diagnostic/session-w4", fetchMock);
+
+    expect(host.textContent).toContain("诊断完成 · 跳过资格确认");
+    expect(host.textContent).toContain("读取CSV数据");
+    const checkbox = host.querySelector<HTMLInputElement>('input[type="checkbox"]')!;
+    expect(checkbox.checked).toBe(false);
+    await click(checkbox);
+    await click(button(host, "按选择生成学习路径"));
+
+    expect(bodyAt(fetchMock, 1)).toMatchObject({
+      evidenceVersion: 13,
+      diagnosticSkipKnowledgePointIds: ["pandas.clean.read-csv"],
+    });
+    expect(router.state.location.pathname).toBe("/path/session-w4");
+  });
+
+  it("counts saved diagnostic answers instead of the current question position", async () => {
+    const initialSession = recovery({ stage: "diagnostic" });
+    const initialBootstrap = bootstrap(initialSession);
+    initialBootstrap.diagnostic.questions.push({
+      questionId: "diag-q2", knowledgePointId: "pandas.clean.read-csv", kind: "single_choice",
+      difficulty: "S-R", prompt: "哪个函数读取 CSV？", options: ["read_csv", "read_json"], required: true,
+    });
+    const savedSession = recovery({ stage: "diagnostic" });
+    savedSession.diagnosticDraft = {
+      ...savedSession.diagnosticDraft!,
+      currentQuestionId: "diag-q2",
+      processedQuestionIds: ["diag-q1"],
+      answers: [{ questionId: "diag-q1", status: "answered", submittedAnswer: "[]" }],
+    };
+    const savedBootstrap = bootstrap(savedSession);
+    savedBootstrap.diagnostic.questions = initialBootstrap.diagnostic.questions;
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(ok(initialBootstrap))
+      .mockResolvedValueOnce(ok({ requestId: "answer-1", sessionId: "session-w4", sessionVersion: 3, profileRevision: 3, diagnosticId: "diagnostic-pandas-cleaning", questionId: "diag-q1", result: "pass", diagnosticDraftVersion: 2 }))
+      .mockResolvedValueOnce(ok(savedBootstrap));
+    const { host } = await renderRoute("/diagnostic/session-w4", fetchMock);
+
+    const progress = () => host.querySelector<HTMLElement>(".progress-track");
+    expect(progress()?.getAttribute("aria-label")).toBe("已保存诊断进度 0/2");
+    expect(progress()?.querySelector("span")?.getAttribute("style")).toContain("width: 0%");
+
+    await click(host.querySelector<HTMLInputElement>('input[type="radio"]')!);
+    await click(button(host, "保存并继续"));
+
+    expect(progress()?.getAttribute("aria-label")).toBe("已保存诊断进度 1/2");
+    expect(progress()?.querySelector("span")?.getAttribute("style")).toContain("width: 50%");
+    expect(host.textContent).toContain("第 2 题 / 共 2 题");
+    expect(host.textContent).toContain("尚未保存");
   });
 
   it("renders all W4 path node fields", async () => {
@@ -586,6 +657,33 @@ describe("W4 real API pages", () => {
     act(() => root?.unmount()); root = undefined; document.body.innerHTML = "";
     const refreshed = await renderRoute("/path/session-w4", vi.fn().mockResolvedValue(ok(bootstrap(recovery({ stage: "path" })))));
     expect(button(refreshed.host, "按最新诊断重算").disabled).toBe(true);
+  });
+
+  it("distinguishes learner-selected diagnostic skips from learned mastery in the summary", async () => {
+    const session = recovery({ stage: "activity" });
+    session.path = {
+      pathId: "path-w4", pathVersion: 1, status: "active",
+      nodes: [
+        {
+          ...pathNodes[0]!, nodeId: "node-read", knowledgePointId: "pandas.clean.read-csv",
+          activityIds: ["act-read"], status: "skipped", required: false, positionLocked: false,
+          reasonCodes: ["diagnostic_skip_selected"],
+        },
+        {
+          ...pathNodes[0]!, nodeId: "node-validate", knowledgePointId: "pandas.clean.validate-result",
+          activityIds: ["act-practical"], status: "completed", positionLocked: false,
+          reasonCodes: ["goal_required", "diagnostic_skip_selected"],
+        },
+      ],
+    };
+    const completed = { requestId: "complete-skip", sessionId: "session-w4", sessionVersion: 3, profileRevision: 3, completedAt: "2026-08-25T00:00:00.000Z", summary: "Session completed." };
+    const { host } = await renderRoute("/summary/session-w4", vi.fn().mockResolvedValueOnce(ok(bootstrap(session))).mockResolvedValueOnce(ok(completed)));
+
+    expect(host.querySelector('[data-section="diagnostic-skips"]')?.textContent).toContain("主动跳过的章节");
+    expect(host.textContent).toContain("读取CSV数据");
+    expect(host.textContent).toContain("已跳过章节教学和普通练习");
+    expect(host.textContent).toContain("已跳过章节教学；最终综合实操仍保留");
+    expect(host.textContent).toContain("不等于经过本轮教学后再次掌握");
   });
 
   it("renders fail, partial, insufficient and unverified from safe progress facts", async () => {
