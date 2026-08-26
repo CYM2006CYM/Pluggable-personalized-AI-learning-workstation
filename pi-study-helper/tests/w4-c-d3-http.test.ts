@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { createDemoRuntime, type DemoRuntime } from "../src/demo/composition-root.js";
 import { startHttpServer, type HttpServerHandle } from "../src/demo/http-server.js";
 import { ProfileFamilyRepository } from "../src/repositories/profile-family-repository.js";
+import { InMemoryAgentRunRepository } from "../src/infrastructure/agent-run-repository.js";
 
 const roots: string[] = [];
 const fixtures = resolve(process.cwd(), "fixtures/profiles");
@@ -39,11 +40,54 @@ async function listen(value: Promise<DemoRuntime>, port = 0): Promise<{ handle: 
 afterEach(async () => { await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true }))); });
 
 describe("W4 C D3 HTTP adapter", () => {
+  it("通过快照和SSE只传输安全Agent run并支持sequence续传", async () => {
+    const now = () => new Date("2026-08-25T10:00:00.000Z");
+    const agentRuns = new InMemoryAgentRunRepository(now);
+    const run = await agentRuns.create({ requestId: "http-agent-request", sessionId: "session-agent", activityId: "activity-agent", profileRevision: 3, pathVersion: 2, evidenceVersion: 1 });
+    const fake = { facade: {}, bootstrap: {}, agentRuns, close: async () => undefined } as unknown as DemoRuntime;
+    const { handle, url } = await listen(Promise.resolve(fake));
+    await handle.ready;
+    const byRequest = await fetch(`${url}/api/agent-runs/by-request/http-agent-request`);
+    expect(byRequest.status).toBe(200);
+    expect((await byRequest.json() as any).data.runId).toBe(run.runId);
+    const exported = await fetch(`${url}/api/agent-runs/${run.runId}/export`);
+    expect(exported.status).toBe(200);
+    const exportBody = await exported.json() as any;
+    expect(exportBody.data).toMatchObject({ schemaVersion: 1, run: { runId: run.runId }, exportSha256: expect.stringMatching(/^[a-f0-9]{64}$/u) });
+    expect(JSON.stringify(exportBody)).not.toMatch(/correctAnswer|systemPrompt|apiKey|[A-Za-z]:\\/u);
+
+    const abort = new AbortController();
+    const events = await fetch(`${url}/api/agent-runs/${run.runId}/events?after=0`, { signal: abort.signal });
+    expect(events.headers.get("content-type")).toContain("text/event-stream");
+    expect(events.headers.get("x-content-type-options")).toBe("nosniff");
+    expect(events.headers.get("x-frame-options")).toBe("DENY");
+    const reader = events.body!.getReader();
+    const initialChunk = new TextDecoder().decode((await reader.read()).value);
+    expect(initialChunk).toContain('"status":"queued"');
+    await agentRuns.append(run.runId, {
+      role: "source", label: "教学依据准备", status: "running", startedAt: now().toISOString(), attemptNumber: 1,
+      publicSummary: "正在绑定公开教学依据。",
+    });
+    const chunk = await reader.read();
+    const text = new TextDecoder().decode(chunk.value);
+    expect(text).toContain("event: run");
+    expect(text).toContain('"sequence":1');
+    expect(text).not.toMatch(/correctAnswer|systemPrompt|apiKey|[A-Za-z]:\\/u);
+    abort.abort();
+    await reader.cancel().catch(() => undefined);
+    await handle.close();
+  });
+
   it("serves bootstrap and creates a session through the existing Facade", async () => {
     const { handle, url } = await listen(runtime());
     await handle.ready;
     const bootstrap = await fetch(`${url}/api/bootstrap`);
     expect(bootstrap.status).toBe(200);
+    expect(bootstrap.headers.get("content-security-policy")).toContain("default-src 'none'");
+    expect(bootstrap.headers.get("x-content-type-options")).toBe("nosniff");
+    expect(bootstrap.headers.get("x-frame-options")).toBe("DENY");
+    expect(bootstrap.headers.get("referrer-policy")).toBe("no-referrer");
+    expect(bootstrap.headers.get("permissions-policy")).toContain("camera=()");
     const bootstrapBody = await bootstrap.json() as { data: { profiles: Array<{ revision: number }> } };
     expect(bootstrapBody.data.profiles[0]?.revision).toBe(3);
     const missingRecovery = await fetch(`${url}/api/bootstrap?recoverSessionId=missing-session`);

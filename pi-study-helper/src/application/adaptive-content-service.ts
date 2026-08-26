@@ -5,6 +5,7 @@ import type {
   QuizQuestionPrivate,
   QuizRemediationContext,
   LessonVariantId,
+  LessonPersonalizationContext,
 } from "../contracts/index.js";
 import {
   createStudyReviewGraphs,
@@ -15,7 +16,9 @@ import {
 } from "../graphs/v2-learning-graphs.js";
 import type { ModelExecutionPort, ModelExecutionResult } from "../infrastructure/model-execution-port.js";
 import type { W4PrivateRuntimeStore } from "../infrastructure/w4-private-runtime-store.js";
+import type { AgentRunRepository, AppendAgentStageInput } from "../infrastructure/agent-run-repository.js";
 import { quizQuestionSetSha256 } from "../domain/quiz-runtime.js";
+import { guidingQuestionFailure } from "../domain/personalized-lesson-guide.js";
 
 export type AdaptiveArtifactKind = "card" | "quiz";
 
@@ -29,6 +32,7 @@ export interface AdaptiveContentSourceContext {
   targetKnowledgePointIds?: string[];
   estimatedMinutes?: number;
   lessonVariantId?: LessonVariantId;
+  personalizationContext?: LessonPersonalizationContext;
   remediationContext?: QuizRemediationContext;
 }
 
@@ -52,6 +56,7 @@ export interface AdaptiveContentServiceOptions {
   fallbackAfterMs?: number;
   discardAfterMs?: number;
   executionMode?: "recorded_response" | "live_model";
+  agentRuns?: AgentRunRepository;
 }
 
 type AcceptedArtifact =
@@ -67,6 +72,7 @@ interface AdaptiveCheckpoint {
   modelId: string;
   promptVersion: string;
   lessonVariantId?: LessonVariantId;
+  personalizationContextSha256?: string;
   remediationContextSha256?: string;
   stage: "generator" | "hunter" | "defender" | "judge" | "accepted" | "unavailable" | "discarded";
   stageOrder: string[];
@@ -91,6 +97,7 @@ interface AdaptiveCacheRecord {
   modelId: string;
   promptVersion: string;
   lessonVariantId?: LessonVariantId;
+  personalizationContextSha256?: string;
   remediationContextSha256?: string;
   artifact: AcceptedArtifact;
   cachedAt: string;
@@ -108,9 +115,18 @@ const FORBIDDEN_TEXT = [
   /\b(?:accessToken|apiKey|authorization|secret|password)\s*[:=]\s*\S+/iu,
   /\b(?:hidden tests?|reference solutions?|private csv|rubric)\b/iu,
 ];
+const CROSS_QUESTION_REFERENCE = /(?:上一|下一|前一|后一|第[一二三四五六七八九十\d]+)(?:道|个)?(?:题|问)|(?:previous|prior|earlier|next)\s+question|question\s*\d+/iu;
+const CROSS_QUESTION_DEPENDENCY = /(?:答案|正确(?:项|答案|选项|结论)|结论|已(?:经)?给出|已知|可知|参照|参考|直接保留)|(?:answer|correct\s+(?:answer|option)|given|shown|refer|above|below)/iu;
 const FORBIDDEN_AUTHORITY_KEYS = new Set([
   "activityresult", "cursor", "evidence", "gold", "knowledgestate", "mastery", "path", "rubric", "score",
 ]);
+const PUBLIC_STAGE_LABELS = {
+  generator: "Generator生成候选内容",
+  safety: "确定性安全检查",
+  hunter: "Hunter反向找错",
+  defender: "Defender辩护",
+  judge: "Judge最终裁决",
+} as const;
 
 function clone<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
@@ -139,6 +155,10 @@ function safeIdList(value: unknown, allowEmpty = false): value is string[] {
     && value.every(safeId) && new Set(value).size === value.length;
 }
 
+function containsCrossQuestionAnswerHint(value: string): boolean {
+  return CROSS_QUESTION_REFERENCE.test(value) && CROSS_QUESTION_DEPENDENCY.test(value);
+}
+
 function normalizedKey(value: string): string {
   return value.replace(/[^a-z]/giu, "").toLowerCase();
 }
@@ -153,6 +173,12 @@ function remediationContextSha256(context: AdaptiveContentSourceContext): string
   return context.remediationContext === undefined
     ? undefined
     : createHash("sha256").update(JSON.stringify(context.remediationContext), "utf8").digest("hex");
+}
+
+function personalizationContextSha256(context: AdaptiveContentSourceContext): string | undefined {
+  return context.personalizationContext === undefined
+    ? undefined
+    : createHash("sha256").update(JSON.stringify(context.personalizationContext), "utf8").digest("hex");
 }
 
 function excludedQuestionPrompts(context: AdaptiveContentSourceContext): Set<string> {
@@ -188,6 +214,9 @@ function questionFailureDetail(
   if (!Array.isArray(value.options) || value.options.length < 2 || value.options.length > 6
       || !value.options.every((option) => safeText(option, 240))) return "question_options";
   if (new Set(value.options).size !== value.options.length) return "question_options_duplicate";
+  if ([value.prompt, value.explanation, ...value.options].some((text) => containsCrossQuestionAnswerHint(text as string))) {
+    return "question_cross_answer_hint";
+  }
   if (value.kind !== "single_choice") return "question_kind";
   return typeof value.correctAnswer === "string" && value.options.includes(value.correctAnswer)
     ? undefined
@@ -203,12 +232,44 @@ function isQuestion(
   return questionFailureDetail(value, allowedSources, excluded, excludedPrompts) === undefined;
 }
 
-function isCard(value: unknown, context: AdaptiveContentSourceContext, excluded: ReadonlySet<string>): value is LearningCardSafeView {
+/**
+ * Spreads answer positions without introducing non-reproducible randomness.
+ * The answer text stays authoritative; only the public option order changes.
+ */
+export function balanceQuizAnswerPositions(
+  questions: readonly QuizQuestionPrivate[],
+): QuizQuestionPrivate[] {
+  if (questions.length === 0) return [];
+  if (questions.some((question) => question.kind !== "single_choice"
+      || typeof question.correctAnswer !== "string"
+      || !question.options.includes(question.correctAnswer)
+      || question.options.length < 2)) {
+    return questions.map((question) => clone(question));
+  }
+  const positionCount = Math.min(...questions.map((question) => question.options.length));
+  const seedSource = questions.map((question) => `${question.questionId}:${question.prompt}`).join("|");
+  const startPosition = Number.parseInt(
+    createHash("sha256").update(seedSource, "utf8").digest("hex").slice(0, 8),
+    16,
+  ) % positionCount;
+
+  return questions.map((question, questionIndex) => {
+    const correctAnswer = question.correctAnswer as string;
+    const currentPosition = question.options.indexOf(correctAnswer);
+    const targetPosition = (startPosition + questionIndex) % positionCount;
+    if (currentPosition === targetPosition) return clone(question);
+    const options = question.options.filter((_option, optionIndex) => optionIndex !== currentPosition);
+    options.splice(targetPosition, 0, correctAnswer);
+    return { ...clone(question), options };
+  });
+}
+
+function cardFailureDetail(value: unknown, context: AdaptiveContentSourceContext, excluded: ReadonlySet<string>): string | undefined {
   if (!isRecord(value) || !exactKeys(value, [
     "cardId", "knowledgePointId", "title", "objective", "explanation", "example", "commonMistake",
     "sourceAnchorIds", "estimatedMinutes",
-  ])) return false;
-  return safeId(value.cardId) && !excluded.has(value.cardId)
+  ])) return "card";
+  const baseValid = safeId(value.cardId) && !excluded.has(value.cardId)
     && value.knowledgePointId === context.knowledgePointId
     && safeText(value.title, 240) && safeText(value.objective) && safeText(value.example) && safeText(value.commonMistake)
     && Array.isArray(value.explanation) && value.explanation.length > 0 && value.explanation.length <= 12
@@ -217,6 +278,13 @@ function isCard(value: unknown, context: AdaptiveContentSourceContext, excluded:
     && value.sourceAnchorIds.every((sourceId) => context.sourceAnchorIds.includes(sourceId))
     && Number.isInteger(value.estimatedMinutes) && (value.estimatedMinutes as number) > 0
     && (context.estimatedMinutes === undefined || value.estimatedMinutes === context.estimatedMinutes);
+  if (!baseValid) return "card";
+  const questionFailure = guidingQuestionFailure(value.example);
+  return questionFailure === undefined ? undefined : `card_guiding_question_${questionFailure}`;
+}
+
+function isCard(value: unknown, context: AdaptiveContentSourceContext, excluded: ReadonlySet<string>): value is LearningCardSafeView {
+  return cardFailureDetail(value, context, excluded) === undefined;
 }
 
 type GeneratorArtifactParseResult =
@@ -243,6 +311,8 @@ function parseGeneratorArtifact(
   const excludedPrompts = excludedQuestionPrompts(context);
   if (artifactKind === "card") {
     if (!exactKeys(parsed, ["artifactKind", "riskLevel", "card"])) return { ok: false, detail: "candidate_fields" };
+    const cardFailure = cardFailureDetail(parsed.card, context, excluded);
+    if (cardFailure !== undefined) return { ok: false, detail: `candidate_${cardFailure}` };
     if (!isCard(parsed.card, context, excluded)) return { ok: false, detail: "candidate_card" };
     return { ok: true, artifact: { artifactKind, riskLevel: parsed.riskLevel, value: clone(parsed.card) } };
   }
@@ -257,7 +327,14 @@ function parseGeneratorArtifact(
   if (new Set(questions.map((question) => question.questionId)).size !== questions.length) {
     return { ok: false, detail: "candidate_question_ids_duplicate" };
   }
-  return { ok: true, artifact: { artifactKind, riskLevel: parsed.riskLevel, value: clone(questions) } };
+  return {
+    ok: true,
+    artifact: {
+      artifactKind,
+      riskLevel: parsed.riskLevel,
+      value: balanceQuizAnswerPositions(questions),
+    },
+  };
 }
 
 function normalizeGeneratorJson(value: string): string {
@@ -339,6 +416,12 @@ function generatorRepairInstruction(detail: string, artifactKind: AdaptiveArtifa
     candidate_artifact_kind: `artifactKind 必须为 ${artifactKind}。`,
     candidate_risk_level: "riskLevel 只能为 low 或 high，并与外层 riskFlags 一致。",
     candidate_card: "card 必须完整满足卡片字段、当前知识点、来源 ID 和预计时间合同。",
+    candidate_card_guiding_question_empty: "example 必须提供一句完整的课前引导问题。",
+    candidate_card_guiding_question_length: "example 去掉固定引导语后应为 18 至 120 个字符的一句话。",
+    candidate_card_guiding_question_not_chinese: "example 必须是无需翻译即可理解的中文问题。",
+    candidate_card_guiding_question_not_a_question: "example 必须以中文或英文问号结尾。",
+    candidate_card_guiding_question_missing_guiding_verb: "example 必须用『为什么、如何、怎样、怎么』之一提出可贯穿本节正文的核心问题。",
+    candidate_card_guiding_question_context_dependent: "example 必须让从未读过本节的学生也能独立看懂：删除样例中的具体数字、裸变量名、代码符号，以及『这张表、上述示例、这里』等悬空指代；改问贯穿本节正文的核心矛盾。",
     candidate_questions_array: "questions 必须是 JSON 数组。",
     candidate_question_count: "questions 必须包含 4 至 6 道彼此不同的题，不能照抄单题结构示例。",
     candidate_question_not_object: "每道题必须是 JSON 对象。",
@@ -351,6 +434,7 @@ function generatorRepairInstruction(detail: string, artifactKind: AdaptiveArtifa
     candidate_question_sources: "每道题的 sourceAnchorIds 必须非空，且只能逐字复制 allowedSourceIds。",
     candidate_question_options: "每道题必须提供 2 至 6 个非空字符串选项。",
     candidate_question_options_duplicate: "同一道题的 options 不得重复。",
+    candidate_question_cross_answer_hint: "每道题必须能够独立作答。逐题扫描 prompt、options 和 explanation，删除所有同时包含‘上一题/下一题/第几题/第几问’与‘答案/正确项/结论/参照’的句子；不得用其他题已给出的信息提示答案。修复后再次逐字段自检，任何跨题引用都不能保留。",
     candidate_question_kind: "当前动态 quiz 只允许中文单选题；每道题的 kind 必须逐字写为 single_choice，不得输出 judgment 或其他题型。",
     candidate_question_answer: "correctAnswer 必须是字符串，并与 options 中某个选项逐字一致。",
     candidate_question_ids_duplicate: "4 至 6 道题的 questionId 必须全部唯一。",
@@ -358,7 +442,9 @@ function generatorRepairInstruction(detail: string, artifactKind: AdaptiveArtifa
     graph_output_schema: "外层必须且只能返回 artifactId、candidateFeedback、rationale、citedSourceIds、riskFlags 五个字段。",
     status_invalid_output: "上一轮外层结构不是有效的五字段 JSON，请严格按输出 Schema 重新生成。",
   };
-  const requirement = requirements[normalized] ?? "严格重新核对五字段外层结构、candidateFeedback 内层结构、题量、答案和来源绑定。";
+  const requirement = requirements[normalized] ?? (artifactKind === "card"
+    ? "严格重新核对五字段外层结构、card 字段、正文依据、个性化重点和来源绑定。"
+    : "严格重新核对五字段外层结构、candidateFeedback 内层结构、题量、答案和来源绑定。");
   return `上一轮候选未通过确定性校验，失败类别=${detail}。${requirement} 重新输出完整候选，不解释修复过程。`;
 }
 
@@ -412,24 +498,39 @@ export class AdaptiveContentService implements AdaptiveContentPort {
     }
   }
 
-  async prepareCard(input: { profileRevision: number; knowledgePointId: string; excludedArtifactIds: string[]; lessonVariantId?: LessonVariantId }) {
+  async prepareCard(input: { profileRevision: number; knowledgePointId: string; excludedArtifactIds: string[]; lessonVariantId?: LessonVariantId; personalizationContext?: LessonPersonalizationContext; agentRunId?: string }) {
     try {
-      const context = await this.#options.sourceProvider.forCard(input);
-      const artifact = await this.#prepare("card", context, input.excludedArtifactIds, 0);
+      const sourceContext = await this.#options.sourceProvider.forCard(input);
+      const context: AdaptiveContentSourceContext = {
+        ...sourceContext,
+        ...(input.personalizationContext === undefined ? {} : { personalizationContext: clone(input.personalizationContext) }),
+      };
+      const artifact = await this.#prepare("card", context, input.excludedArtifactIds, 0, input.agentRunId);
       return artifact?.artifactKind === "card"
-        ? { status: "accepted" as const, card: clone(artifact.value) }
+        ? {
+            status: "accepted" as const,
+            card: clone(artifact.value),
+            origin: this.#options.executionMode ?? "recorded_response",
+            reviewBinding: {
+              generationRunId: stableRunId(this.#key("card", context, input.excludedArtifactIds, 0)),
+              acceptedCardSha256: createHash("sha256").update(JSON.stringify(artifact.value), "utf8").digest("hex"),
+            },
+          }
         : { status: "unavailable" as const };
-    } catch { return { status: "unavailable" as const }; }
+    } catch {
+      await this.#recordUnexpectedPipelineFailure(input.agentRunId);
+      return { status: "unavailable" as const };
+    }
   }
 
-  async prepareQuiz(input: { profileRevision: number; activityId: string; retryNumber: number; excludedQuestionIds: string[]; lessonVariantId?: LessonVariantId; targetKnowledgePointIds?: string[]; remediationContext?: QuizRemediationContext }) {
+  async prepareQuiz(input: { profileRevision: number; activityId: string; retryNumber: number; excludedQuestionIds: string[]; lessonVariantId?: LessonVariantId; targetKnowledgePointIds?: string[]; remediationContext?: QuizRemediationContext; agentRunId?: string }) {
     try {
       const sourceContext = await this.#options.sourceProvider.forQuiz(input);
       const context: AdaptiveContentSourceContext = {
         ...sourceContext,
         ...(input.remediationContext === undefined ? {} : { remediationContext: clone(input.remediationContext) }),
       };
-      const artifact = await this.#prepare("quiz", context, input.excludedQuestionIds, input.retryNumber);
+      const artifact = await this.#prepare("quiz", context, input.excludedQuestionIds, input.retryNumber, input.agentRunId);
       return artifact?.artifactKind === "quiz"
         ? {
             status: "accepted" as const,
@@ -441,7 +542,10 @@ export class AdaptiveContentService implements AdaptiveContentPort {
             },
           }
         : { status: "unavailable" as const };
-    } catch { return { status: "unavailable" as const }; }
+    } catch {
+      await this.#recordUnexpectedPipelineFailure(input.agentRunId);
+      return { status: "unavailable" as const };
+    }
   }
 
   #key(artifactKind: AdaptiveArtifactKind, context: AdaptiveContentSourceContext,
@@ -450,6 +554,8 @@ export class AdaptiveContentService implements AdaptiveContentPort {
     if (context.targetKnowledgePointIds !== undefined) keyParts.push(targetKnowledgePointIds(context).join(","));
     const remediationHash = remediationContextSha256(context);
     if (remediationHash !== undefined) keyParts.push(remediationHash);
+    const personalizationHash = personalizationContextSha256(context);
+    if (personalizationHash !== undefined) keyParts.push(personalizationHash);
     keyParts.push(retryNumber, [...excludedIds].sort().join(","), this.#options.modelId, this.#options.promptVersion);
     if (this.#options.executionMode === "live_model" && context.lessonVariantId !== undefined) keyParts.push(context.lessonVariantId);
     return keyParts.join(":");
@@ -460,9 +566,23 @@ export class AdaptiveContentService implements AdaptiveContentPort {
     context: AdaptiveContentSourceContext,
     excludedIds: readonly string[],
     retryNumber: number,
+    agentRunId?: string,
   ): Promise<AcceptedArtifact | undefined> {
     this.#validateContext(context, artifactKind);
     const key = this.#key(artifactKind, context, excludedIds, retryNumber);
+    const artifactLabel = artifactKind === "card" ? "个性化提醒" : "AI题组";
+    // 缓存/checkpoint也是Generator准备阶段的一部分。先公开工位状态，
+    // 避免本地存储异常时页面错误地显示“Generator尚未触发”。
+    const generatorPreparationStartedAt = await this.#beginPublicStage(
+      agentRunId,
+      "generator",
+      1,
+      `正在检查已审核缓存并准备生成候选${artifactLabel}。`,
+      [
+        { metricId: "attempt", label: "执行轮次", value: "第1轮", tone: "neutral" },
+        { metricId: "model", label: "模型", value: this.#options.modelId, tone: "neutral" },
+      ],
+    );
     const cached = await this.#options.privateStore.read<AdaptiveCacheRecord>("adaptive-cache", key);
     if (cached !== undefined && cached.artifactKind === artifactKind
         && acceptedArtifactIsValid(cached.artifact, artifactKind, context, excludedIds)
@@ -470,7 +590,9 @@ export class AdaptiveContentService implements AdaptiveContentPort {
         && JSON.stringify(cached.targetKnowledgePointIds ?? [context.knowledgePointId]) === JSON.stringify(targetKnowledgePointIds(context))
         && cached.modelId === this.#options.modelId && cached.promptVersion === this.#options.promptVersion
         && cached.lessonVariantId === context.lessonVariantId
+        && cached.personalizationContextSha256 === personalizationContextSha256(context)
         && cached.remediationContextSha256 === remediationContextSha256(context)) {
+      await this.#recordReviewedCache(agentRunId, cached.source, artifactKind);
       return clone(cached.artifact);
     }
     const recoverable = await this.#options.privateStore.read<AdaptiveCheckpoint>("adaptive-checkpoint", key);
@@ -481,12 +603,24 @@ export class AdaptiveContentService implements AdaptiveContentPort {
         recoverable.publishedAt = iso(this.#clock.now()); recoverable.updatedAt = recoverable.publishedAt;
         await this.#options.privateStore.write("adaptive-checkpoint", key, recoverable);
       }
+      await this.#recordReviewedCache(agentRunId, "immediate", artifactKind);
       return clone(recoverable.candidate);
     }
 
     const startedAt = this.#clock.now();
     const controller = new AbortController();
-    const work = this.#generate(key, artifactKind, context, excludedIds, retryNumber, startedAt, controller.signal, recoverable);
+    const work = this.#generate(
+      key,
+      artifactKind,
+      context,
+      excludedIds,
+      retryNumber,
+      startedAt,
+      controller.signal,
+      recoverable,
+      agentRunId,
+      generatorPreparationStartedAt,
+    );
     const early = await Promise.race([
       work.then((artifact) => ({ type: "result" as const, artifact })),
       this.#clock.sleep(this.#fallbackAfterMs).then(() => ({ type: "deadline" as const })),
@@ -534,13 +668,17 @@ export class AdaptiveContentService implements AdaptiveContentPort {
     startedAt: number,
     signal: AbortSignal,
     recovered?: AdaptiveCheckpoint,
+    agentRunId?: string,
+    generatorPreparationStartedAt?: number,
   ): Promise<AcceptedArtifact | undefined> {
+    const artifactLabel = artifactKind === "card" ? "个性化提醒" : "AI题组";
     const generationRunId = stableRunId(key);
     const boundRecovery = recovered !== undefined && recovered.generationRunId === generationRunId
       && recovered.artifactKind === artifactKind && recovered.profileRevision === context.profileRevision
       && recovered.targetId === context.targetId && recovered.modelId === this.#options.modelId
       && recovered.promptVersion === this.#options.promptVersion
       && recovered.lessonVariantId === context.lessonVariantId
+      && recovered.personalizationContextSha256 === personalizationContextSha256(context)
       && recovered.remediationContextSha256 === remediationContextSha256(context)
       && recovered.stage !== "unavailable" && recovered.stage !== "discarded";
     const checkpoint: AdaptiveCheckpoint = boundRecovery ? clone(recovered) : {
@@ -548,9 +686,14 @@ export class AdaptiveContentService implements AdaptiveContentPort {
       ...(targetKnowledgePointIds(context).length === 0 ? {} : { targetKnowledgePointIds: targetKnowledgePointIds(context) }),
       modelId: this.#options.modelId, promptVersion: this.#options.promptVersion,
       ...(context.lessonVariantId === undefined ? {} : { lessonVariantId: context.lessonVariantId }),
+      ...(personalizationContextSha256(context) === undefined ? {} : { personalizationContextSha256: personalizationContextSha256(context) }),
       ...(remediationContextSha256(context) === undefined ? {} : { remediationContextSha256: remediationContextSha256(context) }),
       stage: "generator", stageOrder: [], createdAt: iso(startedAt), updatedAt: iso(startedAt),
     };
+    let prestartedGeneratorAt = generatorPreparationStartedAt;
+    const needsGenerator = checkpoint.candidate === undefined
+      || checkpoint.publicGenerator === undefined
+      || checkpoint.requiresReview === undefined;
     await this.#options.privateStore.write("adaptive-checkpoint", key, checkpoint);
     const reviewContext = {
       activity: {
@@ -575,6 +718,7 @@ export class AdaptiveContentService implements AdaptiveContentPort {
       // The legacy sourceSummary field remains for compatibility with recorded runs.
       allowedSourceIds: [...context.sourceAnchorIds],
       teachingContent: context.publicSourceSummary,
+      ...(context.personalizationContext === undefined ? {} : { personalizationContext: clone(context.personalizationContext) }),
       ...(context.remediationContext === undefined ? {} : { retryContext: clone(context.remediationContext) }),
     };
     const graphs = createStudyReviewGraphs();
@@ -603,7 +747,30 @@ export class AdaptiveContentService implements AdaptiveContentPort {
           && (checkpoint.hunter === undefined || !graphs.judge.validateOutput(checkpoint.judge)
             || containsAdaptiveAuthorityViolation(checkpoint.judge)
             || !judgeIsClosed(checkpoint.judge, checkpoint.hunter, checkpoint.defender)))) {
+      if (prestartedGeneratorAt !== undefined) {
+        await this.#finishPublicStage(
+          agentRunId,
+          "generator",
+          1,
+          prestartedGeneratorAt,
+          "failed",
+          `恢复的${artifactLabel} checkpoint未通过确定性校验，已停止本轮生成。`,
+          { issueCategories: ["恢复状态无效"] },
+        );
+      }
       return this.#unavailable(key, checkpoint, "invalid_recovered_checkpoint", signal);
+    }
+    if (!needsGenerator && prestartedGeneratorAt !== undefined) {
+      await this.#finishPublicStage(
+        agentRunId,
+        "generator",
+        1,
+        prestartedGeneratorAt,
+        "skipped",
+        `已恢复同一上下文的Generator候选，继续完成${artifactLabel}审核。`,
+        { metrics: [{ metricId: "cache-source", label: "复用来源", value: "审核checkpoint", tone: "neutral" }] },
+      );
+      prestartedGeneratorAt = undefined;
     }
     let artifact = checkpoint.candidate;
     let safeGenerator = checkpoint.publicGenerator;
@@ -618,10 +785,26 @@ export class AdaptiveContentService implements AdaptiveContentPort {
       // A transient provider retry and a malformed-candidate repair are separate
       // budgets. A recovered provider must still get one precise schema repair.
       for (let attempt = 0; attempt < 3; attempt += 1) {
+        const attemptNumber = attempt + 1;
         const generatorInput = nextAttempt === "initial" || nextAttempt === "provider-retry"
           ? baseGeneratorInput
           : { ...baseGeneratorInput, repairInstruction: generatorRepairInstruction(generatorDetail, artifactKind) };
         const attemptSuffix = nextAttempt === "initial" ? "" : nextAttempt === "provider-retry" ? ".retry" : ".repair";
+        const generatorStartedAt = prestartedGeneratorAt !== undefined && attemptNumber === 1 && nextAttempt === "initial"
+          ? prestartedGeneratorAt
+          : await this.#beginPublicStage(
+              agentRunId,
+              "generator",
+              attemptNumber,
+              nextAttempt === "initial" ? `正在根据当前教学正文和安全学情事实生成候选${artifactLabel}。`
+                : nextAttempt === "provider-retry" ? "模型服务上一轮未形成有效响应，正在执行一次受控重试。"
+                  : "候选未通过确定性合同，正在按失败类别定向修复。",
+              [
+                { metricId: "attempt", label: "执行轮次", value: `第${attemptNumber}轮`, tone: attemptNumber === 1 ? "neutral" : "warning" },
+                { metricId: "model", label: "模型", value: this.#options.modelId, tone: "neutral" },
+              ],
+            );
+        prestartedGeneratorAt = undefined;
         generatorResult = await this.#execute("generator", `${generationRunId}.generator${attemptSuffix}`,
           context.profileRevision, generatorInput, signal);
         checkpoint.stageOrder.push(nextAttempt === "initial" ? "generator" : nextAttempt === "provider-retry" ? "generator-retry" : "generator-repair");
@@ -638,25 +821,85 @@ export class AdaptiveContentService implements AdaptiveContentPort {
           && !containsAdaptiveAuthorityViolation({ rationale: generatorResult.payload.rationale, riskFlags: generatorResult.payload.riskFlags });
         if (!outerValid) {
           generatorDetail = generatorResult.status === "ok" ? generatorFailureDetail(generatorResult, context) : `status_${generatorResult.status}`;
-          if (generatorResult.status === "provider_error" && providerRetries < 1) {
+          const canProviderRetry = generatorResult.status === "provider_error" && providerRetries < 1;
+          const canRepair = (generatorResult.status === "ok" || generatorResult.status === "invalid_output") && candidateRepairs < 1;
+          await this.#finishPublicStage(
+            agentRunId,
+            "generator",
+            attemptNumber,
+            generatorStartedAt,
+            canProviderRetry || canRepair ? "revised" : "failed",
+            canProviderRetry || canRepair ? "本轮未形成可审核候选，系统将按受控预算重试。" : "Generator未形成可审核候选。",
+            {
+              metrics: [{ metricId: "failure-category", label: "失败类别", value: generatorDetail, tone: "danger" }],
+              issueCategories: [generatorResult.status === "provider_error" ? "模型服务异常" : "输出合同不符"],
+            },
+          );
+          if (canProviderRetry) {
             providerRetries += 1;
             nextAttempt = "provider-retry";
             continue;
           }
-          if ((generatorResult.status === "ok" || generatorResult.status === "invalid_output") && candidateRepairs < 1) {
+          if (canRepair) {
             candidateRepairs += 1;
             nextAttempt = "repair";
             continue;
           }
           return this.#unavailable(key, checkpoint, generatorResult.status === "ok" ? "invalid_schema" : generatorResult.status, signal, generatorDetail);
         }
+        await this.#finishPublicStage(
+          agentRunId,
+          "generator",
+          attemptNumber,
+          generatorStartedAt,
+          "succeeded",
+          "Generator已返回候选，进入确定性安全与Schema检查。",
+          { metrics: [{ metricId: "source-count", label: "引用来源", value: `${generatorResult.sourceRefs.length}项`, tone: "neutral" }] },
+        );
         generator = generatorResult.payload as GeneratorOutput;
+        const safetyStartedAt = await this.#beginPublicStage(
+          agentRunId,
+          "safety",
+          attemptNumber,
+          artifactKind === "card"
+            ? "正在检查提醒字段、正文依据、画像响应、来源绑定和敏感信息边界。"
+            : "正在检查题量、字段、答案唯一性、来源绑定和敏感信息边界。",
+        );
         const parsed = parseGeneratorArtifact(generator, artifactKind, context, excludedIds);
         artifact = parsed.ok ? parsed.artifact : undefined;
         generatorDetail = parsed.ok ? "candidate_risk_flags_mismatch" : parsed.detail;
-        if (artifact !== undefined && generatorRiskIsBound(artifact, generator)) break;
+        if (artifact !== undefined && generatorRiskIsBound(artifact, generator)) {
+          await this.#finishPublicStage(
+            agentRunId,
+            "safety",
+            attemptNumber,
+            safetyStartedAt,
+            "succeeded",
+            "候选已通过确定性安全与输出合同检查。",
+            {
+              metrics: [
+                { metricId: "question-count", label: "候选题量", value: artifact.artifactKind === "quiz" ? `${artifact.value.length}道` : "1份卡片", tone: "success" },
+                { metricId: "risk-level", label: "风险等级", value: artifact.riskLevel === "high" ? "高风险" : "低风险", tone: artifact.riskLevel === "high" ? "warning" : "success" },
+              ],
+            },
+          );
+          break;
+        }
         artifact = undefined;
-        if (candidateRepairs < 1) {
+          const canRepair = candidateRepairs < 2;
+        await this.#finishPublicStage(
+          agentRunId,
+          "safety",
+          attemptNumber,
+          safetyStartedAt,
+          canRepair ? "revised" : "failed",
+          canRepair ? "候选未通过确定性检查，将返回Generator定向修复。" : `候选重复违反确定性合同，已停止${artifactLabel}发布。`,
+          {
+            metrics: [{ metricId: "failure-category", label: "失败类别", value: generatorDetail, tone: "danger" }],
+            issueCategories: ["确定性合同不符"],
+          },
+        );
+        if (canRepair) {
           candidateRepairs += 1;
           nextAttempt = "repair";
           continue;
@@ -684,15 +927,105 @@ export class AdaptiveContentService implements AdaptiveContentPort {
       checkpoint.stage = "hunter"; checkpoint.updatedAt = iso(this.#clock.now());
       await this.#options.privateStore.write("adaptive-checkpoint", key, checkpoint);
       const hunterInput = { context: reviewContext, generator: reviewGenerator };
-      const hunterResult = await this.#execute("hunter", `${generationRunId}.hunter`, context.profileRevision, hunterInput, signal);
-      checkpoint.stageOrder.push("hunter"); checkpoint.updatedAt = iso(this.#clock.now());
-      if (hunterResult.status !== "ok" || !graphs.hunter.validateOutput(hunterResult.payload)
-          || !resultSourcesAreSafe(hunterResult, context.sourceAnchorIds)
-          || containsAdaptiveAuthorityViolation(hunterResult.payload) || !hunterIsClosed(hunterResult.payload, artifact.riskLevel)) {
-        return this.#unavailable(key, checkpoint, hunterResult.status === "ok" ? "hunter_invalid" : hunterResult.status, signal);
+      let hunterFailure = "unknown";
+      for (let attempt = 0; attempt < 2; attempt += 1) {
+        const attemptNumber = attempt + 1;
+        const hunterStartedAt = await this.#beginPublicStage(
+          agentRunId,
+          "hunter",
+          attemptNumber,
+          attempt === 0
+            ? artifactKind === "card"
+              ? "Hunter正在反向检查正文依据、画像响应、错误示例和越权表述。"
+              : "Hunter正在反向检查歧义、错误、来源不足和高风险答案。"
+            : `Hunter上一轮未形成有效审查（${hunterFailure}），正在按合同重试。`,
+        );
+        const currentHunterInput = attempt === 0
+          ? hunterInput
+          : {
+              ...hunterInput,
+              reviewInstruction: hunterFailure === "hunter_contract"
+                ? "确保requiresDefender严格等于是否存在disputed=true；issues非空时recommendedVerdict必须为revise，issues为空时必须为accepted；高风险候选至少报告一个disputed=true问题。"
+                : `上一轮失败类别=${hunterFailure}。只返回Hunter三字段JSON，并纠正该失败类别。`,
+            };
+        const hunterResult = await this.#execute(
+          "hunter",
+          `${generationRunId}.hunter${attempt === 0 ? "" : ".retry"}`,
+          context.profileRevision,
+          currentHunterInput,
+          signal,
+        );
+        checkpoint.stageOrder.push(attempt === 0 ? "hunter" : "hunter-retry"); checkpoint.updatedAt = iso(this.#clock.now());
+        let outputValid = false;
+        let sourcesValid = false;
+        let authorityValid = false;
+        let hunterOutput: HunterOutput | undefined;
+        let closureValid = false;
+        try {
+          outputValid = hunterResult.status === "ok" && graphs.hunter.validateOutput(hunterResult.payload);
+          sourcesValid = outputValid && resultSourcesAreSafe(hunterResult, context.sourceAnchorIds);
+          authorityValid = outputValid && !containsAdaptiveAuthorityViolation(hunterResult.payload);
+          hunterOutput = outputValid ? hunterResult.payload as HunterOutput : undefined;
+          closureValid = hunterOutput !== undefined && hunterIsClosed(hunterOutput, artifact.riskLevel);
+        } catch {
+          hunterFailure = "hunter_processing_error";
+          const retryable = attempt === 0;
+          await this.#finishPublicStage(
+            agentRunId,
+            "hunter",
+            attemptNumber,
+            hunterStartedAt,
+            retryable ? "revised" : "failed",
+            retryable ? "Hunter结果处理出现异常，正在使用同一候选执行一次隔离重试。" : "Hunter结果处理连续异常，未发布未经完整审核的AI内容。",
+            {
+              metrics: [{ metricId: "failure-category", label: "失败类别", value: hunterFailure, tone: "danger" }],
+              issueCategories: ["审查处理异常"],
+            },
+          );
+          await this.#options.privateStore.write("adaptive-checkpoint", key, checkpoint);
+          if (retryable) continue;
+          return this.#unavailable(key, checkpoint, "hunter_invalid", signal, hunterFailure);
+        }
+        if (!outputValid || !sourcesValid || !authorityValid || !closureValid) {
+          hunterFailure = hunterResult.status !== "ok"
+            ? `status_${hunterResult.status}_${hunterResult.errorCode ?? "unknown"}`
+            : !graphs.hunter.validateOutput(hunterResult.payload) ? "hunter_schema"
+              : !sourcesValid ? "hunter_source_refs"
+                : !authorityValid ? "hunter_authority" : "hunter_contract";
+          const retryable = attempt === 0;
+          await this.#finishPublicStage(
+            agentRunId,
+            "hunter",
+            attemptNumber,
+            hunterStartedAt,
+            retryable ? "revised" : "failed",
+            retryable ? "Hunter返回结果未通过审查合同，将按失败类别受控重试。" : "Hunter未形成可验证的安全审查结论。",
+            {
+              metrics: [
+                { metricId: "result-status", label: "执行结果", value: hunterResult.status, tone: "danger" },
+                { metricId: "failure-category", label: "失败类别", value: hunterFailure, tone: "danger" },
+              ],
+              issueCategories: ["审查合同不符"],
+            },
+          );
+          await this.#options.privateStore.write("adaptive-checkpoint", key, checkpoint);
+          if (retryable) continue;
+          return this.#unavailable(key, checkpoint, hunterResult.status === "ok" ? "hunter_invalid" : hunterResult.status, signal, hunterFailure);
+        }
+        hunter = hunterOutput!; checkpoint.hunter = clone(hunter);
+        await this.#finishPublicStage(agentRunId, "hunter", attemptNumber, hunterStartedAt, "succeeded", hunter.issues.length === 0
+          ? "Hunter未发现需要阻塞发布的问题。"
+          : `Hunter发现${hunter.issues.length}项问题，已按是否存在争议决定后续工位。`, {
+          metrics: [
+            { metricId: "issue-count", label: "问题数量", value: `${hunter.issues.length}项`, tone: hunter.issues.length === 0 ? "success" : "warning" },
+            { metricId: "defender-required", label: "需要辩护", value: hunter.requiresDefender ? "是" : "否", tone: hunter.requiresDefender ? "warning" : "neutral" },
+          ],
+          issueCategories: [...new Set(hunter.issues.map((issue) => `${issue.severity}风险`))],
+        });
+        await this.#options.privateStore.write("adaptive-checkpoint", key, checkpoint);
+        break;
       }
-      hunter = hunterResult.payload; checkpoint.hunter = clone(hunter);
-      await this.#options.privateStore.write("adaptive-checkpoint", key, checkpoint);
+      if (hunter === undefined) return this.#unavailable(key, checkpoint, "hunter_invalid", signal, hunterFailure);
     }
     let defender = checkpoint.defender;
     if (hunter.requiresDefender) {
@@ -700,17 +1033,38 @@ export class AdaptiveContentService implements AdaptiveContentPort {
         checkpoint.stage = "defender"; checkpoint.updatedAt = iso(this.#clock.now());
         await this.#options.privateStore.write("adaptive-checkpoint", key, checkpoint);
         const defenderInput = { context: reviewContext, generator: reviewGenerator, hunter };
+        const defenderStartedAt = await this.#beginPublicStage(
+          agentRunId,
+          "defender",
+          1,
+          "Defender正在逐项回应Hunter标记的争议问题。",
+        );
         const defenderResult = await this.#execute("defender", `${generationRunId}.defender`, context.profileRevision, defenderInput, signal);
         checkpoint.stageOrder.push("defender"); checkpoint.updatedAt = iso(this.#clock.now());
         if (defenderResult.status !== "ok" || !graphs.defender.validateOutput(defenderResult.payload)
             || !resultSourcesAreSafe(defenderResult, context.sourceAnchorIds)
             || containsAdaptiveAuthorityViolation(defenderResult.payload)
             || !defenderIsClosed(defenderResult.payload, hunter)) {
+          await this.#finishPublicStage(agentRunId, "defender", 1, defenderStartedAt, "failed", "Defender未能闭合全部争议问题。", {
+            metrics: [{ metricId: "result-status", label: "执行结果", value: defenderResult.status, tone: "danger" }],
+            issueCategories: ["辩护未闭合"],
+          });
           return this.#unavailable(key, checkpoint, defenderResult.status === "ok" ? "defender_invalid" : defenderResult.status, signal);
         }
         defender = defenderResult.payload; checkpoint.defender = clone(defender);
+        await this.#finishPublicStage(agentRunId, "defender", 1, defenderStartedAt, "succeeded", "Defender已逐项回应争议，交由Judge独立裁决。", {
+          metrics: [
+            { metricId: "accepted-issues", label: "接受问题", value: `${defender.acceptedIssueIds.length}项`, tone: defender.acceptedIssueIds.length > 0 ? "warning" : "neutral" },
+            { metricId: "rebutted-issues", label: "完成反驳", value: `${defender.rebuttedIssueIds.length}项`, tone: "neutral" },
+            { metricId: "residual-risks", label: "剩余风险", value: `${defender.residualRisks.length}项`, tone: defender.residualRisks.length > 0 ? "danger" : "success" },
+          ],
+        });
         await this.#options.privateStore.write("adaptive-checkpoint", key, checkpoint);
       }
+    } else {
+      await this.#recordSkippedStage(agentRunId, "defender", "Hunter未标记争议问题，Defender按条件执行规则明确不触发。", [
+        { metricId: "trigger", label: "触发条件", value: "无争议问题", tone: "success" },
+      ]);
     }
     checkpoint.stage = "judge"; checkpoint.updatedAt = iso(this.#clock.now());
     await this.#options.privateStore.write("adaptive-checkpoint", key, checkpoint);
@@ -719,27 +1073,52 @@ export class AdaptiveContentService implements AdaptiveContentPort {
     let acceptedJudge: JudgeOutput | undefined;
     let judgeDetail = "unknown";
     for (let attempt = 0; attempt < 2; attempt += 1) {
+      const attemptNumber = attempt + 1;
       const judgeInput = attempt === 0
         ? baseJudgeInput
         : { ...baseJudgeInput, reviewInstruction: `上一轮裁决未通过确定性校验，失败类别=${judgeDetail}。请只修复裁决结构和问题闭合。` };
+      const judgeStartedAt = await this.#beginPublicStage(
+        agentRunId,
+        "judge",
+        attemptNumber,
+        attempt === 0 ? "Judge正在综合候选、Hunter问题和Defender辩护作最终裁决。" : "Judge正在修复上一轮裁决结构并重新闭合问题。",
+      );
       const judgeResult = await this.#execute("judge", `${generationRunId}.judge${attempt === 0 ? "" : ".repair"}`,
         context.profileRevision, judgeInput, signal);
       checkpoint.stageOrder.push(attempt === 0 ? "judge" : "judge-repair"); checkpoint.updatedAt = iso(this.#clock.now());
       if (judgeResult.status !== "ok") {
         judgeDetail = `status_${judgeResult.status}_${judgeResult.errorCode ?? "unknown"}`;
-        if (attempt === 0 && (judgeResult.status === "invalid_output" || judgeResult.status === "provider_error")) continue;
+        const canRetry = attempt === 0 && (judgeResult.status === "invalid_output" || judgeResult.status === "provider_error");
+        await this.#finishPublicStage(agentRunId, "judge", attemptNumber, judgeStartedAt, canRetry ? "revised" : "failed",
+          canRetry ? "本轮裁决未形成有效结构，将按预算修复一次。" : "Judge未形成可验证裁决。", {
+            metrics: [{ metricId: "failure-category", label: "失败类别", value: judgeDetail, tone: "danger" }],
+            issueCategories: ["裁决执行异常"],
+          });
+        if (canRetry) continue;
         return this.#unavailable(key, checkpoint, judgeResult.status, signal, judgeDetail);
       }
       if (!graphs.judge.validateOutput(judgeResult.payload)) {
         judgeDetail = "invalid_schema";
+        await this.#finishPublicStage(agentRunId, "judge", attemptNumber, judgeStartedAt, attempt === 0 ? "revised" : "rejected",
+          attempt === 0 ? "裁决结构未通过确定性校验，将定向修复一次。" : `裁决结构重复无效，拒绝发布${artifactLabel}。`, {
+            metrics: [{ metricId: "failure-category", label: "失败类别", value: judgeDetail, tone: "danger" }],
+            decision: attempt === 0 ? "revise" : "rejected",
+          });
         if (attempt === 0) continue;
         return this.#unavailable(key, checkpoint, "judge_rejected", signal, judgeDetail);
       }
       if (!resultSourcesAreSafe(judgeResult, context.sourceAnchorIds)) {
+        await this.#finishPublicStage(agentRunId, "judge", attemptNumber, judgeStartedAt, "rejected", `裁决引用了未绑定来源，${artifactLabel}不得发布。`, {
+          issueCategories: ["来源未绑定"], decision: "rejected",
+        });
         return this.#unavailable(key, checkpoint, "judge_rejected", signal, "invalid_source_refs");
       }
       if (containsAdaptiveAuthorityViolation(judgeResult.payload)) {
         judgeDetail = "authority_violation";
+        await this.#finishPublicStage(agentRunId, "judge", attemptNumber, judgeStartedAt, attempt === 0 ? "revised" : "rejected",
+          attempt === 0 ? "裁决触碰安全边界，将清除违规内容后修复一次。" : `裁决重复触碰安全边界，${artifactLabel}不得发布。`, {
+            issueCategories: ["权威边界冲突"], decision: attempt === 0 ? "revise" : "rejected",
+          });
         if (attempt === 0) continue;
         return this.#unavailable(key, checkpoint, "judge_rejected", signal, "authority_violation");
       }
@@ -749,20 +1128,177 @@ export class AdaptiveContentService implements AdaptiveContentPort {
             && (defender.acceptedIssueIds.length > 0 || defender.residualRisks.length > 0));
         judgeDetail = substantiveIssueRemains ? "unresolved_substantive_issue" : "invalid_issue_closure";
         if (substantiveIssueRemains) {
+          await this.#finishPublicStage(agentRunId, "judge", attemptNumber, judgeStartedAt, "rejected", `仍有实质性问题未解决，Judge拒绝发布${artifactLabel}。`, {
+            metrics: [{ metricId: "blocked-count", label: "阻塞问题", value: `${hunter.issues.length}项`, tone: "danger" }],
+            issueCategories: ["实质问题未解决"], decision: "rejected",
+          });
           return this.#unavailable(key, checkpoint, "judge_rejected", signal, judgeDetail);
         }
+        await this.#finishPublicStage(agentRunId, "judge", attemptNumber, judgeStartedAt, attempt === 0 ? "revised" : "rejected",
+          attempt === 0 ? "问题闭合关系不完整，将定向修复一次。" : `问题闭合关系重复无效，拒绝发布${artifactLabel}。`, {
+            issueCategories: ["问题闭合不完整"], decision: attempt === 0 ? "revise" : "rejected",
+          });
         if (attempt === 0) continue;
         return this.#unavailable(key, checkpoint, "judge_rejected", signal, judgeDetail);
       }
       if (judgeResult.payload.verdict !== "accepted") {
+        await this.#finishPublicStage(agentRunId, "judge", attemptNumber, judgeStartedAt, "rejected", `Judge明确拒绝本轮候选${artifactLabel}。`, {
+          metrics: [{ metricId: "verdict", label: "裁决", value: judgeResult.payload.verdict, tone: "danger" }],
+          issueCategories: ["裁决未接受"], decision: judgeResult.payload.verdict,
+        });
         return this.#unavailable(key, checkpoint, "judge_rejected", signal, `verdict_${judgeResult.payload.verdict}`);
       }
+      await this.#finishPublicStage(agentRunId, "judge", attemptNumber, judgeStartedAt, "succeeded", `Judge确认问题已闭合，允许发布本轮${artifactLabel}。`, {
+        metrics: [
+          { metricId: "verdict", label: "裁决", value: "accepted", tone: "success" },
+          { metricId: "blocked-count", label: "阻塞问题", value: `${judgeResult.payload.blockedIssueIds.length}项`, tone: judgeResult.payload.blockedIssueIds.length === 0 ? "success" : "danger" },
+        ],
+        decision: "accepted",
+      });
       acceptedJudge = judgeResult.payload;
       break;
     }
     if (acceptedJudge === undefined) return this.#unavailable(key, checkpoint, "judge_rejected", signal, judgeDetail);
     checkpoint.judge = clone(acceptedJudge);
     return this.#accepted(key, checkpoint, artifact, signal);
+  }
+
+  async #beginPublicStage(
+    agentRunId: string | undefined,
+    role: keyof typeof PUBLIC_STAGE_LABELS,
+    attemptNumber: number,
+    publicSummary: string,
+    metrics: AppendAgentStageInput["metrics"] = [],
+  ): Promise<number> {
+    const startedAt = this.#clock.now();
+    if (agentRunId !== undefined && this.#options.agentRuns !== undefined) {
+      await this.#appendPublicStage(agentRunId, {
+        role,
+        label: PUBLIC_STAGE_LABELS[role],
+        status: "running",
+        startedAt: iso(startedAt),
+        attemptNumber,
+        publicSummary,
+        metrics,
+      });
+    }
+    return startedAt;
+  }
+
+  async #finishPublicStage(
+    agentRunId: string | undefined,
+    role: keyof typeof PUBLIC_STAGE_LABELS,
+    attemptNumber: number,
+    startedAt: number,
+    status: Exclude<AppendAgentStageInput["status"], "queued" | "running">,
+    publicSummary: string,
+    options: Pick<AppendAgentStageInput, "metrics" | "issueCategories" | "decision" | "sourceClaimIds"> = {},
+  ): Promise<void> {
+    if (agentRunId === undefined || this.#options.agentRuns === undefined) return;
+    const finishedAt = this.#clock.now();
+    await this.#appendPublicStage(agentRunId, {
+      role,
+      label: PUBLIC_STAGE_LABELS[role],
+      status,
+      startedAt: iso(startedAt),
+      finishedAt: iso(finishedAt),
+      durationMs: Math.max(0, finishedAt - startedAt),
+      attemptNumber,
+      publicSummary,
+      ...options,
+    });
+  }
+
+  async #recordSkippedStage(
+    agentRunId: string | undefined,
+    role: keyof typeof PUBLIC_STAGE_LABELS,
+    publicSummary: string,
+    metrics: AppendAgentStageInput["metrics"] = [],
+  ): Promise<void> {
+    if (agentRunId === undefined || this.#options.agentRuns === undefined) return;
+    const now = this.#clock.now();
+    await this.#appendPublicStage(agentRunId, {
+      role,
+      label: PUBLIC_STAGE_LABELS[role],
+      status: "skipped",
+      startedAt: iso(now),
+      finishedAt: iso(now),
+      durationMs: 0,
+      attemptNumber: 1,
+      publicSummary,
+      metrics,
+    });
+  }
+
+  async #appendPublicStage(agentRunId: string, event: AppendAgentStageInput): Promise<void> {
+    const repository = this.#options.agentRuns;
+    if (repository === undefined) return;
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      try {
+        await repository.append(agentRunId, event);
+        return;
+      } catch (error) {
+        const persisted = await repository.getByRunId(agentRunId).catch(() => undefined);
+        const alreadyWritten = persisted?.stages.some((stage) => stage.role === event.role
+          && stage.status === event.status
+          && stage.attemptNumber === event.attemptNumber
+          && stage.startedAt === event.startedAt
+          && stage.publicSummary === event.publicSummary) === true;
+        if (alreadyWritten) return;
+        if (attempt === 1) throw error;
+      }
+    }
+  }
+
+  async #recordUnexpectedPipelineFailure(agentRunId: string | undefined): Promise<void> {
+    const repository = this.#options.agentRuns;
+    if (agentRunId === undefined || repository === undefined) return;
+    try {
+      const run = await repository.getByRunId(agentRunId);
+      const stages = run?.stages ?? [];
+      let running: (typeof stages)[number] | undefined;
+      for (let index = stages.length - 1; index >= 0; index -= 1) {
+        const candidate = stages[index]!;
+        if (candidate.status !== "running" || !Object.hasOwn(PUBLIC_STAGE_LABELS, candidate.role)) continue;
+        const hasTerminalPair = stages.slice(index + 1).some((stage) => stage.role === candidate.role
+          && stage.attemptNumber === candidate.attemptNumber
+          && stage.startedAt === candidate.startedAt
+          && stage.status !== "queued"
+          && stage.status !== "running");
+        if (!hasTerminalPair) {
+          running = candidate;
+          break;
+        }
+      }
+      if (running === undefined) return;
+      const role = running.role as keyof typeof PUBLIC_STAGE_LABELS;
+      const finishedAt = this.#clock.now();
+      await this.#appendPublicStage(agentRunId, {
+        role,
+        label: PUBLIC_STAGE_LABELS[role],
+        status: "failed",
+        startedAt: running.startedAt,
+        finishedAt: iso(finishedAt),
+        durationMs: Math.max(0, finishedAt - Date.parse(running.startedAt)),
+        attemptNumber: running.attemptNumber,
+        publicSummary: `${PUBLIC_STAGE_LABELS[role]}出现未预期的处理异常，本轮内容未发布。`,
+        metrics: [{ metricId: "failure-category", label: "失败类别", value: "stage_processing_error", tone: "danger" }],
+        issueCategories: ["工位处理异常"],
+      });
+    } catch {
+      // Public observability must never expose raw provider or storage errors.
+    }
+  }
+
+  async #recordReviewedCache(agentRunId: string | undefined, source: "immediate" | "late", artifactKind: AdaptiveArtifactKind): Promise<void> {
+    if (agentRunId === undefined || this.#options.agentRuns === undefined) return;
+    const cacheMetric = [{ metricId: "cache-source", label: "复用来源", value: source === "late" ? "延迟审核缓存" : "已审核缓存", tone: "neutral" as const }];
+    const artifactLabel = artifactKind === "card" ? "个性化提醒" : "题组";
+    await this.#recordSkippedStage(agentRunId, "generator", `命中同一正文、版本和上下文下的已审核${artifactLabel}，本次未重新调用Generator。`, cacheMetric);
+    await this.#recordSkippedStage(agentRunId, "safety", `已复用原${artifactLabel}的确定性安全检查结论。`, cacheMetric);
+    await this.#recordSkippedStage(agentRunId, "hunter", `已复用原${artifactLabel}的Hunter审核结论。`, cacheMetric);
+    await this.#recordSkippedStage(agentRunId, "defender", `已复用原${artifactLabel}的Defender条件执行结论。`, cacheMetric);
+    await this.#recordSkippedStage(agentRunId, "judge", `已复用原${artifactLabel}的Judge接受结论。`, cacheMetric);
   }
 
   async #execute(graphId: "generator" | "hunter" | "defender" | "judge", runId: string, profileRevision: number,
@@ -824,6 +1360,7 @@ export class AdaptiveContentService implements AdaptiveContentPort {
       ...(context.targetKnowledgePointIds === undefined ? {} : { targetKnowledgePointIds: targetKnowledgePointIds(context) }),
       modelId: this.#options.modelId, promptVersion: this.#options.promptVersion,
       ...(context.lessonVariantId === undefined ? {} : { lessonVariantId: context.lessonVariantId }),
+      ...(personalizationContextSha256(context) === undefined ? {} : { personalizationContextSha256: personalizationContextSha256(context) }),
       ...(remediationContextSha256(context) === undefined ? {} : { remediationContextSha256: remediationContextSha256(context) }),
       artifact: clone(artifact), cachedAt: iso(this.#clock.now()), source,
     });
@@ -845,13 +1382,35 @@ export class AdaptiveContentService implements AdaptiveContentPort {
   }
 
   #validateContext(context: AdaptiveContentSourceContext, artifactKind: AdaptiveArtifactKind): void {
+    const { personalizationContext, ...authorityCheckedContext } = context;
     if (!Number.isInteger(context.profileRevision) || context.profileRevision < 1 || !safeId(context.knowledgePointId)
         || !safeId(context.targetId) || !safeText(context.title, 240) || !safeIdList(context.sourceAnchorIds)
         || (context.targetKnowledgePointIds !== undefined && !safeIdList(context.targetKnowledgePointIds, true))
+        || (personalizationContext !== undefined && !this.#validPersonalizationContext(personalizationContext))
         || (context.remediationContext !== undefined && !this.#validRemediationContext(context.remediationContext, context.sourceAnchorIds))
-        || !safeText(context.publicSourceSummary, 16_000) || containsAdaptiveAuthorityViolation(context)) {
+        || !safeText(context.publicSourceSummary, 16_000) || containsAdaptiveAuthorityViolation(authorityCheckedContext)) {
       throw new Error(`Unsafe ${artifactKind} source context`);
     }
+  }
+
+  #validPersonalizationContext(context: LessonPersonalizationContext): boolean {
+    return ["unverified", "support_needed", "learning", "ready", "mastered"].includes(context.knowledgeStatus)
+      && (context.mastery === null || (Number.isFinite(context.mastery) && context.mastery >= 0 && context.mastery <= 1))
+      && Number.isFinite(context.confidence) && context.confidence >= 0 && context.confidence <= 1
+      && Number.isInteger(context.validEvidenceCount) && context.validEvidenceCount >= 0
+      && Number.isInteger(context.evidenceFormCount) && context.evidenceFormCount >= 0
+      && ["concise", "step_by_step", "example_first", "uncertain"].includes(context.explanationPreference)
+      && (context.journey === undefined || (
+        Number.isInteger(context.journey.currentPosition)
+        && Number.isInteger(context.journey.totalLessons)
+        && context.journey.currentPosition >= 1
+        && context.journey.totalLessons === context.journey.lessons.length
+        && context.journey.currentPosition <= context.journey.totalLessons
+        && context.journey.totalLessons <= 12
+        && context.journey.lessons.every((lesson) => safeId(lesson.knowledgePointId)
+          && safeText(lesson.title, 240)
+          && safeText(lesson.objective, 1_200))
+      ));
   }
 
   #validRemediationContext(context: QuizRemediationContext, allowedSources: readonly string[]): boolean {

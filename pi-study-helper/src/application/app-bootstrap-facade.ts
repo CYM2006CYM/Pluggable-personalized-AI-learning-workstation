@@ -14,11 +14,17 @@ import type { LearningSessionCatalogPort, SessionBindingReader } from "../reposi
 import type { InternalPathSessionPort } from "../repositories/internal-path-session-port.js";
 import type { ProfileFamilyRepository } from "../repositories/profile-family-repository.js";
 import { projectPathNodes } from "./path-progress-projection.js";
-import { buildLearnerProfile } from "../domain/learner-profile.js";
+import { buildLearnerProfile, diagnosticSkippedKnowledgePointIdsFromPath } from "../domain/learner-profile.js";
+import type { LearnerProfileHistoryRepository } from "../infrastructure/learner-profile-history-repository.js";
+import type { SessionCompletionArchiveRepository } from "../infrastructure/session-completion-archive-repository.js";
+import type { AgentRunRepository } from "../infrastructure/agent-run-repository.js";
 
 export interface FileAppBootstrapFacadeOptions {
   profiles: Pick<ProfileFamilyRepository, "listActiveProfileV2Manifests" | "readActiveProfileV2File">;
   sessions: LearningSessionCatalogPort & SessionBindingReader & InternalPathSessionPort;
+  profileHistory?: Pick<LearnerProfileHistoryRepository, "getLatest">;
+  completionArchive?: Pick<SessionCompletionArchiveRepository, "get">;
+  agentRuns?: Pick<AgentRunRepository, "listBySession">;
 }
 
 function sessionView(view: SessionSafeView): SessionSafeView {
@@ -177,7 +183,41 @@ export class FileAppBootstrapFacade implements AppBootstrapFacade {
       : await this.options.sessions.getBoundLearningCards({
           sessionId: recovered.sessionId,
           sessionVersion: recovered.sessionVersion,
+        profileRevision: recovered.profileRevision,
+      });
+    const recoveredAgentRuns = recovered === undefined || this.options.agentRuns === undefined
+      ? []
+      : await this.options.agentRuns.listBySession(recovered.sessionId);
+    const latestTipRunByNode = new Map<string, string>();
+    for (const run of recoveredAgentRuns) {
+      if (!run.activityId.startsWith("node-") || (run.status !== "succeeded" && run.status !== "fallback")) continue;
+      const previousId = latestTipRunByNode.get(run.activityId);
+      const previous = previousId === undefined ? undefined : recoveredAgentRuns.find((candidate) => candidate.runId === previousId);
+      if (previous === undefined || Date.parse(run.finishedAt ?? run.startedAt) > Date.parse(previous.finishedAt ?? previous.startedAt)) {
+        latestTipRunByNode.set(run.activityId, run.runId);
+      }
+    }
+    const latestProfileHistory = recovered === undefined
+      ? undefined
+      : await this.options.profileHistory?.getLatest(recovered.sessionId);
+    const completionArchive = recovered === undefined
+      ? undefined
+      : await this.options.completionArchive?.get(recovered.sessionId);
+    const recoveredProfile = recovered === undefined ? undefined
+      : latestProfileHistory !== undefined
+        && latestProfileHistory.sessionVersion === recovered.sessionVersion
+        && latestProfileHistory.profileRevision === recovered.profileRevision
+        && latestProfileHistory.evidenceVersion === recovered.latestCommit.evidenceVersion
+        ? structuredClone(latestProfileHistory.profile)
+        : buildLearnerProfile({
+          sessionId: recovered.sessionId,
           profileRevision: recovered.profileRevision,
+          evidenceVersion: recovered.latestCommit?.evidenceVersion ?? 0,
+          evidence: recovered.evidence,
+          knowledgeStates: recovered.knowledgeStates ?? [],
+          latestDiagnostic: recovered.latestDiagnostic,
+          activityProgress: recovered.activityProgress,
+          diagnosticSkippedKnowledgePointIds: diagnosticSkippedKnowledgePointIdsFromPath(recovered.path?.nodes),
         });
     const session: SessionRecoverySafeView | undefined = recovered === undefined ? undefined : {
       sessionId: recovered.sessionId,
@@ -189,19 +229,27 @@ export class FileAppBootstrapFacade implements AppBootstrapFacade {
       activityProgress: progress(recovered.activityProgress),
       evidenceVersion: recovered.latestCommit?.evidenceVersion ?? 0,
       knowledgeStates: structuredClone(recovered.knowledgeStates ?? []),
-      learningProfile: buildLearnerProfile({
-        sessionId: recovered.sessionId,
-        profileRevision: recovered.profileRevision,
-        evidenceVersion: recovered.latestCommit?.evidenceVersion ?? 0,
-        evidence: recovered.evidence,
-        knowledgeStates: recovered.knowledgeStates ?? [],
-        latestDiagnostic: recovered.latestDiagnostic,
-        activityProgress: recovered.activityProgress,
-      }),
+      ...(recoveredProfile === undefined ? {} : { learningProfile: recoveredProfile }),
       learningCards: boundLearningCards.map((binding) => ({
         nodeId: binding.nodeId,
-        card: structuredClone(binding.card),
+        card: {
+          ...structuredClone(binding.card),
+          ...(binding.card.personalizedTipAgentRunId === undefined && latestTipRunByNode.has(binding.nodeId)
+            ? { personalizedTipAgentRunId: latestTipRunByNode.get(binding.nodeId)! }
+            : {}),
+        },
       })),
+      ...(completionArchive === undefined
+        || recovered.view.status !== "completed"
+        || completionArchive.sessionVersion !== recovered.sessionVersion
+        || completionArchive.profileRevision !== recovered.profileRevision
+        || completionArchive.evidenceVersion !== recovered.latestCommit.evidenceVersion
+        ? {}
+        : {
+            completedSummary: structuredClone(completionArchive.output),
+            completionArchiveSha256: completionArchive.payloadSha256,
+            agentRunIds: [...completionArchive.agentRunIds],
+          }),
       ...(recovered.currentAttempt === undefined ? {} : { currentAttempt: currentAttempt(recovered.currentAttempt) }),
       ...(recovered.path === undefined ? {} : { path: {
         pathId: recovered.path.pathId,

@@ -99,6 +99,9 @@ export interface SessionRecoverySafeView extends FacadeResponseMeta {
   knowledgeStates?: KnowledgeState[];
   learningProfile?: import("./domain.js").LearnerProfileSafeView;
   learningCards?: Array<{ nodeId: string; card: import("./index.js").LearningCardSafeView }>;
+  completedSummary?: CompleteSessionOutput;
+  completionArchiveSha256?: string;
+  agentRunIds?: string[];
   path?: {
     pathId: string;
     pathVersion: number;
@@ -230,8 +233,24 @@ export interface ConfirmedPathOutput extends FacadeResponseMeta {
   status: "active";
 }
 
+export interface PreparePersonalizedTipInput extends WriteRequestMeta {
+  pathVersion: number;
+  nodeId: string;
+}
+
+export interface PersonalizedTipOutput extends FacadeResponseMeta {
+  requestId: string;
+  pathVersion: number;
+  nodeId: string;
+  status: "generated" | "unavailable";
+  card: import("./index.js").LearningCardSafeView;
+  agentRunId?: string;
+}
+
 export interface GetNextStepInput extends ReadRequestMeta {
   pathVersion: number;
+  /** Optional read-only target used to revisit an earlier or skipped lesson. */
+  nodeId?: string;
 }
 
 export interface NextStepOutput extends FacadeResponseMeta {
@@ -242,6 +261,9 @@ export interface NextStepOutput extends FacadeResponseMeta {
   card?: import("./index.js").LearningCardSafeView;
   sourceAnchorIds?: string[];
   contentReadiness?: "ready" | "fallback" | "preparing";
+  navigationMode?: "current" | "review";
+  currentNodeId?: string;
+  relearnAllowed?: boolean;
 }
 
 export type ReplanTrigger =
@@ -326,6 +348,8 @@ export interface OpenActivityInput extends WriteRequestMeta {
   activityVersion: number;
   pathVersion: number;
   acknowledgedCardId?: string;
+  /** Explicit learner action for reopening a diagnostically skipped or gap-continued activity. */
+  relearn?: boolean;
 }
 
 export interface CodeActivityDraftOutput extends FacadeResponseMeta {

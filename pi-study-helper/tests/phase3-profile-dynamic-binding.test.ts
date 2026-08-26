@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildLearnerProfile } from "../src/domain/learner-profile.js";
+import { buildLearnerProfile, diagnosticSkippedKnowledgePointIdsFromPath } from "../src/domain/learner-profile.js";
 import type { Evidence, KnowledgeState } from "../src/contracts/index.js";
 
 function state(knowledgePointId: string, status: KnowledgeState["status"], evidenceIds: string[]): KnowledgeState {
@@ -42,6 +42,49 @@ describe("Phase 3 learner profile fact projection", () => {
       expect.objectContaining({ knowledgePointId: "kp-clean", beforeStatus: "support_needed", afterStatus: "support_needed", improved: false }),
     ]));
     expect(profile.skippedActivityIds).toEqual(["quiz-clean"]);
+    expect(profile.diagnosticSkippedKnowledgePointIds).toEqual([]);
     expect(profile.deterministicSummary).toContain("未将其记为掌握");
+  });
+
+  it("keeps diagnostic chapter skips separate from activities continued with a gap", () => {
+    const profile = buildLearnerProfile({
+      sessionId: "session-skip", profileRevision: 3, evidenceVersion: 2,
+      evidence: [], knowledgeStates: [state("kp-read", "mastered", [])], activityProgress: [],
+      diagnosticSkippedKnowledgePointIds: ["kp-read", "kp-read"],
+    });
+    expect(profile.diagnosticSkippedKnowledgePointIds).toEqual(["kp-read"]);
+    expect(profile.skippedActivityIds).toEqual([]);
+  });
+
+  it("preserves diagnostic skip selections even after a required activity completes the same node", () => {
+    expect(diagnosticSkippedKnowledgePointIdsFromPath([
+      { knowledgePointId: "kp-read", status: "skipped", reasonCodes: ["diagnostic_skip_selected"] },
+      { knowledgePointId: "kp-validate", status: "completed", reasonCodes: ["goal_required", "diagnostic_skip_selected"] },
+      { knowledgePointId: "kp-basic", status: "completed", reasonCodes: ["goal_required"] },
+    ])).toEqual(["kp-read", "kp-validate"]);
+  });
+
+  it("does not describe a knowledge point as a strength when its latest formal mastery evidence is unresolved", () => {
+    const unresolved = buildLearnerProfile({
+      sessionId: "session-phase3", profileRevision: 3, evidenceVersion: 3,
+      evidence: [evidence("diagnostic-correct", "kp-read", "correct"), evidence("quiz-incorrect", "kp-read", "incorrect")],
+      knowledgeStates: [state("kp-read", "mastered", ["diagnostic-correct", "quiz-incorrect"])],
+      activityProgress: [],
+    });
+    expect(unresolved.strengths).not.toContain("kp-read");
+    expect(unresolved.supportNeeded).toContain("kp-read");
+
+    const improved = buildLearnerProfile({
+      sessionId: "session-phase3", profileRevision: 3, evidenceVersion: 4,
+      evidence: [
+        evidence("diagnostic-correct", "kp-read", "correct"),
+        evidence("quiz-incorrect", "kp-read", "incorrect"),
+        evidence("retry-correct", "kp-read", "correct"),
+      ],
+      knowledgeStates: [state("kp-read", "mastered", ["diagnostic-correct", "quiz-incorrect", "retry-correct"])],
+      activityProgress: [],
+    });
+    expect(improved.strengths).toContain("kp-read");
+    expect(improved.supportNeeded).not.toContain("kp-read");
   });
 });

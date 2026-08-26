@@ -36,6 +36,27 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+function claimsNonEmptySection(summary: string, marker: RegExp): boolean {
+  return summary.split(/\r?\n/u).map((line) => line.trim()).filter(Boolean).some((line) => {
+    const match = marker.exec(line);
+    marker.lastIndex = 0;
+    if (match?.index === undefined) return false;
+    const before = line.slice(0, match.index).trim();
+    const after = line.slice(match.index + match[0].length).replace(/^[\s:：*\-]+/u, "");
+    if (/(?:无|没有|暂无|不存在)$/u.test(before)) return false;
+    return !/^(?:无|没有|暂无|不存在|不需要|0(?:个|项)?)(?:[。；，,]|$)/u.test(after);
+  });
+}
+
+function conflictsWithDeterministicFacts(summary: string, profile: LearnerProfileSafeView): boolean {
+  if (profile.supportNeeded.length === 0
+      && claimsNonEmptySection(summary, /仍需支持(?:点|的知识点)?|薄弱(?:点|知识点)?/u)) return true;
+  if ((profile.diagnosticSkippedKnowledgePointIds ?? []).length > 0
+      && /(?:待处理|pending|尚未(?:执行|开始|开展|进行)|无证据支撑|后续(?:需要)?继续|需要继续(?:推进|完成|学习)|建议继续(?:推进|完成|学习))/iu.test(summary)) return true;
+  return profile.skippedActivityIds.length === 0
+    && claimsNonEmptySection(summary, /带缺口活动/u);
+}
+
 function runId(profile: LearnerProfileSafeView, modelId: string, promptVersion: string): string {
   return `w6-profile-${createHash("sha256").update(JSON.stringify({
     sessionId: profile.sessionId, profileRevision: profile.profileRevision, evidenceVersion: profile.evidenceVersion,
@@ -62,6 +83,11 @@ export class LearnerProfileAgentService implements LearnerProfileAgentPort {
       initialKnowledgeStates: profile.initialKnowledgeStates,
       currentKnowledgeStates: profile.currentKnowledgeStates,
       progress: profile.progress,
+      deterministicSummary: profile.deterministicSummary,
+      strengths: [...profile.strengths],
+      supportNeeded: [...profile.supportNeeded],
+      skippedActivityIds: [...profile.skippedActivityIds],
+      diagnosticSkippedKnowledgePointIds: [...(profile.diagnosticSkippedKnowledgePointIds ?? [])],
       activities: profile.activities,
       evidenceIds: [...profile.evidenceIds],
     };
@@ -84,6 +110,9 @@ export class LearnerProfileAgentService implements LearnerProfileAgentPort {
     if (evidenceRefs.length === 0 || new Set(result.sourceRefs).size !== result.sourceRefs.length
         || result.sourceRefs.some((id) => !profile.evidenceIds.includes(id))) {
       return { status: "unavailable", runId: executionRunId, errorCode: "unbound_evidence" };
+    }
+    if (conflictsWithDeterministicFacts(result.payload.summary, profile)) {
+      return { status: "unavailable", runId: executionRunId, errorCode: "semantic_conflict" };
     }
     return { status: "accepted", runId: executionRunId, explanation: result.payload.summary, evidenceRefs };
   }

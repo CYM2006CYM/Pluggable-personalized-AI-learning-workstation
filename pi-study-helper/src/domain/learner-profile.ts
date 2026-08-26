@@ -30,6 +30,7 @@ export interface LearnerProfileSafeView {
   strengths: string[];
   supportNeeded: string[];
   skippedActivityIds: string[];
+  diagnosticSkippedKnowledgePointIds?: string[];
   activities: LearnerProfileActivityItem[];
   evidenceIds: string[];
   deterministicSummary: string;
@@ -59,6 +60,7 @@ interface LearnerProfileInput {
   knowledgeStates: readonly KnowledgeState[];
   latestDiagnostic?: LearnerDiagnostic;
   activityProgress: readonly NodeActivityProgress[];
+  diagnosticSkippedKnowledgePointIds?: readonly string[];
 }
 
 const STATUS_RANK: Record<KnowledgeState["status"], number> = {
@@ -75,6 +77,15 @@ function clone<T>(value: T): T {
 
 function statusOf(state: KnowledgeState | undefined): KnowledgeState["status"] {
   return state?.status ?? "unverified";
+}
+
+export function diagnosticSkippedKnowledgePointIdsFromPath(
+  nodes: readonly { knowledgePointId: string; reasonCodes: readonly string[]; status?: string }[] | undefined,
+): string[] {
+  return [...new Set((nodes ?? [])
+    .filter((node) => node.reasonCodes.includes("diagnostic_skip_selected"))
+    .map((node) => node.knowledgePointId))]
+    .sort((left, right) => left.localeCompare(right, "en"));
 }
 
 export function buildLearnerProfile(input: LearnerProfileInput): LearnerProfileSafeView {
@@ -99,8 +110,22 @@ export function buildLearnerProfile(input: LearnerProfileInput): LearnerProfileS
     continuedWithGap: activity.continuedWithGap === true,
   })));
   const skippedActivityIds = activities.filter((activity) => activity.continuedWithGap || activity.status === "insufficient").map((activity) => activity.activityId);
-  const strengths = currentKnowledgeStates.filter((state) => state.status === "ready" || state.status === "mastered").map((state) => state.knowledgePointId);
-  const supportNeeded = currentKnowledgeStates.filter((state) => state.status === "support_needed" || state.status === "unverified" || state.status === "learning").map((state) => state.knowledgePointId);
+  const diagnosticSkippedKnowledgePointIds = [...new Set(input.diagnosticSkippedKnowledgePointIds ?? [])]
+    .sort((left, right) => left.localeCompare(right, "en"));
+  const latestMasteryEvidence = new Map<string, Evidence>();
+  for (const item of [...input.evidence].sort((left, right) => (left.evidenceVersion ?? 0) - (right.evidenceVersion ?? 0)
+      || Date.parse(left.createdAt) - Date.parse(right.createdAt))) {
+    if (item.impact === "mastery") latestMasteryEvidence.set(item.knowledgePointId, item);
+  }
+  const unresolvedKnowledgePointIds = new Set([...latestMasteryEvidence.values()]
+    .filter((item) => item.outcome !== "correct")
+    .map((item) => item.knowledgePointId));
+  const strengths = currentKnowledgeStates
+    .filter((state) => (state.status === "ready" || state.status === "mastered") && !unresolvedKnowledgePointIds.has(state.knowledgePointId))
+    .map((state) => state.knowledgePointId);
+  const supportNeeded = currentKnowledgeStates
+    .filter((state) => state.status === "support_needed" || state.status === "unverified" || state.status === "learning" || unresolvedKnowledgePointIds.has(state.knowledgePointId))
+    .map((state) => state.knowledgePointId);
   const evidenceIds = [...new Set((input.evidence ?? []).map((item) => item.evidenceId))].sort((left, right) => left.localeCompare(right, "en"));
   const improvedCount = progress.filter((item) => item.improved).length;
   const deterministicSummary = `本次会话形成 ${currentKnowledgeStates.length} 个知识状态，${strengths.length} 个已有基础或掌握，${supportNeeded.length} 个仍需支持；${improvedCount} 个知识点相较初始诊断有进步，记录 ${evidenceIds.length} 条正式 Evidence。${skippedActivityIds.length > 0 ? `有 ${skippedActivityIds.length} 个活动带缺口继续，未将其记为掌握。` : "没有活动被标记为带缺口继续。"}`;
@@ -115,6 +140,7 @@ export function buildLearnerProfile(input: LearnerProfileInput): LearnerProfileS
     strengths,
     supportNeeded,
     skippedActivityIds,
+    diagnosticSkippedKnowledgePointIds,
     activities,
     evidenceIds,
     deterministicSummary,

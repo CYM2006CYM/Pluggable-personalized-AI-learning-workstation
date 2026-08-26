@@ -10,6 +10,7 @@ import { quizQuestionSetSha256 } from "../src/domain/quiz-runtime.js";
 import type { PathEngineProfile } from "../src/domain/path-engine.js";
 import { FileLearningSessionRepository } from "../src/repositories/file-learning-session-repository.js";
 import { toPathSafeSnapshot, type InternalPersistedPathSnapshot } from "../src/repositories/internal-path-session-port.js";
+import { InMemoryAgentRunRepository, type AgentRunRepository } from "../src/infrastructure/agent-run-repository.js";
 
 const roots: string[] = [];
 const now = () => new Date("2026-08-12T00:00:00.000Z");
@@ -56,6 +57,8 @@ async function setup(
   runtimeAssets: QuizActivityAssets = assets,
   content: AdaptiveContentPort = createDeterministicContentPort(),
   profileAgent?: LearnerProfileAgentPort,
+  agentRuns?: AgentRunRepository,
+  dynamicGenerationTimeoutMs?: number,
 ) {
   const root = await mkdtemp(resolve(tmpdir(), "quiz-activity-runtime-")); roots.push(root);
   const sessions = new FileLearningSessionRepository({ dataRoot: root, now });
@@ -83,11 +86,84 @@ async function setup(
     },
   }, path);
   const pathSuffix = createActivityPathSuffixReplanner({ sessions, profile: { async load() { return structuredClone(pathProfile); } }, now });
-  const runtime = new QuizActivityRuntime({ sessions, content, loadAssets: async () => structuredClone(runtimeAssets), pathSuffix, profileAgent, now });
+  const runtime = new QuizActivityRuntime({ sessions, content, loadAssets: async () => structuredClone(runtimeAssets), pathSuffix, profileAgent, agentRuns, dynamicGenerationTimeoutMs, now });
   return { root, sessions, view, runtime };
 }
 
 describe("QuizActivityRuntime", () => {
+  it("创建并发布可恢复的同一Agent run引用", async () => {
+    const generated = questions("agent-dynamic");
+    const agentRuns = new InMemoryAgentRunRepository(now);
+    const content: AdaptiveContentPort = {
+      async prepareCard() { return { status: "unavailable" }; },
+      async prepareQuiz(input) {
+        expect(input.agentRunId).toBeDefined();
+        for (const [role, status] of [
+          ["generator", "succeeded"], ["safety", "succeeded"], ["hunter", "succeeded"],
+          ["defender", "skipped"], ["judge", "succeeded"],
+        ] as const) {
+          await agentRuns.append(input.agentRunId!, {
+            role, label: role, status, startedAt: now().toISOString(), finishedAt: now().toISOString(), durationMs: 0,
+            attemptNumber: 1, publicSummary: `${role}形成安全结果。`,
+          });
+        }
+        return {
+          status: "accepted", questions: generated, origin: "live_model",
+          reviewBinding: { generationRunId: "w6-agent-run-binding", acceptedQuestionSetSha256: quizQuestionSetSha256(generated) },
+        };
+      },
+    };
+    const { view, runtime } = await setup(assets, content, undefined, agentRuns);
+    const opened = await runtime.openActivity({
+      requestId: "open-agent-run", sessionId: view.sessionId, sessionVersion: 3, profileRevision: 3,
+      activityId: "quiz", activityVersion: 1, pathVersion: 1, acknowledgedCardId: "actual-card-kp",
+    });
+    expect(opened.activity.agentRunId).toMatch(/^agent-[a-f0-9]{32}$/u);
+    const stored = await agentRuns.getByRunId(opened.activity.agentRunId!);
+    expect(stored).toMatchObject({ status: "succeeded", resultOrigin: "ai_live", questionCount: 4 });
+    expect(stored?.stages.at(-1)).toMatchObject({ role: "publish", status: "succeeded" });
+  });
+
+  it("AI执行失败时在同一run中如实记录固定保障发布", async () => {
+    const agentRuns = new InMemoryAgentRunRepository(now);
+    const content: AdaptiveContentPort = {
+      async prepareCard() { return { status: "unavailable" }; },
+      async prepareQuiz(input) {
+        await agentRuns.append(input.agentRunId!, {
+          role: "generator", label: "Generator", status: "failed", startedAt: now().toISOString(), finishedAt: now().toISOString(),
+          durationMs: 0, attemptNumber: 1, publicSummary: "模型服务未形成有效候选。",
+        });
+        return { status: "unavailable" };
+      },
+    };
+    const { view, runtime } = await setup(assets, content, undefined, agentRuns);
+    const opened = await runtime.openActivity({
+      requestId: "open-agent-fallback", sessionId: view.sessionId, sessionVersion: 3, profileRevision: 3,
+      activityId: "quiz", activityVersion: 1, pathVersion: 1, acknowledgedCardId: "actual-card-kp",
+    });
+    expect(opened.activity.questionSource).toBe("profile_fixed");
+    const stored = await agentRuns.getByRunId(opened.activity.agentRunId!);
+    expect(stored).toMatchObject({ status: "fallback", resultOrigin: "profile_fixed", fallbackReasonCode: "AI_UNAVAILABLE_FIXED" });
+    expect(stored?.stages.at(-1)).toMatchObject({ role: "publish", status: "fallback" });
+  });
+
+  it("超出客观题总生成时限后停止等待并记录固定保障原因", async () => {
+    const agentRuns = new InMemoryAgentRunRepository(now);
+    const content: AdaptiveContentPort = {
+      async prepareCard() { return { status: "unavailable" }; },
+      async prepareQuiz() { return new Promise<never>(() => {}); },
+    };
+    const { view, runtime } = await setup(assets, content, undefined, agentRuns, 5);
+    const opened = await runtime.openActivity({
+      requestId: "open-agent-timeout", sessionId: view.sessionId, sessionVersion: 3, profileRevision: 3,
+      activityId: "quiz", activityVersion: 1, pathVersion: 1, acknowledgedCardId: "actual-card-kp",
+    });
+    expect(opened.activity.questionSource).toBe("profile_fixed");
+    const stored = await agentRuns.getByRunId(opened.activity.agentRunId!);
+    expect(stored).toMatchObject({ status: "fallback", resultOrigin: "profile_fixed", fallbackReasonCode: "AI_GENERATION_TIMEOUT_FIXED" });
+    expect(stored?.stages.at(-1)?.publicSummary).toContain("超过1秒");
+  });
+
   it("locks the accepted AI answer set to the Attempt and never grades it with the fixed key", async () => {
     const generated = questions("dynamic").map((question) => ({
       ...question,
@@ -154,10 +230,22 @@ describe("QuizActivityRuntime", () => {
     const firstQuestions = questions("first");
     const retryQuestions = questions("retry").map((question, index) => ({ ...question, prompt: `重做题面${index}` }));
     const requests: Parameters<AdaptiveContentPort["prepareQuiz"]>[0][] = [];
+    const agentRuns = new InMemoryAgentRunRepository(now);
     const content: AdaptiveContentPort = {
       async prepareCard() { return { status: "unavailable" }; },
       async prepareQuiz(input) {
         requests.push(structuredClone(input));
+        if (input.agentRunId !== undefined) {
+          for (const [role, status] of [
+            ["generator", "succeeded"], ["safety", "succeeded"], ["hunter", "succeeded"],
+            ["defender", "skipped"], ["judge", "succeeded"],
+          ] as const) {
+            await agentRuns.append(input.agentRunId, {
+              role, label: role, status, startedAt: now().toISOString(), finishedAt: now().toISOString(), durationMs: 0,
+              attemptNumber: 1, publicSummary: `${role}形成安全结果。`,
+            });
+          }
+        }
         const selected = input.retryNumber === 0 ? firstQuestions : retryQuestions;
         return { status: "accepted", questions: selected, origin: "live_model", reviewBinding: { generationRunId: `remediation-run-${input.retryNumber}`, acceptedQuestionSetSha256: quizQuestionSetSha256(selected) } };
       },
@@ -169,7 +257,7 @@ describe("QuizActivityRuntime", () => {
         return { status: "accepted", runId: "profile-retry-run", explanation: "画像显示当前读取CSV环节仍需强化。", evidenceRefs: [...profile.evidenceIds] };
       },
     };
-    const { sessions, view, runtime } = await setup(assets, content, profileAgent);
+    const { sessions, view, runtime } = await setup(assets, content, profileAgent, agentRuns);
     const first = await runtime.openActivity({ requestId: "first-open", sessionId: view.sessionId, sessionVersion: 3, profileRevision: 3, activityId: "quiz", activityVersion: 1, pathVersion: 1, acknowledgedCardId: "actual-card-kp" });
     await runtime.submitActivity({
       requestId: "first-submit", sessionId: view.sessionId, sessionVersion: first.sessionVersion, profileRevision: 3,
@@ -201,6 +289,30 @@ describe("QuizActivityRuntime", () => {
     expect(retry.activity.targetKnowledgePointIds).toEqual(["kp"]);
     expect(retry.activity.questions.map((question) => question.questionId)).toEqual(retryQuestions.map((question) => question.questionId));
     expect(JSON.stringify(retry)).not.toMatch(/missedQuestions|learnerProfileSummary|evidence-/u);
+    const retryRun = await agentRuns.getByRunId(retry.activity.agentRunId!);
+    expect(retryRun?.remediation).toMatchObject({
+      lessonVariantId: "guided",
+      previousAttemptId: first.attemptId,
+      missedQuestionCount: 2,
+      weakKnowledgePointIds: ["kp"],
+      learnerProfileSource: "agent",
+      evidenceVersion: 1,
+    });
+    expect(retryRun?.remediation?.publicRecommendation).toBe("画像显示当前读取CSV环节仍需强化。");
+    const retried = await runtime.submitActivity({
+      requestId: "retry-submit", sessionId: view.sessionId, sessionVersion: retry.sessionVersion, profileRevision: 3,
+      kind: "quiz", activityId: "quiz", activityVersion: 1, attemptId: retry.attemptId,
+      answers: retry.activity.questions.map((question) => ({ questionId: question.questionId, answer: "A" })),
+    });
+    if (retried.kind !== "quiz") throw new Error("expected quiz result");
+    expect(retried.result.remediationOutcome).toEqual({
+      status: "improved",
+      previousMissedQuestionCount: 2,
+      currentMissedQuestionCount: 0,
+      targetKnowledgePointIds: ["kp"],
+      improvedKnowledgePointIds: ["kp"],
+      stillWeakKnowledgePointIds: [],
+    });
   });
 
   it("uses the deterministic learner profile when the profile Agent is unavailable", async () => {
@@ -323,6 +435,17 @@ describe("QuizActivityRuntime", () => {
     expect(snapshot.path?.nodes).toMatchObject([{ status: "completed", positionLocked: true }, { status: "available" }]);
     expect(snapshot.activityProgress[0]?.activities[0]).toMatchObject({ status: "insufficient", continuedWithGap: true, bestResult: "fail" });
     expect(snapshot.latestCommit.evidenceVersion).toBe(1);
+    await expect(runtime.openActivity({
+      requestId: "reopen-without-explicit-choice", sessionId: view.sessionId, sessionVersion: 8,
+      profileRevision: 3, activityId: "quiz", activityVersion: 1, pathVersion: 2,
+    })).rejects.toMatchObject({ errorCode: "prerequisite_violation" });
+    const relearned = await runtime.openActivity({
+      requestId: "reopen-skipped-quiz", sessionId: view.sessionId, sessionVersion: 8,
+      profileRevision: 3, activityId: "quiz", activityVersion: 1, pathVersion: 2, relearn: true,
+    });
+    expect(relearned).toMatchObject({ sessionVersion: 9, activity: { activityId: "quiz", retryNumber: 2 } });
+    const relearningSnapshot = await sessions.getSnapshot({ sessionId: view.sessionId, sessionVersion: 9, profileRevision: 3 });
+    expect(relearningSnapshot.activityProgress[0]?.activities[0]).toMatchObject({ status: "in_progress", continuedWithGap: true });
     const archived = JSON.parse(await readFile(resolve(root, "profile_families", "subject", "_user", "learning_sessions", view.sessionId, "paths", "superseded", "1.json"), "utf8"));
     expect(archived).toMatchObject({ pathVersion: 1, status: "superseded" });
   });

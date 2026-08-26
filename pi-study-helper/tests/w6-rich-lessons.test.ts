@@ -119,11 +119,16 @@ describe("W6 RichLesson assets", () => {
     expect(projected.cardId).toBe(fixed.cardId);
     expect(projected.selectedLesson?.variantId).toBe("practice");
     expect(projected.personalizedTip?.text).toContain("先核对列名");
+    expect(projected.personalizedTipStatus).toEqual({ state: "generated", reasonCode: "agent_reviewed" });
     expect(JSON.stringify(projected)).not.toContain('"variants"');
     expect(JSON.stringify(projected)).not.toContain("sourceDocumentSha256");
     const tui = materialViewFromLearningCard(projected, { kind: "section", id: fixed.knowledgePointId, label: fixed.title });
     expect(tui.body).toContain("版本：案例优先");
     expect(tui.body).not.toContain("版本：逐步讲解");
+
+    const withoutTip = projectLearningCardForSession({ fixed, preference: "example_first" });
+    expect(withoutTip.personalizedTip).toBeUndefined();
+    expect(withoutTip.personalizedTipStatus).toEqual({ state: "unavailable", reasonCode: "not_generated" });
   });
 
   it("snapshots one selected variant through confirmation, restart and recovery reads", async () => {

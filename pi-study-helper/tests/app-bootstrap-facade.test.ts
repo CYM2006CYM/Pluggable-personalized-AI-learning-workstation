@@ -22,6 +22,7 @@ describe("FileAppBootstrapFacade", () => {
     const view = { sessionId: "session", sessionVersion: 4, profileRevision: 3, subjectId: "subject", mode: "recommended", goalId: "goal", availableMinutes: 20, status: "active", stage: "activity", diagnosticRequired: true, pathVersion: 1 };
     const recovered = {
       sessionId: "session", sessionVersion: 4, profileRevision: 3, view,
+      latestCommit: { sessionVersion: 4, evidenceVersion: 0 }, evidence: [], knowledgeStates: [],
       diagnosticDraftVersion: 2, diagnosticDraft: { diagnosticDraftVersion: 2, currentQuestionId: "q-safe", processedQuestionIds: [] },
       activityProgress: [{ nodeId: "node", activities: [{ activityId: "quiz", status: "in_progress", attemptIds: ["attempt"], quizRetryCount: 0, updatedAt: "2026-08-12T00:00:00.000Z" }] }],
       currentAttempt: { kind: "quiz", activityId: "quiz", attemptId: "attempt", status: "draft", retryNumber: 0 },
@@ -33,7 +34,16 @@ describe("FileAppBootstrapFacade", () => {
       async getInternalPathSnapshot() { return { ...recovered.path, nodes: [{ ...recovered.path.nodes[0], difficulty: "M-U", scaffold: "hint", required: true, positionLocked: true }] }; },
       async getBoundLearningCards() { return []; },
     } as unknown as FileLearningSessionRepository;
-    const bootstrap = await new FileAppBootstrapFacade({ profiles, sessions }).getBootstrap({ recoverSessionId: "session" });
+    const historicalProfile = {
+      sessionId: "session", profileRevision: 3, evidenceVersion: 0, agentStatus: "agent_complete" as const,
+      initialKnowledgeStates: [], currentKnowledgeStates: [], progress: [], strengths: [], supportNeeded: [], skippedActivityIds: [], activities: [], evidenceIds: [],
+      deterministicSummary: "确定性画像已恢复。", agentExplanation: "画像Agent解释已按版本恢复。", agentEvidenceRefs: [], agentRunId: "profile-run",
+    };
+    const profileHistory = { async getLatest() { return {
+      historyId: "profile-history", sessionId: "session", sessionVersion: 4, profileRevision: 3, evidenceVersion: 0,
+      trigger: "quiz_submitted" as const, capturedAt: "2026-08-12T00:00:00.000Z", profile: historicalProfile, profileSha256: "a".repeat(64),
+    }; } };
+    const bootstrap = await new FileAppBootstrapFacade({ profiles, sessions, profileHistory }).getBootstrap({ recoverSessionId: "session" });
     expect(bootstrap).toMatchObject({
       profiles: [{ subjectId: "subject", revision: 3, modalities: ["reading", "quiz"] }],
       goals: [{ goalId: "goal", title: "Goal" }],
@@ -42,6 +52,7 @@ describe("FileAppBootstrapFacade", () => {
       session: { diagnosticDraftVersion: 2, currentAttempt: { attemptId: "attempt" }, path: { nodes: [{ difficulty: "M-U", scaffold: "hint", required: true, positionLocked: true }] } },
     });
     expect(bootstrap.diagnostic).toEqual({ diagnosticId: "diagnostic-safe-v1", diagnosticVersion: 1, estimatedMinutes: 1, questions: [{ questionId: "q-safe", knowledgePointId: "kp-safe", kind: "single_choice", difficulty: "S-U", prompt: "safe", options: ["A", "B", "C"], required: true }] });
+    expect(bootstrap.session?.learningProfile).toEqual(historicalProfile);
   });
 
   it("projects every nested recovery object through one allowlist", async () => {

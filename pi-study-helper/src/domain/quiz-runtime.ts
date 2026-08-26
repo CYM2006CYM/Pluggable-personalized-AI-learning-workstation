@@ -30,6 +30,7 @@ export interface QuizAttemptSnapshot {
   supportingKnowledgePointIds: string[];
   targetKnowledgePointIds?: string[];
   retryNumber: number;
+  agentRunId?: string;
   questionSource?: NonNullable<QuizActivitySafeView["questionSource"]>;
   gradingBinding?: QuizGradingBinding;
   legacySubtype?: "single_choice" | "judgment";
@@ -138,6 +139,7 @@ export class DeterministicQuizRuntime {
     activity: QuizActivityDefinition;
     questions: QuizQuestionPrivate[];
     retryNumber: number;
+    agentRunId?: string;
     questionSource?: NonNullable<QuizActivitySafeView["questionSource"]>;
     gradingBinding?: QuizGradingBinding;
     legacySubtype?: "single_choice" | "judgment";
@@ -165,6 +167,7 @@ export class DeterministicQuizRuntime {
       supportingKnowledgePointIds: [...input.activity.supportingKnowledgePointIds],
       ...(input.targetKnowledgePointIds === undefined ? {} : { targetKnowledgePointIds: [...new Set(input.targetKnowledgePointIds)] }),
       retryNumber: input.retryNumber,
+      ...(input.agentRunId === undefined ? {} : { agentRunId: input.agentRunId }),
       questionSource: input.questionSource ?? "profile_fixed",
       ...(input.gradingBinding === undefined ? {} : { gradingBinding: structuredClone(input.gradingBinding) }),
       ...(input.legacySubtype === undefined ? {} : { legacySubtype: input.legacySubtype }),
@@ -186,6 +189,7 @@ export class DeterministicQuizRuntime {
         ...(input.targetKnowledgePointIds === undefined ? {} : { targetKnowledgePointIds: [...new Set(input.targetKnowledgePointIds)] }),
         questions: questions.map(safeQuestion),
         retryNumber: input.retryNumber,
+        ...(input.agentRunId === undefined ? {} : { agentRunId: input.agentRunId }),
         questionSource: input.questionSource ?? "profile_fixed",
       },
     };

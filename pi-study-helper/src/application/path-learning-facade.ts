@@ -259,14 +259,16 @@ class PathRuntimeCollaborator implements PathMethods {
       for (const card of loaded) if (card !== undefined) fixedCards.set(card.knowledgePointId, card);
     }
     const unavailable = { status: "unavailable" as const };
-    const dynamicPromises = path.nodes.map((node) => this.options.content === undefined
-      ? Promise.resolve(unavailable)
-      : this.options.content.prepareCard({
+    const dynamicPromises = path.nodes.map((node) => {
+      const fixed = fixedCards.get(node.knowledgePointId);
+      if (fixed?.richLesson !== undefined || this.options.content === undefined) return Promise.resolve(unavailable);
+      return this.options.content.prepareCard({
         profileRevision: snapshot.profileRevision,
         knowledgePointId: node.knowledgePointId,
-        excludedArtifactIds: fixedCards.has(node.knowledgePointId) ? [fixedCards.get(node.knowledgePointId)!.cardId] : [],
+        excludedArtifactIds: fixed === undefined ? [] : [fixed.cardId],
         lessonVariantId: lessonVariantForPreference(snapshot.diagnosticDraft?.background?.explanation_preference),
-      }).catch(() => unavailable));
+      }).catch(() => unavailable);
+    });
     let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
     const deadline = new Promise<typeof unavailable>((resolve) => {
       timeoutHandle = setTimeout(() => resolve(unavailable), this.cardPreparationTimeoutMs);
@@ -341,36 +343,45 @@ class PathRuntimeCollaborator implements PathMethods {
       return { ...meta(snapshot), pathVersion: input.pathVersion, completed: false, errorCode: "path_version_conflict" };
     }
     const terminal = new Set(["completed", "insufficient"]);
-    const node = path.nodes.find((item) => {
+    const currentNode = path.nodes.find((item) => {
       if (item.status === "skipped") return false;
       const progress = snapshot.activityProgress.find((entry) => entry.nodeId === item.nodeId);
       return !(progress?.activities.length && progress.activities.every((activity) => terminal.has(activity.status)));
     });
+    const requestedNode = input.nodeId === undefined
+      ? undefined
+      : path.nodes.find((item) => item.nodeId === input.nodeId);
+    if (input.nodeId !== undefined && requestedNode === undefined) {
+      throw new LearningSessionRepositoryError("path_version_conflict", "Requested review node is not on the active path");
+    }
+    const reviewing = requestedNode !== undefined && requestedNode.nodeId !== currentNode?.nodeId;
+    const node = requestedNode ?? currentNode;
     if (node === undefined) return { ...meta(snapshot), pathVersion: path.pathVersion, completed: true };
     const progress = snapshot.activityProgress.find((entry) => entry.nodeId === node.nodeId);
     const projectedNode = { ...node, status: projectNodeStatus(node, progress, node.nodeId) };
     const profile = await this.options.profile.load(snapshot.view.subjectId, snapshot.profileRevision);
-    const activityId = node.activityIds.find((id) => !terminal.has(progress?.activities.find((item) => item.activityId === id)?.status ?? "pending"))
+    const activityId = (reviewing
+      ? progress?.activities.find((item) => item.continuedWithGap === true)?.activityId
+      : undefined)
+      ?? node.activityIds.find((id) => !terminal.has(progress?.activities.find((item) => item.activityId === id)?.status ?? "pending"))
       ?? node.activityIds[0];
     const activity = activityView(profile.activities.find((item) => item.activityId === activityId));
-    if (progress?.card?.status === "pending") {
-      const bindings = await this.options.sessions.getBoundLearningCards(input);
-      const binding = bindings.find((item) => item.nodeId === node.nodeId && item.card.cardId === progress.card?.cardId);
-      const card = binding?.card;
-      return {
-        ...meta(snapshot), pathVersion: path.pathVersion, completed: false, node: asSafeNode(projectedNode),
-        ...(activity === undefined ? {} : { activity }),
-        ...(card === undefined ? {} : { card, sourceAnchorIds: [...card.sourceAnchorIds] }),
-        contentReadiness: card === undefined
-          ? "preparing"
-          : card.selectedLesson !== undefined || binding?.source === "dynamic"
-            ? "ready"
-            : "fallback",
-      };
-    }
+    const bindings = await this.options.sessions.getBoundLearningCards(input);
+    const binding = bindings.find((item) => item.nodeId === node.nodeId
+      && (progress?.card === undefined || item.card.cardId === progress.card.cardId));
+    const card = binding?.card;
+    const activityProgress = progress?.activities.find((item) => item.activityId === activityId);
+    const relearnAllowed = node.status === "skipped" || activityProgress?.continuedWithGap === true;
     return {
       ...meta(snapshot), pathVersion: path.pathVersion, completed: false, node: asSafeNode(projectedNode),
-      ...(activity === undefined ? {} : { activity }), contentReadiness: activity === undefined ? "preparing" : "ready",
+      ...(activity === undefined ? {} : { activity }),
+      ...(card === undefined ? {} : { card, sourceAnchorIds: [...card.sourceAnchorIds] }),
+      contentReadiness: card === undefined
+        ? activity === undefined ? "preparing" : "ready"
+        : card.selectedLesson !== undefined || binding?.source === "dynamic" ? "ready" : "fallback",
+      navigationMode: reviewing ? "review" : "current",
+      ...(currentNode === undefined ? {} : { currentNodeId: currentNode.nodeId }),
+      ...(relearnAllowed ? { relearnAllowed: true } : {}),
     };
   }
 

@@ -12,7 +12,10 @@ import { api, isApiError, isEvaluatorFailure, newRequestId, quizScore, type Eval
 import { useBootstrap } from "../api/use-bootstrap.js";
 import { PageFrame } from "../components/PageFrame.js";
 import { PageStatePanel } from "../components/PageStatePanel.js";
+import { AgentPipeline, AgentPipelineDiscovery } from "../components/AgentPipeline.js";
+import { downloadAgentRunExport } from "../api/agent-run-client.js";
 import { useAsyncActionProgress } from "../hooks/use-async-action-progress.js";
+import { useAgentRun } from "../hooks/use-agent-run.js";
 import { knowledgePointLabel } from "../learning-labels.js";
 import {
   clearActivityDraft,
@@ -23,6 +26,7 @@ import {
 } from "../state/activity-draft-storage.js";
 import { useUiStore } from "../state/ui-store.js";
 import { STABLE_LAYOUT } from "../styles/layout-contract.js";
+import { relearnNodeIdForActivity } from "../relearn-context.js";
 
 type SubmitResult = ActivitySubmissionOutput | EvaluatorFailureView;
 type PendingAction = "advance" | "continue_with_gap";
@@ -33,7 +37,8 @@ export function ActivityPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const bootstrap = useBootstrap(sessionId);
-  const [opened, setOpened] = useState<ActivityDraftOutput | undefined>((location.state as { opened?: ActivityDraftOutput } | null)?.opened);
+  const routeState = (location.state as { opened?: ActivityDraftOutput; nodeId?: string; relearnNodeId?: string } | null);
+  const [opened, setOpened] = useState<ActivityDraftOutput | undefined>(routeState?.opened);
   const [result, setResult] = useState<SubmitResult>();
   const [answers, setAnswers] = useState<Record<string, string | boolean>>({});
   const [questionIndex, setQuestionIndex] = useState(0);
@@ -44,13 +49,20 @@ export function ActivityPage() {
   const [recoveryError, setRecoveryError] = useState<Error>();
   const [recoveryAttempts, setRecoveryAttempts] = useState(0);
   const [recoveryTrigger, setRecoveryTrigger] = useState(0);
+  const [agentRequestId, setAgentRequestId] = useState<string>();
   const actionProgress = useAsyncActionProgress();
+  const agentRun = useAgentRun({
+    requestId: agentRequestId,
+    runId: agentRequestId === undefined && opened?.kind === "quiz" ? opened.activity.agentRunId : undefined,
+    active: busy || opened?.kind === "quiz",
+  });
   const routeStateChecked = useRef<string>();
   const initializedDraftBinding = useRef<string>();
   const drafts = useUiStore((state) => state.activityDrafts);
   const setDraft = useUiStore((state) => state.setActivityDraft);
   const clearDraft = useUiStore((state) => state.clearActivityDraft);
   const session = bootstrap.data?.session;
+  const relearnNodeId = routeState?.relearnNodeId ?? relearnNodeIdForActivity(session, activityId);
   const submittedProgress = session?.activityProgress
     .flatMap((node) => node.activities)
     .find((activity) => activity.activityId === activityId && activity.result !== undefined);
@@ -95,7 +107,7 @@ export function ActivityPage() {
     const pathVersion = session.path.pathVersion;
     setRecoveryAttempts((current) => current + 1);
     setRecovering(true);
-    api.getNextStep({ sessionId, sessionVersion, profileRevision, pathVersion }).then(async (next) => {
+    api.getNextStep({ sessionId, sessionVersion, profileRevision, pathVersion, ...(relearnNodeId === undefined ? {} : { nodeId: relearnNodeId }) }).then(async (next) => {
       if (next.activity?.activityId !== activityId) throw new Error("activity_safe_view_incomplete");
       const recoveredSessionVersion = attempt.kind === "code"
         ? (await api.recoverActivity({ sessionId, sessionVersion, profileRevision, activityId, attemptId: attempt.attemptId })).sessionVersion
@@ -109,6 +121,7 @@ export function ActivityPage() {
         activityVersion: next.activity.activityVersion,
         pathVersion: next.pathVersion,
         ...(next.card === undefined ? {} : { acknowledgedCardId: next.card.cardId }),
+        ...(next.relearnAllowed === true ? { relearn: true } : {}),
       });
     }).then((recovered) => {
       if (recovered.attemptId !== attempt.attemptId) throw new Error("attempt_identity_changed_during_recovery");
@@ -116,7 +129,7 @@ export function ActivityPage() {
     }).catch((error: unknown) => {
       setRecoveryError(error instanceof Error ? error : new Error("activity_recovery_failed"));
     }).finally(() => setRecovering(false));
-  }, [activityId, bootstrap.loading, opened, recovering, recoveryAttempts, recoveryError, recoveryTrigger, session, sessionId]);
+  }, [activityId, bootstrap.loading, opened, recovering, recoveryAttempts, recoveryError, recoveryTrigger, relearnNodeId, session, sessionId]);
 
   const completeAnswers = useMemo<QuizAnswerInput[]>(() => opened?.kind !== "quiz" ? [] : opened.activity.questions.flatMap((question) => answers[question.questionId] === undefined ? [] : [{ questionId: question.questionId, answer: answers[question.questionId]! }]), [answers, opened]);
 
@@ -147,6 +160,7 @@ export function ActivityPage() {
   const submit = async () => {
     if (opened === undefined) return;
     setBusy(true); setActionError(undefined);
+    actionProgress.start(opened.kind === "code" ? "正在提交并评测代码" : "正在提交并评测客观题");
     try {
       const submissionDraft = opened.kind === "code" && localDraft !== opened.userText
         ? await persistCodeDraft(opened, localDraft)
@@ -164,7 +178,7 @@ export function ActivityPage() {
       }
       await bootstrap.reload();
     } catch (error) { await captureActionError(error, "activity_submit_failed"); }
-    finally { setBusy(false); }
+    finally { actionProgress.stop(); setBusy(false); }
   };
 
   const advance = async (retry: boolean) => {
@@ -173,7 +187,15 @@ export function ActivityPage() {
     try {
       const fresh = await api.getBootstrap(sessionId);
       if (fresh.session?.path === undefined) throw new Error("path_not_recoverable");
-      const next = await api.getNextStep({ sessionId, sessionVersion: fresh.session.view.sessionVersion, profileRevision: fresh.session.view.profileRevision, pathVersion: fresh.session.path.pathVersion });
+      const relearnNode = relearnNodeId === undefined ? undefined : fresh.session.path.nodes.find((node) => node.nodeId === relearnNodeId);
+      const continueRelearning = relearnNode !== undefined && (retry || relearnNode.activityIds.at(-1) !== activityId);
+      const next = await api.getNextStep({
+        sessionId,
+        sessionVersion: fresh.session.view.sessionVersion,
+        profileRevision: fresh.session.view.profileRevision,
+        pathVersion: fresh.session.path.pathVersion,
+        ...(continueRelearning ? { nodeId: relearnNodeId } : {}),
+      });
       if (next.completed || next.node === undefined || next.activity === undefined) { navigate(`/summary/${sessionId}`); return; }
       const currentNodeId = fresh.session.path.nodes.find((node) => node.activityIds.includes(activityId))?.nodeId;
       const continueInsideNode = retry || currentNodeId === next.node.nodeId;
@@ -181,9 +203,12 @@ export function ActivityPage() {
         actionProgress.update(next.activity.kind === "mcq"
           ? retry ? "正在生成并审核新题组" : "正在准备题组"
           : "正在准备代码活动");
-        const nextOpened = await api.openActivity({ requestId: newRequestId("web-open-retry"), sessionId, sessionVersion: next.sessionVersion, profileRevision: next.profileRevision, activityId: next.activity.activityId, activityVersion: next.activity.activityVersion, pathVersion: next.pathVersion, ...(next.card === undefined ? {} : { acknowledgedCardId: next.card.cardId }) });
+        const openRequestId = newRequestId("web-open-retry");
+        setAgentRequestId(next.activity.kind === "mcq" ? openRequestId : undefined);
+        const nextOpened = await api.openActivity({ requestId: openRequestId, sessionId, sessionVersion: next.sessionVersion, profileRevision: next.profileRevision, activityId: next.activity.activityId, activityVersion: next.activity.activityVersion, pathVersion: next.pathVersion, ...(next.card === undefined ? {} : { acknowledgedCardId: next.card.cardId }), ...(next.relearnAllowed === true ? { relearn: true } : {}) });
         setOpened(nextOpened); setResult(undefined); setAnswers({}); setQuestionIndex(0);
-        navigate(`/activity/${sessionId}/${next.activity.activityId}`, { replace: true, state: { opened: nextOpened, nodeId: next.node.nodeId } });
+        setAgentRequestId(undefined);
+        navigate(`/activity/${sessionId}/${next.activity.activityId}`, { replace: true, state: { opened: nextOpened, nodeId: next.node.nodeId, ...(continueRelearning ? { relearnNodeId } : {}) } });
       } else navigate(`/learn/${sessionId}/${next.node.nodeId}`, { state: { next } });
     } catch (error) { await captureActionError(error, "advance_failed"); }
     finally { actionProgress.stop(); setPendingAction(undefined); setBusy(false); }
@@ -266,6 +291,8 @@ export function ActivityPage() {
     {refreshBlocked ? <ActivityRecoveryFailure error={new Error("ACTIVITY_SAFE_VIEW_INCOMPLETE")} attempts={recoveryAttempts} hasBrowserDraft={localDraft.length > 0} activityNodeId={activityNodeId} sessionId={sessionId} /> : null}
     {!bootstrap.loading && !recovering && error === undefined && recoveryError === undefined && !refreshBlocked && opened === undefined && submittedProgress !== undefined ? <section className="state-panel recovery-state" data-state="recovery" aria-live="polite" style={{ minHeight: STABLE_LAYOUT.statePanelMinHeight }}><p className="state-code">已恢复服务端进度</p><h2>{retryPending ? "上次结果需要修改后重试" : "该活动已经完成"}</h2><p>服务端记录：{progressLabel(submittedProgress.status)} / {resultLabel(submittedProgress.result)}。系统不会重复创建已完成的提交。</p><div className="button-row">{activityNodeId === undefined ? null : <button type="button" className="button secondary" onClick={() => navigate(`/learn/${sessionId}/${activityNodeId}`)}>返回教学内容</button>}<button type="button" className="button primary" disabled={busy} onClick={() => void advance(retryPending)}>{retryPending ? "修改并重新评测" : "继续下一步"}</button></div></section> : null}
     {!bootstrap.loading && !recovering && error === undefined && recoveryError === undefined && !refreshBlocked && opened === undefined && submittedProgress === undefined ? <PageStatePanel page="activity" state="empty" /> : null}
+    {!bootstrap.loading && error === undefined && recoveryError === undefined && agentRun.run !== undefined ? <AgentPipeline run={agentRun.run} mode={agentRun.transport === "complete" ? "snapshot" : "live"} onExport={() => downloadAgentRunExport(agentRun.run!.runId).then(() => undefined)} />
+      : !bootstrap.loading && error === undefined && recoveryError === undefined && agentRequestId !== undefined ? <AgentPipelineDiscovery statusText={actionProgress.text ?? "正在等待服务端响应"} /> : null}
     {!bootstrap.loading && error === undefined && recoveryError === undefined && opened !== undefined ? <div className="activity-layout" data-page="activity">
       <aside className="activity-brief"><p className="section-kicker">活动信息</p><dl className="metric-list"><div><dt>知识点</dt><dd>{knowledgePointLabel(opened.activity.primaryKnowledgePointId)}</dd></div><div><dt>活动版本</dt><dd>{opened.activity.activityVersion}</dd></div><div><dt>当前尝试</dt><dd>{opened.attemptId}</dd></div><div><dt>会话版本</dt><dd>{opened.sessionVersion}</dd></div></dl><p className="notice-line">{opened.kind === "quiz" ? "提交前不显示答案；提交后只展示本题组的安全复盘。" : "题面、公开样例和验收点可以查看；隐藏测试与参考答案始终留在服务端。"}</p></aside>
       <div className="activity-workspace"><section className="activity-stage" style={{ minHeight: STABLE_LAYOUT.activityStageMinHeight }}>
@@ -273,17 +300,17 @@ export function ActivityPage() {
         {result !== undefined ? <ResultView value={result} /> : opened.kind === "quiz" && currentQuestion !== undefined ? <>
           <div className="quiz-pager" aria-label={`第 ${questionIndex + 1} 题，共 ${opened.activity.questions.length} 题`}><span>第 {questionIndex + 1} / {opened.activity.questions.length} 题</span><span>{completeAnswers.length} 题已作答</span></div>
           <fieldset className="answer-list"><legend className="sr-only">当前题目答案</legend><div className="quiz-question" key={currentQuestion.questionId}><h2>{currentQuestion.prompt}</h2>{currentQuestion.kind === "judgment" ? [true, false].map((value) => <label className="answer-option" key={String(value)}><input type="radio" name={currentQuestion.questionId} checked={answers[currentQuestion.questionId] === value} onChange={() => setAnswers({ ...answers, [currentQuestion.questionId]: value })} /><span>{value ? "正确" : "错误"}</span></label>) : currentQuestion.options.map((option, index) => <label className="answer-option" key={option}><input type="radio" name={currentQuestion.questionId} checked={answers[currentQuestion.questionId] === option} onChange={() => setAnswers({ ...answers, [currentQuestion.questionId]: option })} /><span className="option-key">{String.fromCharCode(65 + index)}</span><span className="option-copy">{option}</span></label>)}</div></fieldset>
-          <div className="section-footer"><button type="button" className="button secondary" disabled={busy || questionIndex === 0} onClick={() => setQuestionIndex((current) => Math.max(0, current - 1))}>← 上一题</button>{questionIndex < opened.activity.questions.length - 1 ? <button type="button" className="button primary" disabled={busy || answers[currentQuestion.questionId] === undefined} onClick={() => setQuestionIndex((current) => current + 1)}>下一题 →</button> : <button type="button" className="button primary" disabled={busy || completeAnswers.length !== opened.activity.questions.length} onClick={() => void submit()}>提交完整题组</button>}</div>
+          <div className="section-footer"><button type="button" className="button secondary" disabled={busy || questionIndex === 0} onClick={() => setQuestionIndex((current) => Math.max(0, current - 1))}>← 上一题</button>{questionIndex < opened.activity.questions.length - 1 ? <button type="button" className="button primary" disabled={busy || answers[currentQuestion.questionId] === undefined} onClick={() => setQuestionIndex((current) => current + 1)}>下一题 →</button> : <button type="button" className="button primary async-action-button" disabled={busy || completeAnswers.length !== opened.activity.questions.length} onClick={() => void submit()}>{busy ? actionProgress.text ?? "正在提交并评测客观题（已处理 0 秒）" : "提交完整题组"}</button>}</div>
         </> : opened.kind === "code" ? <>
           <CodeContractView activity={opened.activity} />
           <label htmlFor="code-draft">代码草稿</label>
           <textarea id="code-draft" value={localDraft} onChange={(event) => updateCodeDraft(opened, event.target.value)} spellCheck={false} />
           <div className="notice-line" role="status" data-preview-enabled="false"><strong>PYODIDE_DISABLED_WITH_NODE_FALLBACK</strong><br />浏览器预览未启用；正式评测由本地 Node/Python 执行。</div>
-          <div className="section-footer"><div className="button-row"><button type="button" className="button secondary" disabled={busy} onClick={() => void saveCodeDraft()}>保存草稿</button></div><button type="button" className="button primary" disabled={busy || localDraft === ""} onClick={() => void submit()}>提交正式评测</button></div>
+          <div className="section-footer"><div className="button-row"><button type="button" className="button secondary" disabled={busy} onClick={() => void saveCodeDraft()}>保存草稿</button></div><button type="button" className="button primary async-action-button" disabled={busy || localDraft === ""} onClick={() => void submit()}>{busy ? actionProgress.text ?? "正在提交并评测代码（已处理 0 秒）" : "提交正式评测"}</button></div>
         </> : null}
         {result !== undefined && isEvaluatorFailure(result) ? <div className="section-footer"><button type="button" className="button secondary" onClick={() => activityNodeId === undefined ? navigate(`/path/${sessionId}`) : navigate(`/learn/${sessionId}/${activityNodeId}`)}>返回教学内容</button><button type="button" className="button primary" disabled={busy || opened.kind !== "code"} onClick={() => void retryEvaluation()}>恢复草稿并重试评测</button></div>
           : codeNeedsRetry ? <div className="section-footer"><button type="button" className="button secondary" onClick={() => activityNodeId === undefined ? navigate(`/path/${sessionId}`) : navigate(`/learn/${sessionId}/${activityNodeId}`)}>返回教学内容</button><div className="button-row">{codeCanContinueWithGap ? <button type="button" className="button secondary async-action-button" disabled={busy} onClick={() => void continueWithGap()}>{pendingAction === "continue_with_gap" ? actionProgress.text : "放弃并进入下一环节"}</button> : null}<button type="button" className="button primary async-action-button" disabled={busy} onClick={() => void advance(true)}>{pendingAction === "advance" ? actionProgress.text : "修改代码后重试"}</button></div></div>
-            : result !== undefined ? <div className="section-footer">{result.kind === "quiz" && result.result.retryAllowed ? <div className="button-row">{opened.kind === "quiz" && opened.activity.retryNumber >= 1 ? <button type="button" className="button secondary async-action-button" disabled={busy} onClick={() => void continueWithGap()}>{pendingAction === "continue_with_gap" ? actionProgress.text : "暂时跳过，进入下一章节"}</button> : null}<button type="button" className="button primary async-action-button" disabled={busy} onClick={() => void advance(true)}>{pendingAction === "advance" ? actionProgress.text : "使用新题组重试"}</button></div> : <button type="button" className="button primary" disabled={busy} onClick={() => void advance(false)}>继续下一步</button>}</div> : null}
+            : result !== undefined ? <div className="section-footer">{result.kind === "quiz" && result.result.retryAllowed ? <div className="button-row">{opened.kind === "quiz" && opened.activity.retryNumber >= 1 ? <button type="button" className="button secondary async-action-button" disabled={busy} onClick={() => void continueWithGap()}>{pendingAction === "continue_with_gap" ? actionProgress.text : "暂时跳过，进入下一环节"}</button> : null}<button type="button" className="button primary async-action-button" disabled={busy} onClick={() => void advance(true)}>{pendingAction === "advance" ? actionProgress.text : "使用新题组重试"}</button></div> : <button type="button" className="button primary" disabled={busy} onClick={() => void advance(false)}>继续下一步</button>}</div> : null}
       </section></div>
     </div> : null}
   </PageFrame>;
@@ -361,7 +388,7 @@ function ResultView({ value }: { value: SubmitResult }) {
     </div>;
   }
   const score = quizScore(value.result);
-  return <div className="result-stage"><div className="result-header"><div><p className="section-kicker">确定性判分结果</p><h2>{verdictLabel(value.result.verdict)}</h2></div><span className="score-block">{score === null ? "未形成" : score.toFixed(2)}</span></div><p className="feedback-copy">{value.result.safeFeedback}</p><dl className="metric-list horizontal"><div><dt>正确题数</dt><dd>{value.result.correctCount}/{value.result.totalCount}</dd></div><div><dt>通过要求</dt><dd>至少答对 {value.result.requiredCorrectCount} 题</dd></div><div><dt>学习证据</dt><dd>{value.evidenceId === undefined ? "未生成" : "已记录"}</dd></div></dl>{value.result.answerReview === undefined ? null : <section className="answer-review"><h2>提交后安全复盘</h2>{value.result.answerReview.map((item, index) => <div key={item.questionId}><p className="answer-review-prompt"><span>原题</span>{item.prompt ?? "旧版作答记录未保存原题题干"}</p><strong>第 {index + 1} 题 · {item.correct ? "回答正确" : "需要复习"}</strong><p>正确答案：{String(item.correctAnswer)}</p><p><strong>正文解释：</strong>{item.explanation}</p></div>)}</section>}</div>;
+  return <div className="result-stage"><div className="result-header"><div><p className="section-kicker">确定性判分结果</p><h2>{verdictLabel(value.result.verdict)}</h2></div><span className="score-block">{score === null ? "未形成" : score.toFixed(2)}</span></div><p className="feedback-copy">{value.result.safeFeedback}</p><dl className="metric-list horizontal"><div><dt>正确题数</dt><dd>{value.result.correctCount}/{value.result.totalCount}</dd></div><div><dt>通过要求</dt><dd>至少答对 {value.result.requiredCorrectCount} 题</dd></div><div><dt>学习证据</dt><dd>{value.evidenceId === undefined ? "未生成" : "已记录"}</dd></div></dl>{value.result.remediationOutcome === undefined ? null : <section className={`remediation-outcome is-${value.result.remediationOutcome.status}`} aria-label="本轮补救变化"><div><span>本轮补救变化</span><strong>{value.result.remediationOutcome.status === "improved" ? "错题减少，有改善" : value.result.remediationOutcome.status === "regressed" ? "错题增加，需要继续巩固" : "错题数量未变化"}</strong></div><p>错题由 {value.result.remediationOutcome.previousMissedQuestionCount} 道变为 {value.result.remediationOutcome.currentMissedQuestionCount} 道。{value.result.remediationOutcome.stillWeakKnowledgePointIds.length === 0 ? "本轮未留下待巩固知识标签。" : `仍需巩固：${value.result.remediationOutcome.stillWeakKnowledgePointIds.join("、")}。`}</p></section>}{value.result.answerReview === undefined ? null : <section className="answer-review"><h2>提交后安全复盘</h2>{value.result.answerReview.map((item, index) => <div key={item.questionId}><p className="answer-review-prompt"><span>原题</span>{item.prompt ?? "旧版作答记录未保存原题题干"}</p><strong>第 {index + 1} 题 · {item.correct ? "回答正确" : "需要复习"}</strong><p>正确答案：{String(item.correctAnswer)}</p><p><strong>正文解释：</strong>{item.explanation}</p></div>)}</section>}</div>;
 }
 
 function testPointStatusLabel(status: ActivityTestPointResult["status"]): string {

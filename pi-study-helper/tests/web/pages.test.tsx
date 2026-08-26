@@ -3,6 +3,7 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import type { SafeAgentRunView } from "../../src/contracts/index.js";
 import { appRoutes } from "../../src/web/app/routes.js";
 import { PageStatePanel } from "../../src/web/components/PageStatePanel.js";
 import { writeActivityDraft } from "../../src/web/state/activity-draft-storage.js";
@@ -81,6 +82,31 @@ async function selectValue(target: HTMLSelectElement, value: string) {
 function bodyAt(fetchMock: ReturnType<typeof vi.fn>, index: number): Record<string, unknown> {
   const init = fetchMock.mock.calls[index]?.[1] as RequestInit | undefined;
   return JSON.parse(String(init?.body ?? "{}")) as Record<string, unknown>;
+}
+
+function richLearningStep() {
+  const modules = (["intuition", "concepts", "walkthrough", "mistakes", "final-task", "terms-sources"] as const).map((moduleId, index) => ({
+    moduleId,
+    title: `模块${index + 1}`,
+    summary: `模块${index + 1}摘要`,
+    blocks: [{ blockId: `block-${index + 1}`, kind: "paragraph" as const, text: `模块${index + 1}正文` }],
+  }));
+  return {
+    ...nextStep,
+    card: {
+      ...nextStep.card!,
+      selectedLesson: {
+        lessonId: "lesson-read-csv-guided",
+        variantId: "guided" as const,
+        label: "逐步讲解版",
+        learningObjectives: { understand: ["理解读取流程"], master: ["掌握读取方法"] },
+        modules,
+        termNotes: [],
+        sourceClaims: [],
+        coveredRuleIds: ["rule-read-csv"],
+      },
+    },
+  };
 }
 
 describe("W4 real API pages", () => {
@@ -267,6 +293,61 @@ describe("W4 real API pages", () => {
     expect(host.textContent).not.toContain("UPSTREAM_CONTRACT_BLOCKED");
   });
 
+  it("allows an explicitly skipped lesson to be relearned without disguising a review as progress", async () => {
+    const skippedNode = { ...pathNodes[0]!, nodeId: "node-skipped", status: "completed" as const };
+    const currentNode = { ...pathNodes[0]!, nodeId: "node-current", activityIds: ["act-current"] };
+    const session = recovery();
+    session.path = { ...session.path!, nodes: [skippedNode, currentNode] };
+    session.activityProgress = [{
+      nodeId: skippedNode.nodeId,
+      card: { cardId: nextStep.card!.cardId, status: "acknowledged" },
+      activities: [{ activityId: "act-basic", status: "insufficient", result: "fail", attemptIds: ["attempt-1", "attempt-2"], quizRetryCount: 2, bestResult: "fail", continuedWithGap: true, updatedAt: "2026-08-25T08:00:00.000Z" }],
+    }];
+    session.learningCards = [{ nodeId: skippedNode.nodeId, card: nextStep.card! }];
+    const reviewStep = {
+      ...nextStep,
+      node: skippedNode,
+      navigationMode: "review" as const,
+      currentNodeId: currentNode.nodeId,
+      relearnAllowed: true,
+    };
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(ok(bootstrap(session)))
+      .mockResolvedValueOnce(ok(reviewStep))
+      .mockResolvedValueOnce(ok(openedQuiz));
+    const { host, router } = await renderRoute("/learn/session-w4/node-skipped", fetchMock);
+
+    expect(host.textContent).toContain("可重新学习");
+    expect(host.textContent).toContain("回看正文不会改变进度");
+    expect(button(host, "返回当前学习进度")).toBeDefined();
+    await click(button(host, "重新学习本节"));
+    expect(bodyAt(fetchMock, 2)).toMatchObject({ relearn: true });
+    expect(router.state.location.pathname).toBe("/activity/session-w4/act-basic");
+    expect(router.state.location.state).toMatchObject({ relearnNodeId: "node-skipped" });
+  });
+
+  it("opens a current gap-continued lesson with explicit relearn authority", async () => {
+    const session = recovery();
+    session.activityProgress = [{
+      nodeId: "node-basic",
+      activities: [{
+        activityId: "act-basic", status: "in_progress", attemptIds: ["attempt-old"], quizRetryCount: 1,
+        continuedWithGap: true, updatedAt: "2026-08-26T13:00:00.000Z",
+      }],
+    }];
+    const relearnStep = { ...nextStep, navigationMode: "current" as const, relearnAllowed: undefined };
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(ok(bootstrap(session)))
+      .mockResolvedValueOnce(ok(relearnStep))
+      .mockResolvedValueOnce(ok(openedQuiz));
+    const { host, router } = await renderRoute("/learn/session-w4/node-basic", fetchMock);
+
+    await click(button(host, "进入正式活动"));
+
+    expect(bodyAt(fetchMock, 2)).toMatchObject({ relearn: true });
+    expect(router.state.location.state).toMatchObject({ relearnNodeId: "node-basic" });
+  });
+
   it("shows an immediate elapsed-time status while a quiz is being generated and audited", async () => {
     let resolveOpen: ((response: Response) => void) | undefined;
     const pendingOpen = new Promise<Response>((resolve) => { resolveOpen = resolve; });
@@ -279,6 +360,9 @@ describe("W4 real API pages", () => {
     await click(button(host, "进入正式活动"));
     expect(button(host, "正在生成并审核题组（已处理 0 秒）").disabled).toBe(true);
     expect(host.querySelector('.async-action-status[role="status"]')?.textContent).toContain("正在生成并审核题组（已处理 0 秒）");
+    expect(host.querySelectorAll(".agent-station")).toHaveLength(8);
+    expect(host.querySelector('.agent-pipeline[data-mode="discovery"]')?.textContent).toContain("正在等待服务端登记真实运行");
+    expect(host.querySelectorAll('.agent-station.is-running')).toHaveLength(0);
 
     await act(async () => { resolveOpen?.(ok(openedQuiz)); });
     await settle();
@@ -286,28 +370,7 @@ describe("W4 real API pages", () => {
   });
 
   it("keeps rich lesson bulk and individual disclosure controls in sync", async () => {
-    const modules = (["intuition", "concepts", "walkthrough", "mistakes", "final-task", "terms-sources"] as const).map((moduleId, index) => ({
-      moduleId,
-      title: `模块${index + 1}`,
-      summary: `模块${index + 1}摘要`,
-      blocks: [{ blockId: `block-${index + 1}`, kind: "paragraph" as const, text: `模块${index + 1}正文` }],
-    }));
-    const richStep = {
-      ...nextStep,
-      card: {
-        ...nextStep.card!,
-        selectedLesson: {
-          lessonId: "lesson-read-csv-guided",
-          variantId: "guided" as const,
-          label: "逐步讲解版",
-          learningObjectives: { understand: ["理解读取流程"], master: ["掌握读取方法"] },
-          modules,
-          termNotes: [],
-          sourceClaims: [],
-          coveredRuleIds: ["rule-read-csv"],
-        },
-      },
-    };
+    const richStep = richLearningStep();
     const fetchMock = vi.fn().mockResolvedValueOnce(ok(bootstrap(recovery()))).mockResolvedValueOnce(ok(richStep));
     const { host } = await renderRoute("/learn/session-w4/node-basic", fetchMock);
     const details = () => [...host.querySelectorAll<HTMLDetailsElement>(".lesson-module")];
@@ -327,6 +390,105 @@ describe("W4 real API pages", () => {
     await click(button(host, "全部收起"));
     await click(button(host, "全部收起"));
     expect(details().every((item) => !item.open)).toBe(true);
+  });
+
+  it("places the personalized-tip pipeline above the reminder and lesson body with a live elapsed timer", async () => {
+    const pendingTip = new Promise<Response>(() => undefined);
+    const pendingRun = new Promise<Response>(() => undefined);
+    const fixedResponses = [ok(bootstrap(recovery())), ok(richLearningStep())];
+    let fixedIndex = 0;
+    const fetchMock = vi.fn((input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes("/personalized-tip")) return pendingTip;
+      if (url.includes("/api/agent-runs/")) return pendingRun;
+      return Promise.resolve(fixedResponses[fixedIndex++]!);
+    });
+    const { host } = await renderRoute("/learn/session-w4/node-basic", fetchMock);
+
+    const content = host.querySelector(".learning-content")!;
+    const children = [...content.children];
+    const objectiveIndex = children.findIndex((item) => item.classList.contains("lesson-objectives"));
+    const pipelineIndex = children.findIndex((item) => item.classList.contains("agent-pipeline"));
+    const tipIndex = children.findIndex((item) => item.classList.contains("lesson-personal-tip"));
+    const manualIndex = children.findIndex((item) => item.classList.contains("lesson-manual"));
+
+    expect([objectiveIndex, pipelineIndex, tipIndex, manualIndex]).toEqual([0, 1, 2, 4]);
+    expect(host.querySelectorAll(".agent-pipeline")).toHaveLength(1);
+    expect(host.querySelector(".lesson-personal-tip-heading strong")?.textContent)
+      .toBe("正在生成并审核个性化提醒（已处理 0 秒）");
+
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 1_100)); });
+    expect(host.querySelector(".lesson-personal-tip-heading strong")?.textContent)
+      .toMatch(/正在生成并审核个性化提醒（已处理 [1-9]\d* 秒）/u);
+  });
+
+  it("renders an Agent-reviewed personalized tip as a structured pre-lesson guide", async () => {
+    const richStep = richLearningStep();
+    richStep.card.personalizedTip = {
+      text: "兼容文本",
+      lessonVariantId: "guided",
+      lessonVariantLabel: "逐步讲解版",
+      lessonOverview: "这一节先建立可靠输入，为后续清洗提供起点。",
+      priorConnection: "上一节完成了基础准备，本节开始进入真实表格处理。",
+      learningFocus: "抓住读取、确认对象、保留原始异常这条主线。",
+      nextConnection: "下一节将检查列名、类型和缺失概况。",
+      studyAdvice: "重点区分读取与清洗，每一步都确认是否修改了原值。",
+      guidingQuestion: "读取成功为什么还不能说明数据已经清洗合格？",
+      sourceAnchorIds: ["src-pandas-read-csv"],
+    };
+    const fetchMock = vi.fn().mockResolvedValueOnce(ok(bootstrap(recovery()))).mockResolvedValueOnce(ok(richStep));
+    const { host } = await renderRoute("/learn/session-w4/node-basic", fetchMock);
+
+    expect(host.textContent).toContain("AI 个性化课前导学");
+    expect(host.textContent).toContain("逐步讲解版");
+    expect(host.textContent).toContain("承接前文");
+    expect(host.textContent).toContain("本节主线");
+    expect(host.textContent).toContain("下一步去哪里");
+    expect(host.textContent).toContain("学习建议");
+    expect(host.textContent).toContain("带着这个问题进入正文");
+    expect(host.textContent).toContain("读取成功为什么还不能说明数据已经清洗合格？");
+    expect(host.textContent).not.toContain("兼容文本");
+  });
+
+  it("hides a saved context-dependent guiding question and automatically upgrades the guide", async () => {
+    const richStep = richLearningStep();
+    richStep.card.personalizedTip = {
+      text: "旧导学。列数恰好是 7，为什么还不能说明列名和列序已经合格？",
+      lessonVariantId: "guided",
+      lessonVariantLabel: "逐步讲解版",
+      lessonOverview: "这一节先检查表格结构。",
+      priorConnection: "上一节完成了读取。",
+      learningFocus: "检查结构、类型和缺失概况。",
+      nextConnection: "下一节将处理缺失值。",
+      studyAdvice: "先理解每项检查回答什么问题。",
+      guidingQuestion: "列数恰好是 7，为什么还不能说明列名和列序已经合格？",
+      sourceAnchorIds: ["src-pandas-read-csv"],
+    };
+    const pendingTip = new Promise<Response>(() => undefined);
+    const responses = [ok(bootstrap(recovery())), ok(richStep)];
+    let responseIndex = 0;
+    const fetchMock = vi.fn((input: RequestInfo | URL) => String(input).includes("/personalized-tip")
+      ? pendingTip
+      : Promise.resolve(responses[responseIndex++]!));
+    const { host } = await renderRoute("/learn/session-w4/node-basic", fetchMock);
+
+    expect(host.textContent).not.toContain("列数恰好是 7");
+    expect(host.textContent).toContain("正在生成并审核个性化提醒");
+    expect(fetchMock.mock.calls.some(([input]) => String(input).includes("/personalized-tip"))).toBe(true);
+  });
+
+  it("clears a failed guide run while keeping the legacy reminder available", async () => {
+    const richStep = richLearningStep();
+    richStep.card.personalizedTip = { text: "旧版单段提醒。", sourceAnchorIds: ["src-pandas-read-csv"] };
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(ok(bootstrap(recovery())))
+      .mockResolvedValueOnce(ok(richStep))
+      .mockResolvedValueOnce(fail(503, "tip_unavailable"));
+    const { host } = await renderRoute("/learn/session-w4/node-basic", fetchMock);
+
+    expect(host.querySelector(".agent-pipeline")).toBeNull();
+    expect(host.textContent).toContain("旧版单段提醒。");
+    expect(host.textContent).toContain("升级课前导学");
   });
 
   it("does not send an incomplete learning step to summary", async () => {
@@ -364,6 +526,56 @@ describe("W4 real API pages", () => {
     expect(host.querySelector(".quiz-question h2")?.textContent).toBe("追加方法？");
     expect(fetchMock).toHaveBeenCalledTimes(3);
     expect(String(fetchMock.mock.calls[2]?.[0])).toContain("/api/activities/act-basic/open");
+  });
+
+  it("recovers a skipped-chapter relearn Attempt after route state is lost", async () => {
+    const session = recovery({ stage: "activity" });
+    const skippedNode = { ...pathNodes[0]!, status: "skipped" as const, required: false, positionLocked: false };
+    session.path = { ...session.path!, nodes: [skippedNode] };
+    session.currentAttempt = { kind: "quiz", activityId: "act-basic", attemptId: "attempt-1", status: "draft", retryNumber: 0 };
+    session.activityProgress = [{
+      nodeId: skippedNode.nodeId,
+      activities: [{ activityId: "act-basic", status: "in_progress", attemptIds: ["attempt-1"], quizRetryCount: 0, updatedAt: "2026-08-26T13:00:00.000Z" }],
+    }];
+    const relearnStep = { ...nextStep, node: skippedNode, navigationMode: "review" as const, relearnAllowed: true };
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(ok(bootstrap(session)))
+      .mockResolvedValueOnce(ok(relearnStep))
+      .mockResolvedValueOnce(ok(openedQuiz));
+
+    const { host } = await renderRoute("/activity/session-w4/act-basic", fetchMock);
+
+    expect(host.textContent).toContain("attempt-1");
+    expect(String(fetchMock.mock.calls[1]?.[0])).toContain("nodeId=node-basic");
+    expect(bodyAt(fetchMock, 2)).toMatchObject({ relearn: true });
+  });
+
+  it("recovers a gap-continued relearn Attempt after route state is lost", async () => {
+    const session = recovery({ stage: "activity" });
+    const relearningNode = { ...pathNodes[0]!, status: "in_progress" as const };
+    session.path = { ...session.path!, nodes: [relearningNode] };
+    session.currentAttempt = { kind: "quiz", activityId: "act-basic", attemptId: "attempt-1", status: "draft", retryNumber: 2 };
+    session.activityProgress = [{
+      nodeId: relearningNode.nodeId,
+      activities: [{
+        activityId: "act-basic", status: "in_progress", attemptIds: ["attempt-old-1", "attempt-old-2", "attempt-1"],
+        quizRetryCount: 2, continuedWithGap: true, updatedAt: "2026-08-26T13:00:00.000Z",
+      }],
+    }];
+    const relearnStep = { ...nextStep, node: relearningNode, navigationMode: "review" as const, relearnAllowed: true };
+    const reopened = openedQuiz.kind === "quiz"
+      ? { ...openedQuiz, activity: { ...openedQuiz.activity, retryNumber: 2 } }
+      : openedQuiz;
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(ok(bootstrap(session)))
+      .mockResolvedValueOnce(ok(relearnStep))
+      .mockResolvedValueOnce(ok(reopened));
+
+    const { host } = await renderRoute("/activity/session-w4/act-basic", fetchMock);
+
+    expect(host.textContent).toContain("attempt-1");
+    expect(String(fetchMock.mock.calls[1]?.[0])).toContain("nodeId=node-basic");
+    expect(bodyAt(fetchMock, 2)).toMatchObject({ relearn: true });
   });
 
   it("stops activity recovery after two failures and keeps safe exits visible", async () => {
@@ -440,6 +652,31 @@ describe("W4 real API pages", () => {
     expect(button(host, "提交正式评测").disabled).toBe(false);
   });
 
+  it("shows an elapsed-time status while formal code evaluation is pending", async () => {
+    let resolveSubmit: ((response: Response) => void) | undefined;
+    const pendingSubmit = new Promise<Response>((resolve) => { resolveSubmit = resolve; });
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(ok(bootstrap(recovery({ stage: "activity" }))))
+      .mockImplementationOnce(() => pendingSubmit)
+      .mockResolvedValueOnce(ok(bootstrap(recovery({ stage: "learning" }))));
+    const { host } = await renderRoute("/activity/session-w4/act-code", fetchMock, { opened: openedCode });
+
+    await click(button(host, "提交正式评测"));
+    expect(button(host, "正在提交并评测代码（已处理 0 秒）").disabled).toBe(true);
+    expect(host.querySelector('.async-action-status[role="status"]')?.textContent)
+      .toContain("正在提交并评测代码（已处理 0 秒）");
+
+    await new Promise((resolve) => setTimeout(resolve, 1_100));
+    await settle();
+    expect(host.querySelector('.async-action-status[role="status"]')?.textContent)
+      .toMatch(/正在提交并评测代码（已处理 [1-9] 秒）/u);
+
+    await act(async () => { resolveSubmit?.(ok(codeSubmission)); });
+    await settle();
+    expect(host.textContent).toContain("通过");
+    expect(host.querySelector('.async-action-status[role="status"]')).toBeNull();
+  });
+
   it("renders a complete public code statement with downloadable CSV samples", async () => {
     if (openedCode.kind !== "code") throw new Error("code fixture expected");
     const detailed = {
@@ -501,6 +738,27 @@ describe("W4 real API pages", () => {
     await click(button(host, "提交正式评测"));
     expect(sessionStorage.length).toBe(0);
     expect(useUiStore.getState().activityDrafts["attempt-code-1"]).toBeUndefined();
+  });
+
+  it("renders five safe code test points as passed count over total count", async () => {
+    const testPoints = Array.from({ length: 5 }, (_, index) => ({
+      pointNumber: index + 1,
+      scope: index === 0 ? "public" as const : "sealed" as const,
+      status: "passed" as const,
+    }));
+    const submission = { ...codeSubmission, result: { ...codeSubmission.result, testPoints } };
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(ok(bootstrap(recovery({ stage: "activity" }))))
+      .mockResolvedValueOnce(ok(submission))
+      .mockResolvedValueOnce(ok(bootstrap(recovery({ stage: "learning" }))));
+    const { host } = await renderRoute("/activity/session-w4/act-code", fetchMock, { opened: openedCode });
+
+    await click(button(host, "提交正式评测"));
+    expect(host.querySelector(".score-block")?.textContent).toContain("5 / 5通过测试点");
+    expect(host.querySelectorAll(".test-point-table tbody tr")).toHaveLength(5);
+    expect(host.textContent).toContain("公开测试点");
+    expect(host.textContent).toContain("密封测试点");
+    expect(host.textContent).not.toMatch(/dataset-private|fixtureId|expectedOutput|hidden/u);
   });
 
   it("renders the frozen generic evaluator failure as actionable Chinese feedback", async () => {
@@ -676,14 +934,88 @@ describe("W4 real API pages", () => {
         },
       ],
     };
+    session.activityProgress = [
+      {
+        nodeId: "node-read",
+        activities: [
+          { activityId: "act-read-quiz", status: "pending", attemptIds: [], quizRetryCount: 0, updatedAt: "2026-08-25T00:00:00.000Z" },
+          { activityId: "act-read-code", status: "pending", attemptIds: [], quizRetryCount: 0, updatedAt: "2026-08-25T00:00:00.000Z" },
+        ],
+      },
+      {
+        nodeId: "node-validate",
+        activities: [
+          { activityId: "act-validate-quiz", status: "pending", attemptIds: [], quizRetryCount: 0, updatedAt: "2026-08-25T00:00:00.000Z" },
+          { activityId: "act-practical", status: "completed", attemptIds: ["attempt-practical"], result: "partial", continuedWithGap: true, quizRetryCount: 0, updatedAt: "2026-08-25T00:00:00.000Z" },
+        ],
+      },
+    ];
     const completed = { requestId: "complete-skip", sessionId: "session-w4", sessionVersion: 3, profileRevision: 3, completedAt: "2026-08-25T00:00:00.000Z", summary: "Session completed." };
     const { host } = await renderRoute("/summary/session-w4", vi.fn().mockResolvedValueOnce(ok(bootstrap(session))).mockResolvedValueOnce(ok(completed)));
 
-    expect(host.querySelector('[data-section="diagnostic-skips"]')?.textContent).toContain("主动跳过的章节");
+    const skipped = host.querySelector('[data-section="diagnostic-skips"]');
+    const unresolved = host.querySelector('[data-section="unresolved-items"]');
+    expect(skipped?.textContent).toContain("主动跳过的章节");
     expect(host.textContent).toContain("读取CSV数据");
     expect(host.textContent).toContain("已跳过章节教学和普通练习");
     expect(host.textContent).toContain("已跳过章节教学；最终综合实操仍保留");
     expect(host.textContent).toContain("不等于经过本轮教学后再次掌握");
+    expect(unresolved?.textContent).not.toContain("读取CSV数据");
+    expect(unresolved?.textContent).toContain("验证清洗结果");
+    expect(unresolved?.textContent).toContain("暂时跳过 / 未掌握 · 作答 1 次");
+    expect(host.querySelector('[aria-label="会话指标"]')?.textContent).toContain("未解决结果1");
+    expect(host.querySelector('.branch-list a[href="/learn/session-w4/node-validate"]')?.textContent).toContain("复习第一个未掌握章节");
+  });
+
+  it("shows real learner-profile summary stages and elapsed time until completion returns", async () => {
+    let resolveComplete: ((response: Response) => void) | undefined;
+    const pendingComplete = new Promise<Response>((resolve) => { resolveComplete = resolve; });
+    const pendingPoll = new Promise<Response>(() => undefined);
+    const startedAt = new Date().toISOString();
+    const summaryRun: SafeAgentRunView = {
+      runId: "agent-summary-running",
+      requestId: "web-complete-session-test",
+      sessionId: "session-w4",
+      activityId: "session-summary",
+      profileRevision: 3,
+      pathVersion: 1,
+      evidenceVersion: 3,
+      status: "running",
+      currentStage: "generator",
+      startedAt,
+      resultOrigin: "unknown",
+      questionCount: 0,
+      stages: [
+        { eventId: "agent-summary-running.evt-1", sequence: 1, role: "source", label: "正式学习证据汇总", status: "running", startedAt, attemptNumber: 1, publicSummary: "正在读取正式学习记录。", metrics: [], issueCategories: [], sourceClaimIds: [] },
+        { eventId: "agent-summary-running.evt-2", sequence: 2, role: "source", label: "正式学习证据汇总", status: "succeeded", startedAt, finishedAt: startedAt, durationMs: 0, attemptNumber: 1, publicSummary: "已完成正式证据汇总。", metrics: [], issueCategories: [], sourceClaimIds: [] },
+        { eventId: "agent-summary-running.evt-3", sequence: 3, role: "profile", label: "确定性学情画像", status: "running", startedAt, attemptNumber: 1, publicSummary: "正在建立画像。", metrics: [], issueCategories: [], sourceClaimIds: [] },
+        { eventId: "agent-summary-running.evt-4", sequence: 4, role: "profile", label: "确定性学情画像", status: "succeeded", startedAt, finishedAt: startedAt, durationMs: 0, attemptNumber: 1, publicSummary: "画像事实基线已建立。", metrics: [], issueCategories: [], sourceClaimIds: [] },
+        { eventId: "agent-summary-running.evt-5", sequence: 5, role: "generator", label: "学情画像Agent总结", status: "running", startedAt, attemptNumber: 1, publicSummary: "正在组织学习成果和后续建议。", metrics: [], issueCategories: [], sourceClaimIds: [] },
+      ],
+    };
+    let bootstrapReturned = false;
+    const fetchMock = vi.fn((input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes("/api/agent-runs/by-request/")) return Promise.resolve(ok(summaryRun));
+      if (url.includes("/api/agent-runs/agent-summary-running")) return pendingPoll;
+      if (url.includes("/complete")) return pendingComplete;
+      if (!bootstrapReturned) { bootstrapReturned = true; return Promise.resolve(ok(bootstrap(recovery({ stage: "activity" })))); }
+      return pendingPoll;
+    });
+    const { host } = await renderRoute("/summary/session-w4", fetchMock);
+    await settle();
+
+    expect(host.querySelectorAll(".summary-generation-stage")).toHaveLength(5);
+    expect(host.querySelector('.summary-generation-stage[aria-current="step"]')?.textContent).toContain("画像 Agent");
+    expect(host.querySelector('.summary-generation-clock[role="status"]')?.textContent).toContain("已处理 0 秒");
+    expect(host.textContent).toContain("正在组织学习成果和后续建议");
+    expect(host.textContent).toContain("真实阶段事件");
+
+    const completed = { requestId: "complete", sessionId: "session-w4", sessionVersion: 3, profileRevision: 3, completedAt: startedAt, summary: "总结已完成。" };
+    await act(async () => { resolveComplete?.(ok(completed)); });
+    await settle();
+    expect(host.querySelector(".summary-generation")).toBeNull();
+    expect(host.textContent).toContain("总结已完成");
   });
 
   it("renders fail, partial, insufficient and unverified from safe progress facts", async () => {
@@ -701,14 +1033,29 @@ describe("W4 real API pages", () => {
     expect(host.textContent).toContain("返回主菜单");
   });
 
-  it("shows completed-session recovery without replaying a frozen historical summary", async () => {
+  it("shows an explicit archive-missing state instead of inventing a completed historical summary", async () => {
     const session = recovery({ stage: "completed", status: "completed" });
     session.activityProgress = [{ nodeId: "node-basic", activities: [{ activityId: "act-pending", status: "pending", attemptIds: [], quizRetryCount: 0, updatedAt: "2026-08-16T00:00:00.000Z" }] }];
     const fetchMock = vi.fn().mockResolvedValue(ok(bootstrap(session)));
     const { host } = await renderRoute("/summary/session-w4", fetchMock);
-    expect(host.textContent).toContain("COMPLETED_SUMMARY_NOT_REPLAYABLE");
+    expect(host.textContent).toContain("COMPLETED_SUMMARY_ARCHIVE_MISSING");
     expect(host.textContent).toContain("尚未验证 · 作答 0 次");
     expect(host.textContent).toContain("返回主菜单");
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("replays the frozen completed summary and archive hash from bootstrap", async () => {
+    const session = recovery({ stage: "completed", status: "completed" });
+    session.completedSummary = { requestId: "complete-frozen", sessionId: session.sessionId, sessionVersion: session.sessionVersion, profileRevision: 3, completedAt: "2026-08-25T01:00:00.000Z", summary: "冻结总结。", nextRecommendation: "复习未掌握章节。" };
+    session.completionArchiveSha256 = "a".repeat(64);
+    session.agentRunIds = ["agent-run-1", "agent-run-2"];
+    const fetchMock = vi.fn().mockResolvedValue(ok(bootstrap(session)));
+    const { host } = await renderRoute("/summary/session-w4", fetchMock);
+    expect(host.textContent).toContain("冻结总结");
+    expect(host.textContent).toContain("总结已冻结并可恢复");
+    expect(host.textContent).toContain("2 轮");
+    expect(host.textContent).toContain("a".repeat(64));
+    expect(host.textContent).not.toContain("COMPLETED_SUMMARY_NOT_REPLAYABLE");
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
@@ -776,6 +1123,112 @@ describe("W4 real API pages", () => {
     expect(host.textContent).toContain("attempt-2");
   });
 
+  it("shows the eight-station live pipeline before the pending quiz-open request completes", async () => {
+    let resolveRetry: ((response: Response) => void) | undefined;
+    let resolveRun: ((response: Response) => void) | undefined;
+    const pendingRetry = new Promise<Response>((resolve) => { resolveRetry = resolve; });
+    const pendingRun = new Promise<Response>((resolve) => { resolveRun = resolve; });
+    const afterSubmit = recovery({ stage: "activity", sessionVersion: 4 });
+    afterSubmit.sessionVersion = 4;
+    const retryQuiz = openedQuiz.kind === "quiz" ? {
+      ...openedQuiz,
+      attemptId: "attempt-2",
+      sessionVersion: 5,
+      activity: { ...openedQuiz.activity, retryNumber: 1 as const },
+    } : openedQuiz;
+    const running: SafeAgentRunView = {
+      runId: "agent-live-running",
+      requestId: "web-open-retry-running",
+      sessionId: "session-w4",
+      activityId: "act-basic",
+      profileRevision: 3,
+      pathVersion: 1,
+      evidenceVersion: 3,
+      status: "running",
+      currentStage: "generator",
+      startedAt: "2026-08-25T10:00:00.000Z",
+      resultOrigin: "unknown",
+      questionCount: 0,
+      stages: [
+        {
+          eventId: "agent-live-running.evt-1", sequence: 1, role: "source", label: "教学依据准备",
+          status: "running", startedAt: "2026-08-25T10:00:00.000Z", attemptNumber: 1,
+          publicSummary: "正在绑定当前章节正式中文正文。", metrics: [], issueCategories: [], sourceClaimIds: [],
+        },
+        {
+          eventId: "agent-live-running.evt-2", sequence: 2, role: "source", label: "教学依据准备",
+          status: "succeeded", startedAt: "2026-08-25T10:00:00.000Z", finishedAt: "2026-08-25T10:00:00.010Z",
+          durationMs: 10, attemptNumber: 1, publicSummary: "已绑定当前章节正式中文正文。",
+          metrics: [], issueCategories: [], sourceClaimIds: [],
+        },
+        {
+          eventId: "agent-live-running.evt-3", sequence: 3, role: "profile", label: "学情画像分析",
+          status: "running", startedAt: "2026-08-25T10:00:00.020Z", attemptNumber: 1,
+          publicSummary: "正在读取当前会话的学情事实。", metrics: [], issueCategories: [], sourceClaimIds: [],
+        },
+        {
+          eventId: "agent-live-running.evt-4", sequence: 4, role: "profile", label: "学情画像分析",
+          status: "succeeded", startedAt: "2026-08-25T10:00:00.020Z", finishedAt: "2026-08-25T10:00:00.030Z",
+          durationMs: 10, attemptNumber: 1, publicSummary: "已建立本轮生成所需的画像基线。",
+          metrics: [], issueCategories: [], sourceClaimIds: [],
+        },
+        {
+          eventId: "agent-live-running.evt-5", sequence: 5, role: "generator", label: "Generator生成题组",
+          status: "running", startedAt: "2026-08-25T10:00:00.040Z", attemptNumber: 1,
+          publicSummary: "正在根据当前教学正文生成候选题组。", metrics: [], issueCategories: [], sourceClaimIds: [],
+        },
+      ],
+    };
+    // Keep the live-run fixture within the UI stale-record guard regardless of wall-clock date.
+    const liveFixtureStartedAt = Date.now();
+    running.startedAt = new Date(liveFixtureStartedAt).toISOString();
+    running.stages = running.stages.map((stage, index) => ({
+      ...stage,
+      startedAt: new Date(liveFixtureStartedAt + index).toISOString(),
+      ...(stage.finishedAt === undefined ? {} : { finishedAt: new Date(liveFixtureStartedAt + index + 1).toISOString() }),
+    }));
+    let fixedResponses = 0;
+    const fetchMock = vi.fn((input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes("/api/agent-runs/by-request/")) return pendingRun;
+      if (url.includes("/api/agent-runs/agent-live-running")) return Promise.resolve(ok(running));
+      const responses = [
+        ok(bootstrap(recovery({ stage: "activity" }))),
+        ok(quizSubmission),
+        ok(bootstrap(afterSubmit)),
+        ok(bootstrap(afterSubmit)),
+        ok(nextStep),
+      ];
+      if (fixedResponses < responses.length) return Promise.resolve(responses[fixedResponses++]!);
+      return pendingRetry;
+    });
+    const { host } = await renderRoute("/activity/session-w4/act-basic", fetchMock, { opened: openedQuiz, nodeId: "node-basic" });
+    for (let index = 0; index < 4; index += 1) {
+      await click(host.querySelector(".quiz-question input")!);
+      if (index < 3) await click(button(host, "下一题 →"));
+    }
+    await click(button(host, "提交完整题组"));
+    await click(button(host, "使用新题组重试"));
+    await settle();
+
+    expect(fetchMock.mock.calls.map((call) => String(call[0])).some((url) => url.includes("/api/agent-runs/by-request/"))).toBe(true);
+    expect(host.querySelectorAll(".agent-station")).toHaveLength(8);
+    expect(host.querySelector('.agent-pipeline[data-mode="discovery"]')?.textContent).toContain("正在等待服务端登记真实运行");
+    expect(host.querySelectorAll('.agent-station.is-running')).toHaveLength(0);
+    expect(host.textContent).not.toContain("attempt-2");
+
+    await act(async () => { resolveRun?.(ok(running)); });
+    await settle();
+    expect(host.querySelector('.agent-pipeline[data-mode="live"]')).not.toBeNull();
+    expect(host.querySelector('.agent-station.is-running')?.textContent).toContain("生成");
+    expect(host.querySelector('.agent-pipeline [role="status"]')?.textContent).toContain("运行中");
+    expect(host.textContent).not.toContain("attempt-2");
+
+    await act(async () => { resolveRetry?.(ok(retryQuiz)); });
+    await settle();
+    expect(host.textContent).toContain("attempt-2");
+  });
+
   it("offers retry or explicit gap continuation after the second unresolved quiz", async () => {
     const retryQuiz = openedQuiz.kind === "quiz" ? {
       ...openedQuiz,
@@ -816,8 +1269,8 @@ describe("W4 real API pages", () => {
     }
     await click(button(host, "提交完整题组"));
     expect(button(host, "使用新题组重试")).toBeDefined();
-    expect(button(host, "暂时跳过，进入下一章节")).toBeDefined();
-    await click(button(host, "暂时跳过，进入下一章节"));
+    expect(button(host, "暂时跳过，进入下一环节")).toBeDefined();
+    await click(button(host, "暂时跳过，进入下一环节"));
     expect(String(fetchMock.mock.calls[4]?.[0])).toBe("/api/activities/act-basic/continue-with-gap");
     expect(bodyAt(fetchMock, 4)).toMatchObject({ sessionVersion: 7, attemptId: "attempt-2" });
     expect(String(fetchMock.mock.calls[5]?.[0])).toBe("/api/bootstrap?recoverSessionId=session-w4");

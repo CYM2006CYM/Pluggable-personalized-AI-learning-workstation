@@ -8,7 +8,7 @@
   ],
   "files": [
     "src",
-    "fixtures/profiles",
+    "fixtures/profiles/demo-review",
     "LICENSE",
     "README.md"
   ],
@@ -55,7 +55,7 @@
     "pi-loop-graph-sdk": "github:0liveiraaa/pi-loop-graph-sdk#401d3e9",
     "react": "18.3.1",
     "react-dom": "18.3.1",
-    "react-router-dom": "6.30.1",
+    "react-router-dom": "7.18.2",
     "zustand": "5.0.14"
   },
   "peerDependencies": {
@@ -72,7 +72,14 @@
     "jsdom": "26.1.0",
     "typebox": "1.3.5",
     "typescript": "5.9.3",
-    "vite": "7.1.7",
+    "vite": "7.3.6",
     "vitest": "4.1.10"
+  },
+  "overrides": {
+    "brace-expansion": "5.0.9",
+    "nanoid": "3.3.18",
+    "postcss": "8.5.23",
+    "protobufjs": "7.6.5",
+    "undici": "8.9.0"
   }
 }

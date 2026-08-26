@@ -22,7 +22,9 @@ import type {
   NextStepOutput,
   OpenActivityInput,
   PathCandidateOutput,
+  PersonalizedTipOutput,
   PrepareActivityRunInput,
+  PreparePersonalizedTipInput,
   PreparedActivityOutput,
   QuizActivityResult,
   RecoverActivityInput,
@@ -34,6 +36,8 @@ import type {
   StartSessionOutput,
   SubmitActivityInput,
   SubmitDiagnosticAnswerInput,
+  SafeAgentRunView,
+  SafeAgentRunExport,
 } from "../../contracts/index.js";
 
 interface ApiSuccess<T> {
@@ -109,6 +113,15 @@ function id(value: string): string {
 }
 
 export const api = {
+  getAgentRunByRequest(requestId: string) {
+    return request<SafeAgentRunView>(`/api/agent-runs/by-request/${id(requestId)}`);
+  },
+  getAgentRun(runId: string) {
+    return request<SafeAgentRunView>(`/api/agent-runs/${id(runId)}`);
+  },
+  getAgentRunExport(runId: string) {
+    return request<SafeAgentRunExport>(`/api/agent-runs/${id(runId)}/export`);
+  },
   getBootstrap(recoverSessionId?: string) {
     return request<AppBootstrapSafeView>(`/api/bootstrap${query({ recoverSessionId })}`);
   },
@@ -130,11 +143,15 @@ export const api = {
   confirmPath(input: ConfirmPathInput) {
     return post<ConfirmedPathOutput>(`/api/sessions/${id(input.sessionId)}/path/confirm`, without(input, "sessionId"));
   },
+  preparePersonalizedTip(input: PreparePersonalizedTipInput) {
+    return post<PersonalizedTipOutput>(`/api/sessions/${id(input.sessionId)}/learning-cards/${id(input.nodeId)}/personalized-tip`, without(without(input, "sessionId"), "nodeId"));
+  },
   getNextStep(input: GetNextStepInput) {
     return request<NextStepOutput>(`/api/sessions/${id(input.sessionId)}/next-step${query({
       sessionVersion: input.sessionVersion,
       profileRevision: input.profileRevision,
       pathVersion: input.pathVersion,
+      nodeId: input.nodeId,
     })}`);
   },
   replanPath(input: ReplanPathInput) {

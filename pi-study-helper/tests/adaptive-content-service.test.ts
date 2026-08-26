@@ -1,11 +1,14 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   AdaptiveContentService,
+  balanceQuizAnswerPositions,
   type AdaptiveContentClock,
   type AdaptiveContentSourceContext,
 } from "../src/application/adaptive-content-service.js";
 import type { ModelExecutionPort, ModelExecutionResult } from "../src/infrastructure/model-execution-port.js";
 import { InMemoryW4PrivateRuntimeStore } from "../src/infrastructure/w4-private-runtime-store.js";
+import { InMemoryAgentRunRepository, type AgentRunRepository } from "../src/infrastructure/agent-run-repository.js";
+import { createStudyReviewGraphs } from "../src/graphs/v2-learning-graphs.js";
 
 const source: AdaptiveContentSourceContext = {
   profileRevision: 3,
@@ -27,11 +30,11 @@ const question = {
   sourceAnchorIds: ["src-pandas-read-csv"],
 };
 
-const questions = Array.from({ length: 4 }, (_, index) => ({
+const questions = balanceQuizAnswerPositions(Array.from({ length: 4 }, (_, index) => ({
   ...question,
   questionId: `dynamic-read-${index + 1}`,
   prompt: `${index + 1}. ${question.prompt}`,
-}));
+})));
 
 const card = {
   cardId: "dynamic-card-read",
@@ -39,7 +42,7 @@ const card = {
   title: "Read CSV safely",
   objective: "Read a CSV and inspect the resulting table.",
   explanation: ["Reading creates a DataFrame but does not clean its values."],
-  example: "const table = pandas.read_csv(source)",
+  example: "面对一份刚读入的表格，为什么仅仅能够打开文件，还不足以证明数据可以直接用于后续清洗？",
   commonMistake: "Assuming parsed values are already normalized.",
   sourceAnchorIds: ["src-pandas-read-csv"],
   estimatedMinutes: 8,
@@ -71,6 +74,91 @@ const cleanHunter = ok({ issues: [], requiresDefender: false, recommendedVerdict
 const defender = ok({ defenseSummary: "The wording follows the public source.", acceptedIssueIds: [], rebuttedIssueIds: ["issue-1"], residualRisks: [] });
 const judge = ok({ verdict: "accepted", finalSafeFeedback: "Accepted after review.", summary: "No blocked issue remains.", blockedIssueIds: [] });
 
+describe("adaptive Generator prompts", () => {
+  it("uses separate contracts for personalized cards and quizzes", () => {
+    const generator = createStudyReviewGraphs().generator;
+    const base = {
+      safeFeedback: "safe",
+      sourceIds: ["src-pandas-read-csv"],
+      sourceSummary: "public source",
+      allowedSourceIds: ["src-pandas-read-csv"],
+      teachingContent: "中文正式教学正文",
+      personalizationContext: {
+        knowledgeStatus: "support_needed" as const,
+        mastery: 0.4,
+        confidence: 0.7,
+        validEvidenceCount: 2,
+        evidenceFormCount: 2,
+        explanationPreference: "step_by_step" as const,
+        journey: {
+          currentPosition: 2,
+          totalLessons: 3,
+          lessons: [
+            { knowledgePointId: "pandas.clean.read-csv", title: "读取CSV", objective: "建立可靠输入。" },
+            { knowledgePointId: "pandas.clean.inspect", title: "检查DataFrame", objective: "检查结构与缺失概况。" },
+            { knowledgePointId: "pandas.clean.missing", title: "处理缺失值", objective: "按字段语义处理缺失。" },
+          ],
+        },
+      },
+    };
+    const cardPrompt = generator.buildSystemPrompt({
+      context: {
+        ...base,
+        activity: { activityId: "pandas.clean.read-csv", activityVersion: 1, kind: "explain", title: "读取CSV", primaryKnowledgePointId: "pandas.clean.read-csv", supportingKnowledgePointIds: [] },
+      },
+      allowedSourcesSummary: "public source",
+    });
+    const quizPrompt = generator.buildSystemPrompt({
+      context: {
+        ...base,
+        activity: { activityId: "act-read-csv", activityVersion: 1, kind: "mcq", title: "读取CSV测验", primaryKnowledgePointId: "pandas.clean.read-csv", supportingKnowledgePointIds: [] },
+      },
+      allowedSourcesSummary: "public source",
+    });
+
+    expect(cardPrompt).toContain("artifactKind=card");
+    expect(cardPrompt).toContain("不得声称改变正文、路径、掌握状态或判分");
+    expect(cardPrompt).toContain("personalizationContext=");
+    expect(cardPrompt).toContain("证据不足时提示先建立直觉和验证步骤");
+    expect(cardPrompt).toContain("承接前文");
+    expect(cardPrompt).toContain("引向下一节");
+    expect(cardPrompt).toContain("从未读过本节的学生也能立刻理解");
+    expect(cardPrompt).toContain("不得依赖正文尚未介绍的样例、具体数字、固定列数");
+    expect(cardPrompt).toContain("检查DataFrame");
+    expect(cardPrompt).not.toContain("当前活动只允许生成 artifactKind=quiz");
+    expect(quizPrompt).toContain("artifactKind=quiz");
+    expect(quizPrompt).toContain("4 至 6 道");
+    expect(quizPrompt).toContain("正确答案位置");
+    expect(quizPrompt).toContain("覆盖 A、B、C、D");
+    expect(quizPrompt).toContain('"options":["正确选项1","干扰选项1-2"');
+    expect(quizPrompt).toContain('"options":["干扰选项2-1","正确选项2"');
+  });
+});
+
+describe("quiz answer position balancing", () => {
+  it("deterministically spreads an all-A model result without changing answer content", () => {
+    const allFirst = Array.from({ length: 4 }, (_, index) => ({
+      ...question,
+      questionId: `all-first-${index + 1}`,
+      prompt: `全A候选题${index + 1}`,
+      options: [question.correctAnswer, `干扰项${index + 1}-1`, `干扰项${index + 1}-2`, `干扰项${index + 1}-3`],
+    }));
+
+    const first = balanceQuizAnswerPositions(allFirst);
+    const second = balanceQuizAnswerPositions(allFirst);
+    const positions = first.map((item) => item.options.indexOf(item.correctAnswer as string));
+
+    expect(second).toEqual(first);
+    expect(new Set(positions)).toEqual(new Set([0, 1, 2, 3]));
+    first.forEach((item, index) => {
+      expect(item.correctAnswer).toBe(allFirst[index]?.correctAnswer);
+      expect(item.explanation).toBe(allFirst[index]?.explanation);
+      expect(new Set(item.options)).toEqual(new Set(allFirst[index]?.options));
+    });
+    expect(allFirst.every((item) => item.options.indexOf(item.correctAnswer as string) === 0)).toBe(true);
+  });
+});
+
 function providerByGraph(generatorResult: ModelExecutionResult, hunterResult = hunter): ModelExecutionPort & { calls: Array<{ graphId: string; safeContext: unknown }> } {
   const calls: Array<{ graphId: string; safeContext: unknown }> = [];
   return {
@@ -91,11 +179,12 @@ function service(
   store = new InMemoryW4PrivateRuntimeStore(),
   clock?: AdaptiveContentClock,
   deadlines?: Pick<ConstructorParameters<typeof AdaptiveContentService>[0], "fallbackAfterMs" | "discardAfterMs">,
+  agentRuns?: AgentRunRepository,
 ) {
   return { store, instance: new AdaptiveContentService({
     modelExecutionPort,
     sourceProvider: { forCard: async () => ({ ...source, targetId: source.knowledgePointId }), forQuiz: async () => source },
-    privateStore: store, modelId: "deepseek-chat", promptVersion: "w4-d2-v1", clock, ...deadlines,
+    privateStore: store, modelId: "deepseek-chat", promptVersion: "w4-d2-v1", clock, agentRuns, ...deadlines,
   }) };
 }
 
@@ -121,6 +210,180 @@ function deferred<T>() {
 }
 
 describe("AdaptiveContentService", () => {
+  it("repairs a context-dependent pre-lesson question before Hunter review", async () => {
+    const contextDependentCard = {
+      ...card,
+      example: "列数恰好是 7，为什么还不能说明列名和列序已经合格？",
+    };
+    let generatorCalls = 0;
+    const port = providerByGraph(generator({ artifactKind: "card", riskLevel: "low", card }), cleanHunter);
+    port.execute = vi.fn(async (input): Promise<ModelExecutionResult> => {
+      port.calls.push({ graphId: input.graphId, safeContext: structuredClone(input.safeContext) });
+      if (input.graphId === "generator") {
+        generatorCalls += 1;
+        return generator({ artifactKind: "card", riskLevel: "low", card: generatorCalls === 1 ? contextDependentCard : card });
+      }
+      if (input.graphId === "hunter") return cleanHunter;
+      if (input.graphId === "judge") return judge;
+      return { status: "provider_error", sourceRefs: [], traceSummary: "unexpected", modelId: "deepseek-chat", promptVersion: "w4-d2-v1" };
+    });
+    const { instance } = service(port);
+
+    await expect(instance.prepareCard({ profileRevision: 3, knowledgePointId: source.knowledgePointId, excludedArtifactIds: [] }))
+      .resolves.toMatchObject({ status: "accepted", card });
+    expect(generatorCalls).toBe(2);
+    expect(port.calls[1]?.safeContext).toMatchObject({
+      repairInstruction: expect.stringMatching(/candidate_card_guiding_question_context_dependent.*从未读过本节.*核心矛盾/u),
+    });
+    expect(port.calls.map((call) => call.graphId)).toEqual(["generator", "generator", "hunter", "judge"]);
+  });
+
+  it("将真实Generator到Judge执行过程追加到同一安全run", async () => {
+    const agentRuns = new InMemoryAgentRunRepository();
+    const run = await agentRuns.create({
+      requestId: "request-agent-events", sessionId: "session-agent-events", activityId: "act-read-csv",
+      profileRevision: 3, pathVersion: 2, evidenceVersion: 1,
+    });
+    const startedAt = new Date().toISOString();
+    await agentRuns.append(run.runId, { role: "source", label: "教学依据准备", status: "running", startedAt, attemptNumber: 1, publicSummary: "正在绑定正文。" });
+    await agentRuns.append(run.runId, { role: "source", label: "教学依据准备", status: "succeeded", startedAt, finishedAt: startedAt, durationMs: 0, attemptNumber: 1, publicSummary: "正文绑定完成。" });
+    await agentRuns.append(run.runId, { role: "profile", label: "学情画像分析", status: "running", startedAt, attemptNumber: 1, publicSummary: "正在读取画像。" });
+    await agentRuns.append(run.runId, { role: "profile", label: "学情画像分析", status: "succeeded", startedAt, finishedAt: startedAt, durationMs: 0, attemptNumber: 1, publicSummary: "画像读取完成。" });
+    const port = providerByGraph(generator({ artifactKind: "quiz", riskLevel: "low", questions }), cleanHunter);
+    const { instance } = service(port, new InMemoryW4PrivateRuntimeStore(), undefined, undefined, agentRuns);
+
+    await expect(instance.prepareQuiz({
+      profileRevision: 3, activityId: "act-read-csv", retryNumber: 0, excludedQuestionIds: [], agentRunId: run.runId,
+    })).resolves.toMatchObject({ status: "accepted", questions });
+
+    const stored = await agentRuns.getByRunId(run.runId);
+    expect(stored?.stages.map((event) => `${event.role}:${event.status}`)).toEqual([
+      "source:running", "source:succeeded", "profile:running", "profile:succeeded",
+      "generator:running", "generator:succeeded", "safety:running", "safety:succeeded",
+      "hunter:running", "hunter:succeeded", "defender:skipped", "judge:running", "judge:succeeded",
+    ]);
+    expect(JSON.stringify(stored)).not.toMatch(/correctAnswer|candidateFeedback|systemPrompt|apiKey/u);
+  });
+
+  it("retries a transient Hunter completion-event write without discarding the reviewed candidate", async () => {
+    const storedRuns = new InMemoryAgentRunRepository();
+    const run = await storedRuns.create({
+      requestId: "request-hunter-event-retry", sessionId: "session-hunter-event-retry", activityId: "act-read-csv",
+      profileRevision: 3, pathVersion: 2, evidenceVersion: 1,
+    });
+    const startedAt = new Date().toISOString();
+    await storedRuns.append(run.runId, { role: "source", label: "教学依据准备", status: "running", startedAt, attemptNumber: 1, publicSummary: "正在绑定正文。" });
+    await storedRuns.append(run.runId, { role: "source", label: "教学依据准备", status: "succeeded", startedAt, finishedAt: startedAt, durationMs: 0, attemptNumber: 1, publicSummary: "正文绑定完成。" });
+    await storedRuns.append(run.runId, { role: "profile", label: "学情画像分析", status: "running", startedAt, attemptNumber: 1, publicSummary: "正在读取画像。" });
+    await storedRuns.append(run.runId, { role: "profile", label: "学情画像分析", status: "succeeded", startedAt, finishedAt: startedAt, durationMs: 0, attemptNumber: 1, publicSummary: "画像读取完成。" });
+    let failedOnce = false;
+    const flakyRuns: AgentRunRepository = {
+      create: storedRuns.create.bind(storedRuns),
+      getByRunId: storedRuns.getByRunId.bind(storedRuns),
+      getByRequestId: storedRuns.getByRequestId.bind(storedRuns),
+      listBySession: storedRuns.listBySession.bind(storedRuns),
+      append: async (runId, event) => {
+        if (!failedOnce && event.role === "hunter" && event.status === "succeeded") {
+          failedOnce = true;
+          throw new Error("transient public stage write failure");
+        }
+        return storedRuns.append(runId, event);
+      },
+      complete: storedRuns.complete.bind(storedRuns),
+      subscribe: storedRuns.subscribe.bind(storedRuns),
+    };
+    const port = providerByGraph(generator({ artifactKind: "quiz", riskLevel: "low", questions }), cleanHunter);
+    const { instance } = service(port, new InMemoryW4PrivateRuntimeStore(), undefined, undefined, flakyRuns);
+
+    await expect(instance.prepareQuiz({
+      profileRevision: 3, activityId: "act-read-csv", retryNumber: 0, excludedQuestionIds: [], agentRunId: run.runId,
+    })).resolves.toMatchObject({ status: "accepted", questions });
+
+    const stored = await storedRuns.getByRunId(run.runId);
+    expect(failedOnce).toBe(true);
+    expect(stored?.stages.filter((stage) => stage.role === "hunter").map((stage) => stage.status))
+      .toEqual(["running", "succeeded"]);
+    expect(port.calls.map((call) => call.graphId)).toEqual(["generator", "hunter", "judge"]);
+  });
+
+  it("isolates one Hunter result-processing exception and retries the same candidate", async () => {
+    let hunterCalls = 0;
+    const port: ModelExecutionPort = {
+      async execute(input) {
+        if (input.graphId === "generator") return generator({ artifactKind: "quiz", riskLevel: "low", questions });
+        if (input.graphId === "hunter") {
+          hunterCalls += 1;
+          if (hunterCalls === 1) {
+            return {
+              status: "ok",
+              get payload(): unknown { throw new Error("malformed Hunter result accessor"); },
+              sourceRefs: ["src-pandas-read-csv"], traceSummary: "safe malformed result",
+              modelId: "deepseek-chat", promptVersion: "w4-d2-v1",
+            } as ModelExecutionResult;
+          }
+          return cleanHunter;
+        }
+        if (input.graphId === "judge") return judge;
+        return ok({ defenseSummary: "unused", acceptedIssueIds: [], rebuttedIssueIds: [], residualRisks: [] });
+      },
+    };
+    const agentRuns = new InMemoryAgentRunRepository();
+    const run = await agentRuns.create({
+      requestId: "request-hunter-processing-retry", sessionId: "session-hunter-processing-retry", activityId: "act-read-csv",
+      profileRevision: 3, pathVersion: 2, evidenceVersion: 1,
+    });
+    const startedAt = new Date().toISOString();
+    await agentRuns.append(run.runId, { role: "source", label: "教学依据准备", status: "running", startedAt, attemptNumber: 1, publicSummary: "正在绑定正文。" });
+    await agentRuns.append(run.runId, { role: "source", label: "教学依据准备", status: "succeeded", startedAt, finishedAt: startedAt, durationMs: 0, attemptNumber: 1, publicSummary: "正文绑定完成。" });
+    await agentRuns.append(run.runId, { role: "profile", label: "学情画像分析", status: "running", startedAt, attemptNumber: 1, publicSummary: "正在读取画像。" });
+    await agentRuns.append(run.runId, { role: "profile", label: "学情画像分析", status: "succeeded", startedAt, finishedAt: startedAt, durationMs: 0, attemptNumber: 1, publicSummary: "画像读取完成。" });
+    const { instance, store } = service(port, new InMemoryW4PrivateRuntimeStore(), undefined, undefined, agentRuns);
+
+    await expect(instance.prepareQuiz({
+      profileRevision: 3, activityId: "act-read-csv", retryNumber: 0, excludedQuestionIds: [], agentRunId: run.runId,
+    })).resolves.toMatchObject({ status: "accepted", questions });
+
+    const stored = await agentRuns.getByRunId(run.runId);
+    expect(hunterCalls).toBe(2);
+    expect(stored?.stages.filter((stage) => stage.role === "hunter").map((stage) => [stage.status, stage.attemptNumber]))
+      .toEqual([["running", 1], ["revised", 1], ["running", 2], ["succeeded", 2]]);
+    expect(stored?.stages.find((stage) => stage.role === "hunter" && stage.status === "revised")?.metrics)
+      .toContainEqual(expect.objectContaining({ metricId: "failure-category", value: "hunter_processing_error" }));
+    expect(store.entries("adaptive-checkpoint")[0]?.value).toMatchObject({
+      stage: "accepted", stageOrder: ["generator", "hunter", "hunter-retry", "judge"],
+    });
+  });
+
+  it("falls back safely after two Hunter result-processing exceptions", async () => {
+    let hunterCalls = 0;
+    const port: ModelExecutionPort = {
+      async execute(input) {
+        if (input.graphId === "generator") return generator({ artifactKind: "quiz", riskLevel: "low", questions });
+        if (input.graphId === "hunter") {
+          hunterCalls += 1;
+          return {
+            status: "ok",
+            get payload(): unknown { throw new Error("persistent malformed Hunter result accessor"); },
+            sourceRefs: ["src-pandas-read-csv"], traceSummary: "safe malformed result",
+            modelId: "deepseek-chat", promptVersion: "w4-d2-v1",
+          } as ModelExecutionResult;
+        }
+        return judge;
+      },
+    };
+    const { instance, store } = service(port);
+
+    await expect(instance.prepareQuiz({
+      profileRevision: 3, activityId: "act-read-csv", retryNumber: 0, excludedQuestionIds: [],
+    })).resolves.toEqual({ status: "unavailable" });
+
+    expect(hunterCalls).toBe(2);
+    expect(store.entries("adaptive-cache")).toHaveLength(0);
+    expect(store.entries("adaptive-trace")[0]?.value).toMatchObject({
+      status: "unavailable", reasonCode: "hunter_invalid", detailCode: "hunter_processing_error",
+    });
+  });
+
   it("accepts a schema-bound candidate object without nested JSON string escaping", async () => {
     const port = providerByGraph(objectGenerator({ artifactKind: "quiz", riskLevel: "low", questions }), cleanHunter);
     const { instance } = service(port);
@@ -155,12 +418,35 @@ describe("AdaptiveContentService", () => {
     expect(JSON.stringify(port.calls)).not.toMatch(/KnowledgeState|activityProgress|mastery|Evidence/u);
   });
 
+  it("balances an all-A model quiz before review, caching, and publication", async () => {
+    const allFirst = questions.map((item) => ({
+      ...item,
+      options: [item.correctAnswer as string, ...item.options.filter((option) => option !== item.correctAnswer)],
+    }));
+    const expected = balanceQuizAnswerPositions(allFirst);
+    const port = providerByGraph(generator({ artifactKind: "quiz", riskLevel: "low", questions: allFirst }), cleanHunter);
+    const { instance, store } = service(port);
+
+    const result = await instance.prepareQuiz({
+      profileRevision: 3,
+      activityId: "act-read-csv",
+      retryNumber: 0,
+      excludedQuestionIds: [],
+    });
+
+    expect(result).toMatchObject({ status: "accepted", questions: expected });
+    expect(new Set(expected.map((item) => item.options.indexOf(item.correctAnswer as string))).size).toBe(3);
+    const hunterContext = port.calls[1]?.safeContext as { generator: { candidateFeedback: string } };
+    expect(JSON.parse(hunterContext.generator.candidateFeedback)).toMatchObject({ questions: expected });
+    expect(store.entries("adaptive-checkpoint")[0]?.value).toMatchObject({ candidate: { value: expected } });
+  });
+
   it("passes retry misses and learner-profile guidance to every review Agent and rejects an unchanged old prompt", async () => {
-    const remediatedQuestions = questions.map((item, index) => ({
+    const remediatedQuestions = balanceQuizAnswerPositions(questions.map((item, index) => ({
       ...item,
       questionId: `dynamic-read-r1-${index + 1}`,
       prompt: `重做新题面${index + 1}：继续检查读取CSV的对应知识。`,
-    }));
+    })));
     const reusedPromptQuestions = remediatedQuestions.map((item, index) => index === 0
       ? { ...item, prompt: questions[0]!.prompt }
       : item);
@@ -207,6 +493,60 @@ describe("AdaptiveContentService", () => {
     });
     expect(port.calls.filter((call) => call.graphId === "hunter" || call.graphId === "judge")
       .every((call) => JSON.stringify(call.safeContext).includes("missedQuestions"))).toBe(true);
+  });
+
+  it("repairs cross-question answer hints before Hunter can review the quiz", async () => {
+    const leakingQuestions = questions.map((item, index) => index === 0
+      ? { ...item, options: [item.options[0]!, item.options[1]!, "第一问已给出答案，直接保留这条记录"] }
+      : item);
+    let generatorCalls = 0;
+    const port = providerByGraph(generator({ artifactKind: "quiz", riskLevel: "low", questions }), cleanHunter);
+    port.execute = vi.fn(async (input): Promise<ModelExecutionResult> => {
+      port.calls.push({ graphId: input.graphId, safeContext: structuredClone(input.safeContext) });
+      if (input.graphId === "generator") {
+        generatorCalls += 1;
+        return generator({ artifactKind: "quiz", riskLevel: "low", questions: generatorCalls === 1 ? leakingQuestions : questions });
+      }
+      if (input.graphId === "hunter") return cleanHunter;
+      if (input.graphId === "judge") return judge;
+      return { status: "provider_error", sourceRefs: [], traceSummary: "unexpected", modelId: "deepseek-chat", promptVersion: "w4-d2-v1" };
+    });
+    const { instance } = service(port);
+
+    await expect(instance.prepareQuiz({ profileRevision: 3, activityId: "act-read-csv", retryNumber: 0, excludedQuestionIds: [] }))
+      .resolves.toMatchObject({ status: "accepted", questions });
+    expect(generatorCalls).toBe(2);
+    expect(port.calls[1]?.safeContext).toMatchObject({
+      repairInstruction: expect.stringMatching(/candidate_question_cross_answer_hint_1.*独立作答.*其他题已给出的信息/u),
+    });
+    expect(port.calls.map((call) => call.graphId)).toEqual(["generator", "generator", "hunter", "judge"]);
+  });
+
+  it("uses a second directed repair before falling back when the same cross-question leak repeats", async () => {
+    const leakingQuestions = questions.map((item, index) => index === 0
+      ? { ...item, explanation: "参照第一问的正确答案，直接保留该结论。" }
+      : item);
+    let generatorCalls = 0;
+    const port = providerByGraph(generator({ artifactKind: "quiz", riskLevel: "low", questions }), cleanHunter);
+    port.execute = vi.fn(async (input): Promise<ModelExecutionResult> => {
+      port.calls.push({ graphId: input.graphId, safeContext: structuredClone(input.safeContext) });
+      if (input.graphId === "generator") {
+        generatorCalls += 1;
+        return generator({ artifactKind: "quiz", riskLevel: "low", questions: generatorCalls < 3 ? leakingQuestions : questions });
+      }
+      if (input.graphId === "hunter") return cleanHunter;
+      if (input.graphId === "judge") return judge;
+      return { status: "provider_error", sourceRefs: [], traceSummary: "unexpected", modelId: "deepseek-chat", promptVersion: "w4-d2-v1" };
+    });
+    const { instance } = service(port);
+
+    await expect(instance.prepareQuiz({ profileRevision: 3, activityId: "act-read-csv", retryNumber: 0, excludedQuestionIds: [] }))
+      .resolves.toMatchObject({ status: "accepted", questions });
+    expect(generatorCalls).toBe(3);
+    expect(port.calls[2]?.safeContext).toMatchObject({
+      repairInstruction: expect.stringMatching(/candidate_question_cross_answer_hint_1.*逐字段自检/u),
+    });
+    expect(port.calls.map((call) => call.graphId)).toEqual(["generator", "generator", "generator", "hunter", "judge"]);
   });
 
   it("gives Generator one explicit repair attempt when candidateFeedback is structurally invalid", async () => {
@@ -475,7 +815,35 @@ describe("AdaptiveContentService", () => {
     const { instance } = service(port);
     await expect(instance.prepareQuiz({ profileRevision: 3, activityId: "act-read-csv", retryNumber: 0, excludedQuestionIds: [] }))
       .resolves.toEqual({ status: "unavailable" });
-    expect(stages).toEqual(["generator", "hunter"]);
+    expect(stages).toEqual(["generator", "hunter", "hunter"]);
+  });
+
+  it("repairs one inconsistent Hunter response before falling back", async () => {
+    const calls: Array<{ graphId: string; safeContext: unknown }> = [];
+    let hunterCalls = 0;
+    const port: ModelExecutionPort = {
+      async execute(input) {
+        calls.push({ graphId: input.graphId, safeContext: structuredClone(input.safeContext) });
+        if (input.graphId === "generator") return generator({ artifactKind: "quiz", riskLevel: "low", questions });
+        if (input.graphId === "hunter") {
+          hunterCalls += 1;
+          return hunterCalls === 1
+            ? ok({ issues: [{ issueId: "issue-1", severity: "medium", message: "题面需要复核。", disputed: true }], requiresDefender: false, recommendedVerdict: "accepted" })
+            : cleanHunter;
+        }
+        if (input.graphId === "judge") return judge;
+        return ok({ defenseSummary: "unused", acceptedIssueIds: [], rebuttedIssueIds: [], residualRisks: [] });
+      },
+    };
+    const { instance, store } = service(port);
+    await expect(instance.prepareQuiz({ profileRevision: 3, activityId: "act-read-csv", retryNumber: 0, excludedQuestionIds: [] }))
+      .resolves.toMatchObject({ status: "accepted", questions });
+    expect(calls.map((call) => call.graphId)).toEqual(["generator", "hunter", "hunter", "judge"]);
+    expect(calls[2]?.safeContext).toMatchObject({ reviewInstruction: expect.stringContaining("requiresDefender") });
+    expect(store.entries("adaptive-checkpoint")[0]?.value).toMatchObject({
+      stage: "accepted",
+      stageOrder: ["generator", "hunter", "hunter-retry", "judge"],
+    });
   });
 
   it("rejects a high-risk answer set when Hunter tries to bypass Defender", async () => {
@@ -486,7 +854,7 @@ describe("AdaptiveContentService", () => {
     const { instance } = service(port);
     await expect(instance.prepareQuiz({ profileRevision: 3, activityId: "act-read-csv", retryNumber: 0, excludedQuestionIds: [] }))
       .resolves.toEqual({ status: "unavailable" });
-    expect(port.calls.map((call) => call.graphId)).toEqual(["generator", "hunter"]);
+    expect(port.calls.map((call) => call.graphId)).toEqual(["generator", "hunter", "hunter"]);
   });
 
   it("resumes a bound review checkpoint after Generator without generating or publishing twice", async () => {
@@ -537,6 +905,47 @@ describe("AdaptiveContentService", () => {
       .resolves.toMatchObject({ status: "accepted", questions });
     expect(quizPort.calls.map((call) => call.graphId)).toEqual(["generator", "hunter", "judge"]);
     expect(store.entries("adaptive-cache")).toHaveLength(2);
+  });
+
+  it("keeps personalized card caches separate for different learner facts", async () => {
+    const store = new InMemoryW4PrivateRuntimeStore();
+    const cardPort = providerByGraph(generator({ artifactKind: "card", riskLevel: "low", card }));
+    const { instance } = service(cardPort, store);
+    const base = {
+      profileRevision: 3,
+      knowledgePointId: source.knowledgePointId,
+      excludedArtifactIds: [] as string[],
+      lessonVariantId: "guided" as const,
+    };
+    await expect(instance.prepareCard({
+      ...base,
+      personalizationContext: {
+        knowledgeStatus: "support_needed",
+        mastery: 0.4,
+        confidence: 0.7,
+        validEvidenceCount: 2,
+        evidenceFormCount: 2,
+        explanationPreference: "step_by_step",
+      },
+    })).resolves.toMatchObject({ status: "accepted" });
+    await expect(instance.prepareCard({
+      ...base,
+      personalizationContext: {
+        knowledgeStatus: "ready",
+        mastery: 0.9,
+        confidence: 0.9,
+        validEvidenceCount: 4,
+        evidenceFormCount: 3,
+        explanationPreference: "step_by_step",
+      },
+    })).resolves.toMatchObject({ status: "accepted" });
+
+    expect(cardPort.calls.filter((call) => call.graphId === "generator")).toHaveLength(2);
+    expect(store.entries("adaptive-cache")).toHaveLength(2);
+    expect(store.entries("adaptive-cache").map((entry) => entry.value))
+      .toEqual(expect.arrayContaining([
+        expect.objectContaining({ personalizationContextSha256: expect.stringMatching(/^[a-f0-9]{64}$/u) }),
+      ]));
   });
 
   it("rejects a semantically wrong candidate answer reported by Hunter", async () => {

@@ -4,7 +4,7 @@ import type {
   OpenActivityInput,
   QuizActivityDraftOutput,
 } from "../contracts/facade.js";
-import type { AdaptiveContentPort, ContinueActivityWithGapInput, ContinueActivityWithGapOutput, NodeActivityProgress, QuizQuestionPrivate, QuizRemediationContext, QuizSubmitActivityInput } from "../contracts/index.js";
+import { PUBLIC_RECOMMENDATION_MAX_LENGTH, type AdaptiveContentPort, type ContinueActivityWithGapInput, type ContinueActivityWithGapOutput, type LessonVariantId, type NodeActivityProgress, type QuizQuestionPrivate, type QuizRemediationContext, type QuizRemediationSafeView, type QuizSubmitActivityInput } from "../contracts/index.js";
 import { calculateKnowledgeStates } from "../domain/knowledge-state.js";
 import {
   DeterministicQuizRuntime,
@@ -27,8 +27,9 @@ import type { ActivityPathSuffixReplanner } from "./activity-path-suffix.js";
 import { toPathSafeSnapshot } from "../repositories/internal-path-session-port.js";
 import type { RuntimeCommitContext } from "./runtime-commit-context.js";
 import { lessonVariantForPreference } from "./rich-lesson-selection.js";
-import { buildLearnerProfile } from "../domain/learner-profile.js";
+import { buildLearnerProfile, diagnosticSkippedKnowledgePointIdsFromPath } from "../domain/learner-profile.js";
 import type { LearnerProfileAgentPort } from "./learner-profile-agent-service.js";
+import type { AgentRunRepository } from "../infrastructure/agent-run-repository.js";
 
 export interface QuizActivityAssets {
   activity: QuizActivityDefinition;
@@ -47,6 +48,9 @@ export interface QuizActivityRuntimeOptions {
   loadAssets(subjectId: string, profileRevision: number, activityId: string): Promise<QuizActivityAssets>;
   pathSuffix: ActivityPathSuffixReplanner;
   profileAgent?: LearnerProfileAgentPort;
+  agentRuns?: AgentRunRepository;
+  /** Upper bound for opening an AI-backed quiz, including unexpected adapter/storage hangs. */
+  dynamicGenerationTimeoutMs?: number;
   now?: () => Date;
 }
 
@@ -65,15 +69,42 @@ function progressFor(snapshot: Awaited<ReturnType<LearningSessionRepository["get
 
 const RESULT_RANK = { insufficient: 0, fail: 1, partial: 2, pass: 3 } as const;
 
+function resolveWithin<T>(operation: Promise<T>, timeoutMs: number): Promise<T | undefined> {
+  return new Promise<T | undefined>((resolve) => {
+    let settled = false;
+    const timer = setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      resolve(undefined);
+    }, timeoutMs);
+    operation.then((value) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      resolve(value);
+    }, () => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      resolve(undefined);
+    });
+  });
+}
+
 function bestResult(current: NodeActivityProgress["activities"][number]["bestResult"], latest: NonNullable<NodeActivityProgress["activities"][number]["result"]>) {
   return current === undefined || RESULT_RANK[latest] > RESULT_RANK[current] ? latest : current;
 }
 
 export class QuizActivityRuntime {
   private readonly now: () => Date;
+  private readonly dynamicGenerationTimeoutMs: number;
 
   constructor(private readonly options: QuizActivityRuntimeOptions) {
     this.now = options.now ?? (() => new Date());
+    this.dynamicGenerationTimeoutMs = options.dynamicGenerationTimeoutMs ?? 120_000;
+    if (!Number.isInteger(this.dynamicGenerationTimeoutMs) || this.dynamicGenerationTimeoutMs <= 0) {
+      throw new RangeError("dynamicGenerationTimeoutMs must be a positive integer");
+    }
   }
 
   async openActivity(input: OpenActivityInput): Promise<QuizActivityDraftOutput> {
@@ -104,9 +135,14 @@ export class QuizActivityRuntime {
       throw new LearningSessionRepositoryError("activity_lifecycle_conflict", "The acknowledged learning card does not belong to the current node");
     }
     const terminal = new Set(["completed", "insufficient"]);
-    const next = node.activityIds.find((id) => !terminal.has(nodeProgress.activities.find((entry) => entry.activityId === id)?.status ?? "pending"));
-    if (next !== input.activityId) throw new LearningSessionRepositoryError("prerequisite_violation", "Activity is not the next unfinished activity");
     const entry = nodeProgress.activities.find((item) => item.activityId === input.activityId)!;
+    const requiresExplicitRelearn = node.status === "skipped" || entry.continuedWithGap === true;
+    const relearnAllowed = input.relearn === true && requiresExplicitRelearn;
+    if ((requiresExplicitRelearn && input.relearn !== true) || (input.relearn === true && !relearnAllowed)) {
+      throw new LearningSessionRepositoryError("prerequisite_violation", "Only a skipped or gap-continued Activity can be relearned");
+    }
+    const next = node.activityIds.find((id) => !terminal.has(nodeProgress.activities.find((entry) => entry.activityId === id)?.status ?? "pending"));
+    if (next !== input.activityId && !relearnAllowed) throw new LearningSessionRepositoryError("prerequisite_violation", "Activity is not the next unfinished activity");
     if (snapshot.currentAttempt !== undefined) {
       if (snapshot.currentAttempt.activityId !== input.activityId) throw new LearningSessionRepositoryError("prerequisite_violation", "Another Activity Attempt is active");
       const existing = await this.options.sessions.getQuizAttempt({ ...input, attemptId: snapshot.currentAttempt.attemptId });
@@ -126,17 +162,40 @@ export class QuizActivityRuntime {
     const remediationContext = retryNumber > 0 && previousAttempt?.result?.answerReview !== undefined
       ? await this.buildRemediationContext(snapshot, previousAttempt, excludedQuestionIds, excludedQuestionPrompts)
       : undefined;
+    const lessonVariantId = lessonVariantForPreference(snapshot.diagnosticDraft?.background?.explanation_preference);
+    const remediation = remediationContext === undefined ? undefined : this.toRemediationSafeView(
+      remediationContext,
+      lessonVariantId,
+      targetKnowledgePointIds,
+      snapshot.latestCommit.evidenceVersion,
+    );
+    const agentRun = assets.legacyQuestion === undefined && this.options.agentRuns !== undefined
+      ? await this.options.agentRuns.create({
+          requestId: input.requestId,
+          sessionId: input.sessionId,
+          activityId: input.activityId,
+          profileRevision: input.profileRevision,
+          pathVersion: input.pathVersion,
+          evidenceVersion: snapshot.latestCommit.evidenceVersion,
+          ...(remediation === undefined ? {} : { remediation }),
+        })
+      : undefined;
+    if (agentRun !== undefined && agentRun.stages.length === 0) {
+      await this.recordPreparationStages(agentRun.runId, lessonVariantId, assets, remediationContext);
+    }
     const dynamic = assets.legacyQuestion === undefined
-      ? await this.options.content.prepareQuiz({
+      ? await resolveWithin(this.options.content.prepareQuiz({
           profileRevision: input.profileRevision,
           activityId: input.activityId,
           retryNumber,
           excludedQuestionIds,
-          lessonVariantId: lessonVariantForPreference(snapshot.diagnosticDraft?.background?.explanation_preference),
+          lessonVariantId,
           targetKnowledgePointIds,
+          ...(agentRun === undefined ? {} : { agentRunId: agentRun.runId }),
           ...(remediationContext === undefined ? {} : { remediationContext }),
-        })
+        }), this.dynamicGenerationTimeoutMs)
       : undefined;
+    const dynamicTimedOut = assets.legacyQuestion === undefined && dynamic === undefined;
     const selected = assets.legacyQuestion === undefined
       ? selectDeterministicQuizContent({
           dynamic: dynamic?.status === "accepted" ? dynamic.questions ?? [] : [],
@@ -150,6 +209,53 @@ export class QuizActivityRuntime {
       ? dynamic?.origin === "live_model" ? "ai_live" as const : "ai_recorded" as const
       : selected.source === "supplemental" ? "ai_supplemented" as const
         : selected.source === "fixed" ? "profile_fixed" as const : "insufficient" as const;
+    if (agentRun !== undefined && this.options.agentRuns !== undefined) {
+      if (dynamicTimedOut) {
+        const timeoutFinishedAt = this.now();
+        const latestGenerator = [...agentRun.stages].reverse().find((stage) => stage.role === "generator");
+        const timeoutStartedAt = latestGenerator?.status === "running" ? Date.parse(latestGenerator.startedAt) : timeoutFinishedAt.getTime();
+        await this.options.agentRuns.append(agentRun.runId, {
+          role: "generator", label: "Generator生成题组", status: "failed",
+          startedAt: new Date(timeoutStartedAt).toISOString(), finishedAt: timeoutFinishedAt.toISOString(),
+          durationMs: Math.max(0, timeoutFinishedAt.getTime() - timeoutStartedAt),
+          attemptNumber: latestGenerator?.attemptNumber ?? 1,
+          publicSummary: `Generator超过${Math.ceil(this.dynamicGenerationTimeoutMs / 1_000)}秒未返回，已停止等待并转入固定保障。`,
+          metrics: [{ metricId: "failure-category", label: "失败类别", value: "generation_timeout", tone: "danger" }],
+          issueCategories: ["生成超时"],
+        });
+      }
+      const publishStartedAt = this.now();
+      await this.options.agentRuns.append(agentRun.runId, {
+        role: "publish", label: "发布题组或固定保障", status: "running", startedAt: publishStartedAt.toISOString(), attemptNumber: 1,
+        publicSummary: selected.source === "dynamic" ? "正在发布已通过多Agent审核的AI题组。"
+          : dynamicTimedOut ? `AI题组生成超过${Math.ceil(this.dynamicGenerationTimeoutMs / 1_000)}秒未完成，正在选择固定保障内容。`
+            : "AI题组未能安全发布，正在选择固定保障内容。",
+      });
+      const publishFinishedAt = this.now();
+      const isDynamic = selected.source === "dynamic";
+      await this.options.agentRuns.append(agentRun.runId, {
+        role: "publish", label: "发布题组或固定保障", status: isDynamic ? "succeeded" : selected.source === "insufficient" ? "failed" : "fallback",
+        startedAt: publishStartedAt.toISOString(), finishedAt: publishFinishedAt.toISOString(),
+        durationMs: Math.max(0, publishFinishedAt.getTime() - publishStartedAt.getTime()), attemptNumber: 1,
+        publicSummary: isDynamic ? `已发布${selected.questions.length}道审核通过的AI客观题。`
+          : selected.source === "insufficient" ? "AI题组和固定保障内容均不可用，本轮活动已阻塞。"
+            : dynamicTimedOut
+              ? `AI题组生成超过${Math.ceil(this.dynamicGenerationTimeoutMs / 1_000)}秒仍未返回，已切换为${selected.questions.length}道固定保障题。`
+              : `已切换为${selected.questions.length}道固定保障题，未将失败AI候选展示给用户。`,
+        metrics: [
+          { metricId: "question-count", label: "发布题量", value: `${selected.questions.length}道`, tone: selected.questions.length > 0 ? "success" : "danger" },
+          { metricId: "content-origin", label: "内容来源", value: questionSource, tone: isDynamic ? "success" : "warning" },
+        ],
+      });
+      await this.options.agentRuns.complete(agentRun.runId, {
+        status: isDynamic ? "succeeded" : selected.source === "insufficient" ? "failed" : "fallback",
+        finishedAt: publishFinishedAt.toISOString(),
+        resultOrigin: isDynamic ? dynamic?.origin === "live_model" ? "ai_live" : "ai_recorded" : selected.source === "insufficient" ? "unknown" : "profile_fixed",
+        questionCount: selected.questions.length,
+        artifactSha256: quizQuestionSetSha256(selected.questions),
+        ...(isDynamic || selected.source === "insufficient" ? {} : { fallbackReasonCode: selected.source === "supplemental" ? "AI_UNAVAILABLE_SUPPLEMENTAL" : dynamicTimedOut ? "AI_GENERATION_TIMEOUT_FIXED" : "AI_UNAVAILABLE_FIXED" }),
+      });
+    }
     let gradingBinding: QuizGradingBinding;
     if (selected.source === "dynamic") {
       if (dynamic?.status !== "accepted" || dynamic.reviewBinding === undefined
@@ -176,6 +282,7 @@ export class QuizActivityRuntime {
       activity: assets.activity,
       questions: selected.questions,
       retryNumber,
+      ...(agentRun === undefined ? {} : { agentRunId: agentRun.runId }),
       targetKnowledgePointIds,
       questionSource,
       gradingBinding,
@@ -203,6 +310,73 @@ export class QuizActivityRuntime {
     return this.openOutput(input.requestId, committed, attempt);
   }
 
+  private toRemediationSafeView(
+    context: QuizRemediationContext,
+    lessonVariantId: LessonVariantId,
+    targetKnowledgePointIds: string[],
+    evidenceVersion: number,
+  ): QuizRemediationSafeView {
+    return {
+      lessonVariantId,
+      previousAttemptId: context.previousAttemptId,
+      missedQuestionCount: context.missedQuestions.length,
+      weakKnowledgePointIds: [...new Set(targetKnowledgePointIds)],
+      learnerProfileSource: context.learnerProfileSource,
+      // 画像 Agent 的安全摘要上限与公共 DTO 合同一致，保留完整可展示内容。
+      publicRecommendation: context.learnerProfileSummary.slice(0, PUBLIC_RECOMMENDATION_MAX_LENGTH),
+      evidenceVersion,
+      evidenceRefCount: context.learnerProfileEvidenceRefs.length,
+    };
+  }
+
+  private async recordPreparationStages(
+    runId: string,
+    lessonVariantId: LessonVariantId,
+    assets: QuizActivityAssets,
+    remediationContext: QuizRemediationContext | undefined,
+  ): Promise<void> {
+    if (this.options.agentRuns === undefined) return;
+    const sourceStartedAt = this.now();
+    await this.options.agentRuns.append(runId, {
+      role: "source", label: "教学依据准备", status: "running", startedAt: sourceStartedAt.toISOString(), attemptNumber: 1,
+      publicSummary: "正在绑定当前章节正式中文正文、版本和公开来源。",
+    });
+    const sourceFinishedAt = this.now();
+    const sourceClaimIds = (assets.allowedSourceAnchorIds ?? assets.knowledgePoint.sourceAnchorIds).slice(0, 32);
+    await this.options.agentRuns.append(runId, {
+      role: "source", label: "教学依据准备", status: "succeeded",
+      startedAt: sourceStartedAt.toISOString(), finishedAt: sourceFinishedAt.toISOString(),
+      durationMs: Math.max(0, sourceFinishedAt.getTime() - sourceStartedAt.getTime()), attemptNumber: 1,
+      publicSummary: "已绑定当前章节正式中文正文；Agent只能据此生成题目，不能替换教材事实。",
+      metrics: [
+        { metricId: "lesson-variant", label: "正文版本", value: lessonVariantId, tone: "success" },
+        { metricId: "source-count", label: "公开来源", value: `${sourceClaimIds.length}项`, tone: "neutral" },
+      ],
+      sourceClaimIds,
+    });
+    const profileStartedAt = this.now();
+    await this.options.agentRuns.append(runId, {
+      role: "profile", label: "学情画像分析", status: "running", startedAt: profileStartedAt.toISOString(), attemptNumber: 1,
+      publicSummary: remediationContext === undefined ? "正在读取当前会话的确定性学情事实。" : "正在结合上一轮错题和学情画像形成补救重点。",
+    });
+    const profileFinishedAt = this.now();
+    const missedCount = remediationContext?.missedQuestions.length ?? 0;
+    const evidenceCount = remediationContext?.learnerProfileEvidenceRefs.length ?? 0;
+    await this.options.agentRuns.append(runId, {
+      role: "profile", label: "学情画像分析", status: "succeeded",
+      startedAt: profileStartedAt.toISOString(), finishedAt: profileFinishedAt.toISOString(),
+      durationMs: Math.max(0, profileFinishedAt.getTime() - profileStartedAt.getTime()), attemptNumber: 1,
+      publicSummary: remediationContext === undefined
+        ? "已建立本轮生成所需的会话画像基线。"
+        : `已识别上一轮${missedCount}道错题，生成时将重复考察对应薄弱知识。`,
+      metrics: [
+        { metricId: "missed-count", label: "上一轮错题", value: `${missedCount}道`, tone: missedCount > 0 ? "warning" : "success" },
+        { metricId: "evidence-count", label: "画像证据", value: `${evidenceCount}项`, tone: "neutral" },
+        { metricId: "profile-source", label: "画像来源", value: remediationContext?.learnerProfileSource ?? "deterministic", tone: remediationContext?.learnerProfileSource === "agent" ? "success" : "neutral" },
+      ],
+    });
+  }
+
   private async buildRemediationContext(
     snapshot: Awaited<ReturnType<LearningSessionRepository["getSnapshot"]>>,
     previousAttempt: QuizAttemptSnapshot,
@@ -225,6 +399,7 @@ export class QuizActivityRuntime {
       knowledgeStates: snapshot.knowledgeStates,
       latestDiagnostic: snapshot.latestDiagnostic,
       activityProgress: snapshot.activityProgress,
+      diagnosticSkippedKnowledgePointIds: diagnosticSkippedKnowledgePointIdsFromPath(snapshot.path?.nodes),
     });
     const agentResult = this.options.profileAgent === undefined
       ? undefined
@@ -290,6 +465,31 @@ export class QuizActivityRuntime {
     const entry = node?.activities.find((activity) => activity.activityId === input.activityId);
     if (node === undefined || entry === undefined || !entry.attemptIds.includes(input.attemptId)) {
       throw new LearningSessionRepositoryError("prerequisite_violation", "Quiz Attempt is not current activity progress");
+    }
+    if (attempt.retryNumber > 0) {
+      const previousAttemptId = entry.attemptIds.at(-2);
+      const previousAttempt = previousAttemptId === undefined ? undefined : await this.options.sessions.getQuizAttempt({
+        ...input,
+        sessionVersion: snapshot.sessionVersion,
+        attemptId: previousAttemptId,
+      });
+      const previousMissedQuestionCount = previousAttempt?.result?.answerReview?.filter((item) => !item.correct).length;
+      const currentMissedQuestionCount = evaluated.result.answerReview?.filter((item) => !item.correct).length ?? 0;
+      if (previousMissedQuestionCount !== undefined) {
+        const targetKnowledgePointIds = attempt.targetKnowledgePointIds ?? [assets.knowledgePoint.id];
+        const status = currentMissedQuestionCount < previousMissedQuestionCount ? "improved" as const
+          : currentMissedQuestionCount > previousMissedQuestionCount ? "regressed" as const : "unchanged" as const;
+        const remediationOutcome = {
+          status,
+          previousMissedQuestionCount,
+          currentMissedQuestionCount,
+          targetKnowledgePointIds: [...targetKnowledgePointIds],
+          improvedKnowledgePointIds: status === "improved" ? [...targetKnowledgePointIds] : [],
+          stillWeakKnowledgePointIds: currentMissedQuestionCount > 0 ? [...targetKnowledgePointIds] : [],
+        };
+        evaluated.result.remediationOutcome = remediationOutcome;
+        if (evaluated.attempt.result !== undefined) evaluated.attempt.result.remediationOutcome = structuredClone(remediationOutcome);
+      }
     }
     const retryPending = evaluated.result.verdict !== "pass";
     entry.status = retryPending ? "in_progress" : evaluated.result.verdict === "insufficient" ? "insufficient" : "completed";
@@ -433,6 +633,7 @@ export class QuizActivityRuntime {
         supportingKnowledgePointIds: [...attempt.supportingKnowledgePointIds],
         questions: [{ questionId: question.questionId, kind: question.kind, prompt: question.prompt, options: [...question.options] }],
         retryNumber: attempt.retryNumber,
+        ...(attempt.agentRunId === undefined ? {} : { agentRunId: attempt.agentRunId }),
         ...(attempt.targetKnowledgePointIds === undefined ? {} : { targetKnowledgePointIds: [...attempt.targetKnowledgePointIds] }),
         questionSource: attempt.questionSource ?? "profile_fixed",
       };
@@ -447,6 +648,7 @@ export class QuizActivityRuntime {
       supportingKnowledgePointIds: [...attempt.supportingKnowledgePointIds],
       questions: attempt.questions.map(({ questionId, kind, prompt, options }) => ({ questionId, kind, prompt, options: [...options] })),
       retryNumber: attempt.retryNumber,
+      ...(attempt.agentRunId === undefined ? {} : { agentRunId: attempt.agentRunId }),
       ...(attempt.targetKnowledgePointIds === undefined ? {} : { targetKnowledgePointIds: [...attempt.targetKnowledgePointIds] }),
       questionSource: attempt.questionSource ?? "profile_fixed",
     };

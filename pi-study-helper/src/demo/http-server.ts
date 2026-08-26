@@ -1,13 +1,14 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import { randomUUID } from "node:crypto";
+import { createSafeAgentRunExport } from "../infrastructure/agent-run-export.js";
 import type { AppBootstrapFacade } from "../contracts/index.js";
 import type { LearningRuntimeFacade } from "../contracts/facade.js";
 import type { DemoRuntime } from "./composition-root.js";
 
 const MAX_BODY = 64 * 1024;
 const PRIVATE_KEYS = new Set(["evidenceCandidate", "knowledgeStates", "pathCandidate", "activityProgress", "correctAnswer", "answerKey", "hiddenTests", "rubric", "referenceSolution"]);
-const NOT_FOUND = new Set(["session_not_found", "activity_not_found", "attempt_not_found"]);
-const CONFLICT = new Set(["profile_revision_conflict", "session_version_conflict", "idempotency_conflict", "activity_lifecycle_conflict", "activity_version_conflict", "draft_version_conflict", "path_version_conflict"]);
+const NOT_FOUND = new Set(["session_not_found", "activity_not_found", "attempt_not_found", "agent_run_not_found"]);
+const CONFLICT = new Set(["profile_revision_conflict", "session_version_conflict", "idempotency_conflict", "activity_lifecycle_conflict", "activity_version_conflict", "draft_version_conflict", "path_version_conflict", "agent_run_conflict"]);
 const UNPROCESSABLE = new Set(["diagnostic_incomplete", "diagnostic_answer_invalid", "diagnostic_answer_conflict", "evidence_invalid", "prerequisite_violation", "submission_contract_error"]);
 const EVALUATOR = new Set(["environment_mismatch", "evaluator_error", "evaluator_start_failed", "evaluator_timeout", "dependency_missing", "test_asset_invalid", "result_protocol_invalid", "runner_crash"]);
 const PUBLIC_RUN_PREPARATION_ERRORS = new Set(["environment_mismatch", "test_asset_invalid"]);
@@ -114,11 +115,11 @@ function validateRequest(name: keyof LearningRuntimeFacade, value: JsonObject): 
     case "confirmPath":
       exact(value, ["requestId", "sessionId", "sessionVersion", "profileRevision", "pathId", "pathVersion"]); writeMeta({ requestId: value.requestId, sessionId: value.sessionId, sessionVersion: value.sessionVersion, profileRevision: value.profileRevision }); stringField(value.pathId, "pathId", true); integerField(value.pathVersion, "pathVersion"); return;
     case "getNextStep":
-      exact(value, ["sessionId", "sessionVersion", "profileRevision", "pathVersion"]); readMeta({ sessionId: value.sessionId, sessionVersion: value.sessionVersion, profileRevision: value.profileRevision }); integerField(value.pathVersion, "pathVersion"); return;
+      exact(value, ["sessionId", "sessionVersion", "profileRevision", "pathVersion"], ["nodeId"]); readMeta({ sessionId: value.sessionId, sessionVersion: value.sessionVersion, profileRevision: value.profileRevision }); integerField(value.pathVersion, "pathVersion"); if (value.nodeId !== undefined) stringField(value.nodeId, "nodeId", true); return;
     case "replanPath":
       exact(value, ["requestId", "sessionId", "sessionVersion", "profileRevision", "pathVersion", "evidenceVersion", "trigger", "availableMinutes", "selectedKnowledgePointIds", "lockedNodeIds"], ["diagnosticSkipKnowledgePointIds"]); writeMeta({ requestId: value.requestId, sessionId: value.sessionId, sessionVersion: value.sessionVersion, profileRevision: value.profileRevision }); integerField(value.pathVersion, "pathVersion"); integerField(value.evidenceVersion, "evidenceVersion"); enumField(value.trigger, "trigger", ["knowledge_state_changed", "skip_eligibility_changed", "error_remediation", "user_constraint_changed"]); integerField(value.availableMinutes, "availableMinutes"); stringArray(value.selectedKnowledgePointIds, "selectedKnowledgePointIds"); if (value.diagnosticSkipKnowledgePointIds !== undefined) stringArray(value.diagnosticSkipKnowledgePointIds, "diagnosticSkipKnowledgePointIds"); stringArray(value.lockedNodeIds, "lockedNodeIds"); return;
     case "openActivity":
-      exact(value, ["requestId", "sessionId", "sessionVersion", "profileRevision", "activityId", "activityVersion", "pathVersion"], ["acknowledgedCardId"]); writeMeta({ requestId: value.requestId, sessionId: value.sessionId, sessionVersion: value.sessionVersion, profileRevision: value.profileRevision }); stringField(value.activityId, "activityId", true); integerField(value.activityVersion, "activityVersion"); integerField(value.pathVersion, "pathVersion"); if (value.acknowledgedCardId !== undefined) stringField(value.acknowledgedCardId, "acknowledgedCardId", true); return;
+      exact(value, ["requestId", "sessionId", "sessionVersion", "profileRevision", "activityId", "activityVersion", "pathVersion"], ["acknowledgedCardId", "relearn"]); writeMeta({ requestId: value.requestId, sessionId: value.sessionId, sessionVersion: value.sessionVersion, profileRevision: value.profileRevision }); stringField(value.activityId, "activityId", true); integerField(value.activityVersion, "activityVersion"); integerField(value.pathVersion, "pathVersion"); if (value.acknowledgedCardId !== undefined) stringField(value.acknowledgedCardId, "acknowledgedCardId", true); if (value.relearn !== undefined && typeof value.relearn !== "boolean") throw invalidShape("Invalid relearn."); return;
     case "saveActivityDraft":
       exact(value, ["requestId", "sessionId", "sessionVersion", "profileRevision", "activityId", "activityVersion", "attemptId", "draftVersion", "userText"]); writeMeta({ requestId: value.requestId, sessionId: value.sessionId, sessionVersion: value.sessionVersion, profileRevision: value.profileRevision }); stringField(value.activityId, "activityId", true); integerField(value.activityVersion, "activityVersion"); stringField(value.attemptId, "attemptId", true); integerField(value.draftVersion, "draftVersion"); stringField(value.userText, "userText"); return;
     case "prepareActivityRun":
@@ -178,14 +179,30 @@ function requestId(request: IncomingMessage): string {
   return typeof header === "string" && /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/u.test(header) ? header : `http-${randomUUID()}`;
 }
 
+const API_SECURITY_HEADERS = {
+  "content-security-policy": "default-src 'none'; frame-ancestors 'none'",
+  "permissions-policy": "camera=(), geolocation=(), microphone=()",
+  "referrer-policy": "no-referrer",
+  "x-content-type-options": "nosniff",
+  "x-frame-options": "DENY",
+} as const;
+
 function send(response: ServerResponse, status: number, body: unknown): void {
   const bytes = Buffer.from(JSON.stringify(body), "utf8");
-  response.writeHead(status, { "content-type": "application/json; charset=utf-8", "content-length": bytes.byteLength, "cache-control": "no-store" });
+  response.writeHead(status, {
+    ...API_SECURITY_HEADERS,
+    "content-type": "application/json; charset=utf-8",
+    "content-length": bytes.byteLength,
+    "cache-control": "no-store",
+  });
   response.end(bytes);
 }
 
 function safeError(error: unknown): { code: string; status: number } {
-  const code = typeof error === "object" && error !== null && "errorCode" in error && typeof error.errorCode === "string" ? error.errorCode : "internal_error";
+  const code = typeof error === "object" && error !== null
+    ? "errorCode" in error && typeof error.errorCode === "string" ? error.errorCode
+      : "code" in error && typeof error.code === "string" ? error.code : "internal_error"
+    : "internal_error";
   if (NOT_FOUND.has(code)) return { code, status: 404 };
   if (CONFLICT.has(code)) return { code, status: 409 };
   if (UNPROCESSABLE.has(code)) return { code, status: 422 };
@@ -233,6 +250,44 @@ function route(url: URL, method: string): RouteTarget | undefined {
     return runtime.bootstrap.getBootstrap({ recoverSessionId: optionalQuery(searchParams, "recoverSessionId") });
   } };
   let match: RegExpMatchArray | null;
+  if ((match = pathname.match(/^\/api\/agent-runs\/by-request\/([^/]+)$/u)) && method === "GET") return { call: async (runtime) => {
+    assertQueryKeys(searchParams, []);
+    const targetRequestId = decodeURIComponent(match![1]!);
+    if (!ID_PATTERN.test(targetRequestId)) throw invalidQuery();
+    const run = await runtime.agentRuns.getByRequestId(targetRequestId);
+    if (run === undefined) throw Object.assign(new Error("Agent run not found"), { errorCode: "agent_run_not_found" });
+    return run;
+  } };
+  if ((match = pathname.match(/^\/api\/agent-runs\/([^/]+)\/export$/u)) && method === "GET") return { call: async (runtime) => {
+    assertQueryKeys(searchParams, []);
+    const runId = decodeURIComponent(match![1]!);
+    if (!ID_PATTERN.test(runId)) throw invalidQuery();
+    const run = await runtime.agentRuns.getByRunId(runId);
+    if (run === undefined) throw Object.assign(new Error("Agent run not found"), { errorCode: "agent_run_not_found" });
+    return createSafeAgentRunExport(run, new Date().toISOString());
+  } };
+  if ((match = pathname.match(/^\/api\/agent-runs\/([^/]+)$/u)) && method === "GET") return { call: async (runtime) => {
+    assertQueryKeys(searchParams, []);
+    const runId = decodeURIComponent(match![1]!);
+    if (!ID_PATTERN.test(runId)) throw invalidQuery();
+    const run = await runtime.agentRuns.getByRunId(runId);
+    if (run === undefined) throw Object.assign(new Error("Agent run not found"), { errorCode: "agent_run_not_found" });
+    return run;
+  } };
+  if ((match = pathname.match(/^\/api\/sessions\/([^/]+)\/learning-cards\/([^/]+)\/personalized-tip$/u)) && method === "POST") return {
+    call: (runtime, value, id) => {
+      const prepared = withRequestId({
+        ...value,
+        sessionId: decodeURIComponent(match![1]!),
+        nodeId: decodeURIComponent(match![2]!),
+      }, id);
+      exact(prepared, ["requestId", "sessionId", "sessionVersion", "profileRevision", "pathVersion", "nodeId"]);
+      writeMeta({ requestId: prepared.requestId, sessionId: prepared.sessionId, sessionVersion: prepared.sessionVersion, profileRevision: prepared.profileRevision });
+      integerField(prepared.pathVersion, "pathVersion");
+      stringField(prepared.nodeId, "nodeId", true);
+      return runtime.personalizedTips.prepare(prepared as unknown as import("../contracts/facade.js").PreparePersonalizedTipInput);
+    },
+  };
   if (method === "POST" && pathname === "/api/sessions") return call("startSession");
   if ((match = pathname.match(/^\/api\/sessions\/([^/]+)\/recover$/u)) && method === "POST") return call("recoverSession", (v, id) => withRequestId({ ...v, sessionId: match![1] }, id));
   if ((match = pathname.match(/^\/api\/sessions\/([^/]+)\/complete$/u)) && method === "POST") return call("completeSession", (v, id) => withRequestId({ ...v, sessionId: match![1] }, id));
@@ -242,8 +297,10 @@ function route(url: URL, method: string): RouteTarget | undefined {
   if ((match = pathname.match(/^\/api\/sessions\/([^/]+)\/path$/u)) && method === "POST") return call("buildPath", (v, id) => withRequestId({ ...v, sessionId: match![1] }, id));
   if ((match = pathname.match(/^\/api\/sessions\/([^/]+)\/path\/confirm$/u)) && method === "POST") return call("confirmPath", (v, id) => withRequestId({ ...v, sessionId: match![1] }, id));
   if ((match = pathname.match(/^\/api\/sessions\/([^/]+)\/next-step$/u)) && method === "GET") return call("getNextStep", () => {
-    assertQueryKeys(searchParams, ["sessionVersion", "profileRevision", "pathVersion"]);
-    return { ...readRequestMeta(searchParams, match![1]!), pathVersion: requiredIntegerQuery(searchParams, "pathVersion") };
+    assertQueryKeys(searchParams, ["sessionVersion", "profileRevision", "pathVersion", "nodeId"]);
+    const nodeId = searchParams.get("nodeId") ?? undefined;
+    if (nodeId !== undefined && !ID_PATTERN.test(nodeId)) throw invalidQuery();
+    return { ...readRequestMeta(searchParams, match![1]!), pathVersion: requiredIntegerQuery(searchParams, "pathVersion"), ...(nodeId === undefined ? {} : { nodeId }) };
   });
   if ((match = pathname.match(/^\/api\/sessions\/([^/]+)\/path\/replan$/u)) && method === "POST") return call("replanPath", (v, id) => withRequestId({ ...v, sessionId: match![1] }, id));
   if ((match = pathname.match(/^\/api\/activities\/([^/]+)\/open$/u)) && method === "POST") return call("openActivity", (v, id) => withRequestId({ ...v, activityId: match![1] }, id));
@@ -268,6 +325,59 @@ export interface HttpServerHandle {
   close(): Promise<void>;
 }
 
+async function serveAgentRunEvents(
+  runtime: DemoRuntime,
+  request: IncomingMessage,
+  response: ServerResponse,
+  url: URL,
+): Promise<boolean> {
+  if (request.method !== "GET") return false;
+  const match = url.pathname.match(/^\/api\/agent-runs\/([^/]+)\/events$/u);
+  if (match === null) return false;
+  assertQueryKeys(url.searchParams, ["after"]);
+  const runId = decodeURIComponent(match[1]!);
+  if (!ID_PATTERN.test(runId)) throw invalidQuery();
+  const after = url.searchParams.has("after") ? requiredIntegerQuery(url.searchParams, "after") : 0;
+  const initial = await runtime.agentRuns.getByRunId(runId);
+  if (initial === undefined) {
+    send(response, 404, { error: { code: "agent_run_not_found", message: "Agent run not found." } });
+    return true;
+  }
+  response.writeHead(200, {
+    ...API_SECURITY_HEADERS,
+    "content-type": "text/event-stream; charset=utf-8",
+    "cache-control": "no-store",
+    connection: "keep-alive",
+    "x-accel-buffering": "no",
+  });
+  response.flushHeaders();
+  let lastSequence = after;
+  let closed = false;
+  let unsubscribe = () => {};
+  let heartbeat: ReturnType<typeof setInterval> | undefined;
+  const terminal = (status: string) => status === "succeeded" || status === "failed" || status === "fallback";
+  const close = () => {
+    if (closed) return;
+    closed = true;
+    unsubscribe();
+    if (heartbeat !== undefined) clearInterval(heartbeat);
+    response.end();
+  };
+  const push = (run: Awaited<ReturnType<DemoRuntime["agentRuns"]["getByRunId"]>>, force = false) => {
+    if (run === undefined || closed) return;
+    const sequence = run.stages.at(-1)?.sequence ?? 0;
+    if (!force && sequence <= lastSequence && !terminal(run.status)) return;
+    lastSequence = Math.max(lastSequence, sequence);
+    response.write(`id: ${lastSequence}\nevent: run\ndata: ${JSON.stringify(run)}\n\n`);
+    if (terminal(run.status)) close();
+  };
+  unsubscribe = runtime.agentRuns.subscribe(runId, push);
+  request.once("close", close);
+  heartbeat = setInterval(() => { if (!closed) response.write(": heartbeat\n\n"); }, 15_000);
+  push(await runtime.agentRuns.getByRunId(runId), true);
+  return true;
+}
+
 export function startHttpServer(runtimePromise: Promise<DemoRuntime>, port = 4310): HttpServerHandle {
   let runtime: DemoRuntime | undefined;
   let initializationError = false;
@@ -278,6 +388,7 @@ export function startHttpServer(runtimePromise: Promise<DemoRuntime>, port = 431
     let target: RouteTarget | undefined;
     try {
       const url = new URL(request.url ?? "/", "http://127.0.0.1");
+      if (await serveAgentRunEvents(runtime, request, response, url)) return;
       target = route(url, request.method ?? "GET");
       if (target === undefined) { send(response, 404, { requestId: id, error: { code: "not_found", message: "Resource not found." } }); return; }
       const input = request.method === "GET" ? {} : await body(request);

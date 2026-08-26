@@ -2,6 +2,8 @@
 import type { ActivitySafeViewBase } from "./facade.js";
 export * from "./facade.js";
 export * from "./domain.js";
+export * from "./agent-run.js";
+export * from "./agent-run-runtime.js";
 
 export interface Revision3KnowledgePointFields {
   activityPolicy?: import("./domain.js").ActivityPolicy;
@@ -78,7 +80,43 @@ export interface SelectedLessonSafeView {
 
 export interface PersonalizedLessonTip {
   text: string;
+  lessonVariantId?: LessonVariantId;
+  lessonVariantLabel?: string;
+  lessonOverview?: string;
+  priorConnection?: string;
+  learningFocus?: string;
+  nextConnection?: string;
+  studyAdvice?: string;
+  guidingQuestion?: string;
   sourceAnchorIds: string[];
+}
+
+export interface PersonalizedLessonTipStatus {
+  state: "generated" | "unavailable";
+  reasonCode: "agent_reviewed" | "not_generated";
+}
+
+/** Answer-free learner facts used only to choose the emphasis of an optional lesson tip. */
+export interface LessonJourneyItem {
+  knowledgePointId: string;
+  title: string;
+  objective: string;
+}
+
+export interface LessonJourneyContext {
+  currentPosition: number;
+  totalLessons: number;
+  lessons: LessonJourneyItem[];
+}
+
+export interface LessonPersonalizationContext {
+  knowledgeStatus: import("./domain.js").KnowledgeStatus;
+  mastery: number | null;
+  confidence: number;
+  validEvidenceCount: number;
+  evidenceFormCount: number;
+  explanationPreference: BackgroundQuestionnaire["explanation_preference"];
+  journey?: LessonJourneyContext;
 }
 
 export interface LearningCardBase {
@@ -102,6 +140,9 @@ export interface LearningCardAsset extends LearningCardBase {
 export interface LearningCardSafeView extends LearningCardBase {
   selectedLesson?: SelectedLessonSafeView;
   personalizedTip?: PersonalizedLessonTip;
+  personalizedTipStatus?: PersonalizedLessonTipStatus;
+  /** Safe reference used to restore the public Agent pipeline after navigation or refresh. */
+  personalizedTipAgentRunId?: string;
 }
 
 export interface QuizQuestionSafeView {
@@ -121,6 +162,7 @@ export interface QuizActivitySafeView extends ActivitySafeViewBase {
   kind: "mcq";
   questions: QuizQuestionSafeView[];
   retryNumber: number;
+  agentRunId?: string;
   questionSource?: "ai_recorded" | "ai_live" | "ai_supplemented" | "profile_fixed" | "insufficient";
   targetKnowledgePointIds?: string[];
 }
@@ -201,6 +243,14 @@ export interface QuizActivityResult {
   requiredCorrectCount: number;
   retryAllowed: boolean;
   safeFeedback: string;
+  remediationOutcome?: {
+    status: "improved" | "unchanged" | "regressed";
+    previousMissedQuestionCount: number;
+    currentMissedQuestionCount: number;
+    targetKnowledgePointIds: string[];
+    improvedKnowledgePointIds: string[];
+    stillWeakKnowledgePointIds: string[];
+  };
   answerReview?: Array<{
     questionId: string;
     prompt: string;
@@ -309,11 +359,16 @@ export type CurrentAttemptSafeReference =
   | { kind: "quiz"; activityId: string; attemptId: string; status: "draft" | "submitted" | "evaluator_error"; retryNumber: number };
 
 export interface AdaptiveContentPort {
-  prepareCard(input: { profileRevision: number; knowledgePointId: string; excludedArtifactIds: string[]; lessonVariantId?: LessonVariantId }): Promise<{
+  prepareCard(input: { profileRevision: number; knowledgePointId: string; excludedArtifactIds: string[]; lessonVariantId?: LessonVariantId; personalizationContext?: LessonPersonalizationContext; agentRunId?: string }): Promise<{
     status: "accepted" | "unavailable";
     card?: LearningCardSafeView;
+    origin?: "recorded_response" | "live_model";
+    reviewBinding?: {
+      generationRunId: string;
+      acceptedCardSha256: string;
+    };
   }>;
-  prepareQuiz(input: { profileRevision: number; activityId: string; retryNumber: number; excludedQuestionIds: string[]; lessonVariantId?: LessonVariantId; targetKnowledgePointIds?: string[]; remediationContext?: QuizRemediationContext }): Promise<{
+  prepareQuiz(input: { profileRevision: number; activityId: string; retryNumber: number; excludedQuestionIds: string[]; lessonVariantId?: LessonVariantId; targetKnowledgePointIds?: string[]; remediationContext?: QuizRemediationContext; agentRunId?: string }): Promise<{
     status: "accepted" | "unavailable";
     questions?: QuizQuestionPrivate[];
     origin?: "recorded_response" | "live_model";

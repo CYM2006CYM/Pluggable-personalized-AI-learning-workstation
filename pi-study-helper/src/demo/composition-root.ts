@@ -19,6 +19,11 @@ import { loadRecordedModelResponseFixtures, RecordedModelExecutionAdapter } from
 import { createLiveModelExecutionPort } from "../infrastructure/live-model-execution-port.js";
 import { ProfileAdaptiveContentSourceProvider } from "../infrastructure/profile-adaptive-source-provider.js";
 import { FileProfileUserRuntimeStore } from "../infrastructure/w4-private-runtime-store.js";
+import { FileAgentRunRepository, type AgentRunRepository } from "../infrastructure/agent-run-repository.js";
+import { FileLearnerProfileHistoryRepository } from "../infrastructure/learner-profile-history-repository.js";
+import { LearnerProfileHistoryService } from "../application/learner-profile-history-service.js";
+import { PersonalizedTipService } from "../application/personalized-tip-service.js";
+import { FileSessionCompletionArchiveRepository } from "../infrastructure/session-completion-archive-repository.js";
 import { SessionCapabilityEvidenceProvider } from "../infrastructure/session-capability-evidence-provider.js";
 import { PythonProcessCodeEvaluationAdapter } from "../infrastructure/python-process-evaluation-adapter.js";
 import { FileActivityRepository } from "../repositories/file-activity-repository.js";
@@ -30,6 +35,8 @@ import type { LearningRuntimeFacade } from "../contracts/facade.js";
 export interface DemoRuntime {
   facade: LearningRuntimeFacade;
   bootstrap: FileAppBootstrapFacade;
+  agentRuns: AgentRunRepository;
+  personalizedTips: PersonalizedTipService;
   close(): Promise<void>;
 }
 
@@ -61,6 +68,9 @@ export async function createDemoRuntime(options: DemoRuntimeOptions): Promise<De
   const pathProfile = new ProfileFamilyPathResolver(profiles);
   const pathSuffix = createActivityPathSuffixReplanner({ sessions, profile: pathProfile, now: options.now });
   const privateStore = new FileProfileUserRuntimeStore(profiles.familyDirectory("pandas-cleaning"));
+  const agentRuns = new FileAgentRunRepository({ dataRoot: options.dataRoot, now: options.now });
+  const profileHistoryRepository = new FileLearnerProfileHistoryRepository({ dataRoot: options.dataRoot });
+  const completionArchive = new FileSessionCompletionArchiveRepository({ dataRoot: options.dataRoot });
   const [historicalRecordings, currentQuizRecordings] = await Promise.all([
     readFile(resolve(options.fixturesRoot, "../model-responses/w4/recorded-responses.json"), "utf8").then(loadRecordedModelResponseFixtures),
     readFile(resolve(options.fixturesRoot, "../model-responses/w6/recorded-quiz-responses.json"), "utf8").then(loadRecordedModelResponseFixtures),
@@ -95,9 +105,10 @@ export async function createDemoRuntime(options: DemoRuntimeOptions): Promise<De
     modelId: configuredModelId,
     promptVersion: configuredPromptVersion,
     executionMode: options.liveConfig === undefined ? "recorded_response" : "live_model",
+    agentRuns,
     ...(options.liveConfig === undefined
       ? {}
-      : { fallbackAfterMs: 60_000, discardAfterMs: 90_000 }),
+      : { fallbackAfterMs: 115_000, discardAfterMs: 120_000 }),
   });
   const capability = new CapabilityTaskService({
     modelExecutionPort,
@@ -108,6 +119,7 @@ export async function createDemoRuntime(options: DemoRuntimeOptions): Promise<De
     now: options.now,
   });
   const profileAgent = new LearnerProfileAgentService({ modelExecutionPort, modelId: configuredModelId, promptVersion: W6_PROFILE_PROMPT_VERSION, now: options.now });
+  const profileHistory = new LearnerProfileHistoryService({ sessions, repository: profileHistoryRepository, profileAgent, now: options.now });
   const profileBound = new ProfileBoundSessionRuntime({ profiles, sessions });
   const diagnostic = new DiagnosticRuntime({
     repository: sessions,
@@ -116,6 +128,7 @@ export async function createDemoRuntime(options: DemoRuntimeOptions): Promise<De
     now: options.now,
   });
   const path = createPathRuntimeMethods({ sessions, profile: pathProfile, content: adaptive, now: options.now });
+  const personalizedTips = new PersonalizedTipService({ sessions, content: adaptive, agentRuns, now: options.now });
   const quizAssets = new ProfileFamilyQuizActivityAssetResolver(profiles);
   const quiz = new QuizActivityRuntime({
     sessions,
@@ -123,6 +136,8 @@ export async function createDemoRuntime(options: DemoRuntimeOptions): Promise<De
     loadAssets: (subjectId, revision, activityId) => quizAssets.loadAssets(subjectId, revision, activityId),
     pathSuffix,
     profileAgent,
+    agentRuns,
+    dynamicGenerationTimeoutMs: 120_000,
     now: options.now,
   });
   const codeAssets = new ProfileFamilyCodeActivityAssetResolver(profiles);
@@ -158,6 +173,9 @@ export async function createDemoRuntime(options: DemoRuntimeOptions): Promise<De
     profile: pathProfile,
     capabilityTasks: capability,
     profileAgent,
+    profileHistory,
+    completionArchive,
+    agentRuns,
     resolveActivityKind: async (input) => {
       const profile = await pathProfile.load(input.sessionId ? (await sessions.getBoundSnapshot(input.sessionId)).view.subjectId : "pandas-cleaning", input.profileRevision);
       const activity = profile.activities.find((item) => item.activityId === input.activityId);
@@ -166,6 +184,6 @@ export async function createDemoRuntime(options: DemoRuntimeOptions): Promise<De
     },
     now: options.now,
   });
-  const bootstrap = new FileAppBootstrapFacade({ profiles, sessions });
-  return { facade, bootstrap, close: async () => { await capability.waitForIdle(); } };
+  const bootstrap = new FileAppBootstrapFacade({ profiles, sessions, profileHistory: profileHistoryRepository, completionArchive, agentRuns });
+  return { facade, bootstrap, agentRuns, personalizedTips, close: async () => { await Promise.all([capability.waitForIdle(), profileHistory.waitForIdle()]); } };
 }

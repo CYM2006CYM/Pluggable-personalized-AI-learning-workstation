@@ -23,6 +23,10 @@ describe("W4 Vite direct-access boundary", () => {
       const origin = `http://127.0.0.1:${address.port}`;
       const home = await fetch(origin);
       expect(home.status).toBe(200);
+      expect(home.headers.get("x-content-type-options")).toBe("nosniff");
+      expect(home.headers.get("x-frame-options")).toBe("DENY");
+      expect(home.headers.get("referrer-policy")).toBe("no-referrer");
+      expect(home.headers.get("permissions-policy")).toContain("camera=()");
       expect(await home.text()).toContain("/main.tsx");
 
       const webApiModule = await fetch(`${origin}/api/client.ts`);

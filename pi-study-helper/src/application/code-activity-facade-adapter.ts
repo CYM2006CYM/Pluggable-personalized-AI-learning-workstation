@@ -159,8 +159,14 @@ export class CodeActivityFacadeAdapter {
         && input.acknowledgedCardId !== nodeProgress.card.cardId) {
       throw new LearningSessionRepositoryError("activity_lifecycle_conflict", "The acknowledged learning card does not belong to the current node");
     }
+    const entry = nodeProgress.activities.find((item) => item.activityId === input.activityId)!;
+    const requiresExplicitRelearn = node.status === "skipped" || entry.continuedWithGap === true;
+    const relearnAllowed = input.relearn === true && requiresExplicitRelearn;
+    if ((requiresExplicitRelearn && input.relearn !== true) || (input.relearn === true && !relearnAllowed)) {
+      throw new LearningSessionRepositoryError("prerequisite_violation", "Only a skipped or gap-continued Activity can be relearned");
+    }
     const next = node.activityIds.find((id) => !terminal(nodeProgress.activities.find((entry) => entry.activityId === id)?.status ?? "pending"));
-    if (next !== input.activityId) throw new LearningSessionRepositoryError("prerequisite_violation", "Activity is not the next unfinished activity");
+    if (next !== input.activityId && !relearnAllowed) throw new LearningSessionRepositoryError("prerequisite_violation", "Activity is not the next unfinished activity");
     const assets = await this.options.assets.load(snapshot.view.subjectId, input.profileRevision, input.activityId);
     if (assets.activity.activityVersion !== input.activityVersion) throw new ActivityRepositoryError("activity_version_conflict", "Activity version is stale");
 
@@ -193,7 +199,6 @@ export class CodeActivityFacadeAdapter {
           now: this.now().toISOString(),
         })
       : opened;
-    const entry = nodeProgress.activities.find((item) => item.activityId === input.activityId)!;
     entry.status = "in_progress";
     if (!entry.attemptIds.includes(draft.attemptId)) entry.attemptIds.push(draft.attemptId);
     entry.updatedAt = this.now().toISOString();
@@ -354,6 +359,7 @@ export class CodeActivityFacadeAdapter {
         if (entry === undefined || !entry.attemptIds.includes(input.attemptId)) throw new LearningSessionRepositoryError("prerequisite_violation", "Activity Attempt is not current progress");
         entry.status = evidence.outcome === "correct" ? "completed" : "in_progress";
         entry.result = evidence.outcome === "correct" ? "pass" : evidence.outcome === "partial" ? "partial" : "fail";
+        delete entry.continuedWithGap;
         entry.updatedAt = now;
         const evidenceVersion = bound.latestCommit.evidenceVersion + 1;
         const definitions = new Map((assets.knowledgePoints ?? [assets.knowledgePoint]).map((point) => [point.id, point]));

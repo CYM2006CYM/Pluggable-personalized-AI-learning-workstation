@@ -153,13 +153,30 @@ describe("path runtime collaborator", () => {
     await runtime.confirmPath({ requestId: "progress-confirm", sessionId: view.sessionId, sessionVersion: 2, profileRevision: 2, pathId: candidate.pathId!, pathVersion: 1 });
     const confirmed = await sessions.getSnapshot({ sessionId: view.sessionId, sessionVersion: 3, profileRevision: 2 });
     const progress = structuredClone(confirmed.activityProgress);
-    progress[0]!.activities[0] = { ...progress[0]!.activities[0]!, status: "completed", result: "pass" };
-    await sessions.commit({ requestId: "progress-first-complete", sessionId: view.sessionId, sessionVersion: 3, profileRevision: 2, candidate: { requestId: "progress-first-complete", knowledgeStates: [], activityProgress: progress } });
-    await expect(runtime.getNextStep({ sessionId: view.sessionId, sessionVersion: 4, profileRevision: 2, pathVersion: 1 })).resolves.toMatchObject({ completed: false, node: { knowledgePointId: "second", status: "available" }, activity: { activityId: "second-activity" } });
+    progress[0]!.activities[0] = { ...progress[0]!.activities[0]!, status: "in_progress", continuedWithGap: true };
+    await sessions.commit({ requestId: "progress-first-relearning", sessionId: view.sessionId, sessionVersion: 3, profileRevision: 2, candidate: { requestId: "progress-first-relearning", knowledgeStates: [], activityProgress: progress } });
+    await expect(runtime.getNextStep({ sessionId: view.sessionId, sessionVersion: 4, profileRevision: 2, pathVersion: 1 })).resolves.toMatchObject({
+      completed: false,
+      navigationMode: "current",
+      relearnAllowed: true,
+      node: { knowledgePointId: "first" },
+      activity: { activityId: "first-activity" },
+    });
+    progress[0]!.activities[0] = { ...progress[0]!.activities[0]!, status: "insufficient", result: "fail" };
+    await sessions.commit({ requestId: "progress-first-complete", sessionId: view.sessionId, sessionVersion: 4, profileRevision: 2, candidate: { requestId: "progress-first-complete", knowledgeStates: [], activityProgress: progress } });
+    await expect(runtime.getNextStep({ sessionId: view.sessionId, sessionVersion: 5, profileRevision: 2, pathVersion: 1 })).resolves.toMatchObject({ completed: false, node: { knowledgePointId: "second", status: "available" }, activity: { activityId: "second-activity" } });
+    await expect(runtime.getNextStep({ sessionId: view.sessionId, sessionVersion: 5, profileRevision: 2, pathVersion: 1, nodeId: "node-first" })).resolves.toMatchObject({
+      completed: false,
+      navigationMode: "review",
+      currentNodeId: "node-second",
+      relearnAllowed: true,
+      node: { nodeId: "node-first", knowledgePointId: "first", status: "completed" },
+      activity: { activityId: "first-activity" },
+    });
     progress[1]!.activities[0] = { ...progress[1]!.activities[0]!, status: "completed", result: "pass" };
-    await sessions.commit({ requestId: "progress-second-complete", sessionId: view.sessionId, sessionVersion: 4, profileRevision: 2, candidate: { requestId: "progress-second-complete", knowledgeStates: [], activityProgress: progress } });
-    await expect(runtime.getNextStep({ sessionId: view.sessionId, sessionVersion: 5, profileRevision: 2, pathVersion: 1 })).resolves.toMatchObject({ completed: true });
-    expect((await sessions.getInternalPathSnapshot({ sessionId: view.sessionId, sessionVersion: 5, profileRevision: 2 }))?.nodes.map((node) => node.status)).toEqual(["available", "locked"]);
+    await sessions.commit({ requestId: "progress-second-complete", sessionId: view.sessionId, sessionVersion: 5, profileRevision: 2, candidate: { requestId: "progress-second-complete", knowledgeStates: [], activityProgress: progress } });
+    await expect(runtime.getNextStep({ sessionId: view.sessionId, sessionVersion: 6, profileRevision: 2, pathVersion: 1 })).resolves.toMatchObject({ completed: true });
+    expect((await sessions.getInternalPathSnapshot({ sessionId: view.sessionId, sessionVersion: 6, profileRevision: 2 }))?.nodes.map((node) => node.status)).toEqual(["available", "locked"]);
   });
 
   it("persists candidates through the repository so a fresh collaborator can confirm after restart", async () => {

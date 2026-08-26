@@ -24,6 +24,16 @@ describe("W4 Web API client", () => {
     expect(fetchMock).toHaveBeenCalledWith("/api/sessions/session-1/path/confirm", expect.objectContaining({ body: expect.not.stringContaining("sessionId") }));
   });
 
+  it("requests a specific skipped lesson through the safe next-step query", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(ok({}));
+    vi.stubGlobal("fetch", fetchMock);
+    await api.getNextStep({ sessionId: "session-1", sessionVersion: 3, profileRevision: 3, pathVersion: 2, nodeId: "node-skipped" });
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/sessions/session-1/next-step?sessionVersion=3&profileRevision=3&pathVersion=2&nodeId=node-skipped",
+      expect.any(Object),
+    );
+  });
+
   it("recognizes evaluator failures as business results", () => {
     expect(isEvaluatorFailure({ status: "evaluator_error", errorCode: "evaluator_timeout", verdict: "not_graded" })).toBe(true);
     expect(newRequestId("web")).toMatch(/^web-/u);

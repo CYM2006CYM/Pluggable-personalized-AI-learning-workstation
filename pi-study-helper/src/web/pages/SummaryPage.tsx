@@ -5,6 +5,9 @@ import { api, isApiError, newRequestId } from "../api/client.js";
 import { useBootstrap } from "../api/use-bootstrap.js";
 import { PageFrame } from "../components/PageFrame.js";
 import { PageStatePanel } from "../components/PageStatePanel.js";
+import { SummaryGenerationPipeline } from "../components/SummaryGenerationPipeline.js";
+import { useAgentRun } from "../hooks/use-agent-run.js";
+import { useAsyncActionProgress } from "../hooks/use-async-action-progress.js";
 import { knowledgePointLabel } from "../learning-labels.js";
 
 type UnresolvedResult = "fail" | "partial" | "insufficient" | "unverified";
@@ -17,24 +20,33 @@ export function SummaryPage() {
   const [output, setOutput] = useState<CompleteSessionOutput>();
   const [actionError, setActionError] = useState<Error>();
   const [attempted, setAttempted] = useState(false);
+  const [summaryRequestId, setSummaryRequestId] = useState(() => newRequestId("web-complete-session"));
+  const actionProgress = useAsyncActionProgress();
   const session = bootstrap.data?.session;
+  const resolvedOutput = output ?? session?.completedSummary;
   const unresolved = useMemo(() => unresolvedActivities(session), [session]);
+  const generating = attempted && actionError === undefined && resolvedOutput === undefined;
+  const agentRun = useAgentRun({ requestId: generating ? summaryRequestId : undefined, active: generating });
 
   useEffect(() => {
     if (attempted || session === undefined || session.view.status === "completed") return;
     setAttempted(true);
-    api.completeSession({ requestId: newRequestId("web-complete-session"), sessionId, sessionVersion: session.view.sessionVersion, profileRevision: session.view.profileRevision })
-      .then(setOutput).catch((error: unknown) => setActionError(error instanceof Error ? error : new Error("complete_session_failed")));
-  }, [attempted, session, sessionId]);
+    actionProgress.start("学情画像 Agent 正在生成总结");
+    api.completeSession({ requestId: summaryRequestId, sessionId, sessionVersion: session.view.sessionVersion, profileRevision: session.view.profileRevision })
+      .then(setOutput)
+      .catch((error: unknown) => setActionError(error instanceof Error ? error : new Error("complete_session_failed")))
+      .finally(actionProgress.stop);
+  }, [actionProgress.start, actionProgress.stop, attempted, session, sessionId, summaryRequestId]);
 
   const error = actionError ?? bootstrap.error;
   const firstUnresolved = unresolved[0];
-  return <PageFrame eyebrow="会话总结" title="本次学习进度" summary={output?.summary ?? "总结由服务端确定性事务生成。"} back={{ to: "/", label: "返回主菜单" }} actions={<span className="header-badge">Session v{output?.sessionVersion ?? session?.view.sessionVersion ?? 0}</span>}>
+  return <PageFrame eyebrow="会话总结" title="本次学习进度" summary={resolvedOutput?.summary ?? "总结由服务端确定性事务生成。"} back={{ to: "/", label: "返回主菜单" }} actions={<span className="header-badge">Session v{resolvedOutput?.sessionVersion ?? session?.view.sessionVersion ?? 0}</span>}>
     {bootstrap.loading ? <PageStatePanel page="summary" state="loading" /> : null}
-    {!bootstrap.loading && error ? <PageStatePanel page="summary" state={isApiError(error) && error.status === 409 ? "conflict" : "error"} code={isApiError(error) ? error.code : error.message} detail="只有最终综合实操产生正式学习者判定后才能结束会话。" onRetry={() => { setActionError(undefined); setAttempted(false); void bootstrap.reload(); }} /> : null}
+    {!bootstrap.loading && error ? <PageStatePanel page="summary" state={isApiError(error) && error.status === 409 ? "conflict" : "error"} code={isApiError(error) ? error.code : error.message} detail="只有最终综合实操产生正式学习者判定后才能结束会话。" onRetry={() => { setActionError(undefined); setSummaryRequestId(newRequestId("web-complete-session")); setAttempted(false); void bootstrap.reload(); }} /> : null}
     {!bootstrap.loading && error === undefined && session === undefined ? <PageStatePanel page="summary" state="empty" /> : null}
-    {!bootstrap.loading && error === undefined && session?.view.status === "completed" && output === undefined ? <><PageStatePanel page="summary" state="recovery" code="COMPLETED_SUMMARY_NOT_REPLAYABLE" detail="会话已完成；当前 Bootstrap 可恢复活动级结果，但未冻结完整历史总结重放。" /><ProgressSummary session={session} unresolved={unresolved} /><LearningProfileSummary profile={session.learningProfile} /><SummaryActions sessionId={sessionId} firstUnresolved={firstUnresolved} /></> : null}
-    {!bootstrap.loading && error === undefined && output !== undefined && session !== undefined ? <div className="summary-layout" data-page="summary"><ProgressSummary session={session} unresolved={unresolved} /><LearningProfileSummary profile={output.learningProfile ?? session.learningProfile} /><section className="work-section recommendation-section"><p className="section-kicker">下一步建议</p><h2>接下来怎么做</h2><p>{output.nextRecommendation ?? "当前没有额外建议。"}</p></section><SummaryActions sessionId={sessionId} firstUnresolved={firstUnresolved} /></div> : null}
+    {!bootstrap.loading && error === undefined && session !== undefined && generating ? <SummaryGenerationPipeline run={agentRun.run} transport={agentRun.transport} elapsedText={actionProgress.text ?? "学情画像 Agent 正在生成总结（已处理 0 秒）"} /> : null}
+    {!bootstrap.loading && error === undefined && session?.view.status === "completed" && resolvedOutput === undefined ? <><PageStatePanel page="summary" state="recovery" code="COMPLETED_SUMMARY_ARCHIVE_MISSING" detail="会话已完成，但安全总结归档缺失；服务端不会伪造历史总结。" /><ProgressSummary session={session} unresolved={unresolved} /><LearningProfileSummary profile={session.learningProfile} /><SummaryActions sessionId={sessionId} firstUnresolved={firstUnresolved} /></> : null}
+    {!bootstrap.loading && error === undefined && resolvedOutput !== undefined && session !== undefined ? <div className="summary-layout" data-page="summary"><ProgressSummary session={session} unresolved={unresolved} /><LearningProfileSummary profile={resolvedOutput.learningProfile ?? session.learningProfile} />{session.completionArchiveSha256 === undefined ? null : <section className="work-section recommendation-section" data-section="completion-archive"><p className="section-kicker">可复验完成归档</p><h2>总结已冻结并可恢复</h2><dl className="metric-list horizontal"><div><dt>完成时间</dt><dd>{resolvedOutput.completedAt ?? "未登记"}</dd></div><div><dt>协同运行</dt><dd>{session.agentRunIds?.length ?? 0} 轮</dd></div><div><dt>归档SHA-256</dt><dd className="agent-mono">{session.completionArchiveSha256}</dd></div></dl></section>}<section className="work-section recommendation-section"><p className="section-kicker">下一步建议</p><h2>接下来怎么做</h2><p>{resolvedOutput.nextRecommendation ?? "当前没有额外建议。"}</p></section><SummaryActions sessionId={sessionId} firstUnresolved={firstUnresolved} /></div> : null}
   </PageFrame>;
 }
 
@@ -46,13 +58,15 @@ function LearningProfileSummary({ profile }: { profile?: NonNullable<SessionReco
 function unresolvedActivities(session?: SessionRecoverySafeView): UnresolvedItem[] {
   if (session === undefined) return [];
   return session.activityProgress.reduce<UnresolvedItem[]>((items, node) => {
-    const knowledgePointId = session.path?.nodes.find((item) => item.nodeId === node.nodeId)?.knowledgePointId;
+    const pathNode = session.path?.nodes.find((item) => item.nodeId === node.nodeId);
+    const knowledgePointId = pathNode?.knowledgePointId;
+    const diagnosticSkipSelected = pathNode?.reasonCodes.includes("diagnostic_skip_selected") === true;
     const title = session.learningCards?.find((item) => item.nodeId === node.nodeId)?.card.title
       ?? (knowledgePointId === undefined ? node.nodeId : knowledgePointLabel(knowledgePointId));
     for (const activity of node.activities) {
       if (activity.result === "partial" || activity.result === "fail" || activity.result === "insufficient") {
         items.push({ nodeId: node.nodeId, activityId: activity.activityId, title, result: activity.result, bestResult: activity.bestResult, attemptCount: activity.attemptIds.length, continuedWithGap: activity.continuedWithGap === true });
-      } else if (activity.status === "pending" || activity.status === "in_progress") {
+      } else if (!diagnosticSkipSelected && pathNode?.status !== "skipped" && (activity.status === "pending" || activity.status === "in_progress")) {
         items.push({ nodeId: node.nodeId, activityId: activity.activityId, title, result: "unverified", bestResult: activity.bestResult, attemptCount: activity.attemptIds.length, continuedWithGap: false });
       }
     }
@@ -72,7 +86,7 @@ function diagnosticSkippedModules(session: SessionRecoverySafeView): DiagnosticS
 
 function ProgressSummary({ session, unresolved }: { session: SessionRecoverySafeView; unresolved: UnresolvedItem[] }) {
   const diagnosticSkipped = diagnosticSkippedModules(session);
-  return <><section className="summary-metrics" aria-label="会话指标"><div><span>路径节点</span><strong>{session.path?.nodes.length ?? 0}</strong><small>服务端快照</small></div><div><span>活动记录</span><strong>{session.activityProgress.flatMap((node) => node.activities).length}</strong><small>确定性游标</small></div><div><span>未解决结果</span><strong>{unresolved.length}</strong><small>失败、部分完成或尚未验证</small></div><div><span>诊断主动跳过</span><strong>{diagnosticSkipped.length}</strong><small>由你确认的路径选择</small></div></section>{diagnosticSkipped.length === 0 ? null : <section className="work-section recommendation-section" data-section="diagnostic-skips"><p className="section-kicker">诊断后的路径选择</p><h2>主动跳过的章节</h2><p>以下章节因两类客观诊断证据均答对，由你选择跳过。这表示“已有基础并主动跳过”，不等于经过本轮教学后再次掌握。</p><ul className="unresolved-list">{diagnosticSkipped.map((item) => <li key={item.nodeId}><div><strong>{item.title}</strong><span>{item.finalPracticalRetained ? "已跳过章节教学；最终综合实操仍保留" : "已跳过章节教学和普通练习"}</span></div><span>诊断双证据</span></li>)}</ul></section>}<section className="work-section recommendation-section"><p className="section-kicker">待处理项目</p><h2>仍需处理</h2>{unresolved.length === 0 ? <p>暂无未解决项。</p> : <ul className="unresolved-list">{unresolved.map((item) => <li key={`${item.nodeId}:${item.activityId}`}><div><strong>{item.title}</strong><span>{item.continuedWithGap ? "暂时跳过 / 未掌握" : unresolvedLabel(item.result)} · 作答 {item.attemptCount} 次 · 最佳结果 {resultLabel(item.bestResult)} · 最近结果 {unresolvedLabel(item.result)}</span></div><Link to={`/learn/${session.sessionId}/${item.nodeId}`}>复习本节</Link></li>)}</ul>}</section></>;
+  return <><section className="summary-metrics" aria-label="会话指标"><div><span>路径节点</span><strong>{session.path?.nodes.length ?? 0}</strong><small>服务端快照</small></div><div><span>活动记录</span><strong>{session.activityProgress.flatMap((node) => node.activities).length}</strong><small>确定性游标</small></div><div><span>未解决结果</span><strong>{unresolved.length}</strong><small>失败、部分完成或尚未验证</small></div><div><span>诊断主动跳过</span><strong>{diagnosticSkipped.length}</strong><small>由你确认的路径选择</small></div></section>{diagnosticSkipped.length === 0 ? null : <section className="work-section recommendation-section" data-section="diagnostic-skips"><p className="section-kicker">诊断后的路径选择</p><h2>主动跳过的章节</h2><p>以下章节因两类客观诊断证据均答对，由你选择跳过。这表示“已有基础并主动跳过”，不等于经过本轮教学后再次掌握。</p><ul className="unresolved-list">{diagnosticSkipped.map((item) => <li key={item.nodeId}><div><strong>{item.title}</strong><span>{item.finalPracticalRetained ? "已跳过章节教学；最终综合实操仍保留" : "已跳过章节教学和普通练习"}</span></div><span>诊断双证据</span></li>)}</ul></section>}<section className="work-section recommendation-section" data-section="unresolved-items"><p className="section-kicker">待处理项目</p><h2>仍需处理</h2>{unresolved.length === 0 ? <p>暂无未解决项。</p> : <ul className="unresolved-list">{unresolved.map((item) => <li key={`${item.nodeId}:${item.activityId}`}><div><strong>{item.title}</strong><span>{item.continuedWithGap ? "暂时跳过 / 未掌握" : unresolvedLabel(item.result)} · 作答 {item.attemptCount} 次 · 最佳结果 {resultLabel(item.bestResult)} · 最近结果 {unresolvedLabel(item.result)}</span></div><Link to={`/learn/${session.sessionId}/${item.nodeId}`}>复习本节</Link></li>)}</ul>}</section></>;
 }
 
 function SummaryActions({ sessionId, firstUnresolved }: { sessionId: string; firstUnresolved?: UnresolvedItem }) {

@@ -9,8 +9,12 @@ const errors = [];
 const packageJson = JSON.parse(await readFile(resolve(root, "package.json"), "utf8"));
 if (packageJson.license !== "MIT") errors.push("package.json license must be MIT");
 if (packageJson.private !== true) errors.push("must keep private=true to prevent accidental npm publish");
-for (const required of ["src", "fixtures/profiles", "LICENSE"]) {
+const allowedPackageFiles = new Set(["src", "fixtures/profiles/demo-review", "LICENSE", "README.md"]);
+for (const required of allowedPackageFiles) {
   if (!packageJson.files?.includes(required)) errors.push(`package.json files missing ${required}`);
+}
+for (const entry of packageJson.files ?? []) {
+  if (!allowedPackageFiles.has(entry)) errors.push(`package.json files contains unapproved release path: ${entry}`);
 }
 for (const dependency of Object.values(packageJson.dependencies ?? {})) {
   if (typeof dependency === "string" && /^(?:file|link):/u.test(dependency)) {
