@@ -250,7 +250,7 @@ export class PiGraphModelExecutionAdapter implements ModelExecutionPort {
         promptVersion: input.promptVersion,
         safeContext: clone(input.safeContext),
         budget: clone(input.budget),
-      });
+      }, signal);
     } catch (error) {
       if (signal.aborted || isAbortError(error)) throw abortError();
       return this.#providerError(input, `graph=${graph.id};status=failed;failure=provider_error`);

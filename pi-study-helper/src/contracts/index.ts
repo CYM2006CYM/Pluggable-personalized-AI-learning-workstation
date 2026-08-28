@@ -358,9 +358,16 @@ export type CurrentAttemptSafeReference =
   | { kind: "code"; activityId: string; attemptId: string; status: "draft" | "submitted" | "evaluator_error"; draftVersion: number }
   | { kind: "quiz"; activityId: string; attemptId: string; status: "draft" | "submitted" | "evaluator_error"; retryNumber: number };
 
+export type AdaptiveContentUnavailableReason =
+  | "model_unavailable"
+  | "review_rejected"
+  | "repair_exhausted"
+  | "generation_timeout";
+
 export interface AdaptiveContentPort {
   prepareCard(input: { profileRevision: number; knowledgePointId: string; excludedArtifactIds: string[]; lessonVariantId?: LessonVariantId; personalizationContext?: LessonPersonalizationContext; agentRunId?: string }): Promise<{
     status: "accepted" | "unavailable";
+    reasonCode?: AdaptiveContentUnavailableReason;
     card?: LearningCardSafeView;
     origin?: "recorded_response" | "live_model";
     reviewBinding?: {
@@ -370,6 +377,7 @@ export interface AdaptiveContentPort {
   }>;
   prepareQuiz(input: { profileRevision: number; activityId: string; retryNumber: number; excludedQuestionIds: string[]; lessonVariantId?: LessonVariantId; targetKnowledgePointIds?: string[]; remediationContext?: QuizRemediationContext; agentRunId?: string }): Promise<{
     status: "accepted" | "unavailable";
+    reasonCode?: AdaptiveContentUnavailableReason;
     questions?: QuizQuestionPrivate[];
     origin?: "recorded_response" | "live_model";
     reviewBinding?: {

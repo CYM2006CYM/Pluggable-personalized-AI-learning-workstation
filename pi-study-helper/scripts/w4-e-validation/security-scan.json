@@ -1,0 +1,60 @@
+{
+  "schemaVersion": "w4-d4-e-security-scan-v2",
+  "status": "PASS",
+  "checks": [
+    {
+      "scope": "web_runtime_imports",
+      "status": "PASS",
+      "findingCount": 0,
+      "detail": "Runtime Web source has no import from src/web/mocks, repositories, demo composition or private fixture paths."
+    },
+    {
+      "scope": "http_open_quiz",
+      "status": "PASS",
+      "findingCount": 0,
+      "detail": "Opened Attempt responses expose only safe question fields and no answer key or explanation."
+    },
+    {
+      "scope": "dom_answer_boundary",
+      "status": "PASS",
+      "findingCount": 0,
+      "detail": "Correct-answer review is absent before formal submission; after submission the UI consumes only the public answerReview allowlist."
+    },
+    {
+      "scope": "production_bundle",
+      "status": "PASS",
+      "findingCount": 0,
+      "detail": "No private asset path, answer-key filename, hidden test, Rubric payload, secret, system prompt or host absolute path is present. The public correctAnswer field name remains because it is part of the post-submit safe DTO."
+    },
+    {
+      "scope": "vite_module_and_direct_access",
+      "status": "PASS",
+      "findingCount": 0,
+      "detail": "Backend proxy matching is limited to bootstrap/sessions/activities endpoints; Web /api/*.ts modules load locally, while mocks, profile fixtures, private, rubric, hidden and reference-solution targets reveal no protected content."
+    },
+    {
+      "scope": "audit_logs",
+      "status": "PASS",
+      "findingCount": 0,
+      "detail": "No private key, API key or system prompt match. Expected local toolchain and working-directory paths are confined to audit logs, not the browser bundle or screenshots."
+    },
+    {
+      "scope": "agent_context",
+      "status": "PASS",
+      "findingCount": 0,
+      "detail": "The sealed D recording hash is independently bound and the synthetic authority-escalation canary remains rejected."
+    }
+  ],
+  "bundleHashes": {
+    "index.html": "2992e21e37e995a8ed31d23281cc7e1d622744569e29bb2a0837bae2ba88b2d9",
+    "assets/index-BPvGnDzN.css": "ad21e5f0703e0e4497691a745474690e04cd3fb7df192b9b4db5277701d85b0d",
+    "assets/index-cbS5BToK.js": "d19379063e5f4b28969fc5b8a8747d07aaf531e079ab226d15c82674fca5d334"
+  },
+  "screenshots": {
+    "desktopSha256": "a0bca65a7dddedbb61d571617cea39745b300b7f4d53d86b0f7f59d6d3ecdd09",
+    "mobileSha256": "f92b46587e96f29ea290f7bc5695ea95e99e2ec8c5447464caf77d4440a2ff86",
+    "containsSecretOrAbsolutePath": false
+  },
+  "bundleIncludedInDelivery": false,
+  "rawLogsIncludedInZip": true
+}

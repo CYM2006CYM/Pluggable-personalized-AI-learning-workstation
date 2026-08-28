@@ -127,6 +127,16 @@ describe("AgentPipeline visual prototype", () => {
     expect(host.textContent).toContain("画像Agent · v4 · 3项");
   });
 
+  it("时间线只展示事件主信息，不在时间下方重复显示内部指标", async () => {
+    const host = await render(fixture("failed"));
+    const timeline = host.querySelector(".agent-event-log");
+    expect(timeline?.textContent).not.toContain("公开检查：已记录");
+    expect(timeline?.textContent).not.toContain("问题类别：答案歧义");
+    expect(timeline?.textContent).not.toContain("裁决：拒绝");
+    expect(timeline?.querySelectorAll("small")).toHaveLength(0);
+    expect(timeline?.textContent).toContain("候选题组未达到发布标准");
+  });
+
   it("完整显示服务端提供的学情建议，不在组件层截断", async () => {
     const recommendation = "学情建议".repeat(300);
     const host = await render({

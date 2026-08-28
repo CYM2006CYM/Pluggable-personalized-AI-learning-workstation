@@ -653,6 +653,18 @@ h3 {
   }
 }
 
+@media (max-width: 600px) {
+  .agent-event-log li {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 6px 8px;
+    align-items: start;
+  }
+
+  .agent-event-log p {
+    grid-column: 1 / -1;
+  }
+}
+
 @media (max-width: 620px) {
   .agent-pipeline-header,
   .agent-workbench-heading {

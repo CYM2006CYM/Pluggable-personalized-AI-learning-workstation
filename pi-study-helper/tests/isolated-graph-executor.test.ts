@@ -111,6 +111,25 @@ describe("createIsolatedGraphExecutor", () => {
     expect(Object.hasOwn(receivedInput as object, "drop")).toBe(false);
   });
 
+  it("把单次模型执行的取消信号与命令上下文信号合并后传给 Host", async () => {
+    const ctx = commandContext();
+    const contextController = new AbortController();
+    const operationController = new AbortController();
+    Object.defineProperty(ctx, "signal", { get: () => contextController.signal });
+    let receivedSignal: AbortSignal | undefined;
+    const host = fakeHost(async (_graph, _input, runOptions) => {
+      receivedSignal = runOptions?.signal;
+      return result;
+    });
+    const execute = createIsolatedGraphExecutor(ctx, {}, { createHost: () => host });
+
+    await execute(graph, {}, operationController.signal);
+    expect(receivedSignal).toBeDefined();
+    expect(receivedSignal?.aborted).toBe(false);
+    operationController.abort();
+    expect(receivedSignal?.aborted).toBe(true);
+  });
+
   it("每次执行创建独立 host 并分别释放", async () => {
     const hosts: FakeHost[] = [];
     const execute = createIsolatedGraphExecutor(

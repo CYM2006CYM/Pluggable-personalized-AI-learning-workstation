@@ -1,0 +1,61 @@
+{
+  "schemaVersion": "w4-d4-e-evidence-index-v2",
+  "generatedAt": "2026-08-16T07:13:12.725Z",
+  "baselineCommit": "a896c4b219cccb0da256fdf7e5d1cb96ba41f7b4",
+  "candidateStatus": "READY_FOR_OWNER_REVIEW_WITH_LIMITATIONS",
+  "entries": [
+    {
+      "id": "INPUT_BINDING",
+      "archivePath": "candidate/pi-study-helper/scripts/w4-e-validation/input-binding.json",
+      "covers": ["A", "B", "C", "D", "baseline", "missing process guide"]
+    },
+    {
+      "id": "V4_SUMMARY",
+      "archivePath": "candidate/pi-study-helper/scripts/w4-e-validation/v4-summary.json",
+      "covers": ["V4-1", "V4-2", "V4-3", "V4-4", "V4-5", "V4-6", "V4-7", "V4-8"]
+    },
+    {
+      "id": "FINAL_COMMAND_RESULTS",
+      "archivePath": "candidate/pi-study-helper/scripts/w4-e-validation/command-results.json",
+      "covers": ["environment", "web", "real API", "six points", "affected regression", "full test", "typecheck", "docs", "build", "smoke", "verify", "diff check"]
+    },
+    {
+      "id": "FINAL_RAW_LOGS",
+      "archivePath": "evidence/raw/",
+      "covers": ["stdout", "stderr", "SHA-256 source material"]
+    },
+    {
+      "id": "HISTORICAL_ENVIRONMENT_MISMATCH",
+      "archivePath": "evidence/history/environment-mismatch-20260816/",
+      "covers": ["initial 26 failures", "ENVIRONMENT_MISMATCH"]
+    },
+    {
+      "id": "BROWSER_EVIDENCE",
+      "archivePath": "evidence/browser/screenshot-index.json",
+      "covers": ["desktop recovery state", "mobile recovery state", "fixed-port blocker", "responsive overflow"]
+    },
+    {
+      "id": "SECURITY_SCAN",
+      "archivePath": "candidate/pi-study-helper/scripts/w4-e-validation/security-scan.json",
+      "covers": ["HTTP", "DOM", "bundle", "Vite", "logs", "Agent context"]
+    },
+    {
+      "id": "INDEPENDENT_NARRATIVE",
+      "archivePath": "candidate/新版设计文档-重写版/第四周任务/W4-D4-E-独立验证正文.md",
+      "covers": ["findings", "limitations", "attribution", "conclusion"]
+    },
+    {
+      "id": "HANDOFF",
+      "archivePath": "candidate/新版设计文档-重写版/第四周任务/handoff-w4-e-d4.md",
+      "covers": ["owner review", "status", "no commit", "no push"]
+    },
+    {
+      "id": "ARCHIVE_MANIFEST",
+      "archivePath": "manifest.json",
+      "covers": ["all ZIP members", "byte length", "SHA-256"]
+    }
+  ],
+  "excluded": ["node_modules", ".demo-data", ".demo-build", "dist-web", "toolchains", "Edge profiles", "blank screenshots", "keys", "private responses"],
+  "w4GoClaimed": false,
+  "uploadLock": "NOT_REQUESTED"
+}

@@ -1,6 +1,6 @@
 import { Type, agentNode, defineSingleAgentGraph, type Graph } from "pi-loop-graph-sdk";
 
-export const W4_D_LIVE_PROMPT_VERSION = "w4-d2-v16";
+export const W4_D_LIVE_PROMPT_VERSION = "w4-d2-v19";
 
 const ContextInput = Type.Object({
   runId: Type.String(),
@@ -58,9 +58,13 @@ const GeneratorOutput = Type.Object({
 
 const HunterOutput = Type.Object({
   issues: Type.Array(Type.Object({
-    issueId: Type.String(),
+    issueId: Type.String({ minLength: 1 }),
     severity: Type.Union([Type.Literal("low"), Type.Literal("medium"), Type.Literal("high")]),
-    message: Type.String(),
+    category: Type.String({ minLength: 1 }),
+    candidateField: Type.String({ minLength: 1 }),
+    message: Type.String({ minLength: 1 }),
+    evidenceSummary: Type.String({ minLength: 1 }),
+    sourceAnchorIds: Type.Array(Type.String({ minLength: 1 }), { minItems: 1 }),
     disputed: Type.Boolean(),
   })),
   requiresDefender: Type.Boolean(),
@@ -68,17 +72,36 @@ const HunterOutput = Type.Object({
 });
 
 const DefenderOutput = Type.Object({
-  defenseSummary: Type.String(),
-  acceptedIssueIds: Type.Array(Type.String()),
-  rebuttedIssueIds: Type.Array(Type.String()),
-  residualRisks: Type.Array(Type.String()),
+  defenseSummary: Type.String({ minLength: 1 }),
+  issueAssessments: Type.Array(Type.Object({
+    issueId: Type.String({ minLength: 1 }),
+    position: Type.Union([Type.Literal("rebutted"), Type.Literal("conceded")]),
+    rationale: Type.String({ minLength: 1 }),
+    sourceAnchorIds: Type.Array(Type.String({ minLength: 1 }), { minItems: 1 }),
+    residualRisk: Type.Union([Type.String({ minLength: 1 }), Type.Null()]),
+  }), { minItems: 1 }),
 });
 
 const JudgeOutput = Type.Object({
   verdict: Type.Union([Type.Literal("accepted"), Type.Literal("revise"), Type.Literal("rejected")]),
-  finalSafeFeedback: Type.String(),
-  summary: Type.String(),
-  blockedIssueIds: Type.Array(Type.String()),
+  finalSafeFeedback: Type.String({ minLength: 1 }),
+  summary: Type.String({ minLength: 1 }),
+  issueDecisions: Type.Array(Type.Object({
+    issueId: Type.String({ minLength: 1 }),
+    decision: Type.Union([Type.Literal("upheld"), Type.Literal("overruled")]),
+    rationale: Type.String({ minLength: 1 }),
+    sourceAnchorIds: Type.Array(Type.String({ minLength: 1 }), { minItems: 1 }),
+  })),
+  additionalIssues: Type.Array(Type.Object({
+    issueId: Type.String({ minLength: 1 }),
+    severity: Type.Union([Type.Literal("low"), Type.Literal("medium"), Type.Literal("high")]),
+    category: Type.String({ minLength: 1 }),
+    candidateField: Type.String({ minLength: 1 }),
+    message: Type.String({ minLength: 1 }),
+    evidenceSummary: Type.String({ minLength: 1 }),
+    sourceAnchorIds: Type.Array(Type.String({ minLength: 1 }), { minItems: 1 }),
+  })),
+  blockedIssueIds: Type.Array(Type.String({ minLength: 1 })),
 });
 
 const CapabilityOutput = Type.Object({
@@ -192,19 +215,24 @@ function graph(id: string, goal: string, output: typeof GeneratorOutput | typeof
         "safeContext.generator.candidateFeedback 是只供审核链使用的私有候选视图。必须逐题读取 prompt、options、correctAnswer 和 explanation，核对候选答案是否能被正文唯一支持、解析是否与题干和答案一致；不能只检查结构或来源 ID。",
         "检查题干是否清楚、选项是否互斥且只有一个正确项、是否超出正文、代码行为和反例是否准确、来源是否支持，以及是否泄漏私有评测资产。服务端只检查 correctAnswer 是否属于 options，不代表其语义正确。",
         "检查整组 correctAnswer 在 options 中的位置是否已打散，不能全部集中在 A 或其他同一位置；若分布明显失衡，必须报告非争议 issue 并建议 revise。",
+        "若 safeContext.context.safetySummary 存在，你审核的是Safety输出候选。normalization=quiz_option_order_balanced 表示程序按固定算法调整了选项顺序，并提供调整前后候选哈希；这不代表Generator原始输出已满足分布要求，也不改变题干、答案文本、解析或来源。",
         "还要逐项检查题目独立性：任一题干、选项或解析引用上一题、下一题、第一问、其他第几问的答案或结论，都属于跨题答案提示，必须报告非争议 issue 并建议 revise。",
         "若 safeContext.context.retryContext 存在，还必须检查：新题ID未出现在 excludedQuestionIds、题干未逐字复用旧题、每个 missedQuestions 的薄弱知识都至少被一道新题覆盖。只换ID、遗漏错题知识或改成无关基础题都必须报告非争议 issue 并建议 revise。",
         "正文不能唯一支持答案、题目多解、答案或解析错误时，必须报告具体 issue 并 recommendedVerdict=revise。不得重写题目、替换答案、补充正文没有的事实、在输出中复述答案或给出权威评分。没有问题时返回 issues=[]、requiresDefender=false、recommendedVerdict=accepted。",
-        "只返回 issues、requiresDefender、recommendedVerdict；issueId 唯一，每个 issue 只能使用 low/medium/high、具体 message 和 disputed 布尔值。requiresDefender 必须严格等于是否存在 disputed=true 的 issue；只要 issues 非空，recommendedVerdict 必须为 revise。",
+        "每个 issue 必须且只能包含 issueId、severity、category、candidateField、message、evidenceSummary、sourceAnchorIds、disputed。category 使用简短稳定的问题类别；candidateField 指向具体候选字段或字段路径；message 描述可公开的问题；evidenceSummary 概括正文如何支持该指控但不得复述私有答案；sourceAnchorIds 至少包含一个 allowedSourceIds 中的原始ID。禁止只写『需要复核』『可能有问题』而不给候选位置和正文依据。",
+        "只返回 issues、requiresDefender、recommendedVerdict；issueId 唯一，severity 只能使用 low/medium/high。requiresDefender 只是Hunter建议字段；只要 issues 非空，recommendedVerdict 必须为 revise。",
         "如果候选标记 riskLevel=high，必须把需要交叉验证的答案风险写成至少一个 disputed=true 的具体 issue，并令 requiresDefender=true；不能按无争议低风险直接放行。",
         "若 safeContext.reviewInstruction 存在，这是Hunter审查合同修复。必须纠正其中指出的结构、来源、安全或条件一致性问题；仍要如实报告真实问题，不能为了通过校验而返回空 issues。",
         ]
       : id === "defender"
         ? [
-            "你是 Defender（辩护智能体），只处理 Hunter 标记 disputed=true 的 issue。",
+            "你是 Defender（辩护智能体），只为程序路由器交付的 Hunter 语义问题或高风险问题提供基于正文的反证或承认。Hunter只负责找错，Defender不拥有最终裁决权。",
             "只能使用 safeContext.context.teachingContent 和 allowedSourceIds 进行承认或反驳；可以核对私有候选答案与解析，但不得重写或在输出中复述它们，不得从隐藏资产或模型常识补事实。",
-            "acceptedIssueIds 与 rebuttedIssueIds 合并后必须恰好覆盖每个 disputed issueId 一次，不能遗漏、重复或新增；没有争议时不应被调用。",
-            "只返回 defenseSummary、acceptedIssueIds、rebuttedIssueIds、residualRisks 四个字段，文本保持公开、安全、简短。",
+            "必须逐个处理 safeContext.hunter.issues 中的全部 issueId，不只处理 disputed=true 的问题。issueAssessments 必须与输入问题一一对应，不能遗漏、重复或新增。",
+            "每项必须包含 issueId、position、rationale、sourceAnchorIds、residualRisk。position=rebutted 表示有正文反证，position=conceded 表示Hunter有理并如实承认；rationale 必须给出正文依据，sourceAnchorIds 至少包含一个 allowedSourceIds 中的原始ID；无剩余风险时 residualRisk 必须为 null。",
+            "承认问题成立是合法输出，后续仍由Judge决定返修或拒绝。Defender无权决定发布、返修或拒绝，也不能为了角色立场强行反驳。",
+            "若 safeContext.reviewInstruction 存在，这是Defender输出合同修复：严格按其中列出的失败类别和 expectedIssueIds 修复逐项输出，但仍须如实承认或反驳，不能为了通过校验而隐瞒真实问题。",
+            "只返回 defenseSummary、issueAssessments 两个字段，文本保持公开、安全、简短。",
           ]
         : id === "judge"
           ? [
@@ -215,12 +243,15 @@ function graph(id: string, goal: string, output: typeof GeneratorOutput | typeof
               "accepted 只表示候选通过内容与安全审查；候选答案无法由正文唯一支持、答案或解析错误、题目多解，或存在未解决的来源与泄漏风险时必须 revise 或 rejected。",
               "必须复核每道题能否脱离其他题独立作答；题干、选项或解析一旦借用上一题、下一题或第几问已经给出的答案或结论，不得 accepted。",
               "还必须确认整组正确答案位置没有全部集中在同一选项，并已在各题可用位置间尽量均衡分布；明显失衡的题组不得 accepted。",
+              "若 safeContext.context.safetySummary 存在，必须把它视为确定性Safety审计事实：当前候选是outputSha256对应的Safety输出版本；选项顺序标准化不改变答案语义，也不能被误写成Generator原始输出已经均衡。",
               "若 safeContext.context.retryContext 存在，必须最终确认新旧题ID不同、题面未逐字复用、并且上一轮每个错题知识都在新题组中得到重复考察；任一条件不满足都不得 accepted。",
-              "blockedIssueIds 只能引用 Hunter 已报告的 issueId；verdict=accepted 时必须为空。存在非争议 issue 时不能 accepted；若 Hunter 存在 disputed=true，必须有 Defender 输入，且只有全部争议均被反驳并无 residualRisks 时才可 accepted。不得修改题目、答案、Rubric、hidden tests、reference solution、Evidence、KnowledgeState 或路径。",
+              "issueDecisions必须逐项且仅覆盖Hunter的全部issueId。每项包含issueId、decision=upheld|overruled、rationale、sourceAnchorIds；必须依据正文独立判断，不得把Hunter或Defender意见当成既定事实。",
+              "若独立复核发现Hunter遗漏的问题，写入additionalIssues；每项包含新的issueId、severity、category、candidateField、message、evidenceSummary、sourceAnchorIds，且不得与Hunter问题ID重复。没有遗漏时返回空数组。",
+              "blockedIssueIds只能引用decision=upheld的Hunter问题或additionalIssues中的问题；verdict=accepted时必须为空，verdict=revise或rejected时必须非空。Hunter和Defender只提供审查意见：即使Defender为conceded，你仍可依据正文overruled；即使Defender为rebutted，你仍可upheld。不得修改题目、答案、Rubric、hidden tests、reference solution、Evidence、KnowledgeState或路径。",
               "Hunter 输出代表它已经执行了逐题审核，不要求 Hunter 在 issues 为空时复述检查过程。若 Hunter 返回 issues=[]、requiresDefender=false、recommendedVerdict=accepted，且你复核候选后没有发现新的正文、唯一答案、安全或来源问题，则必须返回 verdict=accepted、blockedIssueIds=[]；不得因为缺少额外审计说明而凭空拒绝。",
-              "若 safeContext.reviewInstruction 存在，这是一次结构或问题闭合修复：按其中失败类别修复四字段裁决输出，不得借修复改变候选题或绕过实质风险。",
+              "若safeContext.reviewInstruction存在，这是一次结构或问题闭合修复：按其中失败类别修复六字段裁决输出，不得借修复改变候选题或绕过实质风险。",
               "若修复失败类别为 authority_violation，只清理 finalSafeFeedback 和 summary 中对受限资产或权威状态的复述；不得改变 verdict 或 blockedIssueIds，也不要复述受限名称来说明没有泄漏。",
-              "finalSafeFeedback 和 summary 只能是公开审查结论，不得包含答案、私有评测内容、主机路径、密钥或 token。只返回 verdict、finalSafeFeedback、summary、blockedIssueIds。",
+              "所有理由只能是公开审查结论，不得包含答案、私有评测内容、主机路径、密钥或token。只返回verdict、finalSafeFeedback、summary、issueDecisions、additionalIssues、blockedIssueIds六个字段。",
             ]
           : [
               "You are the capability scorer.",

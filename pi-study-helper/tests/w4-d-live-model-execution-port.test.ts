@@ -29,6 +29,7 @@ describe("W4 D live ModelExecutionPort", () => {
       graphs,
       createHost,
     });
+    const controller = new AbortController();
     const result = await port.execute({
       graphId: "generator",
       runId: "live-test",
@@ -36,11 +37,12 @@ describe("W4 D live ModelExecutionPort", () => {
       promptVersion: "w4-d2-v1",
       safeContext: {},
       budget: { timeoutMs: 1_000 },
-    }, new AbortController().signal);
+    }, controller.signal);
 
     expect(result).toMatchObject({ status: "ok", modelId: "deepseek-chat", promptVersion: "w4-d2-v1" });
     expect(createHost).toHaveBeenCalledOnce();
     expect(execute).toHaveBeenCalledOnce();
+    expect((execute.mock.calls as unknown[][])[0]?.[2]).toEqual({ signal: controller.signal });
     expect(dispose).toHaveBeenCalledOnce();
     expect(JSON.stringify(createHost.mock.calls)).not.toContain("test-only-key");
   });

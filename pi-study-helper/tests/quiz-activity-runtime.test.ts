@@ -124,6 +124,47 @@ describe("QuizActivityRuntime", () => {
     expect(stored?.stages.at(-1)).toMatchObject({ role: "publish", status: "succeeded" });
   });
 
+  it("同一请求复用半截run时会补齐依据和画像工位，不会停在第一步", async () => {
+    const generated = questions("partial-agent-run");
+    const agentRuns = new InMemoryAgentRunRepository(now);
+    const content: AdaptiveContentPort = {
+      async prepareCard() { return { status: "unavailable" }; },
+      async prepareQuiz(input) {
+        expect(input.agentRunId).toBeDefined();
+        for (const role of ["generator", "safety", "hunter", "defender", "judge"] as const) {
+          await agentRuns.append(input.agentRunId!, {
+            role, label: role, status: role === "defender" ? "skipped" : "succeeded", startedAt: now().toISOString(), finishedAt: now().toISOString(),
+            durationMs: 0, attemptNumber: 1, publicSummary: `${role}形成安全结果。`,
+          });
+        }
+        return {
+          status: "accepted", questions: generated, origin: "live_model",
+          reviewBinding: { generationRunId: "partial-agent-binding", acceptedQuestionSetSha256: quizQuestionSetSha256(generated) },
+        };
+      },
+    };
+    const { view, runtime } = await setup(assets, content, undefined, agentRuns);
+    const partial = await agentRuns.create({
+      requestId: "open-partial-agent-run", sessionId: view.sessionId, activityId: "quiz",
+      profileRevision: 3, pathVersion: 1, evidenceVersion: 0,
+    });
+    await agentRuns.append(partial.runId, {
+      role: "source", label: "教学依据准备", status: "running", startedAt: now().toISOString(), attemptNumber: 1,
+      publicSummary: "正在绑定正文。",
+    });
+    await agentRuns.append(partial.runId, {
+      role: "source", label: "教学依据准备", status: "succeeded", startedAt: now().toISOString(), finishedAt: now().toISOString(),
+      durationMs: 0, attemptNumber: 1, publicSummary: "正文绑定完成。", sourceClaimIds: ["source-1"],
+    });
+    const opened = await runtime.openActivity({
+      requestId: "open-partial-agent-run", sessionId: view.sessionId, sessionVersion: 3, profileRevision: 3,
+      activityId: "quiz", activityVersion: 1, pathVersion: 1, acknowledgedCardId: "actual-card-kp",
+    });
+    const stored = await agentRuns.getByRunId(opened.activity.agentRunId!);
+    expect(stored?.stages.filter((stage) => stage.role === "profile" && stage.status === "succeeded")).toHaveLength(1);
+    expect(stored?.status).toBe("succeeded");
+  });
+
   it("AI执行失败时在同一run中如实记录固定保障发布", async () => {
     const agentRuns = new InMemoryAgentRunRepository(now);
     const content: AdaptiveContentPort = {

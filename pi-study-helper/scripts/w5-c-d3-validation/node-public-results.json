@@ -1,0 +1,721 @@
+{
+  "schemaVersion": 1,
+  "contract": "W5-C1/W5-R1",
+  "baselineCommit": "383690831a8b3de42dad58795e71f218678f6fbc",
+  "decisionId": "W5-D64-PYODIDE-1",
+  "pyodideDecision": "PYODIDE_DISABLED_WITH_NODE_FALLBACK",
+  "pyodideEnabled": false,
+  "liveModel": "LIVE_NOT_RUN",
+  "groups": [
+    {
+      "stableInputId": "public-act-inspect-dataframe-1",
+      "inputSource": "revision-3-public-execution-bundle",
+      "inputContentSummary": {
+        "activityId": "act-inspect-dataframe",
+        "profileRevision": 3,
+        "runId": "w5-d3-act-inspect-dataframe-1",
+        "publicBundleHash": "sha256:3351e96a45f9750ffae191909adbaeeb32a90b51bf351840536829beb0204578",
+        "publicDatasetFiles": [
+          {
+            "name": "orders-learning.csv",
+            "bytes": 1315,
+            "sha256": "sha256:99b2923bfde4a6a824ed69bb410dc9c9f5d10f69e30b9bc5692ae986c6ab09f9"
+          }
+        ],
+        "publicTestSourcesSha256": [
+          "sha256:eca54fb129f63799fd2290d2ab13f6d1f0258894357fb656ff68c1e1e02c3ef1"
+        ],
+        "submission": "public starterCode",
+        "submissionSha256": "sha256:f3c95980eecfcd895c70490ae68acfaf9e61544b00da5b763961bcce0446f8a4"
+      },
+      "inputSha256": "sha256:d062afbee28e1323c2fa71f52fb9eeac14357fa93512e178085ecec5080c7be8",
+      "activityId": "act-inspect-dataframe",
+      "profileRevision": 3,
+      "nodeRuns": [
+        {
+          "repeat": 1,
+          "elapsedMs": 1915.82,
+          "executionStatus": "completed",
+          "verdict": "partial",
+          "score": 0.5,
+          "errorKind": "learner",
+          "errorCode": "test_failed",
+          "evaluatorVersion": "node-python-evaluator-w3-c1",
+          "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+          "assetBundleHash": "sha256:d6e1114a8be5ce2c8075fd7cc81dfcd02f9fb86798ce2830bdf1ff6ea2fae1a8"
+        },
+        {
+          "repeat": 2,
+          "elapsedMs": 2012.013,
+          "executionStatus": "completed",
+          "verdict": "partial",
+          "score": 0.5,
+          "errorKind": "learner",
+          "errorCode": "test_failed",
+          "evaluatorVersion": "node-python-evaluator-w3-c1",
+          "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+          "assetBundleHash": "sha256:d6e1114a8be5ce2c8075fd7cc81dfcd02f9fb86798ce2830bdf1ff6ea2fae1a8"
+        },
+        {
+          "repeat": 3,
+          "elapsedMs": 1988.979,
+          "executionStatus": "completed",
+          "verdict": "partial",
+          "score": 0.5,
+          "errorKind": "learner",
+          "errorCode": "test_failed",
+          "evaluatorVersion": "node-python-evaluator-w3-c1",
+          "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+          "assetBundleHash": "sha256:d6e1114a8be5ce2c8075fd7cc81dfcd02f9fb86798ce2830bdf1ff6ea2fae1a8"
+        }
+      ],
+      "nodeFieldsIdentical": true,
+      "pyodide": {
+        "status": "NOT_RUN",
+        "errorCode": "PYODIDE_CANDIDATE_UNAVAILABLE"
+      },
+      "adapterVersion": "node-python-evaluator-w3-c1",
+      "evaluatorVersion": "node-python-evaluator-w3-c1",
+      "outputSensitiveFields": []
+    },
+    {
+      "stableInputId": "public-act-inspect-dataframe-2",
+      "inputSource": "revision-3-public-execution-bundle",
+      "inputContentSummary": {
+        "activityId": "act-inspect-dataframe",
+        "profileRevision": 3,
+        "runId": "w5-d3-act-inspect-dataframe-2",
+        "publicBundleHash": "sha256:99076e4b569080839a09353df60c0fce3f4ce31bcf629d675248d6969d6ec059",
+        "publicDatasetFiles": [
+          {
+            "name": "orders-learning.csv",
+            "bytes": 1315,
+            "sha256": "sha256:99b2923bfde4a6a824ed69bb410dc9c9f5d10f69e30b9bc5692ae986c6ab09f9"
+          }
+        ],
+        "publicTestSourcesSha256": [
+          "sha256:eca54fb129f63799fd2290d2ab13f6d1f0258894357fb656ff68c1e1e02c3ef1"
+        ],
+        "submission": "public starterCode with deterministic syntax-error suffix",
+        "submissionSha256": "sha256:5781022edb8cf46cb277e193d03118d276942f58fae69df6b2a075cb24aa25b6"
+      },
+      "inputSha256": "sha256:0c2655725bc40b75a60bdd040b2bc22cee6621e1733d12b522d5e6a14a307738",
+      "activityId": "act-inspect-dataframe",
+      "profileRevision": 3,
+      "nodeRuns": [
+        {
+          "repeat": 1,
+          "elapsedMs": 151.76,
+          "executionStatus": "completed",
+          "verdict": "fail",
+          "score": 0,
+          "errorKind": "learner",
+          "errorCode": "syntax_error",
+          "evaluatorVersion": "node-python-evaluator-w3-c1",
+          "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+          "assetBundleHash": "sha256:d6e1114a8be5ce2c8075fd7cc81dfcd02f9fb86798ce2830bdf1ff6ea2fae1a8"
+        },
+        {
+          "repeat": 2,
+          "elapsedMs": 128.351,
+          "executionStatus": "completed",
+          "verdict": "fail",
+          "score": 0,
+          "errorKind": "learner",
+          "errorCode": "syntax_error",
+          "evaluatorVersion": "node-python-evaluator-w3-c1",
+          "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+          "assetBundleHash": "sha256:d6e1114a8be5ce2c8075fd7cc81dfcd02f9fb86798ce2830bdf1ff6ea2fae1a8"
+        },
+        {
+          "repeat": 3,
+          "elapsedMs": 140.908,
+          "executionStatus": "completed",
+          "verdict": "fail",
+          "score": 0,
+          "errorKind": "learner",
+          "errorCode": "syntax_error",
+          "evaluatorVersion": "node-python-evaluator-w3-c1",
+          "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+          "assetBundleHash": "sha256:d6e1114a8be5ce2c8075fd7cc81dfcd02f9fb86798ce2830bdf1ff6ea2fae1a8"
+        }
+      ],
+      "nodeFieldsIdentical": true,
+      "pyodide": {
+        "status": "NOT_RUN",
+        "errorCode": "PYODIDE_CANDIDATE_UNAVAILABLE"
+      },
+      "adapterVersion": "node-python-evaluator-w3-c1",
+      "evaluatorVersion": "node-python-evaluator-w3-c1",
+      "outputSensitiveFields": []
+    },
+    {
+      "stableInputId": "public-act-missing-1",
+      "inputSource": "revision-3-public-execution-bundle",
+      "inputContentSummary": {
+        "activityId": "act-missing",
+        "profileRevision": 3,
+        "runId": "w5-d3-act-missing-3",
+        "publicBundleHash": "sha256:e0f709f5b5b244fa0a739cc907a3d124245d57a6ff3eea281585ee174408b920",
+        "publicDatasetFiles": [
+          {
+            "name": "orders-learning.csv",
+            "bytes": 1315,
+            "sha256": "sha256:99b2923bfde4a6a824ed69bb410dc9c9f5d10f69e30b9bc5692ae986c6ab09f9"
+          }
+        ],
+        "publicTestSourcesSha256": [
+          "sha256:2dc5a6f931e45fbeeff890cd122aa3a5f52a42251228f1beb5a9f660a77ff1e2"
+        ],
+        "submission": "public starterCode",
+        "submissionSha256": "sha256:a81db8c7ddb6fc50fb8450fe4b954593179ed6e0db43545b535a99bebaa35e91"
+      },
+      "inputSha256": "sha256:620800e5eb098603a9ebcec7957762359f3b81d283c2791188ea880aa937b66c",
+      "activityId": "act-missing",
+      "profileRevision": 3,
+      "nodeRuns": [
+        {
+          "repeat": 1,
+          "elapsedMs": 2062.734,
+          "executionStatus": "completed",
+          "verdict": "fail",
+          "score": 0,
+          "errorKind": "learner",
+          "errorCode": "test_failed",
+          "evaluatorVersion": "node-python-evaluator-w3-c1",
+          "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+          "assetBundleHash": "sha256:4bd182db5673a5ffab3b40820de022254207651abaf718c7fabf40e0e9c828f1"
+        },
+        {
+          "repeat": 2,
+          "elapsedMs": 1881.983,
+          "executionStatus": "completed",
+          "verdict": "fail",
+          "score": 0,
+          "errorKind": "learner",
+          "errorCode": "test_failed",
+          "evaluatorVersion": "node-python-evaluator-w3-c1",
+          "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+          "assetBundleHash": "sha256:4bd182db5673a5ffab3b40820de022254207651abaf718c7fabf40e0e9c828f1"
+        },
+        {
+          "repeat": 3,
+          "elapsedMs": 2008.284,
+          "executionStatus": "completed",
+          "verdict": "fail",
+          "score": 0,
+          "errorKind": "learner",
+          "errorCode": "test_failed",
+          "evaluatorVersion": "node-python-evaluator-w3-c1",
+          "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+          "assetBundleHash": "sha256:4bd182db5673a5ffab3b40820de022254207651abaf718c7fabf40e0e9c828f1"
+        }
+      ],
+      "nodeFieldsIdentical": true,
+      "pyodide": {
+        "status": "NOT_RUN",
+        "errorCode": "PYODIDE_CANDIDATE_UNAVAILABLE"
+      },
+      "adapterVersion": "node-python-evaluator-w3-c1",
+      "evaluatorVersion": "node-python-evaluator-w3-c1",
+      "outputSensitiveFields": []
+    },
+    {
+      "stableInputId": "public-act-missing-2",
+      "inputSource": "revision-3-public-execution-bundle",
+      "inputContentSummary": {
+        "activityId": "act-missing",
+        "profileRevision": 3,
+        "runId": "w5-d3-act-missing-4",
+        "publicBundleHash": "sha256:79f8c2fb05088a2628023e77aa19207a754fc6a47ae776273579bb125b78746c",
+        "publicDatasetFiles": [
+          {
+            "name": "orders-learning.csv",
+            "bytes": 1315,
+            "sha256": "sha256:99b2923bfde4a6a824ed69bb410dc9c9f5d10f69e30b9bc5692ae986c6ab09f9"
+          }
+        ],
+        "publicTestSourcesSha256": [
+          "sha256:2dc5a6f931e45fbeeff890cd122aa3a5f52a42251228f1beb5a9f660a77ff1e2"
+        ],
+        "submission": "public starterCode with deterministic syntax-error suffix",
+        "submissionSha256": "sha256:dda12697867dca369b49b58e9d7c5d6181949eaaa27d12a33b0d5338efb94b05"
+      },
+      "inputSha256": "sha256:d40842344e3fdedc0a74f9ebd18f3cbebd951f56124bf7be44ae0003744d2372",
+      "activityId": "act-missing",
+      "profileRevision": 3,
+      "nodeRuns": [
+        {
+          "repeat": 1,
+          "elapsedMs": 245.821,
+          "executionStatus": "completed",
+          "verdict": "fail",
+          "score": 0,
+          "errorKind": "learner",
+          "errorCode": "syntax_error",
+          "evaluatorVersion": "node-python-evaluator-w3-c1",
+          "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+          "assetBundleHash": "sha256:4bd182db5673a5ffab3b40820de022254207651abaf718c7fabf40e0e9c828f1"
+        },
+        {
+          "repeat": 2,
+          "elapsedMs": 139.295,
+          "executionStatus": "completed",
+          "verdict": "fail",
+          "score": 0,
+          "errorKind": "learner",
+          "errorCode": "syntax_error",
+          "evaluatorVersion": "node-python-evaluator-w3-c1",
+          "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+          "assetBundleHash": "sha256:4bd182db5673a5ffab3b40820de022254207651abaf718c7fabf40e0e9c828f1"
+        },
+        {
+          "repeat": 3,
+          "elapsedMs": 133.975,
+          "executionStatus": "completed",
+          "verdict": "fail",
+          "score": 0,
+          "errorKind": "learner",
+          "errorCode": "syntax_error",
+          "evaluatorVersion": "node-python-evaluator-w3-c1",
+          "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+          "assetBundleHash": "sha256:4bd182db5673a5ffab3b40820de022254207651abaf718c7fabf40e0e9c828f1"
+        }
+      ],
+      "nodeFieldsIdentical": true,
+      "pyodide": {
+        "status": "NOT_RUN",
+        "errorCode": "PYODIDE_CANDIDATE_UNAVAILABLE"
+      },
+      "adapterVersion": "node-python-evaluator-w3-c1",
+      "evaluatorVersion": "node-python-evaluator-w3-c1",
+      "outputSensitiveFields": []
+    },
+    {
+      "stableInputId": "public-act-duplicates-1",
+      "inputSource": "revision-3-public-execution-bundle",
+      "inputContentSummary": {
+        "activityId": "act-duplicates",
+        "profileRevision": 3,
+        "runId": "w5-d3-act-duplicates-5",
+        "publicBundleHash": "sha256:39fd4f4405d673d4bec96fac8cd9b0a5f91a0295aae130dacc140ba7376aadca",
+        "publicDatasetFiles": [
+          {
+            "name": "orders-learning.csv",
+            "bytes": 1315,
+            "sha256": "sha256:99b2923bfde4a6a824ed69bb410dc9c9f5d10f69e30b9bc5692ae986c6ab09f9"
+          }
+        ],
+        "publicTestSourcesSha256": [
+          "sha256:f494513463a02d3168a66d9bd5c312fbc50fcdec89b2a7c20a1cfb4f64bde7f1"
+        ],
+        "submission": "public starterCode",
+        "submissionSha256": "sha256:521179a94fec521d3f6f480aac59d7bee772d67f68fe59dd4c5c342c9627e2f8"
+      },
+      "inputSha256": "sha256:2cb6f3768597a86b4600d430f1fbf68b6cacc9c13503c8e080fbd5ea8f3ae602",
+      "activityId": "act-duplicates",
+      "profileRevision": 3,
+      "nodeRuns": [
+        {
+          "repeat": 1,
+          "elapsedMs": 1987.654,
+          "executionStatus": "completed",
+          "verdict": "fail",
+          "score": 0,
+          "errorKind": "learner",
+          "errorCode": "test_failed",
+          "evaluatorVersion": "node-python-evaluator-w3-c1",
+          "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+          "assetBundleHash": "sha256:c5047dc99d6c3443e1f67302a8c63f374d2f0371aa5c6e37b6e49e7beedecd3e"
+        },
+        {
+          "repeat": 2,
+          "elapsedMs": 2089.366,
+          "executionStatus": "completed",
+          "verdict": "fail",
+          "score": 0,
+          "errorKind": "learner",
+          "errorCode": "test_failed",
+          "evaluatorVersion": "node-python-evaluator-w3-c1",
+          "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+          "assetBundleHash": "sha256:c5047dc99d6c3443e1f67302a8c63f374d2f0371aa5c6e37b6e49e7beedecd3e"
+        },
+        {
+          "repeat": 3,
+          "elapsedMs": 1948.958,
+          "executionStatus": "completed",
+          "verdict": "fail",
+          "score": 0,
+          "errorKind": "learner",
+          "errorCode": "test_failed",
+          "evaluatorVersion": "node-python-evaluator-w3-c1",
+          "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+          "assetBundleHash": "sha256:c5047dc99d6c3443e1f67302a8c63f374d2f0371aa5c6e37b6e49e7beedecd3e"
+        }
+      ],
+      "nodeFieldsIdentical": true,
+      "pyodide": {
+        "status": "NOT_RUN",
+        "errorCode": "PYODIDE_CANDIDATE_UNAVAILABLE"
+      },
+      "adapterVersion": "node-python-evaluator-w3-c1",
+      "evaluatorVersion": "node-python-evaluator-w3-c1",
+      "outputSensitiveFields": []
+    },
+    {
+      "stableInputId": "public-act-duplicates-2",
+      "inputSource": "revision-3-public-execution-bundle",
+      "inputContentSummary": {
+        "activityId": "act-duplicates",
+        "profileRevision": 3,
+        "runId": "w5-d3-act-duplicates-6",
+        "publicBundleHash": "sha256:4806c8884dff75270e21ff7561fe542bb883a6f9eef710065ad623b4853c39f6",
+        "publicDatasetFiles": [
+          {
+            "name": "orders-learning.csv",
+            "bytes": 1315,
+            "sha256": "sha256:99b2923bfde4a6a824ed69bb410dc9c9f5d10f69e30b9bc5692ae986c6ab09f9"
+          }
+        ],
+        "publicTestSourcesSha256": [
+          "sha256:f494513463a02d3168a66d9bd5c312fbc50fcdec89b2a7c20a1cfb4f64bde7f1"
+        ],
+        "submission": "public starterCode with deterministic syntax-error suffix",
+        "submissionSha256": "sha256:f563666507cea2445c1a0ac838b0b4c03aae7b106b9a61d0d50806859adb09b9"
+      },
+      "inputSha256": "sha256:f7196824d00a6568f63b15c523b3f99d5e7e4a5ebf682dc391bccb57547e8da3",
+      "activityId": "act-duplicates",
+      "profileRevision": 3,
+      "nodeRuns": [
+        {
+          "repeat": 1,
+          "elapsedMs": 136.504,
+          "executionStatus": "completed",
+          "verdict": "fail",
+          "score": 0,
+          "errorKind": "learner",
+          "errorCode": "syntax_error",
+          "evaluatorVersion": "node-python-evaluator-w3-c1",
+          "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+          "assetBundleHash": "sha256:c5047dc99d6c3443e1f67302a8c63f374d2f0371aa5c6e37b6e49e7beedecd3e"
+        },
+        {
+          "repeat": 2,
+          "elapsedMs": 203.126,
+          "executionStatus": "completed",
+          "verdict": "fail",
+          "score": 0,
+          "errorKind": "learner",
+          "errorCode": "syntax_error",
+          "evaluatorVersion": "node-python-evaluator-w3-c1",
+          "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+          "assetBundleHash": "sha256:c5047dc99d6c3443e1f67302a8c63f374d2f0371aa5c6e37b6e49e7beedecd3e"
+        },
+        {
+          "repeat": 3,
+          "elapsedMs": 130.981,
+          "executionStatus": "completed",
+          "verdict": "fail",
+          "score": 0,
+          "errorKind": "learner",
+          "errorCode": "syntax_error",
+          "evaluatorVersion": "node-python-evaluator-w3-c1",
+          "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+          "assetBundleHash": "sha256:c5047dc99d6c3443e1f67302a8c63f374d2f0371aa5c6e37b6e49e7beedecd3e"
+        }
+      ],
+      "nodeFieldsIdentical": true,
+      "pyodide": {
+        "status": "NOT_RUN",
+        "errorCode": "PYODIDE_CANDIDATE_UNAVAILABLE"
+      },
+      "adapterVersion": "node-python-evaluator-w3-c1",
+      "evaluatorVersion": "node-python-evaluator-w3-c1",
+      "outputSensitiveFields": []
+    },
+    {
+      "stableInputId": "public-act-types-1",
+      "inputSource": "revision-3-public-execution-bundle",
+      "inputContentSummary": {
+        "activityId": "act-types",
+        "profileRevision": 3,
+        "runId": "w5-d3-act-types-7",
+        "publicBundleHash": "sha256:a257819d39f20811b72b35363113d1aa161aa0a4cea469057688da7bae57ee4e",
+        "publicDatasetFiles": [
+          {
+            "name": "orders-learning.csv",
+            "bytes": 1315,
+            "sha256": "sha256:99b2923bfde4a6a824ed69bb410dc9c9f5d10f69e30b9bc5692ae986c6ab09f9"
+          }
+        ],
+        "publicTestSourcesSha256": [
+          "sha256:b995f2e36844821afb1d30ba4d3efae72732072a0a0d3f7985056955e40748e6"
+        ],
+        "submission": "public starterCode",
+        "submissionSha256": "sha256:7ec8410d2f2221f7d7380c280f9911fea5480206ee8c0d34bbd1ee75afbd82c6"
+      },
+      "inputSha256": "sha256:b887e56f477890ead88078e4601a12152eb6804b75c1605c5e0b734bf1095c12",
+      "activityId": "act-types",
+      "profileRevision": 3,
+      "nodeRuns": [
+        {
+          "repeat": 1,
+          "elapsedMs": 2056.765,
+          "executionStatus": "completed",
+          "verdict": "fail",
+          "score": 0,
+          "errorKind": "learner",
+          "errorCode": "test_failed",
+          "evaluatorVersion": "node-python-evaluator-w3-c1",
+          "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+          "assetBundleHash": "sha256:961537a84d162ee575da4348647553dafa916c2de048e6405e0c894b7f70bca7"
+        },
+        {
+          "repeat": 2,
+          "elapsedMs": 1847.668,
+          "executionStatus": "completed",
+          "verdict": "fail",
+          "score": 0,
+          "errorKind": "learner",
+          "errorCode": "test_failed",
+          "evaluatorVersion": "node-python-evaluator-w3-c1",
+          "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+          "assetBundleHash": "sha256:961537a84d162ee575da4348647553dafa916c2de048e6405e0c894b7f70bca7"
+        },
+        {
+          "repeat": 3,
+          "elapsedMs": 1924.692,
+          "executionStatus": "completed",
+          "verdict": "fail",
+          "score": 0,
+          "errorKind": "learner",
+          "errorCode": "test_failed",
+          "evaluatorVersion": "node-python-evaluator-w3-c1",
+          "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+          "assetBundleHash": "sha256:961537a84d162ee575da4348647553dafa916c2de048e6405e0c894b7f70bca7"
+        }
+      ],
+      "nodeFieldsIdentical": true,
+      "pyodide": {
+        "status": "NOT_RUN",
+        "errorCode": "PYODIDE_CANDIDATE_UNAVAILABLE"
+      },
+      "adapterVersion": "node-python-evaluator-w3-c1",
+      "evaluatorVersion": "node-python-evaluator-w3-c1",
+      "outputSensitiveFields": []
+    },
+    {
+      "stableInputId": "public-act-types-2",
+      "inputSource": "revision-3-public-execution-bundle",
+      "inputContentSummary": {
+        "activityId": "act-types",
+        "profileRevision": 3,
+        "runId": "w5-d3-act-types-8",
+        "publicBundleHash": "sha256:e154badd3ce60f6803588817ba61dbf49c47027c616f86b1cd9f378c12b4e286",
+        "publicDatasetFiles": [
+          {
+            "name": "orders-learning.csv",
+            "bytes": 1315,
+            "sha256": "sha256:99b2923bfde4a6a824ed69bb410dc9c9f5d10f69e30b9bc5692ae986c6ab09f9"
+          }
+        ],
+        "publicTestSourcesSha256": [
+          "sha256:b995f2e36844821afb1d30ba4d3efae72732072a0a0d3f7985056955e40748e6"
+        ],
+        "submission": "public starterCode with deterministic syntax-error suffix",
+        "submissionSha256": "sha256:395d90c3e3c71afab3b2c73b155b545e8a3b77c1a14ffb8fd0e79b05601c3ed0"
+      },
+      "inputSha256": "sha256:aeda294db928875d52982a9b744a237f4557966027e1d2539fae6d45e9f9aaed",
+      "activityId": "act-types",
+      "profileRevision": 3,
+      "nodeRuns": [
+        {
+          "repeat": 1,
+          "elapsedMs": 131.059,
+          "executionStatus": "completed",
+          "verdict": "fail",
+          "score": 0,
+          "errorKind": "learner",
+          "errorCode": "syntax_error",
+          "evaluatorVersion": "node-python-evaluator-w3-c1",
+          "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+          "assetBundleHash": "sha256:961537a84d162ee575da4348647553dafa916c2de048e6405e0c894b7f70bca7"
+        },
+        {
+          "repeat": 2,
+          "elapsedMs": 319.032,
+          "executionStatus": "completed",
+          "verdict": "fail",
+          "score": 0,
+          "errorKind": "learner",
+          "errorCode": "syntax_error",
+          "evaluatorVersion": "node-python-evaluator-w3-c1",
+          "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+          "assetBundleHash": "sha256:961537a84d162ee575da4348647553dafa916c2de048e6405e0c894b7f70bca7"
+        },
+        {
+          "repeat": 3,
+          "elapsedMs": 135.782,
+          "executionStatus": "completed",
+          "verdict": "fail",
+          "score": 0,
+          "errorKind": "learner",
+          "errorCode": "syntax_error",
+          "evaluatorVersion": "node-python-evaluator-w3-c1",
+          "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+          "assetBundleHash": "sha256:961537a84d162ee575da4348647553dafa916c2de048e6405e0c894b7f70bca7"
+        }
+      ],
+      "nodeFieldsIdentical": true,
+      "pyodide": {
+        "status": "NOT_RUN",
+        "errorCode": "PYODIDE_CANDIDATE_UNAVAILABLE"
+      },
+      "adapterVersion": "node-python-evaluator-w3-c1",
+      "evaluatorVersion": "node-python-evaluator-w3-c1",
+      "outputSensitiveFields": []
+    },
+    {
+      "stableInputId": "public-act-practical-1",
+      "inputSource": "revision-3-public-execution-bundle",
+      "inputContentSummary": {
+        "activityId": "act-practical",
+        "profileRevision": 3,
+        "runId": "w5-d3-act-practical-9",
+        "publicBundleHash": "sha256:9948de464aaf660c296de5de2a9fe4a2cbcbca16f78b9e60c7d51f340199dc17",
+        "publicDatasetFiles": [
+          {
+            "name": "orders-learning.csv",
+            "bytes": 1315,
+            "sha256": "sha256:99b2923bfde4a6a824ed69bb410dc9c9f5d10f69e30b9bc5692ae986c6ab09f9"
+          }
+        ],
+        "publicTestSourcesSha256": [
+          "sha256:acaa0a8141a2d300452dd4bb786376da5b227c339f897325a20e4a359a0b3906"
+        ],
+        "submission": "public starterCode",
+        "submissionSha256": "sha256:ceb0fd12de5f0772764af7c10863f15b9d27d4d97c4102eafc9c10b2419677ef"
+      },
+      "inputSha256": "sha256:001865a96596abe504a3d7371636399b850b5c26c542e4deda19424c73b6933f",
+      "activityId": "act-practical",
+      "profileRevision": 3,
+      "nodeRuns": [
+        {
+          "repeat": 1,
+          "elapsedMs": 1185.529,
+          "executionStatus": "completed",
+          "verdict": "fail",
+          "score": 0,
+          "errorKind": "learner",
+          "errorCode": "runtime_error",
+          "evaluatorVersion": "node-python-evaluator-w3-c1",
+          "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+          "assetBundleHash": "sha256:9b2e23b14653273873896cfdcac01a7d39d57928d25901ce80ba072ea9ebb4ec"
+        },
+        {
+          "repeat": 2,
+          "elapsedMs": 950.628,
+          "executionStatus": "completed",
+          "verdict": "fail",
+          "score": 0,
+          "errorKind": "learner",
+          "errorCode": "runtime_error",
+          "evaluatorVersion": "node-python-evaluator-w3-c1",
+          "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+          "assetBundleHash": "sha256:9b2e23b14653273873896cfdcac01a7d39d57928d25901ce80ba072ea9ebb4ec"
+        },
+        {
+          "repeat": 3,
+          "elapsedMs": 1164.444,
+          "executionStatus": "completed",
+          "verdict": "fail",
+          "score": 0,
+          "errorKind": "learner",
+          "errorCode": "runtime_error",
+          "evaluatorVersion": "node-python-evaluator-w3-c1",
+          "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+          "assetBundleHash": "sha256:9b2e23b14653273873896cfdcac01a7d39d57928d25901ce80ba072ea9ebb4ec"
+        }
+      ],
+      "nodeFieldsIdentical": true,
+      "pyodide": {
+        "status": "NOT_RUN",
+        "errorCode": "PYODIDE_CANDIDATE_UNAVAILABLE"
+      },
+      "adapterVersion": "node-python-evaluator-w3-c1",
+      "evaluatorVersion": "node-python-evaluator-w3-c1",
+      "outputSensitiveFields": []
+    },
+    {
+      "stableInputId": "public-act-practical-2",
+      "inputSource": "revision-3-public-execution-bundle",
+      "inputContentSummary": {
+        "activityId": "act-practical",
+        "profileRevision": 3,
+        "runId": "w5-d3-act-practical-10",
+        "publicBundleHash": "sha256:6ce0746e4d3bc942d368cd06664a106621a259bdd912875d38d7c9b45818ecf3",
+        "publicDatasetFiles": [
+          {
+            "name": "orders-learning.csv",
+            "bytes": 1315,
+            "sha256": "sha256:99b2923bfde4a6a824ed69bb410dc9c9f5d10f69e30b9bc5692ae986c6ab09f9"
+          }
+        ],
+        "publicTestSourcesSha256": [
+          "sha256:acaa0a8141a2d300452dd4bb786376da5b227c339f897325a20e4a359a0b3906"
+        ],
+        "submission": "public starterCode with deterministic syntax-error suffix",
+        "submissionSha256": "sha256:4f9275bab4ab80a3a3c71ecb9aa6e9d430286601e2813a78db379fe2bbde84c0"
+      },
+      "inputSha256": "sha256:85ed9f80412975e357f59f8e3a1f7a81c76c710ad7a9c4c69314aef01cce1ee7",
+      "activityId": "act-practical",
+      "profileRevision": 3,
+      "nodeRuns": [
+        {
+          "repeat": 1,
+          "elapsedMs": 194.7,
+          "executionStatus": "completed",
+          "verdict": "fail",
+          "score": 0,
+          "errorKind": "learner",
+          "errorCode": "syntax_error",
+          "evaluatorVersion": "node-python-evaluator-w3-c1",
+          "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+          "assetBundleHash": "sha256:9b2e23b14653273873896cfdcac01a7d39d57928d25901ce80ba072ea9ebb4ec"
+        },
+        {
+          "repeat": 2,
+          "elapsedMs": 310.432,
+          "executionStatus": "completed",
+          "verdict": "fail",
+          "score": 0,
+          "errorKind": "learner",
+          "errorCode": "syntax_error",
+          "evaluatorVersion": "node-python-evaluator-w3-c1",
+          "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+          "assetBundleHash": "sha256:9b2e23b14653273873896cfdcac01a7d39d57928d25901ce80ba072ea9ebb4ec"
+        },
+        {
+          "repeat": 3,
+          "elapsedMs": 135.822,
+          "executionStatus": "completed",
+          "verdict": "fail",
+          "score": 0,
+          "errorKind": "learner",
+          "errorCode": "syntax_error",
+          "evaluatorVersion": "node-python-evaluator-w3-c1",
+          "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+          "assetBundleHash": "sha256:9b2e23b14653273873896cfdcac01a7d39d57928d25901ce80ba072ea9ebb4ec"
+        }
+      ],
+      "nodeFieldsIdentical": true,
+      "pyodide": {
+        "status": "NOT_RUN",
+        "errorCode": "PYODIDE_CANDIDATE_UNAVAILABLE"
+      },
+      "adapterVersion": "node-python-evaluator-w3-c1",
+      "evaluatorVersion": "node-python-evaluator-w3-c1",
+      "outputSensitiveFields": []
+    }
+  ]
+}

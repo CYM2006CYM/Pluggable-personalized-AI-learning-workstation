@@ -1,0 +1,74 @@
+{
+  "schemaVersion": "w4-d4-e-v4-summary-v2",
+  "baselineCommit": "a896c4b219cccb0da256fdf7e5d1cb96ba41f7b4",
+  "candidateConclusion": "READY_FOR_OWNER_REVIEW_WITH_LIMITATIONS",
+  "gates": [
+    {
+      "gate": "V4-1",
+      "status": "PASS",
+      "basis": "Illegal quiz shapes, full-answer enforcement and deterministic grading passed in the 13-file/78-test affected regression."
+    },
+    {
+      "gate": "V4-2",
+      "status": "PASS",
+      "basis": "Invalid schema, timeout, provider error and fallback degradation passed without authoritative state mutation."
+    },
+    {
+      "gate": "V4-3",
+      "status": "PASS",
+      "basis": "Generator-Hunter-Defender-Judge ordering, high-risk review and authority rejection passed in D regressions and E's independent recording audit."
+    },
+    {
+      "gate": "V4-4",
+      "status": "PASS",
+      "basis": "Capability projection remains bound to formal Evidence, retains unverified dimensions and preserves prior state after provider failure."
+    },
+    {
+      "gate": "V4-5",
+      "status": "PASS",
+      "basis": "Recommended and chapter real HTTP trajectories pass from empty temporary data through diagnostic draft, path confirmation, quiz open/submit, Bootstrap refresh and getNextStep continuation."
+    },
+    {
+      "gate": "V4-6",
+      "status": "PASS",
+      "basis": "HTTP opening output, DOM assertions, production bundle, logs, Agent context and Vite direct-access tests contain no private asset, secret or host-path exposure to the browser."
+    },
+    {
+      "gate": "V4-7",
+      "status": "PASS",
+      "basis": "Fourteen sealed recordings cover six required classes; hashes, review order, fallback markers and authority rejection were independently recomputed. Online model remains LIVE_NOT_RUN."
+    },
+    {
+      "gate": "V4-8",
+      "status": "PASS",
+      "basis": "All six revision 3 core points independently pass card binding, fixed 4-question opening, zero opening leakage, recomputable scoring, pass/fail, new disjoint retry, insufficient-without-Evidence and answerReview allowlist assertions."
+    }
+  ],
+  "environment": {
+    "status": "PASS",
+    "expected": { "node": "v22.23.1", "npm": "10.9.8", "python": "3.13.7", "pandas": "3.0.5", "PYTHONNOUSERSITE": "1" },
+    "observed": { "node": "v22.23.1", "npm": "10.9.8", "python": "3.13.7", "pandas": "3.0.5", "dateutil": "2.9.0.post0", "PYTHONNOUSERSITE": "1" },
+    "nodeChildPython": "D:/<audit-root>/toolchains/python-3.13.7/python.exe",
+    "fullTest": { "status": "PASS", "testFilesPassed": 85, "testsPassed": 738, "testsSkipped": 1 },
+    "verify": "PASS",
+    "historicalMismatch": {
+      "status": "ENVIRONMENT_MISMATCH_RETAINED",
+      "testsFailed": 26,
+      "evidence": "history/environment-mismatch-20260816/command-results.json"
+    }
+  },
+  "browser": {
+    "status": "PARTIAL_FIXED_PORT_BLOCKED",
+    "errorRecoveryState": "PASS_DESKTOP_AND_MOBILE",
+    "normalRealApiState": "NOT_RUN",
+    "reason": "127.0.0.1:4310 was occupied by external QQ.exe PID 10840; E did not terminate it or drift the contract port.",
+    "desktop": { "width": 1440, "height": 1000, "rootChildren": 1, "noHorizontalOverflow": true },
+    "mobile": { "width": 390, "height": 844, "rootChildren": 1, "noHorizontalOverflow": true }
+  },
+  "auditInputStatus": "AUDIT_INPUT_INCOMPLETE",
+  "liveModelStatus": "LIVE_NOT_RUN",
+  "w4GoClaimed": false,
+  "notCommitted": true,
+  "notPushed": true,
+  "uploadLock": "NOT_REQUESTED"
+}

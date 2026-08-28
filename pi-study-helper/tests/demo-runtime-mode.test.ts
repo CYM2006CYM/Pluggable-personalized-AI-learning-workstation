@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { resolveDemoModelMode } from "../src/demo/runtime-mode.js";
+import { PRODUCTION_REVIEW_ENGINE } from "../src/demo/composition-root.js";
 
 const liveEnv = {
   OPENAI_MODEL: "deepseek-chat",
@@ -8,6 +9,10 @@ const liveEnv = {
 };
 
 describe("demo model mode", () => {
+  it("wires one production review engine; the legacy orchestrator is compatibility-only", () => {
+    expect(PRODUCTION_REVIEW_ENGINE).toBe("adaptive-content-service");
+  });
+
   it("keeps the normal demo deterministic without host model configuration", () => {
     expect(resolveDemoModelMode(["node", "launcher.js"], {})).toBe("recorded_response");
   });

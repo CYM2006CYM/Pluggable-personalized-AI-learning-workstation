@@ -37,7 +37,7 @@
       "schemaStatus": "implemented",
       "normal": {
         "input": { "artifactId": "artifact-1", "disputedIssueIds": ["issue-1"] },
-        "output": { "defenseSummary": "The registered source supports the candidate.", "acceptedIssueIds": ["issue-1"], "rebuttedIssueIds": [], "residualRisks": [] }
+        "output": { "defenseSummary": "The registered source supports the candidate.", "issueAssessments": [{ "issueId": "issue-1", "position": "rebutted", "rationale": "The registered source directly supports the candidate statement.", "sourceAnchorIds": ["source-public-1"], "residualRisk": null }] }
       },
       "failure": { "status": "invalid_output", "errorCode": "invalid_json" },
       "timeout": { "status": "timeout", "errorCode": "timeout" }
@@ -47,7 +47,7 @@
       "schemaStatus": "implemented",
       "normal": {
         "input": { "artifactId": "artifact-1", "issueIds": [] },
-        "output": { "verdict": "accepted", "finalSafeFeedback": "The checked feedback is available.", "summary": "All deterministic checks passed.", "blockedIssueIds": [] }
+        "output": { "verdict": "accepted", "finalSafeFeedback": "The checked feedback is available.", "summary": "All deterministic checks passed.", "issueDecisions": [], "additionalIssues": [], "blockedIssueIds": [] }
       },
       "failure": { "status": "provider_error", "errorCode": "provider_error" },
       "timeout": { "status": "timeout", "errorCode": "timeout" }

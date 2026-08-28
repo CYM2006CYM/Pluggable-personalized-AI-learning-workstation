@@ -1,0 +1,55 @@
+{
+  "schemaVersion": "w4-d4-e-input-binding-v2",
+  "checkedAt": "2026-08-16T07:13:12.725Z",
+  "head": "a896c4b219cccb0da256fdf7e5d1cb96ba41f7b4",
+  "originMain": "a896c4b219cccb0da256fdf7e5d1cb96ba41f7b4",
+  "fetchStatus": "FETCHED_AND_EQUAL",
+  "auditInputStatus": "AUDIT_INPUT_INCOMPLETE",
+  "missingInputs": [
+    {
+      "path": "团队协作参考/审计后一次性整改提示词编写规范.md",
+      "status": "NOT_FOUND_AFTER_REPOSITORY_AND_ATTACHMENT_SEARCH",
+      "impact": "PROCESS_GUIDANCE_ONLY; no V4 runtime assertion depends on this missing document"
+    }
+  ],
+  "formalCommits": {
+    "A": "4c52eb7c78fa80007aa9a8ab4e00768d71d3f3f5",
+    "B": "56398ab5f44283e9c10b6d66ec2f0732cc043790",
+    "D": "dc1693e5bfcc0bed226ff0f20613fc4b2ec88681",
+    "C": "a896c4b219cccb0da256fdf7e5d1cb96ba41f7b4"
+  },
+  "sealedInputs": {
+    "revisionSealSha256": "e147c440b3f7dfcab84ebc816862ccae2aa45172fa6dd5545574b75e7ff6bb28",
+    "revisionSealEntryCount": 78,
+    "assetTreeSha256": "d1438022a49f83df20fa865443c36f4c3442856c8b679aac989de9e61a3feb30",
+    "recordedResponsesSha256": "4dc9fae61d7d179947fe24ed661b5a6826484f9c27e79a0b2fc39a55a186061c",
+    "recordingCount": 14,
+    "endpointStatusMatrixSha256": "183c8bef60f5aec00256f7296c08ec146e77be8f5ede78f5604cb05408fecdc5"
+  },
+  "contractObservations": [
+    {
+      "id": "OPTIONAL_REVIEW_TIMELINE_NOT_PROVIDED",
+      "status": "NOT_PROVIDED",
+      "classification": "OPTIONAL_FIELD; NOT_AN_A_CONTRACT_VIOLATION",
+      "evidence": "The learning page consumes the field only when present and otherwise renders NOT_PROVIDED."
+    },
+    {
+      "id": "BOOTSTRAP_EVIDENCE_VERSION_NOT_FROZEN",
+      "status": "SCENARIO_NOT_REPLAYABLE_AFTER_REFRESH",
+      "classification": "CURRENT_SAFE_DTO_SCOPE; NOT_AN_A_CONTRACT_VIOLATION",
+      "evidence": "The path page preserves the server path and disables replan after refresh instead of fabricating evidenceVersion."
+    },
+    {
+      "id": "COMPLETED_SUMMARY_NOT_FROZEN",
+      "status": "ACTIVITY_PROGRESS_ONLY_RECOVERABLE",
+      "classification": "CURRENT_SAFE_DTO_SCOPE; NOT_AN_A_CONTRACT_VIOLATION",
+      "evidence": "The summary page shows recoverable activity facts and does not claim replay of CompleteSessionOutput or full KnowledgeState."
+    },
+    {
+      "id": "QUIZ_ATTEMPT_QUESTION_RECOVERY",
+      "status": "VERIFIED",
+      "classification": "EXISTING_API_REPLAY",
+      "evidence": "Bootstrap currentAttempt -> getNextStep -> openActivity returns the same attemptId and identical questionIds for a draft refresh."
+    }
+  ]
+}

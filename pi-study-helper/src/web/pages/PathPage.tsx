@@ -49,9 +49,45 @@ function diagnosticPathNotice(states: readonly KnowledgeState[], nodes: readonly
   const supportNeeded = states.filter((state) => state.status === "support_needed" || state.status === "learning" || state.status === "unverified").length;
   const ready = states.filter((state) => state.status === "ready").length;
   const mastered = states.filter((state) => state.status === "mastered").length;
-  const skipped = nodes.filter((node) => node.status === "skipped").length;
+  // A diagnostic skip can retain the mandatory final practical activity. Such
+  // a node is intentionally not `status: skipped`, but its teaching content
+  // is still skipped and must be counted in the learner-facing summary.
+  const skipped = nodes.filter((node) => node.reasonCodes.includes("diagnostic_skip_selected")).length;
   const optional = states.filter((state) => state.diagnosticSkipEligible === true).length;
-  return `本次诊断形成 ${states.length} 个知识状态：${supportNeeded} 个需要支持，${ready} 个已有基础，${mastered} 个已充分掌握；${optional} 个模块通过两类客观诊断证据，可由你决定是否跳过；当前路径跳过 ${skipped} 个节点。`;
+  return `本次诊断形成 ${states.length} 个知识状态：${supportNeeded} 个需要支持，${ready} 个已有基础，${mastered} 个已充分掌握；${optional} 个模块通过两类客观诊断证据，可由你决定是否跳过；当前路径已选择跳过 ${skipped} 个章节教学。`;
+}
+
+function statusLabel(node: PathCandidateOutput["nodes"][number]): string {
+  if (node.reasonCodes.includes("diagnostic_skip_selected")) {
+    return node.status === "skipped" ? "已跳过" : "已跳过教学（保留实操）";
+  }
+  return STATUS_LABELS[node.status];
+}
+
+/**
+ * The path engine may mark several independent nodes as available after a
+ * diagnostic skip. The learner-facing path is still walked in order, so only
+ * the first unfinished node may advertise "可以开始".
+ */
+function projectSequentialPathNodes<T extends PathCandidateOutput["nodes"][number]>(nodes: readonly T[]): T[] {
+  let startableClaimed = false;
+  let blockedByPrerequisite = false;
+  return nodes.map((node) => {
+    if (node.status === "skipped" || node.status === "completed") return node;
+    if (node.status === "in_progress") {
+      blockedByPrerequisite = true;
+      return node;
+    }
+    if (node.status === "locked") {
+      blockedByPrerequisite = true;
+      return node;
+    }
+    if (node.status === "available" && !startableClaimed && !blockedByPrerequisite) {
+      startableClaimed = true;
+      return node;
+    }
+    return { ...node, status: "locked" as const };
+  });
 }
 
 export function PathPage() {
@@ -86,6 +122,7 @@ export function PathPage() {
   const path = replanned !== undefined
     ? { pathId: replanned.pathId, pathVersion: replanned.pathVersion, status: "active" as const, nodes: replanned.nodes }
     : confirmedPath ?? (serverPathIsAuthoritative ? serverPath : candidatePath ?? serverPath);
+  const displayNodes = path === undefined ? [] : projectSequentialPathNodes(path.nodes);
   const active = path?.status === "active" || path?.status === "confirmed" || path?.status === "completed";
   const evidenceVersion = routeState.evidenceVersion ?? session?.evidenceVersion;
   const knowledgeStates = routeState.knowledgeStates ?? session?.knowledgeStates ?? [];
@@ -153,7 +190,7 @@ export function PathPage() {
           </div>
           <p className="notice-line diagnostic-path-notice">{diagnosticPathNotice(knowledgeStates, path.nodes)}</p>
           <ol className="path-list">
-            {path.nodes.map((node, index) => (
+            {displayNodes.map((node, index) => (
               <li className={`path-node ${node.status}`} key={node.nodeId} style={{ minHeight: STABLE_LAYOUT.pathNodeMinHeight }}>
                 <span className="path-sequence">{String(index + 1).padStart(2, "0")}</span>
                 <div className="path-node-main">
@@ -161,7 +198,7 @@ export function PathPage() {
                   <span>{arrangementText(node, knowledgeStates)}</span>
                   <small>{difficultyLabel(node.difficulty)} · {SCAFFOLD_LABELS[node.scaffold]} · {node.required ? "本次目标要求" : "可选巩固"}</small>
                 </div>
-                <div className="path-node-meta"><span>{node.estimatedMinutes}分钟</span><strong>{STATUS_LABELS[node.status]}</strong></div>
+                <div className="path-node-meta"><span>{node.estimatedMinutes}分钟</span><strong>{statusLabel(node)}</strong></div>
               </li>
             ))}
           </ol>

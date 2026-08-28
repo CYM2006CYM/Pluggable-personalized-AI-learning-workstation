@@ -1,0 +1,157 @@
+{
+  "schemaVersion": 1,
+  "contract": "W5-C1/W5-R1",
+  "generatedAt": "2026-08-28T03:55:11.438Z",
+  "records": [
+    {
+      "id": "timeout",
+      "inputSha256": "sha256:91745116b1a39efe1a08e889687acb8a96958d5312b7a55c399d989c5d2101f9",
+      "startedAt": "2026-08-28T03:54:46.842Z",
+      "endedAt": "2026-08-28T03:54:51.700Z",
+      "elapsedMs": 4857.773,
+      "result": {
+        "executionStatus": "completed",
+        "verdict": "fail",
+        "score": 0,
+        "errorKind": "learner",
+        "errorCode": "timeout",
+        "evaluatorVersion": "node-python-evaluator-w3-c1",
+        "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+        "assetBundleHash": "sha256:9b2e23b14653273873896cfdcac01a7d39d57928d25901ce80ba072ea9ebb4ec"
+      },
+      "noAuthoritativeRepositoryDependency": true,
+      "noSensitiveOutput": true
+    },
+    {
+      "id": "output-flood",
+      "inputSha256": "sha256:619a78eccce8f51bc879edd45e07139f47238ac9cb06544f3117a51a363e9cfe",
+      "startedAt": "2026-08-28T03:54:52.709Z",
+      "endedAt": "2026-08-28T03:54:53.748Z",
+      "elapsedMs": 1038.632,
+      "result": {
+        "executionStatus": "completed",
+        "verdict": "fail",
+        "score": 0,
+        "errorKind": "learner",
+        "errorCode": "output_limit",
+        "evaluatorVersion": "node-python-evaluator-w3-c1",
+        "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+        "assetBundleHash": "sha256:9b2e23b14653273873896cfdcac01a7d39d57928d25901ce80ba072ea9ebb4ec"
+      },
+      "noAuthoritativeRepositoryDependency": true,
+      "noSensitiveOutput": true
+    },
+    {
+      "id": "temp-cleanup",
+      "inputSha256": "sha256:fa24f298a784a32a0b79d615c22faddef1ff2f34ed90de858e234ac48cfeb35a",
+      "startedAt": "2026-08-28T03:54:54.620Z",
+      "endedAt": "2026-08-28T03:54:56.719Z",
+      "elapsedMs": 2099.719,
+      "result": {
+        "executionStatus": "completed",
+        "verdict": "partial",
+        "score": 0.1,
+        "errorKind": "learner",
+        "errorCode": "test_failed",
+        "evaluatorVersion": "node-python-evaluator-w3-c1",
+        "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+        "assetBundleHash": "sha256:9b2e23b14653273873896cfdcac01a7d39d57928d25901ce80ba072ea9ebb4ec"
+      },
+      "noAuthoritativeRepositoryDependency": true,
+      "noSensitiveOutput": true
+    },
+    {
+      "id": "disk-write-failure",
+      "inputSha256": "sha256:fa24f298a784a32a0b79d615c22faddef1ff2f34ed90de858e234ac48cfeb35a",
+      "startedAt": "2026-08-28T03:54:57.655Z",
+      "endedAt": "2026-08-28T03:54:57.656Z",
+      "elapsedMs": 0.638,
+      "result": {
+        "executionStatus": "failed",
+        "verdict": "not_graded",
+        "score": null,
+        "errorKind": "evaluator",
+        "errorCode": "evaluator_error",
+        "evaluatorVersion": "node-python-evaluator-w3-c1",
+        "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+        "assetBundleHash": "sha256:9b2e23b14653273873896cfdcac01a7d39d57928d25901ce80ba072ea9ebb4ec"
+      },
+      "noAuthoritativeRepositoryDependency": true,
+      "noSensitiveOutput": true
+    },
+    {
+      "id": "windows-process-tree",
+      "inputSha256": "sha256:fa24f298a784a32a0b79d615c22faddef1ff2f34ed90de858e234ac48cfeb35a",
+      "startedAt": "2026-08-28T03:54:58.610Z",
+      "endedAt": "2026-08-28T03:55:03.255Z",
+      "elapsedMs": 4645.033,
+      "result": {
+        "executionStatus": "completed",
+        "verdict": "fail",
+        "score": 0,
+        "errorKind": "learner",
+        "errorCode": "timeout",
+        "evaluatorVersion": "node-python-evaluator-w3-c1",
+        "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+        "assetBundleHash": "sha256:9b2e23b14653273873896cfdcac01a7d39d57928d25901ce80ba072ea9ebb4ec"
+      },
+      "noAuthoritativeRepositoryDependency": true,
+      "noSensitiveOutput": true
+    },
+    {
+      "id": "windows-descendant-check",
+      "descendantPidObserved": true,
+      "descendantTerminated": true
+    },
+    {
+      "id": "idempotent-replay",
+      "inputSha256": "sha256:fa24f298a784a32a0b79d615c22faddef1ff2f34ed90de858e234ac48cfeb35a",
+      "result": {
+        "executionStatus": "completed",
+        "verdict": "partial",
+        "score": 0.1,
+        "errorKind": "learner",
+        "errorCode": "test_failed",
+        "evaluatorVersion": "node-python-evaluator-w3-c1",
+        "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+        "assetBundleHash": "sha256:9b2e23b14653273873896cfdcac01a7d39d57928d25901ce80ba072ea9ebb4ec"
+      },
+      "replayFieldIdentical": true,
+      "conflictErrorCode": "idempotency_conflict",
+      "noDuplicateFacts": true
+    },
+    {
+      "id": "version-conflict-preview",
+      "inputSha256": "sha256:f349942c77569bb586b87d91f15cb4c30073a618a01028e04d68cea8cfc4e3fb",
+      "errorCode": "submission_contract_error",
+      "noEvaluatorStarted": true,
+      "noAuthoritativeFacts": true
+    },
+    {
+      "id": "restart-prepare-rebuild",
+      "inputSha256": "sha256:fa24f298a784a32a0b79d615c22faddef1ff2f34ed90de858e234ac48cfeb35a",
+      "staleResult": {
+        "executionStatus": "failed",
+        "verdict": "not_graded",
+        "score": null,
+        "errorKind": "evaluator",
+        "errorCode": "test_asset_invalid",
+        "evaluatorVersion": "node-python-evaluator-w3-c1",
+        "environmentHash": "unavailable",
+        "assetBundleHash": "unavailable"
+      },
+      "recoveredResult": {
+        "executionStatus": "completed",
+        "verdict": "partial",
+        "score": 0.1,
+        "errorKind": "learner",
+        "errorCode": "test_failed",
+        "evaluatorVersion": "node-python-evaluator-w3-c1",
+        "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+        "assetBundleHash": "sha256:9b2e23b14653273873896cfdcac01a7d39d57928d25901ce80ba072ea9ebb4ec"
+      },
+      "rebuiltPreparedState": true,
+      "noHalfWrite": true
+    }
+  ]
+}

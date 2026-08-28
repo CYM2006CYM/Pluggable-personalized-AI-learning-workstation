@@ -235,7 +235,15 @@ export function AgentPipeline({ run, mode = "snapshot", resourceKind = "quiz", i
 
     <details className="agent-event-log">
       <summary>查看完整安全时间线（{orderedEvents.length}条）</summary>
-      <ol>{orderedEvents.map((event) => <li key={event.eventId}><time>{new Date(event.startedAt).toLocaleTimeString("zh-CN", { hour12: false })}</time><strong>{ROLE_COPY[event.role].shortLabel}</strong><span>{STATUS_COPY[event.status]}</span><p>{event.publicSummary}</p></li>)}</ol>
+      <ol>{orderedEvents.map((event) => {
+        const copy = roleCopy(event.role, resourceKind);
+        return <li key={event.eventId}>
+          <time>{new Date(event.startedAt).toLocaleTimeString("zh-CN", { hour12: false })}</time>
+          <strong>{copy.shortLabel}</strong>
+          <span>{STATUS_COPY[event.status]}</span>
+          <p>{event.publicSummary}</p>
+        </li>;
+      })}</ol>
     </details>
   </section>;
 }

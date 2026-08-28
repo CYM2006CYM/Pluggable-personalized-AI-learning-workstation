@@ -1,0 +1,152 @@
+{
+  "schemaVersion": 1,
+  "contract": "W5-C1/W5-R1",
+  "baselineCommit": "383690831a8b3de42dad58795e71f218678f6fbc",
+  "decisionId": "W5-D64-PYODIDE-1",
+  "decision": {
+    "pyodideDecision": "PYODIDE_DISABLED_WITH_NODE_FALLBACK",
+    "pyodideEnabled": false,
+    "liveModel": "LIVE_NOT_RUN"
+  },
+  "measuredAt": "2026-08-25T12:59:36.826Z",
+  "commands": [
+    {
+      "label": "node-version",
+      "command": "<host-path> --version",
+      "startedAt": "2026-08-25T12:59:35.438Z",
+      "endedAt": "2026-08-25T12:59:35.497Z",
+      "exitCode": 0,
+      "stdoutBytes": 10,
+      "stderrBytes": 0,
+      "stdoutSha256": "e0e2d0f152e51ce057f65c0a3497fece49245608cd2cdffaa3437d6ec835c0cb",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdoutSummary": "v22.23.1",
+      "stderrSummary": ""
+    },
+    {
+      "label": "npm-version",
+      "command": "npm.cmd --version",
+      "startedAt": "2026-08-25T12:59:35.499Z",
+      "endedAt": "2026-08-25T12:59:35.882Z",
+      "exitCode": 0,
+      "stdoutBytes": 7,
+      "stderrBytes": 0,
+      "stdoutSha256": "7eeb2f42ee0d10d4e00355252af2e7468bbff992af43b511355feb76da5c7cfb",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdoutSummary": "10.9.8",
+      "stderrSummary": ""
+    },
+    {
+      "label": "python-pandas-version",
+      "command": "<host-path> -c import json,platform,site,sys,pandas as pd; print(json.dumps({'python':platform.python_version(),'pandas':pd.__version__,'platform':sys.platform,'userSiteEnabled':site.ENABLE_USER_SITE,'pythonnousersite':__import__('os').environ.get('PYTHONNOUSERSITE')}))",
+      "startedAt": "2026-08-25T12:59:35.882Z",
+      "endedAt": "2026-08-25T12:59:36.823Z",
+      "exitCode": 0,
+      "stdoutBytes": 113,
+      "stderrBytes": 0,
+      "stdoutSha256": "075c1352f5f90cccd9a7d53f265bd56d946669d996bc5a71bd31d36bde927dd0",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdoutSummary": "{\"python\": \"3.13.7\", \"pandas\": \"3.0.5\", \"platform\": \"win32\", \"userSiteEnabled\": false, \"pythonnousersite\": \"1\"}",
+      "stderrSummary": ""
+    }
+  ],
+  "environmentEvidenceSha256": "sha256:59917d1528d031f46a1e76359d99628e810f2dfa78a92d66e03386c860fbaf43",
+  "approvedLock": {
+    "environmentId": "env-python-pandas-candidate",
+    "nodeVersion": "v22.23.1",
+    "pythonVersion": "3.13.7",
+    "pandasVersion": "3.0.5",
+    "platform": "win32-10.0.26100-x64",
+    "evaluatorVersion": "node-python-evaluator-w3-c1",
+    "environmentHash": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+    "prototypeEvidenceRef": "scripts/w3-code-evaluation/environment-prototype-evidence.json",
+    "capabilityFlags": {
+      "reliableMemoryLimit": false,
+      "networkIsolation": false,
+      "processTreeTermination": true
+    },
+    "limits": {
+      "wallClockMs": 4000,
+      "stdoutBytes": 8192,
+      "stderrBytes": 8192,
+      "sourceBytes": 8000,
+      "datasetBytes": 65536
+    },
+    "pyodideVersion": null
+  },
+  "pyodide": {
+    "status": "NOT_RUN",
+    "errorCode": "PYODIDE_CANDIDATE_UNAVAILABLE",
+    "measured": false,
+    "reason": "负责人裁决关闭Pyodide；Node正式路径独立测量，不复制Node结果。"
+  },
+  "fieldDecisions": {
+    "nodeVersion": {
+      "value": "v22.23.1",
+      "command": "node --version",
+      "proven": true
+    },
+    "pythonVersion": {
+      "value": "3.13.7",
+      "command": "python -c platform.python_version",
+      "proven": true
+    },
+    "pandasVersion": {
+      "value": "3.0.5",
+      "command": "python -c pandas.__version__",
+      "proven": true
+    },
+    "platform": {
+      "value": "win32-10.0.26100-x64",
+      "command": "python -c sys.platform; Windows build recorded separately and is not a D47 rejection key",
+      "proven": true
+    },
+    "evaluatorVersion": {
+      "value": "node-python-evaluator-w3-c1",
+      "command": "formal adapter result.evaluatorVersion",
+      "proven": true
+    },
+    "environmentHash": {
+      "value": "sha256:9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76",
+      "command": "sha256(environment-lock.json canonical contract)",
+      "proven": true
+    },
+    "prototypeEvidenceRef": {
+      "value": "scripts/w3-code-evaluation/environment-prototype-evidence.json",
+      "command": "approved lock reference",
+      "proven": true
+    },
+    "pyodideVersion": {
+      "value": null,
+      "command": "负责人裁决 W5-D64-PYODIDE-1",
+      "proven": true
+    },
+    "capabilityFlags": {
+      "value": {
+        "reliableMemoryLimit": false,
+        "networkIsolation": false,
+        "processTreeTermination": true
+      },
+      "command": "approved lock plus existing process-tree evidence",
+      "proven": true
+    },
+    "limits": {
+      "value": {
+        "wallClockMs": 4000,
+        "stdoutBytes": 8192,
+        "stderrBytes": 8192,
+        "sourceBytes": 8000,
+        "datasetBytes": 65536
+      },
+      "command": "approved lock plus existing runner thresholds",
+      "proven": true
+    }
+  },
+  "status": "MEASURED_NODE_MATCHES_APPROVED_LOCK",
+  "constraints": [
+    "未修改Profile环境锁或revision seal",
+    "未安装依赖",
+    "未运行Pyodide",
+    "不得写measured_dual_backend"
+  ]
+}

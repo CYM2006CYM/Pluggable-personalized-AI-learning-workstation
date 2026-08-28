@@ -52,7 +52,7 @@
     "probe:sdk-agent": "node scripts/run-sdk-agent-probe.mjs"
   },
   "dependencies": {
-    "pi-loop-graph-sdk": "github:0liveiraaa/pi-loop-graph-sdk#401d3e9",
+    "pi-loop-graph-sdk": "git+https://github.com/0liveiraaa/pi-loop-graph-sdk.git#401d3e9bfa49e630196caefbabd732a3209b17a0",
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "react-router-dom": "7.18.2",

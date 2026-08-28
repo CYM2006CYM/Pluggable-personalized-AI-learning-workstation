@@ -64,7 +64,7 @@ export function createLiveModelExecutionPort(options: LiveModelExecutionPortOpti
   const model = modelRegistry.find(PROVIDER_ID, modelId);
   if (model === undefined) throw new Error("live model registration failed");
   const createHost = options.createHost ?? createPiGraphHost;
-  const executor: IsolatedGraphExecutor = async (graph, input) => {
+  const executor: IsolatedGraphExecutor = async (graph, input, signal) => {
     const host: GraphHost = await createHost({
       cwd: options.cwd,
       authStorage,
@@ -75,7 +75,7 @@ export function createLiveModelExecutionPort(options: LiveModelExecutionPortOpti
       graphs: options.graphs,
     });
     try {
-      return await host.execute(graph, input as never) as GraphRunResult;
+      return await host.execute(graph, input as never, signal === undefined ? undefined : { signal }) as GraphRunResult;
     } finally {
       await host.dispose();
     }

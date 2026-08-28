@@ -12,6 +12,7 @@ import {
 export type IsolatedGraphExecutor = (
   graph: Graph,
   input: Record<string, unknown>,
+  signal?: AbortSignal,
 ) => Promise<GraphRunResult>;
 
 export interface IsolatedGraphExecutorOptions {
@@ -64,13 +65,19 @@ export function createIsolatedGraphExecutor(
     graphs: options.graphs,
   };
 
-  return async (graph, input) => {
+  return async (graph, input, operationSignal) => {
     const host = await createHost(hostOptions);
     try {
+      const contextSignal = ctx.signal;
+      const signal = contextSignal === undefined
+        ? operationSignal
+        : operationSignal === undefined
+          ? contextSignal
+          : AbortSignal.any([contextSignal, operationSignal]);
       return await host.execute(
         graph,
         toGraphInput(input) as never,
-        { signal: ctx.signal },
+        signal === undefined ? undefined : { signal },
       ) as GraphRunResult;
     } finally {
       await host.dispose();

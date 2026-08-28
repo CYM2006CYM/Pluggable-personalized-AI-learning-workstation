@@ -1,0 +1,285 @@
+{
+  "schemaVersion": "w4-d4-e-command-results-v1",
+  "generatedAt": "2026-08-16T07:29:13.073Z",
+  "baselineCommit": "a896c4b219cccb0da256fdf7e5d1cb96ba41f7b4",
+  "commandCount": 12,
+  "nonzeroExitCount": 0,
+  "commands": [
+    {
+      "id": "environment-contract",
+      "command": "node scripts/w4-e-validation/environment-probe.mjs",
+      "workingDirectory": "D:\\.A_C_code\\PPALW\\Pluggable-personalized-AI-learning-workstation\\pi-study-helper",
+      "startedAt": "2026-08-16T07:24:29.666Z",
+      "completedAt": "2026-08-16T07:24:30.332Z",
+      "durationMs": 666,
+      "exitCode": 0,
+      "observedCounts": {
+        "testFilesFailed": 0,
+        "testFilesPassed": null,
+        "testsFailed": 0,
+        "testsPassed": null,
+        "testsSkipped": 0,
+        "markdownLinksValidated": null
+      },
+      "stdoutSha256": "ed9a258904aa75b8c470bf451a09b99a3f7cd7922f4b575c9a32963a5dd3d3ae",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "rawLogs": [
+        "raw/environment-contract.stdout.log",
+        "raw/environment-contract.stderr.log"
+      ]
+    },
+    {
+      "id": "test-web",
+      "command": "npm.cmd run test:web -- --maxWorkers=1",
+      "workingDirectory": "D:\\.A_C_code\\PPALW\\Pluggable-personalized-AI-learning-workstation\\pi-study-helper",
+      "startedAt": "2026-08-16T07:24:30.334Z",
+      "completedAt": "2026-08-16T07:24:40.274Z",
+      "durationMs": 9940,
+      "exitCode": 0,
+      "observedCounts": {
+        "testFilesFailed": 0,
+        "testFilesPassed": 11,
+        "testsFailed": 0,
+        "testsPassed": 69,
+        "testsSkipped": 0,
+        "markdownLinksValidated": null
+      },
+      "stdoutSha256": "8f4e830530966c9bef9cbb78709d6ede3cf73cc352d1b6c54e6aebb08a4fb4c1",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "rawLogs": [
+        "raw/test-web.stdout.log",
+        "raw/test-web.stderr.log"
+      ]
+    },
+    {
+      "id": "real-api-trajectories",
+      "command": "npm.cmd test -- --run tests/web/real-api.test.ts --maxWorkers=1",
+      "workingDirectory": "D:\\.A_C_code\\PPALW\\Pluggable-personalized-AI-learning-workstation\\pi-study-helper",
+      "startedAt": "2026-08-16T07:24:40.274Z",
+      "completedAt": "2026-08-16T07:24:45.824Z",
+      "durationMs": 5550,
+      "exitCode": 0,
+      "observedCounts": {
+        "testFilesFailed": 0,
+        "testFilesPassed": 1,
+        "testsFailed": 0,
+        "testsPassed": 3,
+        "testsSkipped": 0,
+        "markdownLinksValidated": null
+      },
+      "stdoutSha256": "83fe7be8c4b8922658cd3c74ba3a9d674e30de900845b745f7e487d0912dab9d",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "rawLogs": [
+        "raw/real-api-trajectories.stdout.log",
+        "raw/real-api-trajectories.stderr.log"
+      ]
+    },
+    {
+      "id": "v4-six-point",
+      "command": "npm.cmd test -- --run tests/web/v4-six-point.test.ts --maxWorkers=1",
+      "workingDirectory": "D:\\.A_C_code\\PPALW\\Pluggable-personalized-AI-learning-workstation\\pi-study-helper",
+      "startedAt": "2026-08-16T07:24:45.824Z",
+      "completedAt": "2026-08-16T07:24:46.595Z",
+      "durationMs": 771,
+      "exitCode": 0,
+      "observedCounts": {
+        "testFilesFailed": 0,
+        "testFilesPassed": 1,
+        "testsFailed": 0,
+        "testsPassed": 7,
+        "testsSkipped": 0,
+        "markdownLinksValidated": null
+      },
+      "stdoutSha256": "ee9ee42d5d5cb1387e66699a5d8e892f850bd1552632156cf0c3c4abd8560531",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "rawLogs": [
+        "raw/v4-six-point.stdout.log",
+        "raw/v4-six-point.stderr.log"
+      ]
+    },
+    {
+      "id": "v4-targeted",
+      "command": "npm.cmd test -- --run tests/w4-contracts.test.ts tests/quiz-runtime.test.ts tests/quiz-activity-runtime.test.ts tests/adaptive-content-service.test.ts tests/capability-task-service.test.ts tests/session-capability-evidence-provider.test.ts tests/w4-d-graph-factory.test.ts tests/w4-d-recorded-responses.test.ts tests/w4-d-formal-ad-binding.test.ts tests/w4-c-d3-http.test.ts tests/web/real-api.test.ts tests/web/v4-six-point.test.ts tests/web/v4-recorded-response-audit.test.ts --maxWorkers=1",
+      "workingDirectory": "D:\\.A_C_code\\PPALW\\Pluggable-personalized-AI-learning-workstation\\pi-study-helper",
+      "startedAt": "2026-08-16T07:24:46.595Z",
+      "completedAt": "2026-08-16T07:25:02.375Z",
+      "durationMs": 15780,
+      "exitCode": 0,
+      "observedCounts": {
+        "testFilesFailed": 0,
+        "testFilesPassed": 13,
+        "testsFailed": 0,
+        "testsPassed": 78,
+        "testsSkipped": 0,
+        "markdownLinksValidated": null
+      },
+      "stdoutSha256": "764b50a6542d47bd26402421296711de1b261a058c1ab115f2e5ae7e0ed1d79d",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "rawLogs": [
+        "raw/v4-targeted.stdout.log",
+        "raw/v4-targeted.stderr.log"
+      ]
+    },
+    {
+      "id": "full-test",
+      "command": "npm.cmd test -- --run --maxWorkers=1",
+      "workingDirectory": "D:\\.A_C_code\\PPALW\\Pluggable-personalized-AI-learning-workstation\\pi-study-helper",
+      "startedAt": "2026-08-16T07:25:02.375Z",
+      "completedAt": "2026-08-16T07:26:52.277Z",
+      "durationMs": 109902,
+      "exitCode": 0,
+      "observedCounts": {
+        "testFilesFailed": 0,
+        "testFilesPassed": 85,
+        "testsFailed": 0,
+        "testsPassed": 738,
+        "testsSkipped": 1,
+        "markdownLinksValidated": null
+      },
+      "stdoutSha256": "04bb55d49774fc89c6393b12da194890a64652f336bec9f89cc8e6a4376d4c22",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "rawLogs": [
+        "raw/full-test.stdout.log",
+        "raw/full-test.stderr.log"
+      ]
+    },
+    {
+      "id": "typecheck",
+      "command": "npm.cmd run typecheck",
+      "workingDirectory": "D:\\.A_C_code\\PPALW\\Pluggable-personalized-AI-learning-workstation\\pi-study-helper",
+      "startedAt": "2026-08-16T07:26:52.277Z",
+      "completedAt": "2026-08-16T07:27:04.012Z",
+      "durationMs": 11735,
+      "exitCode": 0,
+      "observedCounts": {
+        "testFilesFailed": 0,
+        "testFilesPassed": null,
+        "testsFailed": 0,
+        "testsPassed": null,
+        "testsSkipped": 0,
+        "markdownLinksValidated": null
+      },
+      "stdoutSha256": "657f3a771c3ac9b683e5e8bd2354be0cd82fe12a113b8e0fe5cd25311254bd68",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "rawLogs": [
+        "raw/typecheck.stdout.log",
+        "raw/typecheck.stderr.log"
+      ]
+    },
+    {
+      "id": "check-docs",
+      "command": "npm.cmd run check:docs",
+      "workingDirectory": "D:\\.A_C_code\\PPALW\\Pluggable-personalized-AI-learning-workstation\\pi-study-helper",
+      "startedAt": "2026-08-16T07:27:04.012Z",
+      "completedAt": "2026-08-16T07:27:04.300Z",
+      "durationMs": 288,
+      "exitCode": 0,
+      "observedCounts": {
+        "testFilesFailed": 0,
+        "testFilesPassed": null,
+        "testsFailed": 0,
+        "testsPassed": null,
+        "testsSkipped": 0,
+        "markdownLinksValidated": null
+      },
+      "stdoutSha256": "a3a3fc7c3dc03411b49a103109294989c7fa14f645e50afb1e938f801f28fe95",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "rawLogs": [
+        "raw/check-docs.stdout.log",
+        "raw/check-docs.stderr.log"
+      ]
+    },
+    {
+      "id": "build-web",
+      "command": "npm.cmd run build:web",
+      "workingDirectory": "D:\\.A_C_code\\PPALW\\Pluggable-personalized-AI-learning-workstation\\pi-study-helper",
+      "startedAt": "2026-08-16T07:27:04.300Z",
+      "completedAt": "2026-08-16T07:27:05.361Z",
+      "durationMs": 1061,
+      "exitCode": 0,
+      "observedCounts": {
+        "testFilesFailed": 0,
+        "testFilesPassed": null,
+        "testsFailed": 0,
+        "testsPassed": null,
+        "testsSkipped": 0,
+        "markdownLinksValidated": null
+      },
+      "stdoutSha256": "b39939152d1f49d75b1226014f6c91797fc360d9f8bd7353c3a14b57efc148ff",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "rawLogs": [
+        "raw/build-web.stdout.log",
+        "raw/build-web.stderr.log"
+      ]
+    },
+    {
+      "id": "smoke-extension",
+      "command": "npm.cmd run smoke:extension",
+      "workingDirectory": "D:\\.A_C_code\\PPALW\\Pluggable-personalized-AI-learning-workstation\\pi-study-helper",
+      "startedAt": "2026-08-16T07:27:05.362Z",
+      "completedAt": "2026-08-16T07:27:06.798Z",
+      "durationMs": 1436,
+      "exitCode": 0,
+      "observedCounts": {
+        "testFilesFailed": 0,
+        "testFilesPassed": null,
+        "testsFailed": 0,
+        "testsPassed": null,
+        "testsSkipped": 0,
+        "markdownLinksValidated": null
+      },
+      "stdoutSha256": "65fd9a6cc0ade27c0f311d0281a9f702b89b28824e1ea5e7244b7849339a4b78",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "rawLogs": [
+        "raw/smoke-extension.stdout.log",
+        "raw/smoke-extension.stderr.log"
+      ]
+    },
+    {
+      "id": "verify",
+      "command": "npm.cmd run verify",
+      "workingDirectory": "D:\\.A_C_code\\PPALW\\Pluggable-personalized-AI-learning-workstation\\pi-study-helper",
+      "startedAt": "2026-08-16T07:27:06.798Z",
+      "completedAt": "2026-08-16T07:29:13.017Z",
+      "durationMs": 126219,
+      "exitCode": 0,
+      "observedCounts": {
+        "testFilesFailed": 0,
+        "testFilesPassed": 85,
+        "testsFailed": 0,
+        "testsPassed": 738,
+        "testsSkipped": 1,
+        "markdownLinksValidated": null
+      },
+      "stdoutSha256": "2cff31e4c0cf3208442a4980c3033aef5662a59ae6ec346109e98f5315b9043c",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "rawLogs": [
+        "raw/verify.stdout.log",
+        "raw/verify.stderr.log"
+      ]
+    },
+    {
+      "id": "git-diff-check",
+      "command": "git diff --check",
+      "workingDirectory": "D:\\.A_C_code\\PPALW\\Pluggable-personalized-AI-learning-workstation",
+      "startedAt": "2026-08-16T07:29:13.018Z",
+      "completedAt": "2026-08-16T07:29:13.073Z",
+      "durationMs": 55,
+      "exitCode": 0,
+      "observedCounts": {
+        "testFilesFailed": 0,
+        "testFilesPassed": null,
+        "testsFailed": 0,
+        "testsPassed": null,
+        "testsSkipped": 0,
+        "markdownLinksValidated": null
+      },
+      "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "rawLogs": [
+        "raw/git-diff-check.stdout.log",
+        "raw/git-diff-check.stderr.log"
+      ]
+    }
+  ]
+}

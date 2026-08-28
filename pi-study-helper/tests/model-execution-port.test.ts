@@ -172,19 +172,22 @@ describe("ModelExecutionPort recorded fixture adapter", () => {
 describe("PiGraphModelExecutionAdapter", () => {
   it("maps completed SDK output and projects only safe source IDs", async () => {
     let receivedInput: Record<string, unknown> | undefined;
+    let receivedSignal: AbortSignal | undefined;
     const adapter = new PiGraphModelExecutionAdapter({
       graphs: [piGraph],
       modelId: "pi-model-1",
-      executor: async (_graph, input) => {
+      executor: async (_graph, input, signal) => {
         receivedInput = input;
+        receivedSignal = signal;
         return completedGraphResult();
       },
     });
 
+    const controller = new AbortController();
     const result = await adapter.execute({
       ...baseInput,
       safeContext: { context: { sourceIds: ["source-public-1"] } },
-    }, new AbortController().signal);
+    }, controller.signal);
 
     expect(result).toMatchObject({
       status: "ok",
@@ -201,6 +204,7 @@ describe("PiGraphModelExecutionAdapter", () => {
       safeContext: { context: { sourceIds: ["source-public-1"] } },
       budget: baseInput.budget,
     });
+    expect(receivedSignal).toBe(controller.signal);
     expect(result.traceSummary).not.toContain("private");
     expect(result.traceSummary).not.toContain("replay.json");
   });

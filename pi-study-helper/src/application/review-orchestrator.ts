@@ -19,6 +19,14 @@ import {
   type ReviewRoleDefinition,
   type ReviewSafeContext,
 } from "../graphs/v2-learning-graphs.js";
+import {
+  defenderOutputIsClosed,
+  defenderRoute,
+  highRiskHunterOutput,
+  judgeOutputIsClosed,
+} from "./review-decision-policy.js";
+
+export const REVIEW_ORCHESTRATOR_SCOPE = "compatibility-audit-only" as const;
 
 export interface ReviewOrchestratorInput {
   requestId: string;
@@ -440,6 +448,11 @@ export class InMemoryReviewCheckpointStore implements ReviewCheckpointStore {
   }
 }
 
+/**
+ * @deprecated Compatibility-only reviewer for historical W2/W3 checkpoints.
+ * Product card/quiz generation, Judge-directed candidate repair, caching and
+ * publication are owned exclusively by AdaptiveContentService.
+ */
 export class ReviewOrchestrator {
   readonly #modelExecutionPort: ModelExecutionPort;
   readonly #sourceProvider: ReviewSafeSourceProvider;
@@ -547,8 +560,10 @@ export class ReviewOrchestrator {
     }
 
     let defenderOutput: DefenderOutput | undefined;
-    if (hunter.output.requiresDefender || hunter.output.issues.some((issue) => issue.disputed)) {
-      const defender = await this.#runDefender(checkpoint, context, generator.output, hunter.output, signal);
+    const route = defenderRoute(hunter.output);
+    if (route.required) {
+      const defenderHunter = highRiskHunterOutput(hunter.output);
+      const defender = await this.#runDefender(checkpoint, context, generator.output, defenderHunter, signal);
       if ("failure" in defender) {
         if (defender.errorCode === "version_conflict") {
           return this.#finalizeTechnical(checkpoint, fallbackSafeFeedback, "defender", defender.errorCode);
@@ -752,6 +767,12 @@ export class ReviewOrchestrator {
           reason: "stage " + graphId + " checkpoint output violates its schema or safety boundary",
         };
       }
+      if (graphId !== "generator" && !this.#reviewEvidenceSourcesAllowed(graphId, stage.output, allowedSourceIds)) {
+        return {
+          errorCode: "source_conflict",
+          reason: `stage ${graphId} checkpoint evidence cites an unregistered source`,
+        };
+      }
       if (typeof stage.traceSummary !== "string") {
         return {
           errorCode: "invalid_json",
@@ -786,12 +807,13 @@ export class ReviewOrchestrator {
 
   #conditionalTopologyIssue(checkpoint: ReviewRunCheckpoint): StageCheckpointIssue | undefined {
     if (!checkpoint.hunter) return undefined;
-    const requiresDefender = checkpoint.hunter.output.requiresDefender
-      || checkpoint.hunter.output.issues.some((issue) => issue.disputed);
+    // Routing is deterministic at the application boundary: only a concrete
+    // high-severity Hunter issue requires Defender.
+    const requiresDefender = checkpoint.hunter.output.issues.some((issue) => issue.severity === "high");
     const hasDefenderAttempts = (checkpoint.stageAttempts.defender?.length ?? 0) > 0;
     const hasJudgeAttempts = (checkpoint.stageAttempts.judge?.length ?? 0) > 0;
     if ((checkpoint.defender || hasDefenderAttempts) && !requiresDefender) {
-      return { errorCode: "invalid_json", reason: "defender checkpoint exists without a disputed Hunter result" };
+      return { errorCode: "invalid_json", reason: "defender checkpoint exists without a routed semantic or high-risk review" };
     }
     if ((checkpoint.judge || hasJudgeAttempts) && requiresDefender && !checkpoint.defender) {
       return { errorCode: "invalid_json", reason: "judge checkpoint is missing the required defender predecessor" };
@@ -889,27 +911,18 @@ export class ReviewOrchestrator {
       return { errorCode: "invalid_json", reason: "Hunter issue identifiers must be unique" };
     }
 
-    const disputedIds = hunter.issues.filter((issue) => issue.disputed).map((issue) => issue.issueId);
     const defender = checkpoint.defender?.output;
     if (defender) {
-      const accepted = defender.acceptedIssueIds;
-      const rebutted = defender.rebuttedIssueIds;
-      const combined = [...accepted, ...rebutted];
-      if (new Set(accepted).size !== accepted.length
-        || new Set(rebutted).size !== rebutted.length
-        || new Set(combined).size !== combined.length
-        || combined.length !== disputedIds.length
-        || combined.some((issueId) => !disputedIds.includes(issueId))) {
-        return { errorCode: "invalid_json", reason: "Defender issue references do not close the disputed Hunter issues" };
+      if (!defenderOutputIsClosed(defender, highRiskHunterOutput(hunter))) {
+        return { errorCode: "invalid_json", reason: "Defender issue references do not close the routed Hunter issues" };
       }
     }
 
-    const blocked = checkpoint.judge?.output.blockedIssueIds;
-    if (blocked
-      && (new Set(blocked).size !== blocked.length
-        || blocked.some((issueId) => !issueIds.includes(issueId))
-        || (checkpoint.judge?.output.verdict === "accepted" && blocked.length > 0))) {
-      return { errorCode: "invalid_json", reason: "Judge blocked issue references are duplicated or unknown" };
+    const judge = checkpoint.judge?.output;
+    if (judge) {
+      if (!judgeOutputIsClosed(judge, hunter)) {
+        return { errorCode: "invalid_json", reason: "Judge issue decisions or blocked references do not close the reviewed issues" };
+      }
     }
     return undefined;
   }
@@ -1276,6 +1289,24 @@ export class ReviewOrchestrator {
         });
         continue;
       }
+      if (definition.graphId !== "generator"
+        && !this.#reviewEvidenceSourcesAllowed(definition.graphId, safePayload, baseContext.sourceIds)) {
+        lastFailure = `source_conflict: ${definition.graphId} evidence cites an unregistered source`;
+        lastErrorCode = "source_conflict";
+        await this.#appendAttempt(checkpoint, {
+          graphId: definition.graphId,
+          attempt,
+          modelRunId,
+          status: "invalid_output",
+          errorCode: lastErrorCode,
+          modelId: checkpoint.modelId,
+          promptVersion: checkpoint.promptVersion,
+          ...(result.durationMs === undefined ? {} : { durationMs: result.durationMs }),
+          traceSummary: safeTraceSummary,
+          completedAt: this.#now().toISOString(),
+        });
+        continue;
+      }
       const referenceIssue = outputIssue?.(safePayload);
       if (referenceIssue) {
         lastFailure = `${referenceIssue.errorCode}: ${referenceIssue.reason}`;
@@ -1372,6 +1403,26 @@ export class ReviewOrchestrator {
     return sourceRefs.every((sourceRef) => allowed.has(sourceRef));
   }
 
+  #reviewEvidenceSourcesAllowed(
+    graphId: Exclude<ReviewGraphId, "generator">,
+    output: unknown,
+    allowedSourceIds: readonly string[],
+  ): boolean {
+    if (graphId === "hunter") {
+      return (output as HunterOutput).issues.every((issue) => this.#sourceRefsAllowed(issue.sourceAnchorIds, allowedSourceIds)
+        && issue.sourceAnchorIds.length > 0);
+    }
+    if (graphId === "defender") {
+      return (output as DefenderOutput).issueAssessments.every((assessment) => this.#sourceRefsAllowed(assessment.sourceAnchorIds, allowedSourceIds)
+        && assessment.sourceAnchorIds.length > 0);
+    }
+    const judge = output as JudgeOutput;
+    return judge.issueDecisions.every((decision) => this.#sourceRefsAllowed(decision.sourceAnchorIds, allowedSourceIds)
+      && decision.sourceAnchorIds.length > 0)
+      && judge.additionalIssues.every((issue) => this.#sourceRefsAllowed(issue.sourceAnchorIds, allowedSourceIds)
+        && issue.sourceAnchorIds.length > 0);
+  }
+
   #hunterOutputIssue(output: HunterOutput): StageCheckpointIssue | undefined {
     const issueIds = output.issues.map((issue) => issue.issueId);
     return new Set(issueIds).size === issueIds.length
@@ -1380,24 +1431,15 @@ export class ReviewOrchestrator {
   }
 
   #defenderOutputIssue(output: DefenderOutput, hunter: HunterOutput): StageCheckpointIssue | undefined {
-    const disputedIds = hunter.issues.filter((issue) => issue.disputed).map((issue) => issue.issueId);
-    const combined = [...output.acceptedIssueIds, ...output.rebuttedIssueIds];
-    if (new Set(output.acceptedIssueIds).size !== output.acceptedIssueIds.length
-      || new Set(output.rebuttedIssueIds).size !== output.rebuttedIssueIds.length
-      || new Set(combined).size !== combined.length
-      || combined.length !== disputedIds.length
-      || combined.some((issueId) => !disputedIds.includes(issueId))) {
-      return { errorCode: "invalid_json", reason: "Defender issue references do not close the disputed Hunter issues" };
+    if (!defenderOutputIsClosed(output, hunter)) {
+      return { errorCode: "invalid_json", reason: "Defender issue references do not close the routed Hunter issues" };
     }
     return undefined;
   }
 
   #judgeOutputIssue(output: JudgeOutput, hunter: HunterOutput): StageCheckpointIssue | undefined {
-    const issueIds = new Set(hunter.issues.map((issue) => issue.issueId));
-    if ((output.verdict === "accepted" && output.blockedIssueIds.length > 0)
-      || new Set(output.blockedIssueIds).size !== output.blockedIssueIds.length
-      || output.blockedIssueIds.some((issueId) => !issueIds.has(issueId))) {
-      return { errorCode: "invalid_json", reason: "Judge blocked issue references are duplicated or unknown" };
+    if (!judgeOutputIsClosed(output, hunter)) {
+      return { errorCode: "invalid_json", reason: "Judge issue decisions or blocked references do not close the reviewed issues" };
     }
     return undefined;
   }

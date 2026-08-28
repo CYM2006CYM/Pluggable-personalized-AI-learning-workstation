@@ -32,6 +32,9 @@ import { FileLearningSessionRepository } from "../repositories/file-learning-ses
 import { ProfileFamilyRepository } from "../repositories/profile-family-repository.js";
 import type { LearningRuntimeFacade } from "../contracts/facade.js";
 
+/** The only review engine wired into the product composition root. */
+export const PRODUCTION_REVIEW_ENGINE = "adaptive-content-service" as const;
+
 export interface DemoRuntime {
   facade: LearningRuntimeFacade;
   bootstrap: FileAppBootstrapFacade;
@@ -108,7 +111,7 @@ export async function createDemoRuntime(options: DemoRuntimeOptions): Promise<De
     agentRuns,
     ...(options.liveConfig === undefined
       ? {}
-      : { fallbackAfterMs: 115_000, discardAfterMs: 120_000 }),
+      : { fallbackAfterMs: 120_000, discardAfterMs: 120_000 }),
   });
   const capability = new CapabilityTaskService({
     modelExecutionPort,
@@ -137,7 +140,7 @@ export async function createDemoRuntime(options: DemoRuntimeOptions): Promise<De
     pathSuffix,
     profileAgent,
     agentRuns,
-    dynamicGenerationTimeoutMs: 120_000,
+    dynamicGenerationTimeoutMs: 125_000,
     now: options.now,
   });
   const codeAssets = new ProfileFamilyCodeActivityAssetResolver(profiles);

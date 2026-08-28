@@ -1,0 +1,194 @@
+{
+  "schemaVersion": 1,
+  "contract": "W5-C1/W5-R1",
+  "baselineCommit": "383690831a8b3de42dad58795e71f218678f6fbc",
+  "generatedAt": "2026-08-21T05:52:34.875Z",
+  "environment": {
+    "pyodideEnabled": false,
+    "liveModel": "LIVE_NOT_RUN",
+    "pythonNoUserSite": true
+  },
+  "results": [
+    {
+      "id": "c-d3-targeted",
+      "command": "npm.cmd test -- --run tests/w5-c-d3-node-public-inputs.test.ts --maxWorkers=1",
+      "startedAt": "2026-08-21T05:49:23.438Z",
+      "endedAt": "2026-08-21T05:49:53.711Z",
+      "exitCode": 0,
+      "stdoutBytes": 378,
+      "stderrBytes": 0,
+      "stdoutSha256": "95d30cd148eaf4229f9b64d49c24c2651f49351588a57344568b484708ca8592",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdoutSummary": "> pi-study-helper@0.1.0 test\n> vitest run --run tests/w5-c-d3-node-public-inputs.test.ts --maxWorkers=1\n\n\n RUN  v4.1.10 <package-root>\n\n\n Test Files  1 passed (1)\n      Tests  1 passed (1)\n   Start at  13:49:24\n   Duration  28.89s (transform 152ms, setup 0ms, import 332ms, tests 28.32s, environment 0ms)",
+      "stderrSummary": "",
+      "counts": {
+        "passed": 1,
+        "failed": 0
+      },
+      "classification": "contract-gate"
+    },
+    {
+      "id": "w5-public-and-python",
+      "command": "npm.cmd test -- --run tests/w5-c-d1-public-run.test.ts tests/w5-formal-bundle-revision-binding.test.ts tests/python-process-evaluation.test.ts tests/python-process-evaluation-r2.test.ts tests/python-process-environment-compatibility.test.ts --maxWorkers=1",
+      "startedAt": "2026-08-21T05:49:53.712Z",
+      "endedAt": "2026-08-21T05:51:44.237Z",
+      "exitCode": 0,
+      "stdoutBytes": 560,
+      "stderrBytes": 0,
+      "stdoutSha256": "eb5315568416be8e4b58e7e68ec574a071df214231205cb73cf0514a1dfba0c2",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdoutSummary": "> pi-study-helper@0.1.0 test\n> vitest run --run tests/w5-c-d1-public-run.test.ts tests/w5-formal-bundle-revision-binding.test.ts tests/python-process-evaluation.test.ts tests/python-process-evaluation-r2.test.ts tests/python-process-environment-compatibility.test.ts --maxWorkers=1\n\n\n RUN  v4.1.10 <package-root>\n\n\n Test Files  5 passed (5)\n      Tests  40 passed (40)\n   Start at  13:49:55\n   Duration  109.15s (transform 760ms, setup 0ms, import 3.81s, tests 104.22s, environment 1ms)",
+      "stderrSummary": "",
+      "counts": {
+        "passed": 40,
+        "failed": 0
+      },
+      "classification": "contract-gate"
+    },
+    {
+      "id": "affected-adapter-http-fault-recovery",
+      "command": "npm.cmd test -- --run tests/activity-runtime-service.test.ts tests/file-activity-repository.test.ts tests/file-learning-session-repository.test.ts tests/w4-c-d3-http.test.ts --maxWorkers=1",
+      "startedAt": "2026-08-21T05:51:44.237Z",
+      "endedAt": "2026-08-21T05:52:01.673Z",
+      "exitCode": 0,
+      "stdoutBytes": 491,
+      "stderrBytes": 0,
+      "stdoutSha256": "a351a8413a26bf9924c31f3c555cdeeb28d3b23a22f9e7aec2cb28ca19dc1c46",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdoutSummary": "> pi-study-helper@0.1.0 test\n> vitest run --run tests/activity-runtime-service.test.ts tests/file-activity-repository.test.ts tests/file-learning-session-repository.test.ts tests/w4-c-d3-http.test.ts --maxWorkers=1\n\n\n RUN  v4.1.10 <package-root>\n\n\n Test Files  4 passed (4)\n      Tests  62 passed (62)\n   Start at  13:51:45\n   Duration  16.15s (transform 676ms, setup 0ms, import 3.47s, tests 11.77s, environment 0ms)",
+      "stderrSummary": "",
+      "counts": {
+        "passed": 62,
+        "failed": 0
+      },
+      "classification": "contract-gate"
+    },
+    {
+      "id": "typecheck",
+      "command": "npm.cmd run typecheck",
+      "startedAt": "2026-08-21T05:52:01.673Z",
+      "endedAt": "2026-08-21T05:52:21.324Z",
+      "exitCode": 0,
+      "stdoutBytes": 108,
+      "stderrBytes": 0,
+      "stdoutSha256": "657f3a771c3ac9b683e5e8bd2354be0cd82fe12a113b8e0fe5cd25311254bd68",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdoutSummary": "> pi-study-helper@0.1.0 typecheck\n> tsc --noEmit && tsc -p tsconfig.test.json && tsc -p tsconfig.web.json",
+      "stderrSummary": "",
+      "counts": {
+        "passed": null,
+        "failed": 0
+      },
+      "classification": "contract-gate"
+    },
+    {
+      "id": "build-demo",
+      "command": "npm.cmd run build:demo",
+      "startedAt": "2026-08-21T05:52:21.324Z",
+      "endedAt": "2026-08-21T05:52:27.184Z",
+      "exitCode": 0,
+      "stdoutBytes": 65,
+      "stderrBytes": 0,
+      "stdoutSha256": "75625f75f1623ad0de0a349b2d354f9f3bcdc80e58c8acd327316f6f47a23ca5",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdoutSummary": "> pi-study-helper@0.1.0 build:demo\n> tsc -p tsconfig.demo.json",
+      "stderrSummary": "",
+      "counts": {
+        "passed": null,
+        "failed": 0
+      },
+      "classification": "contract-gate"
+    },
+    {
+      "id": "build-web",
+      "command": "npm.cmd run build:web",
+      "startedAt": "2026-08-21T05:52:27.184Z",
+      "endedAt": "2026-08-21T05:52:29.519Z",
+      "exitCode": 0,
+      "stdoutBytes": 523,
+      "stderrBytes": 0,
+      "stdoutSha256": "d874971f0a177da4684ba406e353c2539073983dc43be984a984c06d3b164272",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdoutSummary": "> pi-study-helper@0.1.0 build:web\n> vite build\n\nvite v7.1.7 building for production...\ntransforming...\n✓ 51 modules transformed.\nrendering chunks...\ncomputing gzip size...\n../../dist-web/assets/pyodide-preview.worker-DtAokygp.js    0.30 kB\n../../dist-web/index.html                                   0.48 kB │ gzip:  0.32 kB\n../../dist-web/assets/index-BPvGnDzN.css                   18.06 kB │ gzip:  4.39 kB\n../../dist-web/assets/index-BbjFPJ_t.js                   270.06 kB │ gzip: 84.48 kB\n✓ built in 1.20s",
+      "stderrSummary": "",
+      "counts": {
+        "passed": null,
+        "failed": 0
+      },
+      "classification": "contract-gate"
+    },
+    {
+      "id": "check-docs",
+      "command": "npm.cmd run check:docs",
+      "startedAt": "2026-08-21T05:52:29.519Z",
+      "endedAt": "2026-08-21T05:52:30.243Z",
+      "exitCode": 0,
+      "stdoutBytes": 141,
+      "stderrBytes": 0,
+      "stdoutSha256": "ad34dca85a325a08b6ac512b11b93fff9af88e61c3ff028d1ab558e7053e828d",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdoutSummary": "> pi-study-helper@0.1.0 check:docs\n> node scripts/check-doc-links.mjs\n\n已检查 93 个项目 Markdown 文件，本地链接全部有效。",
+      "stderrSummary": "",
+      "counts": {
+        "passed": null,
+        "failed": 0
+      },
+      "classification": "contract-gate"
+    },
+    {
+      "id": "smoke-extension",
+      "command": "npm.cmd run smoke:extension",
+      "startedAt": "2026-08-21T05:52:30.243Z",
+      "endedAt": "2026-08-21T05:52:33.864Z",
+      "exitCode": 0,
+      "stdoutBytes": 137,
+      "stderrBytes": 0,
+      "stdoutSha256": "65fd9a6cc0ade27c0f311d0281a9f702b89b28824e1ea5e7244b7849339a4b78",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdoutSummary": "> pi-study-helper@0.1.0 smoke:extension\n> node scripts/smoke-extension.mjs\n\npi 已成功解析并初始化 Pi Study Helper extension。",
+      "stderrSummary": "",
+      "counts": {
+        "passed": null,
+        "failed": 0
+      },
+      "classification": "contract-gate"
+    },
+    {
+      "id": "check-release",
+      "command": "npm.cmd run check:release",
+      "startedAt": "2026-08-21T05:52:33.864Z",
+      "endedAt": "2026-08-21T05:52:34.753Z",
+      "exitCode": 0,
+      "stdoutBytes": 148,
+      "stderrBytes": 0,
+      "stdoutSha256": "13559b8967a87a6dc4863fbffa7fc1aae75d2561f6a2ce3b731958a532764308",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdoutSummary": "> pi-study-helper@0.1.0 check:release\n> node scripts/check-release.mjs\n\nRelease check passed: 579 tracked files, no private data or secrets found.",
+      "stderrSummary": "",
+      "counts": {
+        "passed": null,
+        "failed": 0
+      },
+      "classification": "contract-gate"
+    },
+    {
+      "id": "git-diff-check",
+      "command": "git diff --check",
+      "startedAt": "2026-08-21T05:52:34.753Z",
+      "endedAt": "2026-08-21T05:52:34.875Z",
+      "exitCode": 0,
+      "stdoutBytes": 0,
+      "stderrBytes": 0,
+      "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdoutSummary": "",
+      "stderrSummary": "",
+      "counts": {
+        "passed": null,
+        "failed": 0
+      },
+      "classification": "contract-gate"
+    }
+  ],
+  "status": "PASS"
+}

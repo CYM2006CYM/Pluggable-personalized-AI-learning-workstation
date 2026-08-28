@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import type {
   AdaptiveContentPort,
+  AdaptiveContentUnavailableReason,
   LearningCardSafeView,
   QuizQuestionPrivate,
   QuizRemediationContext,
@@ -19,6 +20,12 @@ import type { W4PrivateRuntimeStore } from "../infrastructure/w4-private-runtime
 import type { AgentRunRepository, AppendAgentStageInput } from "../infrastructure/agent-run-repository.js";
 import { quizQuestionSetSha256 } from "../domain/quiz-runtime.js";
 import { guidingQuestionFailure } from "../domain/personalized-lesson-guide.js";
+import {
+  defenderOutputIsClosed,
+  defenderRoute,
+  highRiskHunterOutput,
+  judgeOutputIsClosed,
+} from "./review-decision-policy.js";
 
 export type AdaptiveArtifactKind = "card" | "quiz";
 
@@ -63,6 +70,23 @@ type AcceptedArtifact =
   | { artifactKind: "card"; riskLevel: "low" | "high"; value: LearningCardSafeView }
   | { artifactKind: "quiz"; riskLevel: "low" | "high"; value: QuizQuestionPrivate[] };
 
+interface AdaptiveAcceptedReviewProof {
+  generationRunId: string;
+  candidateSha256: string;
+  stageOrder: string[];
+  completedStages: Array<"generator" | "safety" | "hunter" | "defender" | "judge">;
+  safetyAudit: DeterministicSafetyAudit;
+  hunter: HunterOutput;
+  defender: DefenderOutput | null;
+  judge: JudgeOutput;
+}
+
+interface DeterministicSafetyAudit {
+  inputCandidateSha256: string;
+  outputCandidateSha256: string;
+  normalization: "none" | "quiz_option_order_balanced";
+}
+
 interface AdaptiveCheckpoint {
   generationRunId: string;
   artifactKind: AdaptiveArtifactKind;
@@ -82,6 +106,10 @@ interface AdaptiveCheckpoint {
   hunter?: HunterOutput;
   defender?: DefenderOutput;
   judge?: JudgeOutput;
+  safetyAudit?: DeterministicSafetyAudit;
+  acceptedReviewProof?: AdaptiveAcceptedReviewProof;
+  judgeRevisionCount?: number;
+  pendingJudgeRepairInstruction?: string;
   createdAt: string;
   updatedAt: string;
   publishedAt?: string;
@@ -100,6 +128,7 @@ interface AdaptiveCacheRecord {
   personalizationContextSha256?: string;
   remediationContextSha256?: string;
   artifact: AcceptedArtifact;
+  acceptedReviewProof: AdaptiveAcceptedReviewProof;
   cachedAt: string;
   source: "immediate" | "late";
 }
@@ -130,6 +159,10 @@ const PUBLIC_STAGE_LABELS = {
 
 function clone<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
+}
+
+function uniqueIds(values: readonly string[]): string[] {
+  return [...new Set(values)];
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -264,6 +297,27 @@ export function balanceQuizAnswerPositions(
   });
 }
 
+/**
+ * Safety-level distribution rule. The rule scales down for questions with only
+ * two options, while requiring at least three used positions when possible.
+ */
+export function quizAnswerDistributionFailure(
+  questions: readonly QuizQuestionPrivate[],
+): string | undefined {
+  if (questions.length === 0) return "question_answer_distribution_empty";
+  const positions = questions.map((question) => question.options.indexOf(question.correctAnswer as string));
+  if (positions.some((position) => position < 0)) return "question_answer_distribution_invalid";
+  const availablePositionCount = Math.min(...questions.map((question) => question.options.length));
+  const requiredPositionCount = Math.min(3, availablePositionCount, questions.length);
+  if (new Set(positions).size < requiredPositionCount) return "question_answer_distribution_concentrated";
+  const maximumPerPosition = Math.ceil(questions.length / requiredPositionCount);
+  const counts = new Map<number, number>();
+  for (const position of positions) counts.set(position, (counts.get(position) ?? 0) + 1);
+  return [...counts.values()].some((count) => count > maximumPerPosition)
+    ? "question_answer_distribution_imbalanced"
+    : undefined;
+}
+
 function cardFailureDetail(value: unknown, context: AdaptiveContentSourceContext, excluded: ReadonlySet<string>): string | undefined {
   if (!isRecord(value) || !exactKeys(value, [
     "cardId", "knowledgePointId", "title", "objective", "explanation", "example", "commonMistake",
@@ -288,7 +342,7 @@ function isCard(value: unknown, context: AdaptiveContentSourceContext, excluded:
 }
 
 type GeneratorArtifactParseResult =
-  | { ok: true; artifact: AcceptedArtifact }
+  | { ok: true; artifact: AcceptedArtifact; safetyAudit: DeterministicSafetyAudit }
   | { ok: false; detail: string };
 
 function parseGeneratorArtifact(
@@ -314,7 +368,13 @@ function parseGeneratorArtifact(
     const cardFailure = cardFailureDetail(parsed.card, context, excluded);
     if (cardFailure !== undefined) return { ok: false, detail: `candidate_${cardFailure}` };
     if (!isCard(parsed.card, context, excluded)) return { ok: false, detail: "candidate_card" };
-    return { ok: true, artifact: { artifactKind, riskLevel: parsed.riskLevel, value: clone(parsed.card) } };
+    const artifact: AcceptedArtifact = { artifactKind, riskLevel: parsed.riskLevel, value: clone(parsed.card) };
+    const candidateSha256 = acceptedArtifactSha256(artifact);
+    return {
+      ok: true,
+      artifact,
+      safetyAudit: { inputCandidateSha256: candidateSha256, outputCandidateSha256: candidateSha256, normalization: "none" },
+    };
   }
   if (!exactKeys(parsed, ["artifactKind", "riskLevel", "questions"])) return { ok: false, detail: "candidate_fields" };
   if (!Array.isArray(parsed.questions)) return { ok: false, detail: "candidate_questions_array" };
@@ -327,12 +387,20 @@ function parseGeneratorArtifact(
   if (new Set(questions.map((question) => question.questionId)).size !== questions.length) {
     return { ok: false, detail: "candidate_question_ids_duplicate" };
   }
+  const balancedQuestions = balanceQuizAnswerPositions(questions);
+  const distributionFailure = quizAnswerDistributionFailure(balancedQuestions);
+  if (distributionFailure !== undefined) return { ok: false, detail: `candidate_${distributionFailure}` };
+  const inputArtifact: AcceptedArtifact = { artifactKind, riskLevel: parsed.riskLevel, value: clone(questions) };
+  const outputArtifact: AcceptedArtifact = { artifactKind, riskLevel: parsed.riskLevel, value: balancedQuestions };
+  const inputCandidateSha256 = acceptedArtifactSha256(inputArtifact);
+  const outputCandidateSha256 = acceptedArtifactSha256(outputArtifact);
   return {
     ok: true,
-    artifact: {
-      artifactKind,
-      riskLevel: parsed.riskLevel,
-      value: balanceQuizAnswerPositions(questions),
+    artifact: outputArtifact,
+    safetyAudit: {
+      inputCandidateSha256,
+      outputCandidateSha256,
+      normalization: inputCandidateSha256 === outputCandidateSha256 ? "none" : "quiz_option_order_balanced",
     },
   };
 }
@@ -368,7 +436,8 @@ function acceptedArtifactIsValid(value: unknown, artifactKind: AdaptiveArtifactK
   const allowed = new Set(context.sourceAnchorIds);
   return Array.isArray(value.value) && value.value.length >= 4 && value.value.length <= 6
     && value.value.every((question) => isQuestion(question, allowed, excluded, excludedQuestionPrompts(context)))
-    && new Set(value.value.map((question) => (question as QuizQuestionPrivate).questionId)).size === value.value.length;
+    && new Set(value.value.map((question) => (question as QuizQuestionPrivate).questionId)).size === value.value.length
+    && quizAnswerDistributionFailure(value.value as QuizQuestionPrivate[]) === undefined;
 }
 
 function generatorRiskIsBound(artifact: AcceptedArtifact, generator: GeneratorOutput): boolean {
@@ -387,9 +456,31 @@ function stableRunId(key: string): string {
   return `w4-${createHash("sha256").update(key).digest("hex").slice(0, 24)}`;
 }
 
+function acceptedArtifactSha256(artifact: AcceptedArtifact): string {
+  return createHash("sha256").update(JSON.stringify(artifact), "utf8").digest("hex");
+}
+
 function resultSourcesAreSafe(result: ModelExecutionResult, allowed: readonly string[]): boolean {
   const allowedSet = new Set(allowed);
   return result.sourceRefs.every((sourceId) => allowedSet.has(sourceId));
+}
+
+function sourceAnchorIdsAreSafe(sourceAnchorIds: readonly string[], allowed: readonly string[]): boolean {
+  const allowedSet = new Set(allowed);
+  return sourceAnchorIds.length > 0 && sourceAnchorIds.every((sourceId) => allowedSet.has(sourceId));
+}
+
+function hunterEvidenceSourcesAreSafe(hunter: HunterOutput, allowed: readonly string[]): boolean {
+  return hunter.issues.every((issue) => sourceAnchorIdsAreSafe(issue.sourceAnchorIds, allowed));
+}
+
+function defenderEvidenceSourcesAreSafe(defender: DefenderOutput, allowed: readonly string[]): boolean {
+  return defender.issueAssessments.every((assessment) => sourceAnchorIdsAreSafe(assessment.sourceAnchorIds, allowed));
+}
+
+function judgeEvidenceSourcesAreSafe(judge: JudgeOutput, allowed: readonly string[]): boolean {
+  return judge.issueDecisions.every((decision) => sourceAnchorIdsAreSafe(decision.sourceAnchorIds, allowed))
+    && judge.additionalIssues.every((issue) => sourceAnchorIdsAreSafe(issue.sourceAnchorIds, allowed));
 }
 
 function generatorFailureDetail(result: ModelExecutionResult, context: AdaptiveContentSourceContext): string {
@@ -438,6 +529,10 @@ function generatorRepairInstruction(detail: string, artifactKind: AdaptiveArtifa
     candidate_question_kind: "当前动态 quiz 只允许中文单选题；每道题的 kind 必须逐字写为 single_choice，不得输出 judgment 或其他题型。",
     candidate_question_answer: "correctAnswer 必须是字符串，并与 options 中某个选项逐字一致。",
     candidate_question_ids_duplicate: "4 至 6 道题的 questionId 必须全部唯一。",
+    candidate_question_answer_distribution_empty: "题组不得为空。",
+    candidate_question_answer_distribution_invalid: "每道题的 correctAnswer 必须能在本题 options 中定位。",
+    candidate_question_answer_distribution_concentrated: "正确答案位置必须在可用选项位置间分散；有三个以上可用位置时至少覆盖三个位置。",
+    candidate_question_answer_distribution_imbalanced: "正确答案位置分布不得明显失衡；四至六题时同一位置通常不得超过两次。",
     candidate_risk_flags_mismatch: "riskLevel=low 时外层 riskFlags 必须为空；riskLevel=high 时必须列出具体风险。",
     graph_output_schema: "外层必须且只能返回 artifactId、candidateFeedback、rationale、citedSourceIds、riskFlags 五个字段。",
     status_invalid_output: "上一轮外层结构不是有效的五字段 JSON，请严格按输出 Schema 重新生成。",
@@ -450,33 +545,138 @@ function generatorRepairInstruction(detail: string, artifactKind: AdaptiveArtifa
 
 function hunterIsClosed(hunter: HunterOutput, riskLevel: AcceptedArtifact["riskLevel"]): boolean {
   const ids = hunter.issues.map((issue) => issue.issueId);
-  const disputed = hunter.issues.filter((issue) => issue.disputed);
-  // The Defender stage is conditional, but the condition itself is authoritative:
-  // a disputed Hunter issue must never be silently accepted without a defense.
   return new Set(ids).size === ids.length
-    && hunter.requiresDefender === (disputed.length > 0)
-    && (riskLevel !== "high" || disputed.length > 0)
+    // Hunter may report whether it expects a defense for compatibility, but it
+    // does not own routing. A high-risk flag must be backed by a concrete issue.
+    && (riskLevel !== "high" || hunter.issues.length > 0)
     && hunter.recommendedVerdict === (hunter.issues.length === 0 ? "accepted" : "revise");
 }
 
-function defenderIsClosed(defender: DefenderOutput, hunter: HunterOutput): boolean {
-  const disputed = hunter.issues.filter((issue) => issue.disputed).map((issue) => issue.issueId);
-  const combined = [...defender.acceptedIssueIds, ...defender.rebuttedIssueIds];
-  return new Set(combined).size === combined.length && combined.length === disputed.length
-    && combined.every((issueId) => disputed.includes(issueId));
+function defenderConcededIssueIds(defender: DefenderOutput): string[] {
+  return defender.issueAssessments
+    .filter((assessment) => assessment.position === "conceded")
+    .map((assessment) => assessment.issueId);
 }
 
-function judgeIsClosed(judge: JudgeOutput, hunter: HunterOutput, defender?: DefenderOutput): boolean {
-  const issueIds = new Set(hunter.issues.map((issue) => issue.issueId));
-  const acceptedCanClose = hunter.issues.length === 0
-    || (hunter.issues.every((issue) => issue.disputed)
-      && defender !== undefined
-      && defender.acceptedIssueIds.length === 0
-      && defender.residualRisks.length === 0
-      && defender.rebuttedIssueIds.length === hunter.issues.length);
-  return new Set(judge.blockedIssueIds).size === judge.blockedIssueIds.length
-    && judge.blockedIssueIds.every((issueId) => issueIds.has(issueId))
-    && (judge.verdict !== "accepted" || (judge.blockedIssueIds.length === 0 && acceptedCanClose));
+function defenderRebuttedIssueIds(defender: DefenderOutput): string[] {
+  return defender.issueAssessments
+    .filter((assessment) => assessment.position === "rebutted")
+    .map((assessment) => assessment.issueId);
+}
+
+function defenderResidualRisks(defender: DefenderOutput): string[] {
+  return defender.issueAssessments.flatMap((assessment) => assessment.residualRisk === null
+    ? []
+    : [assessment.residualRisk]);
+}
+
+function defenderRepairInstruction(failure: string, hunter: HunterOutput): string {
+  return [
+    `上一轮Defender输出未通过确定性校验，失败类别=${failure}。`,
+    `expectedIssueIds=${JSON.stringify(hunter.issues.map((issue) => issue.issueId))}。`,
+    "只返回defenseSummary和issueAssessments两个字段；issueAssessments必须恰好覆盖每个expectedIssueId一次。",
+    "每项必须包含issueId、position、rationale、sourceAnchorIds、residualRisk；position只能是conceded或rebutted，不得遗漏、重复、新增或改写issueId。",
+  ].join(" ");
+}
+
+function lastStageIndex(stageOrder: readonly string[], prefixes: readonly string[]): number {
+  for (let index = stageOrder.length - 1; index >= 0; index -= 1) {
+    const stage = stageOrder[index]!;
+    if (prefixes.some((prefix) => stage === prefix || stage.startsWith(`${prefix}-`))) return index;
+  }
+  return -1;
+}
+
+function acceptedReviewStageOrderIsComplete(stageOrder: readonly string[], hunter: HunterOutput): boolean {
+  const generatorIndex = lastStageIndex(stageOrder, ["generator"]);
+  const hunterIndex = lastStageIndex(stageOrder, ["hunter"]);
+  const judgeIndex = lastStageIndex(stageOrder, ["judge"]);
+  if (!(generatorIndex >= 0 && generatorIndex < hunterIndex && hunterIndex < judgeIndex)) return false;
+  if (!hunter.issues.some((issue) => issue.severity === "high")) return true;
+  const defenderIndex = lastStageIndex(stageOrder, ["defender"]);
+  return hunterIndex < defenderIndex && defenderIndex < judgeIndex;
+}
+
+function acceptedReviewProofIsValid(
+  value: unknown,
+  artifact: AcceptedArtifact,
+  context: AdaptiveContentSourceContext,
+  generationRunId: string,
+): value is AdaptiveAcceptedReviewProof {
+  if (!isRecord(value) || !exactKeys(value, [
+    "generationRunId", "candidateSha256", "stageOrder", "completedStages", "safetyAudit", "hunter", "defender", "judge",
+  ])) return false;
+  if (value.generationRunId !== generationRunId || value.candidateSha256 !== acceptedArtifactSha256(artifact)
+      || !Array.isArray(value.stageOrder) || !value.stageOrder.every((stage) => typeof stage === "string")
+      || !Array.isArray(value.completedStages) || !isRecord(value.safetyAudit)
+      || value.safetyAudit.outputCandidateSha256 !== value.candidateSha256
+      || typeof value.safetyAudit.inputCandidateSha256 !== "string"
+      || !/^[a-f0-9]{64}$/u.test(value.safetyAudit.inputCandidateSha256)
+      || typeof value.safetyAudit.outputCandidateSha256 !== "string"
+      || !/^[a-f0-9]{64}$/u.test(value.safetyAudit.outputCandidateSha256)
+      || (value.safetyAudit.normalization !== "none" && value.safetyAudit.normalization !== "quiz_option_order_balanced")) return false;
+  const graphs = createStudyReviewGraphs();
+  if (!graphs.hunter.validateOutput(value.hunter) || !graphs.judge.validateOutput(value.judge)
+      || value.judge.verdict !== "accepted" || !hunterIsClosed(value.hunter, artifact.riskLevel)
+      || !judgeOutputIsClosed(value.judge, value.hunter)
+      || containsAdaptiveAuthorityViolation(value.hunter) || containsAdaptiveAuthorityViolation(value.judge)
+      || !hunterEvidenceSourcesAreSafe(value.hunter, context.sourceAnchorIds)
+      || !judgeEvidenceSourcesAreSafe(value.judge, context.sourceAnchorIds)
+      || !acceptedReviewStageOrderIsComplete(value.stageOrder, value.hunter)) return false;
+  const defenderRequired = value.hunter.issues.some((issue) => issue.severity === "high");
+  if (defenderRequired) {
+    const routedHunter = highRiskHunterOutput(value.hunter);
+    if (!graphs.defender.validateOutput(value.defender) || !defenderOutputIsClosed(value.defender, routedHunter)
+        || containsAdaptiveAuthorityViolation(value.defender)
+        || !defenderEvidenceSourcesAreSafe(value.defender, context.sourceAnchorIds)) return false;
+  } else if (value.defender !== null) return false;
+  const expectedStages = ["generator", "safety", "hunter", ...(defenderRequired ? ["defender"] : []), "judge"];
+  return JSON.stringify(value.completedStages) === JSON.stringify(expectedStages);
+}
+
+function buildAcceptedReviewProof(checkpoint: AdaptiveCheckpoint, artifact: AcceptedArtifact): AdaptiveAcceptedReviewProof | undefined {
+  if (checkpoint.safetyAudit === undefined || checkpoint.hunter === undefined
+      || checkpoint.judge === undefined || checkpoint.judge.verdict !== "accepted") return undefined;
+  const defenderRequired = checkpoint.hunter.issues.some((issue) => issue.severity === "high");
+  if (defenderRequired !== (checkpoint.defender !== undefined)) return undefined;
+  return {
+    generationRunId: checkpoint.generationRunId,
+    candidateSha256: acceptedArtifactSha256(artifact),
+    stageOrder: [...checkpoint.stageOrder],
+    completedStages: ["generator", "safety", "hunter", ...(defenderRequired ? ["defender" as const] : []), "judge"],
+    safetyAudit: clone(checkpoint.safetyAudit),
+    hunter: clone(checkpoint.hunter),
+    defender: checkpoint.defender === undefined ? null : clone(checkpoint.defender),
+    judge: clone(checkpoint.judge),
+  };
+}
+
+function judgeRepairInstruction(judge: JudgeOutput): string {
+  const blocked = new Set(judge.blockedIssueIds);
+  const confirmedIssues = judge.issueDecisions
+    .filter((decision) => decision.decision === "upheld" && blocked.has(decision.issueId))
+    .map((decision) => ({
+      issueId: decision.issueId,
+      rationale: decision.rationale,
+      sourceAnchorIds: decision.sourceAnchorIds,
+    }));
+  const additionalIssues = judge.additionalIssues
+    .filter((issue) => blocked.has(issue.issueId))
+    .map((issue) => ({
+      issueId: issue.issueId,
+      severity: issue.severity,
+      category: issue.category,
+      candidateField: issue.candidateField,
+      message: issue.message,
+      evidenceSummary: issue.evidenceSummary,
+      sourceAnchorIds: issue.sourceAnchorIds,
+    }));
+  return [
+    "Judge要求返修当前候选。只修改被确认的候选内容问题，不得更改教学正文、来源允许列表、画像事实或权威判分。",
+    `judgeUpheldIssues=${JSON.stringify(confirmedIssues)}`,
+    `judgeAdditionalIssues=${JSON.stringify(additionalIssues)}`,
+    "重新输出完整候选；新候选将从确定性Safety开始重新经过Hunter、必要的Defender和Judge审核。",
+  ].join(" ");
 }
 
 /** D-owned implementation of A's frozen AdaptiveContentPort. */
@@ -486,6 +686,7 @@ export class AdaptiveContentService implements AdaptiveContentPort {
   readonly #fallbackAfterMs: number;
   readonly #discardAfterMs: number;
   readonly #discardedSignals = new WeakSet<AbortSignal>();
+  readonly #closedAgentRunIds = new Set<string>();
 
   constructor(options: AdaptiveContentServiceOptions) {
     if (!safeId(options.modelId) || !safeId(options.promptVersion)) throw new TypeError("modelId and promptVersion must be stable IDs");
@@ -493,8 +694,8 @@ export class AdaptiveContentService implements AdaptiveContentPort {
     this.#clock = options.clock ?? defaultClock();
     this.#fallbackAfterMs = options.fallbackAfterMs ?? 15_000;
     this.#discardAfterMs = options.discardAfterMs ?? 60_000;
-    if (!(this.#fallbackAfterMs > 0 && this.#discardAfterMs > this.#fallbackAfterMs)) {
-      throw new RangeError("Adaptive content deadlines must satisfy 0 < fallback < discard");
+    if (!(this.#fallbackAfterMs > 0 && this.#discardAfterMs >= this.#fallbackAfterMs)) {
+      throw new RangeError("Adaptive content deadlines must satisfy 0 < fallback <= discard");
     }
   }
 
@@ -505,6 +706,7 @@ export class AdaptiveContentService implements AdaptiveContentPort {
         ...sourceContext,
         ...(input.personalizationContext === undefined ? {} : { personalizationContext: clone(input.personalizationContext) }),
       };
+      const key = this.#key("card", context, input.excludedArtifactIds, 0);
       const artifact = await this.#prepare("card", context, input.excludedArtifactIds, 0, input.agentRunId);
       return artifact?.artifactKind === "card"
         ? {
@@ -516,7 +718,7 @@ export class AdaptiveContentService implements AdaptiveContentPort {
               acceptedCardSha256: createHash("sha256").update(JSON.stringify(artifact.value), "utf8").digest("hex"),
             },
           }
-        : { status: "unavailable" as const };
+        : await this.#publicUnavailableResult(key, input.agentRunId !== undefined);
     } catch {
       await this.#recordUnexpectedPipelineFailure(input.agentRunId);
       return { status: "unavailable" as const };
@@ -530,6 +732,7 @@ export class AdaptiveContentService implements AdaptiveContentPort {
         ...sourceContext,
         ...(input.remediationContext === undefined ? {} : { remediationContext: clone(input.remediationContext) }),
       };
+      const key = this.#key("quiz", context, input.excludedQuestionIds, input.retryNumber);
       const artifact = await this.#prepare("quiz", context, input.excludedQuestionIds, input.retryNumber, input.agentRunId);
       return artifact?.artifactKind === "quiz"
         ? {
@@ -541,7 +744,7 @@ export class AdaptiveContentService implements AdaptiveContentPort {
               acceptedQuestionSetSha256: quizQuestionSetSha256(artifact.value),
             },
           }
-        : { status: "unavailable" as const };
+        : await this.#publicUnavailableResult(key, input.agentRunId !== undefined);
     } catch {
       await this.#recordUnexpectedPipelineFailure(input.agentRunId);
       return { status: "unavailable" as const };
@@ -586,6 +789,7 @@ export class AdaptiveContentService implements AdaptiveContentPort {
     const cached = await this.#options.privateStore.read<AdaptiveCacheRecord>("adaptive-cache", key);
     if (cached !== undefined && cached.artifactKind === artifactKind
         && acceptedArtifactIsValid(cached.artifact, artifactKind, context, excludedIds)
+        && acceptedReviewProofIsValid(cached.acceptedReviewProof, cached.artifact, context, stableRunId(key))
         && cached.profileRevision === context.profileRevision && cached.targetId === context.targetId
         && JSON.stringify(cached.targetKnowledgePointIds ?? [context.knowledgePointId]) === JSON.stringify(targetKnowledgePointIds(context))
         && cached.modelId === this.#options.modelId && cached.promptVersion === this.#options.promptVersion
@@ -597,8 +801,10 @@ export class AdaptiveContentService implements AdaptiveContentPort {
     }
     const recoverable = await this.#options.privateStore.read<AdaptiveCheckpoint>("adaptive-checkpoint", key);
     if (recoverable?.stage === "accepted"
-        && acceptedArtifactIsValid(recoverable.candidate, artifactKind, context, excludedIds)) {
-      await this.#cache(key, recoverable.candidate, "immediate", context);
+        && acceptedArtifactIsValid(recoverable.candidate, artifactKind, context, excludedIds)
+        && acceptedReviewProofIsValid(recoverable.acceptedReviewProof, recoverable.candidate, context, stableRunId(key))
+        && JSON.stringify(recoverable.acceptedReviewProof.stageOrder) === JSON.stringify(recoverable.stageOrder)) {
+      await this.#cache(key, recoverable.candidate, "immediate", context, recoverable.acceptedReviewProof);
       if (recoverable.publishedAt === undefined) {
         recoverable.publishedAt = iso(this.#clock.now()); recoverable.updatedAt = recoverable.publishedAt;
         await this.#options.privateStore.write("adaptive-checkpoint", key, recoverable);
@@ -617,7 +823,7 @@ export class AdaptiveContentService implements AdaptiveContentPort {
       retryNumber,
       startedAt,
       controller.signal,
-      recoverable,
+      recoverable?.stage === "accepted" ? undefined : recoverable,
       agentRunId,
       generatorPreparationStartedAt,
     );
@@ -627,35 +833,23 @@ export class AdaptiveContentService implements AdaptiveContentPort {
     ]);
     if (early.type === "result") {
       if (early.artifact !== undefined) {
-        await this.#cache(key, early.artifact, "immediate", context);
         const checkpoint = await this.#options.privateStore.read<AdaptiveCheckpoint>("adaptive-checkpoint", key);
-        if (checkpoint !== undefined) {
+        if (checkpoint !== undefined
+            && acceptedReviewProofIsValid(checkpoint.acceptedReviewProof, early.artifact, context, stableRunId(key))
+            && JSON.stringify(checkpoint.acceptedReviewProof.stageOrder) === JSON.stringify(checkpoint.stageOrder)) {
+          await this.#cache(key, early.artifact, "immediate", context, checkpoint.acceptedReviewProof);
           checkpoint.publishedAt = iso(this.#clock.now()); checkpoint.updatedAt = checkpoint.publishedAt;
           await this.#options.privateStore.write("adaptive-checkpoint", key, checkpoint);
-        }
+        } else return undefined;
       }
       return early.artifact;
     }
-
-    void Promise.race([
-      work.then((artifact) => ({ type: "result" as const, artifact })),
-      this.#clock.sleep(this.#discardAfterMs - this.#fallbackAfterMs).then(() => ({ type: "discard" as const })),
-    ]).then(async (late) => {
-      if (late.type === "result" && late.artifact !== undefined
-          && this.#clock.now() - startedAt < this.#discardAfterMs) {
-        await this.#cache(key, late.artifact, "late", context);
-        const checkpoint = await this.#options.privateStore.read<AdaptiveCheckpoint>("adaptive-checkpoint", key);
-        if (checkpoint !== undefined) {
-          checkpoint.lateCachedAt = iso(this.#clock.now()); checkpoint.updatedAt = checkpoint.lateCachedAt;
-          await this.#options.privateStore.write("adaptive-checkpoint", key, checkpoint);
-        }
-      } else {
-        this.#discardedSignals.add(controller.signal);
-        controller.abort();
-        await this.#markDiscarded(key);
-        void work.finally(() => this.#markDiscarded(key)).catch(() => undefined);
-      }
-    }).catch(() => undefined);
+    this.#discardedSignals.add(controller.signal);
+    if (agentRunId !== undefined) this.#closedAgentRunIds.add(agentRunId);
+    controller.abort();
+    await this.#recordOwnedTimeout(agentRunId);
+    await this.#markDiscarded(key);
+    void work.catch(() => undefined);
     return undefined;
   }
 
@@ -723,7 +917,9 @@ export class AdaptiveContentService implements AdaptiveContentPort {
     };
     const graphs = createStudyReviewGraphs();
     if ((checkpoint.candidate !== undefined
-          && !acceptedArtifactIsValid(checkpoint.candidate, artifactKind, context, excludedIds))
+          && (!acceptedArtifactIsValid(checkpoint.candidate, artifactKind, context, excludedIds)
+            || checkpoint.safetyAudit === undefined
+            || checkpoint.safetyAudit.outputCandidateSha256 !== acceptedArtifactSha256(checkpoint.candidate)))
         || (checkpoint.publicGenerator !== undefined
           && (!graphs.generator.validateOutput(checkpoint.publicGenerator)
             || !safeId(checkpoint.publicGenerator.artifactId) || !safeText(checkpoint.publicGenerator.rationale)
@@ -742,11 +938,11 @@ export class AdaptiveContentService implements AdaptiveContentPort {
         || (checkpoint.defender !== undefined
           && (checkpoint.hunter === undefined || !graphs.defender.validateOutput(checkpoint.defender)
             || containsAdaptiveAuthorityViolation(checkpoint.defender)
-            || !defenderIsClosed(checkpoint.defender, checkpoint.hunter)))
+            || !defenderOutputIsClosed(checkpoint.defender, checkpoint.hunter)))
         || (checkpoint.judge !== undefined
           && (checkpoint.hunter === undefined || !graphs.judge.validateOutput(checkpoint.judge)
             || containsAdaptiveAuthorityViolation(checkpoint.judge)
-            || !judgeIsClosed(checkpoint.judge, checkpoint.hunter, checkpoint.defender)))) {
+            || !judgeOutputIsClosed(checkpoint.judge, checkpoint.hunter)))) {
       if (prestartedGeneratorAt !== undefined) {
         await this.#finishPublicStage(
           agentRunId,
@@ -779,17 +975,25 @@ export class AdaptiveContentService implements AdaptiveContentPort {
       let generatorResult: ModelExecutionResult | undefined;
       let generator: GeneratorOutput | undefined;
       let generatorDetail = "graph_output_schema";
-      let nextAttempt: "initial" | "provider-retry" | "repair" = "initial";
+      let nextAttempt: "initial" | "provider-retry" | "repair" | "judge-repair" = checkpoint.pendingJudgeRepairInstruction === undefined
+        ? "initial"
+        : "judge-repair";
       let providerRetries = 0;
       let candidateRepairs = 0;
+      const generatorAttemptOffset = (checkpoint.judgeRevisionCount ?? 0) * 3;
       // A transient provider retry and a malformed-candidate repair are separate
       // budgets. A recovered provider must still get one precise schema repair.
       for (let attempt = 0; attempt < 3; attempt += 1) {
-        const attemptNumber = attempt + 1;
+        const attemptNumber = generatorAttemptOffset + attempt + 1;
         const generatorInput = nextAttempt === "initial" || nextAttempt === "provider-retry"
           ? baseGeneratorInput
-          : { ...baseGeneratorInput, repairInstruction: generatorRepairInstruction(generatorDetail, artifactKind) };
-        const attemptSuffix = nextAttempt === "initial" ? "" : nextAttempt === "provider-retry" ? ".retry" : ".repair";
+          : nextAttempt === "judge-repair"
+            ? { ...baseGeneratorInput, repairInstruction: checkpoint.pendingJudgeRepairInstruction }
+            : { ...baseGeneratorInput, repairInstruction: generatorRepairInstruction(generatorDetail, artifactKind) };
+        const attemptSuffix = nextAttempt === "initial" ? ""
+          : nextAttempt === "provider-retry" ? ".retry"
+            : nextAttempt === "judge-repair" ? `.judge-revision-${checkpoint.judgeRevisionCount ?? 1}`
+              : ".repair";
         const generatorStartedAt = prestartedGeneratorAt !== undefined && attemptNumber === 1 && nextAttempt === "initial"
           ? prestartedGeneratorAt
           : await this.#beginPublicStage(
@@ -798,6 +1002,7 @@ export class AdaptiveContentService implements AdaptiveContentPort {
               attemptNumber,
               nextAttempt === "initial" ? `正在根据当前教学正文和安全学情事实生成候选${artifactLabel}。`
                 : nextAttempt === "provider-retry" ? "模型服务上一轮未形成有效响应，正在执行一次受控重试。"
+                  : nextAttempt === "judge-repair" ? "Judge已确认候选需要返修，Generator正在按阻塞问题生成完整新候选。"
                   : "候选未通过确定性合同，正在按失败类别定向修复。",
               [
                 { metricId: "attempt", label: "执行轮次", value: `第${attemptNumber}轮`, tone: attemptNumber === 1 ? "neutral" : "warning" },
@@ -807,7 +1012,10 @@ export class AdaptiveContentService implements AdaptiveContentPort {
         prestartedGeneratorAt = undefined;
         generatorResult = await this.#execute("generator", `${generationRunId}.generator${attemptSuffix}`,
           context.profileRevision, generatorInput, signal);
-        checkpoint.stageOrder.push(nextAttempt === "initial" ? "generator" : nextAttempt === "provider-retry" ? "generator-retry" : "generator-repair");
+        checkpoint.stageOrder.push(nextAttempt === "initial" ? "generator"
+          : nextAttempt === "provider-retry" ? "generator-retry"
+            : nextAttempt === "judge-repair" ? "generator-judge-repair"
+              : "generator-repair");
         checkpoint.updatedAt = iso(this.#clock.now());
         const outerValid = generatorResult.status === "ok"
           && graphs.generator.validateOutput(generatorResult.payload)
@@ -821,8 +1029,11 @@ export class AdaptiveContentService implements AdaptiveContentPort {
           && !containsAdaptiveAuthorityViolation({ rationale: generatorResult.payload.rationale, riskFlags: generatorResult.payload.riskFlags });
         if (!outerValid) {
           generatorDetail = generatorResult.status === "ok" ? generatorFailureDetail(generatorResult, context) : `status_${generatorResult.status}`;
-          const canProviderRetry = generatorResult.status === "provider_error" && providerRetries < 1;
-          const canRepair = (generatorResult.status === "ok" || generatorResult.status === "invalid_output") && candidateRepairs < 1;
+          const hasNextAttempt = attempt + 1 < 3;
+          const canProviderRetry = hasNextAttempt && generatorResult.status === "provider_error" && providerRetries < 1;
+          const canRepair = hasNextAttempt
+            && (generatorResult.status === "ok" || generatorResult.status === "invalid_output")
+            && candidateRepairs < 1;
           await this.#finishPublicStage(
             agentRunId,
             "generator",
@@ -868,25 +1079,34 @@ export class AdaptiveContentService implements AdaptiveContentPort {
         const parsed = parseGeneratorArtifact(generator, artifactKind, context, excludedIds);
         artifact = parsed.ok ? parsed.artifact : undefined;
         generatorDetail = parsed.ok ? "candidate_risk_flags_mismatch" : parsed.detail;
-        if (artifact !== undefined && generatorRiskIsBound(artifact, generator)) {
+        if (parsed.ok && generatorRiskIsBound(parsed.artifact, generator)) {
+          artifact = parsed.artifact;
+          checkpoint.safetyAudit = clone(parsed.safetyAudit);
           await this.#finishPublicStage(
             agentRunId,
             "safety",
             attemptNumber,
             safetyStartedAt,
             "succeeded",
-            "候选已通过确定性安全与输出合同检查。",
+            parsed.safetyAudit.normalization === "quiz_option_order_balanced"
+              ? "候选已通过确定性检查；Safety按固定算法标准化了单选题选项顺序，并保留前后哈希供审核链核对。"
+              : "候选已通过确定性安全与输出合同检查，候选内容未发生标准化改写。",
             {
               metrics: [
                 { metricId: "question-count", label: "候选题量", value: artifact.artifactKind === "quiz" ? `${artifact.value.length}道` : "1份卡片", tone: "success" },
                 { metricId: "risk-level", label: "风险等级", value: artifact.riskLevel === "high" ? "高风险" : "低风险", tone: artifact.riskLevel === "high" ? "warning" : "success" },
+                { metricId: "normalization", label: "确定性标准化", value: parsed.safetyAudit.normalization, tone: parsed.safetyAudit.normalization === "none" ? "success" : "warning" },
+                { metricId: "input-sha256", label: "输入候选哈希", value: parsed.safetyAudit.inputCandidateSha256.slice(0, 12), tone: "neutral" },
+                { metricId: "output-sha256", label: "输出候选哈希", value: parsed.safetyAudit.outputCandidateSha256.slice(0, 12), tone: "neutral" },
               ],
             },
           );
           break;
         }
         artifact = undefined;
-          const canRepair = candidateRepairs < 2;
+        delete checkpoint.safetyAudit;
+        const hasNextAttempt = attempt + 1 < 3;
+        const canRepair = hasNextAttempt && candidateRepairs < 2;
         await this.#finishPublicStage(
           agentRunId,
           "safety",
@@ -915,21 +1135,27 @@ export class AdaptiveContentService implements AdaptiveContentPort {
       checkpoint.requiresReview = true;
       safeGenerator = { ...generator, candidateFeedback: publicCandidate(artifact) };
       checkpoint.publicGenerator = clone(safeGenerator);
+      delete checkpoint.pendingJudgeRepairInstruction;
       await this.#options.privateStore.write("adaptive-checkpoint", key, checkpoint);
     }
     if (artifact === undefined || safeGenerator === undefined || checkpoint.requiresReview !== true) {
       return this.#unavailable(key, checkpoint, "checkpoint_incomplete", signal);
     }
     const reviewGenerator = privateReviewGenerator(artifact, safeGenerator);
+    if (checkpoint.safetyAudit === undefined) {
+      return this.#unavailable(key, checkpoint, "safety_audit_missing", signal);
+    }
+    const auditedReviewContext = { ...reviewContext, safetySummary: clone(checkpoint.safetyAudit) };
 
     let hunter = checkpoint.hunter;
     if (hunter === undefined) {
       checkpoint.stage = "hunter"; checkpoint.updatedAt = iso(this.#clock.now());
       await this.#options.privateStore.write("adaptive-checkpoint", key, checkpoint);
-      const hunterInput = { context: reviewContext, generator: reviewGenerator };
+      const hunterInput = { context: auditedReviewContext, generator: reviewGenerator };
       let hunterFailure = "unknown";
+      const reviewRound = checkpoint.judgeRevisionCount ?? 0;
       for (let attempt = 0; attempt < 2; attempt += 1) {
-        const attemptNumber = attempt + 1;
+        const attemptNumber = reviewRound * 2 + attempt + 1;
         const hunterStartedAt = await this.#beginPublicStage(
           agentRunId,
           "hunter",
@@ -945,7 +1171,7 @@ export class AdaptiveContentService implements AdaptiveContentPort {
           : {
               ...hunterInput,
               reviewInstruction: hunterFailure === "hunter_contract"
-                ? "确保requiresDefender严格等于是否存在disputed=true；issues非空时recommendedVerdict必须为revise，issues为空时必须为accepted；高风险候选至少报告一个disputed=true问题。"
+                ? "Hunter只负责找错和举证。issues非空时recommendedVerdict必须为revise，issues为空时必须为accepted；高风险候选至少报告一个具体问题。requiresDefender只是兼容建议字段，不拥有服务端路由权。"
                 : `上一轮失败类别=${hunterFailure}。只返回Hunter三字段JSON，并纠正该失败类别。`,
             };
         const hunterResult = await this.#execute(
@@ -963,7 +1189,9 @@ export class AdaptiveContentService implements AdaptiveContentPort {
         let closureValid = false;
         try {
           outputValid = hunterResult.status === "ok" && graphs.hunter.validateOutput(hunterResult.payload);
-          sourcesValid = outputValid && resultSourcesAreSafe(hunterResult, context.sourceAnchorIds);
+          sourcesValid = outputValid
+            && resultSourcesAreSafe(hunterResult, context.sourceAnchorIds)
+            && hunterEvidenceSourcesAreSafe(hunterResult.payload as HunterOutput, context.sourceAnchorIds);
           authorityValid = outputValid && !containsAdaptiveAuthorityViolation(hunterResult.payload);
           hunterOutput = outputValid ? hunterResult.payload as HunterOutput : undefined;
           closureValid = hunterOutput !== undefined && hunterIsClosed(hunterOutput, artifact.riskLevel);
@@ -1013,14 +1241,18 @@ export class AdaptiveContentService implements AdaptiveContentPort {
           return this.#unavailable(key, checkpoint, hunterResult.status === "ok" ? "hunter_invalid" : hunterResult.status, signal, hunterFailure);
         }
         hunter = hunterOutput!; checkpoint.hunter = clone(hunter);
+        const hunterCategories = [...new Set(hunter.issues.map((issue) => issue.category))];
+        const hunterSourceIds = uniqueIds(hunter.issues.flatMap((issue) => issue.sourceAnchorIds));
         await this.#finishPublicStage(agentRunId, "hunter", attemptNumber, hunterStartedAt, "succeeded", hunter.issues.length === 0
           ? "Hunter未发现需要阻塞发布的问题。"
-          : `Hunter发现${hunter.issues.length}项问题，已按是否存在争议决定后续工位。`, {
+          : `Hunter发现${hunter.issues.length}项问题（${hunterCategories.join("、") || "待分类"}），已提交Judge独立裁决。`, {
           metrics: [
             { metricId: "issue-count", label: "问题数量", value: `${hunter.issues.length}项`, tone: hunter.issues.length === 0 ? "success" : "warning" },
-            { metricId: "defender-required", label: "需要辩护", value: hunter.requiresDefender ? "是" : "否", tone: hunter.requiresDefender ? "warning" : "neutral" },
+            { metricId: "hunter-route-advice", label: "Hunter路由建议", value: hunter.requiresDefender ? "建议辩护" : "未建议辩护", tone: hunter.requiresDefender ? "warning" : "neutral" },
+            { metricId: "issue-categories", label: "问题类别", value: hunterCategories.join("、") || "无", tone: hunterCategories.length === 0 ? "success" : "warning" },
           ],
           issueCategories: [...new Set(hunter.issues.map((issue) => `${issue.severity}风险`))],
+          sourceClaimIds: hunterSourceIds,
         });
         await this.#options.privateStore.write("adaptive-checkpoint", key, checkpoint);
         break;
@@ -1028,52 +1260,109 @@ export class AdaptiveContentService implements AdaptiveContentPort {
       if (hunter === undefined) return this.#unavailable(key, checkpoint, "hunter_invalid", signal, hunterFailure);
     }
     let defender = checkpoint.defender;
-    if (hunter.requiresDefender) {
+    const route = defenderRoute(hunter);
+    if (route.required) {
+      const defenderHunter = highRiskHunterOutput(hunter);
       if (defender === undefined) {
         checkpoint.stage = "defender"; checkpoint.updatedAt = iso(this.#clock.now());
         await this.#options.privateStore.write("adaptive-checkpoint", key, checkpoint);
-        const defenderInput = { context: reviewContext, generator: reviewGenerator, hunter };
-        const defenderStartedAt = await this.#beginPublicStage(
-          agentRunId,
-          "defender",
-          1,
-          "Defender正在逐项回应Hunter标记的争议问题。",
-        );
-        const defenderResult = await this.#execute("defender", `${generationRunId}.defender`, context.profileRevision, defenderInput, signal);
-        checkpoint.stageOrder.push("defender"); checkpoint.updatedAt = iso(this.#clock.now());
-        if (defenderResult.status !== "ok" || !graphs.defender.validateOutput(defenderResult.payload)
-            || !resultSourcesAreSafe(defenderResult, context.sourceAnchorIds)
-            || containsAdaptiveAuthorityViolation(defenderResult.payload)
-            || !defenderIsClosed(defenderResult.payload, hunter)) {
-          await this.#finishPublicStage(agentRunId, "defender", 1, defenderStartedAt, "failed", "Defender未能闭合全部争议问题。", {
-            metrics: [{ metricId: "result-status", label: "执行结果", value: defenderResult.status, tone: "danger" }],
-            issueCategories: ["辩护未闭合"],
+        const defenderInput = { context: auditedReviewContext, generator: reviewGenerator, hunter: defenderHunter };
+        let defenderFailure = "unknown";
+        const reviewRound = checkpoint.judgeRevisionCount ?? 0;
+        for (let attempt = 0; attempt < 2; attempt += 1) {
+          const defenderAttemptNumber = reviewRound * 2 + attempt + 1;
+          const defenderStartedAt = await this.#beginPublicStage(
+            agentRunId,
+            "defender",
+            defenderAttemptNumber,
+            attempt === 0
+              ? "Hunter报告了high风险问题，Defender正在依据正文逐项辩护或承认。"
+              : `Defender上一轮输出未通过合同校验（${defenderFailure}），正在按问题ID定向重试。`,
+          );
+          const currentDefenderInput = attempt === 0
+            ? defenderInput
+            : { ...defenderInput, reviewInstruction: defenderRepairInstruction(defenderFailure, defenderHunter) };
+          const revisionSuffix = reviewRound === 0 ? "" : `.revision-${reviewRound}`;
+          const defenderResult = await this.#execute(
+            "defender",
+            `${generationRunId}.defender${revisionSuffix}${attempt === 0 ? "" : ".contract-repair"}`,
+            context.profileRevision,
+            currentDefenderInput,
+            signal,
+          );
+          checkpoint.stageOrder.push(attempt === 0 ? "defender" : "defender-retry"); checkpoint.updatedAt = iso(this.#clock.now());
+          const outputValid = defenderResult.status === "ok" && graphs.defender.validateOutput(defenderResult.payload);
+          const sourcesValid = outputValid
+            && resultSourcesAreSafe(defenderResult, context.sourceAnchorIds)
+            && defenderEvidenceSourcesAreSafe(defenderResult.payload as DefenderOutput, context.sourceAnchorIds);
+          const authorityValid = outputValid && !containsAdaptiveAuthorityViolation(defenderResult.payload);
+          const closureValid = outputValid && defenderOutputIsClosed(defenderResult.payload as DefenderOutput, defenderHunter);
+          if (!outputValid || !sourcesValid || !authorityValid || !closureValid) {
+            defenderFailure = defenderResult.status !== "ok"
+              ? `status_${defenderResult.status}_${defenderResult.errorCode ?? "unknown"}`
+              : !graphs.defender.validateOutput(defenderResult.payload) ? "defender_schema"
+                : !sourcesValid ? "defender_source_refs"
+                  : !authorityValid ? "defender_authority" : "defender_issue_closure";
+            const retryable = attempt === 0;
+            await this.#finishPublicStage(
+              agentRunId,
+              "defender",
+              defenderAttemptNumber,
+              defenderStartedAt,
+              retryable ? "revised" : "failed",
+              retryable
+                ? "Defender输出未完整覆盖Hunter问题，正在按原问题ID修复一次。"
+                : "Defender连续未形成可验证的逐项回应，未发布未经完整审核的AI内容。",
+              {
+                metrics: [
+                  { metricId: "result-status", label: "执行结果", value: defenderResult.status, tone: "danger" },
+                  { metricId: "failure-category", label: "失败类别", value: defenderFailure, tone: "danger" },
+                ],
+                issueCategories: ["辩护合同不符"],
+              },
+            );
+            await this.#options.privateStore.write("adaptive-checkpoint", key, checkpoint);
+            if (retryable) continue;
+            return this.#unavailable(
+              key,
+              checkpoint,
+              defenderResult.status === "ok" ? "defender_invalid" : defenderResult.status,
+              signal,
+              defenderFailure,
+            );
+          }
+          defender = defenderResult.payload as DefenderOutput; checkpoint.defender = clone(defender);
+          const concededIssueIds = defenderConcededIssueIds(defender);
+          const rebuttedIssueIds = defenderRebuttedIssueIds(defender);
+          const residualRisks = defenderResidualRisks(defender);
+          const defenderSourceIds = uniqueIds(defender.issueAssessments.flatMap((assessment) => assessment.sourceAnchorIds));
+          await this.#finishPublicStage(agentRunId, "defender", defenderAttemptNumber, defenderStartedAt, "succeeded", `Defender已逐项回应Hunter证据（承认${concededIssueIds.length}项、反驳${rebuttedIssueIds.length}项），交由Judge独立裁决。`, {
+            metrics: [
+              { metricId: "accepted-issues", label: "承认问题", value: `${concededIssueIds.length}项`, tone: concededIssueIds.length > 0 ? "warning" : "neutral" },
+              { metricId: "rebutted-issues", label: "完成反驳", value: `${rebuttedIssueIds.length}项`, tone: "neutral" },
+              { metricId: "residual-risks", label: "剩余风险", value: `${residualRisks.length}项`, tone: residualRisks.length > 0 ? "danger" : "success" },
+            ],
+            sourceClaimIds: defenderSourceIds,
           });
-          return this.#unavailable(key, checkpoint, defenderResult.status === "ok" ? "defender_invalid" : defenderResult.status, signal);
+          await this.#options.privateStore.write("adaptive-checkpoint", key, checkpoint);
+          break;
         }
-        defender = defenderResult.payload; checkpoint.defender = clone(defender);
-        await this.#finishPublicStage(agentRunId, "defender", 1, defenderStartedAt, "succeeded", "Defender已逐项回应争议，交由Judge独立裁决。", {
-          metrics: [
-            { metricId: "accepted-issues", label: "接受问题", value: `${defender.acceptedIssueIds.length}项`, tone: defender.acceptedIssueIds.length > 0 ? "warning" : "neutral" },
-            { metricId: "rebutted-issues", label: "完成反驳", value: `${defender.rebuttedIssueIds.length}项`, tone: "neutral" },
-            { metricId: "residual-risks", label: "剩余风险", value: `${defender.residualRisks.length}项`, tone: defender.residualRisks.length > 0 ? "danger" : "success" },
-          ],
-        });
-        await this.#options.privateStore.write("adaptive-checkpoint", key, checkpoint);
+        if (defender === undefined) return this.#unavailable(key, checkpoint, "defender_invalid", signal, defenderFailure);
       }
     } else {
-      await this.#recordSkippedStage(agentRunId, "defender", "Hunter未标记争议问题，Defender按条件执行规则明确不触发。", [
-        { metricId: "trigger", label: "触发条件", value: "无争议问题", tone: "success" },
+      await this.#recordSkippedStage(agentRunId, "defender", "Hunter未报告high风险问题，按节流规则跳过Defender并直接交给Judge。", [
+        { metricId: "trigger", label: "程序路由结论", value: "无high风险问题", tone: "success" },
       ]);
     }
     checkpoint.stage = "judge"; checkpoint.updatedAt = iso(this.#clock.now());
     await this.#options.privateStore.write("adaptive-checkpoint", key, checkpoint);
-    const baseJudgeInput = { context: reviewContext, generator: reviewGenerator, hunter,
+    const baseJudgeInput = { context: auditedReviewContext, generator: reviewGenerator, hunter,
       ...(defender === undefined ? {} : { defender }) };
     let acceptedJudge: JudgeOutput | undefined;
     let judgeDetail = "unknown";
+    const judgeAttemptOffset = (checkpoint.judgeRevisionCount ?? 0) * 2;
     for (let attempt = 0; attempt < 2; attempt += 1) {
-      const attemptNumber = attempt + 1;
+      const attemptNumber = judgeAttemptOffset + attempt + 1;
       const judgeInput = attempt === 0
         ? baseJudgeInput
         : { ...baseJudgeInput, reviewInstruction: `上一轮裁决未通过确定性校验，失败类别=${judgeDetail}。请只修复裁决结构和问题闭合。` };
@@ -1083,7 +1372,8 @@ export class AdaptiveContentService implements AdaptiveContentPort {
         attemptNumber,
         attempt === 0 ? "Judge正在综合候选、Hunter问题和Defender辩护作最终裁决。" : "Judge正在修复上一轮裁决结构并重新闭合问题。",
       );
-      const judgeResult = await this.#execute("judge", `${generationRunId}.judge${attempt === 0 ? "" : ".repair"}`,
+      const judgeRoundSuffix = (checkpoint.judgeRevisionCount ?? 0) === 0 ? "" : `.revision-${checkpoint.judgeRevisionCount}`;
+      const judgeResult = await this.#execute("judge", `${generationRunId}.judge${judgeRoundSuffix}${attempt === 0 ? "" : ".contract-repair"}`,
         context.profileRevision, judgeInput, signal);
       checkpoint.stageOrder.push(attempt === 0 ? "judge" : "judge-repair"); checkpoint.updatedAt = iso(this.#clock.now());
       if (judgeResult.status !== "ok") {
@@ -1095,65 +1385,128 @@ export class AdaptiveContentService implements AdaptiveContentPort {
             issueCategories: ["裁决执行异常"],
           });
         if (canRetry) continue;
-        return this.#unavailable(key, checkpoint, judgeResult.status, signal, judgeDetail);
+        return this.#unavailable(
+          key,
+          checkpoint,
+          judgeResult.status === "invalid_output" ? "judge_invalid" : judgeResult.status,
+          signal,
+          judgeDetail,
+        );
       }
       if (!graphs.judge.validateOutput(judgeResult.payload)) {
         judgeDetail = "invalid_schema";
-        await this.#finishPublicStage(agentRunId, "judge", attemptNumber, judgeStartedAt, attempt === 0 ? "revised" : "rejected",
-          attempt === 0 ? "裁决结构未通过确定性校验，将定向修复一次。" : `裁决结构重复无效，拒绝发布${artifactLabel}。`, {
+        await this.#finishPublicStage(agentRunId, "judge", attemptNumber, judgeStartedAt, attempt === 0 ? "revised" : "failed",
+          attempt === 0 ? "裁决结构未通过确定性校验，将定向修复一次。" : "裁决结构连续无效，本轮未形成可验证的Judge结论。", {
             metrics: [{ metricId: "failure-category", label: "失败类别", value: judgeDetail, tone: "danger" }],
-            decision: attempt === 0 ? "revise" : "rejected",
           });
         if (attempt === 0) continue;
-        return this.#unavailable(key, checkpoint, "judge_rejected", signal, judgeDetail);
+        return this.#unavailable(key, checkpoint, "judge_invalid", signal, judgeDetail);
       }
-      if (!resultSourcesAreSafe(judgeResult, context.sourceAnchorIds)) {
-        await this.#finishPublicStage(agentRunId, "judge", attemptNumber, judgeStartedAt, "rejected", `裁决引用了未绑定来源，${artifactLabel}不得发布。`, {
-          issueCategories: ["来源未绑定"], decision: "rejected",
+      if (!resultSourcesAreSafe(judgeResult, context.sourceAnchorIds)
+        || !judgeEvidenceSourcesAreSafe(judgeResult.payload, context.sourceAnchorIds)) {
+        judgeDetail = "invalid_source_refs";
+        await this.#finishPublicStage(agentRunId, "judge", attemptNumber, judgeStartedAt, attempt === 0 ? "revised" : "failed",
+          attempt === 0 ? "裁决证据引用未绑定来源，将按允许来源修复一次。" : "裁决连续引用未绑定来源，本轮未形成可验证的Judge结论。", {
+          issueCategories: ["来源未绑定"],
         });
-        return this.#unavailable(key, checkpoint, "judge_rejected", signal, "invalid_source_refs");
+        if (attempt === 0) continue;
+        return this.#unavailable(key, checkpoint, "judge_invalid", signal, judgeDetail);
       }
       if (containsAdaptiveAuthorityViolation(judgeResult.payload)) {
         judgeDetail = "authority_violation";
-        await this.#finishPublicStage(agentRunId, "judge", attemptNumber, judgeStartedAt, attempt === 0 ? "revised" : "rejected",
-          attempt === 0 ? "裁决触碰安全边界，将清除违规内容后修复一次。" : `裁决重复触碰安全边界，${artifactLabel}不得发布。`, {
-            issueCategories: ["权威边界冲突"], decision: attempt === 0 ? "revise" : "rejected",
+        await this.#finishPublicStage(agentRunId, "judge", attemptNumber, judgeStartedAt, attempt === 0 ? "revised" : "failed",
+          attempt === 0 ? "裁决触碰安全边界，将清除违规内容后修复一次。" : "裁决连续触碰安全边界，本轮未形成可验证的Judge结论。", {
+            issueCategories: ["权威边界冲突"],
           });
         if (attempt === 0) continue;
-        return this.#unavailable(key, checkpoint, "judge_rejected", signal, "authority_violation");
+        return this.#unavailable(key, checkpoint, "judge_invalid", signal, judgeDetail);
       }
-      if (!judgeIsClosed(judgeResult.payload, hunter, defender)) {
-        const substantiveIssueRemains = hunter.issues.some((issue) => !issue.disputed)
-          || (defender !== undefined
-            && (defender.acceptedIssueIds.length > 0 || defender.residualRisks.length > 0));
-        judgeDetail = substantiveIssueRemains ? "unresolved_substantive_issue" : "invalid_issue_closure";
-        if (substantiveIssueRemains) {
-          await this.#finishPublicStage(agentRunId, "judge", attemptNumber, judgeStartedAt, "rejected", `仍有实质性问题未解决，Judge拒绝发布${artifactLabel}。`, {
-            metrics: [{ metricId: "blocked-count", label: "阻塞问题", value: `${hunter.issues.length}项`, tone: "danger" }],
-            issueCategories: ["实质问题未解决"], decision: "rejected",
-          });
-          return this.#unavailable(key, checkpoint, "judge_rejected", signal, judgeDetail);
-        }
-        await this.#finishPublicStage(agentRunId, "judge", attemptNumber, judgeStartedAt, attempt === 0 ? "revised" : "rejected",
-          attempt === 0 ? "问题闭合关系不完整，将定向修复一次。" : `问题闭合关系重复无效，拒绝发布${artifactLabel}。`, {
-            issueCategories: ["问题闭合不完整"], decision: attempt === 0 ? "revise" : "rejected",
+      if (!judgeOutputIsClosed(judgeResult.payload, hunter)) {
+        judgeDetail = "invalid_issue_closure";
+        await this.#finishPublicStage(agentRunId, "judge", attemptNumber, judgeStartedAt, attempt === 0 ? "revised" : "failed",
+          attempt === 0 ? "问题闭合关系不完整，将定向修复一次。" : "问题闭合关系连续无效，本轮未形成可验证的Judge结论。", {
+            issueCategories: ["问题闭合不完整"],
           });
         if (attempt === 0) continue;
-        return this.#unavailable(key, checkpoint, "judge_rejected", signal, judgeDetail);
+        return this.#unavailable(key, checkpoint, "judge_invalid", signal, judgeDetail);
       }
-      if (judgeResult.payload.verdict !== "accepted") {
-        await this.#finishPublicStage(agentRunId, "judge", attemptNumber, judgeStartedAt, "rejected", `Judge明确拒绝本轮候选${artifactLabel}。`, {
-          metrics: [{ metricId: "verdict", label: "裁决", value: judgeResult.payload.verdict, tone: "danger" }],
-          issueCategories: ["裁决未接受"], decision: judgeResult.payload.verdict,
+      if (judgeResult.payload.verdict === "rejected") {
+        const judgeSourceIds = uniqueIds([
+          ...judgeResult.payload.issueDecisions.flatMap((decision) => decision.sourceAnchorIds),
+          ...judgeResult.payload.additionalIssues.flatMap((issue) => issue.sourceAnchorIds),
+        ]);
+        await this.#finishPublicStage(agentRunId, "judge", attemptNumber, judgeStartedAt, "rejected", `Judge确认存在无法安全闭合的问题（阻塞${judgeResult.payload.blockedIssueIds.length}项），拒绝发布本轮${artifactLabel}。`, {
+          metrics: [{ metricId: "verdict", label: "裁决", value: "rejected", tone: "danger" }],
+          issueCategories: ["Judge最终拒绝"], decision: "rejected", sourceClaimIds: judgeSourceIds,
         });
-        return this.#unavailable(key, checkpoint, "judge_rejected", signal, `verdict_${judgeResult.payload.verdict}`);
+        checkpoint.judge = clone(judgeResult.payload);
+        await this.#options.privateStore.write("adaptive-checkpoint", key, checkpoint);
+        return this.#unavailable(key, checkpoint, "judge_rejected", signal, "verdict_rejected");
       }
-      await this.#finishPublicStage(agentRunId, "judge", attemptNumber, judgeStartedAt, "succeeded", `Judge确认问题已闭合，允许发布本轮${artifactLabel}。`, {
+      if (judgeResult.payload.verdict === "revise") {
+        const revisionCount = checkpoint.judgeRevisionCount ?? 0;
+        const canReviseCandidate = revisionCount < 1;
+        await this.#finishPublicStage(
+          agentRunId,
+          "judge",
+          attemptNumber,
+          judgeStartedAt,
+          canReviseCandidate ? "revised" : "rejected",
+          canReviseCandidate
+            ? `Judge已确认阻塞问题，授权Generator执行一次受控返修；返修候选将从Safety开始完整重审。`
+            : `Judge再次要求返修，但本轮受控返修预算已耗尽，停止发布${artifactLabel}。`,
+          {
+            metrics: [
+              { metricId: "verdict", label: "裁决", value: "revise", tone: "warning" },
+              { metricId: "blocked-count", label: "阻塞问题", value: `${judgeResult.payload.blockedIssueIds.length}项`, tone: "danger" },
+              { metricId: "revision-budget", label: "候选返修预算", value: canReviseCandidate ? "剩余1次" : "已耗尽", tone: canReviseCandidate ? "warning" : "danger" },
+            ],
+            issueCategories: [canReviseCandidate ? "Judge要求返修" : "返修预算耗尽"],
+            decision: canReviseCandidate ? "revise" : "rejected",
+            sourceClaimIds: uniqueIds([
+              ...judgeResult.payload.issueDecisions.flatMap((decision) => decision.sourceAnchorIds),
+              ...judgeResult.payload.additionalIssues.flatMap((issue) => issue.sourceAnchorIds),
+            ]),
+          },
+        );
+        checkpoint.judge = clone(judgeResult.payload);
+        if (!canReviseCandidate) {
+          await this.#options.privateStore.write("adaptive-checkpoint", key, checkpoint);
+          return this.#unavailable(key, checkpoint, "judge_repair_exhausted", signal, "verdict_revise_budget_exhausted");
+        }
+        checkpoint.judgeRevisionCount = revisionCount + 1;
+        checkpoint.pendingJudgeRepairInstruction = judgeRepairInstruction(judgeResult.payload);
+        checkpoint.stage = "generator";
+        delete checkpoint.candidate;
+        delete checkpoint.publicGenerator;
+        delete checkpoint.hunter;
+        delete checkpoint.defender;
+        delete checkpoint.judge;
+        await this.#options.privateStore.write("adaptive-checkpoint", key, checkpoint);
+        return this.#generate(
+          key,
+          artifactKind,
+          context,
+          excludedIds,
+          retryNumber,
+          startedAt,
+          signal,
+          checkpoint,
+          agentRunId,
+        );
+      }
+      await this.#finishPublicStage(agentRunId, "judge", attemptNumber, judgeStartedAt, "succeeded", `Judge综合正文与审核意见完成裁决，确认问题已闭合，允许发布本轮${artifactLabel}。`, {
         metrics: [
           { metricId: "verdict", label: "裁决", value: "accepted", tone: "success" },
           { metricId: "blocked-count", label: "阻塞问题", value: `${judgeResult.payload.blockedIssueIds.length}项`, tone: judgeResult.payload.blockedIssueIds.length === 0 ? "success" : "danger" },
+          { metricId: "overruled-count", label: "推翻Hunter指控", value: `${judgeResult.payload.issueDecisions.filter((decision) => decision.decision === "overruled").length}项`, tone: "neutral" },
+          { metricId: "additional-count", label: "Judge补充问题", value: `${judgeResult.payload.additionalIssues.length}项`, tone: judgeResult.payload.additionalIssues.length === 0 ? "success" : "warning" },
         ],
         decision: "accepted",
+        sourceClaimIds: uniqueIds([
+          ...judgeResult.payload.issueDecisions.flatMap((decision) => decision.sourceAnchorIds),
+          ...judgeResult.payload.additionalIssues.flatMap((issue) => issue.sourceAnchorIds),
+        ]),
       });
       acceptedJudge = judgeResult.payload;
       break;
@@ -1231,6 +1584,7 @@ export class AdaptiveContentService implements AdaptiveContentPort {
   }
 
   async #appendPublicStage(agentRunId: string, event: AppendAgentStageInput): Promise<void> {
+    if (this.#closedAgentRunIds.has(agentRunId)) return;
     const repository = this.#options.agentRuns;
     if (repository === undefined) return;
     for (let attempt = 0; attempt < 2; attempt += 1) {
@@ -1290,6 +1644,41 @@ export class AdaptiveContentService implements AdaptiveContentPort {
     }
   }
 
+  async #recordOwnedTimeout(agentRunId: string | undefined): Promise<void> {
+    const repository = this.#options.agentRuns;
+    if (agentRunId === undefined || repository === undefined) return;
+    try {
+      const run = await repository.getByRunId(agentRunId);
+      if (run === undefined || ["succeeded", "failed", "fallback"].includes(run.status)) return;
+      let running: (typeof run.stages)[number] | undefined;
+      for (let index = run.stages.length - 1; index >= 0; index -= 1) {
+        const candidate = run.stages[index]!;
+        if (candidate.status !== "running" || !Object.hasOwn(PUBLIC_STAGE_LABELS, candidate.role)) continue;
+        const hasTerminalPair = run.stages.slice(index + 1).some((stage) => stage.role === candidate.role
+          && stage.attemptNumber === candidate.attemptNumber
+          && stage.startedAt === candidate.startedAt
+          && stage.status !== "queued" && stage.status !== "running");
+        if (!hasTerminalPair) { running = candidate; break; }
+      }
+      if (running === undefined) return;
+      const finishedAt = this.#clock.now();
+      await repository.append(agentRunId, {
+        role: running.role,
+        label: running.label,
+        status: "failed",
+        startedAt: running.startedAt,
+        finishedAt: iso(finishedAt),
+        durationMs: Math.max(0, finishedAt - Date.parse(running.startedAt)),
+        attemptNumber: running.attemptNumber,
+        publicSummary: `${running.label}超过${Math.ceil(this.#fallbackAfterMs / 1_000)}秒仍未完成，已取消本轮模型执行并转入固定保障。`,
+        metrics: [{ metricId: "failure-category", label: "失败类别", value: "generation_timeout", tone: "danger" }],
+        issueCategories: ["生成超时"],
+      });
+    } catch {
+      // The upper runtime may already own and finalize this run.
+    }
+  }
+
   async #recordReviewedCache(agentRunId: string | undefined, source: "immediate" | "late", artifactKind: AdaptiveArtifactKind): Promise<void> {
     if (agentRunId === undefined || this.#options.agentRuns === undefined) return;
     const cacheMetric = [{ metricId: "cache-source", label: "复用来源", value: source === "late" ? "延迟审核缓存" : "已审核缓存", tone: "neutral" as const }];
@@ -1309,7 +1698,7 @@ export class AdaptiveContentService implements AdaptiveContentPort {
         safeContext, budget: { timeoutMs: this.#discardAfterMs },
       }, signal);
       if (signal.aborted) {
-        return { status: "timeout", errorCode: this.#discardReasonCode(), sourceRefs: [],
+        return { status: "timeout", errorCode: this.#deadlineReasonCode(), sourceRefs: [],
           traceSummary: "execution completed after the discard deadline", modelId: this.#options.modelId,
           promptVersion: this.#options.promptVersion };
       }
@@ -1328,14 +1717,36 @@ export class AdaptiveContentService implements AdaptiveContentPort {
   async #accepted(key: string, checkpoint: AdaptiveCheckpoint, artifact: AcceptedArtifact,
     signal: AbortSignal): Promise<AcceptedArtifact | undefined> {
     if (signal.aborted || this.#discardedSignals.has(signal)) return undefined;
-    checkpoint.stage = "accepted"; checkpoint.candidate = clone(artifact); checkpoint.updatedAt = iso(this.#clock.now());
+    const acceptedReviewProof = buildAcceptedReviewProof(checkpoint, artifact);
+    if (acceptedReviewProof === undefined) return this.#unavailable(key, checkpoint, "accepted_review_proof_invalid", signal);
+    checkpoint.stage = "accepted"; checkpoint.candidate = clone(artifact); checkpoint.acceptedReviewProof = acceptedReviewProof;
+    checkpoint.updatedAt = iso(this.#clock.now());
     await this.#options.privateStore.write("adaptive-checkpoint", key, checkpoint);
     await this.#options.privateStore.write("adaptive-trace", checkpoint.generationRunId, {
       artifactKind: checkpoint.artifactKind, generationRunId: checkpoint.generationRunId,
       stageOrder: checkpoint.stageOrder, status: "accepted", modelId: checkpoint.modelId,
-      promptVersion: checkpoint.promptVersion,
+      promptVersion: checkpoint.promptVersion, candidateSha256: acceptedReviewProof.candidateSha256,
+      judgeVerdict: acceptedReviewProof.judge.verdict,
     });
     return clone(artifact);
+  }
+
+  async #publicUnavailableResult(key: string, includeReason: boolean): Promise<{
+    status: "unavailable";
+    reasonCode?: AdaptiveContentUnavailableReason;
+  }> {
+    const checkpoint = await this.#options.privateStore.read<AdaptiveCheckpoint>("adaptive-checkpoint", key);
+    const reasonCode = checkpoint?.reasonCode;
+    if (reasonCode === "judge_rejected") return includeReason ? { status: "unavailable", reasonCode: "review_rejected" } : { status: "unavailable" };
+    if (reasonCode === "judge_repair_exhausted") return includeReason ? { status: "unavailable", reasonCode: "repair_exhausted" } : { status: "unavailable" };
+    if (reasonCode === "timeout" || reasonCode?.startsWith("discard_after_") === true) {
+      return includeReason ? { status: "unavailable", reasonCode: "generation_timeout" } : { status: "unavailable" };
+    }
+    // A still-running checkpoint means the caller reached its bounded wait.
+    if (checkpoint !== undefined && checkpoint.stage !== "unavailable" && checkpoint.stage !== "discarded") {
+      return includeReason ? { status: "unavailable", reasonCode: "generation_timeout" } : { status: "unavailable" };
+    }
+    return { status: "unavailable" };
   }
 
   async #unavailable(key: string, checkpoint: AdaptiveCheckpoint, reasonCode: string,
@@ -1354,7 +1765,8 @@ export class AdaptiveContentService implements AdaptiveContentPort {
     return undefined;
   }
 
-  async #cache(key: string, artifact: AcceptedArtifact, source: "immediate" | "late", context: AdaptiveContentSourceContext): Promise<void> {
+  async #cache(key: string, artifact: AcceptedArtifact, source: "immediate" | "late", context: AdaptiveContentSourceContext,
+    acceptedReviewProof: AdaptiveAcceptedReviewProof): Promise<void> {
     await this.#options.privateStore.write<AdaptiveCacheRecord>("adaptive-cache", key, {
       artifactKind: artifact.artifactKind, profileRevision: Number(key.split(":")[1]), targetId: key.split(":")[2] ?? "unknown",
       ...(context.targetKnowledgePointIds === undefined ? {} : { targetKnowledgePointIds: targetKnowledgePointIds(context) }),
@@ -1362,23 +1774,23 @@ export class AdaptiveContentService implements AdaptiveContentPort {
       ...(context.lessonVariantId === undefined ? {} : { lessonVariantId: context.lessonVariantId }),
       ...(personalizationContextSha256(context) === undefined ? {} : { personalizationContextSha256: personalizationContextSha256(context) }),
       ...(remediationContextSha256(context) === undefined ? {} : { remediationContextSha256: remediationContextSha256(context) }),
-      artifact: clone(artifact), cachedAt: iso(this.#clock.now()), source,
+      artifact: clone(artifact), acceptedReviewProof: clone(acceptedReviewProof), cachedAt: iso(this.#clock.now()), source,
     });
   }
 
   async #markDiscarded(key: string): Promise<void> {
     const checkpoint = await this.#options.privateStore.read<AdaptiveCheckpoint>("adaptive-checkpoint", key);
     if (checkpoint !== undefined && checkpoint.publishedAt === undefined) {
-      checkpoint.stage = "discarded"; checkpoint.reasonCode = this.#discardReasonCode();
+      checkpoint.stage = "discarded"; checkpoint.reasonCode = this.#deadlineReasonCode();
       checkpoint.updatedAt = iso(this.#clock.now());
       await this.#options.privateStore.write("adaptive-checkpoint", key, checkpoint);
     }
   }
 
-  #discardReasonCode(): string {
-    return this.#discardAfterMs % 1_000 === 0
-      ? `discard_after_${this.#discardAfterMs / 1_000}s`
-      : `discard_after_${this.#discardAfterMs}ms`;
+  #deadlineReasonCode(): string {
+    return this.#fallbackAfterMs % 1_000 === 0
+      ? `discard_after_${this.#fallbackAfterMs / 1_000}s`
+      : `discard_after_${this.#fallbackAfterMs}ms`;
   }
 
   #validateContext(context: AdaptiveContentSourceContext, artifactKind: AdaptiveArtifactKind): void {

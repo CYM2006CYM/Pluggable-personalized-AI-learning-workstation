@@ -63,6 +63,24 @@ function buildInlineAdapter(
     judgePayload?: JudgeOutput;
   } = {},
 ): RecordedModelExecutionAdapter {
+  const hunterPayload = overrides.hunterPayload ?? {
+    issues: [],
+    requiresDefender: false,
+    recommendedVerdict: "accepted" as const,
+  };
+  const judgePayload = overrides.judgePayload ?? {
+    verdict: "accepted" as const,
+    finalSafeFeedback: "Stage accepted feedback.",
+    summary: "Stage accepted summary.",
+    issueDecisions: hunterPayload.issues.map((issue) => ({
+      issueId: issue.issueId,
+      decision: "overruled" as const,
+      rationale: "The public source supports the candidate wording.",
+      sourceAnchorIds: ["source-public-1"],
+    })),
+    additionalIssues: [],
+    blockedIssueIds: [],
+  };
   const fixtures: RecordedModelResponseFixture[] = [{
     runId,
     graphId: "generator",
@@ -79,11 +97,7 @@ function buildInlineAdapter(
         runId,
         graphId: "hunter",
         status: "ok",
-        payload: overrides.hunterPayload ?? {
-          issues: [],
-          requiresDefender: false,
-          recommendedVerdict: "accepted",
-        },
+        payload: hunterPayload,
         sourceRefs: ["source-public-1"],
         traceSummary: "hunter inline fixture",
         modelId: "fixture-model",
@@ -93,7 +107,7 @@ function buildInlineAdapter(
         runId,
         graphId: "judge",
         status: "ok",
-        payload: overrides.judgePayload ?? judgeStageOutput,
+        payload: judgePayload,
         sourceRefs: ["source-public-1"],
         traceSummary: "judge inline fixture",
         modelId: "fixture-model",
@@ -174,10 +188,18 @@ const generatorStageOutput: GeneratorOutput = {
   riskFlags: [],
 };
 
+const hunterIssueEvidence = {
+  category: "candidate_quality",
+  candidateField: "candidateFeedback",
+  evidenceSummary: "The public lesson source provides the evidence needed to review this issue.",
+  sourceAnchorIds: ["source-public-1"],
+};
+
 const hunterStageOutput: HunterOutput = {
   issues: [{
+    ...hunterIssueEvidence,
     issueId: "issue-stage",
-    severity: "medium",
+    severity: "high",
     message: "Stage issue.",
     disputed: true,
   }],
@@ -187,15 +209,26 @@ const hunterStageOutput: HunterOutput = {
 
 const defenderStageOutput: DefenderOutput = {
   defenseSummary: "Stage defense.",
-  acceptedIssueIds: ["issue-stage"],
-  rebuttedIssueIds: [],
-  residualRisks: [],
+  issueAssessments: [{
+    issueId: "issue-stage",
+    position: "conceded",
+    rationale: "The public source supports the Hunter issue.",
+    sourceAnchorIds: ["source-public-1"],
+    residualRisk: null,
+  }],
 };
 
 const judgeStageOutput: JudgeOutput = {
   verdict: "accepted",
   finalSafeFeedback: "Stage accepted feedback.",
   summary: "Stage accepted summary.",
+  issueDecisions: [{
+    issueId: "issue-stage",
+    decision: "overruled",
+    rationale: "The public source supports the candidate wording.",
+    sourceAnchorIds: ["source-public-1"],
+  }],
+  additionalIssues: [],
   blockedIssueIds: [],
 };
 
@@ -667,7 +700,10 @@ describe("ReviewOrchestrator", () => {
     }
     const store = new InMemoryReviewCheckpointStore();
     await store.save(checkpoint);
-    const adapter = buildInlineAdapter(checkpointInput.runId);
+    const adapter = buildInlineAdapter(
+      checkpointInput.runId,
+      label === "dispute" ? { judgePayload: judgeStageOutput } : {},
+    );
     const orchestrator = new ReviewOrchestrator({ modelExecutionPort: adapter, sourceProvider, checkpointStore: store });
 
     const result = await orchestrator.run(checkpointInput, new AbortController().signal);
@@ -735,8 +771,8 @@ describe("ReviewOrchestrator", () => {
     ["duplicate Hunter issue IDs", {
       hunterPayload: {
         issues: [
-          { issueId: "issue-duplicate", severity: "low", message: "First issue.", disputed: false },
-          { issueId: "issue-duplicate", severity: "medium", message: "Second issue.", disputed: false },
+          { ...hunterIssueEvidence, issueId: "issue-duplicate", severity: "low", message: "First issue.", disputed: false },
+          { ...hunterIssueEvidence, issueId: "issue-duplicate", severity: "medium", message: "Second issue.", disputed: false },
         ],
         requiresDefender: false,
         recommendedVerdict: "revise",
@@ -744,7 +780,10 @@ describe("ReviewOrchestrator", () => {
     }],
     ["invalid Defender issue closure", {
       hunterPayload: hunterStageOutput,
-      defenderPayload: { ...defenderStageOutput, rebuttedIssueIds: ["issue-stage"] } as DefenderOutput,
+      defenderPayload: {
+        ...defenderStageOutput,
+        issueAssessments: [...defenderStageOutput.issueAssessments, defenderStageOutput.issueAssessments[0]!],
+      } as DefenderOutput,
     }],
     ["unknown Judge blocked issue", {
       judgePayload: { ...judgeStageOutput, blockedIssueIds: ["issue-unknown"] } as JudgeOutput,
@@ -757,6 +796,37 @@ describe("ReviewOrchestrator", () => {
     const result = await orchestrator.run(input(runId), new AbortController().signal);
 
     expect(result).toMatchObject({ status: "fallback", errorCode: "invalid_json" });
+  });
+
+  it.each([
+    ["Hunter", {
+      hunterPayload: {
+        ...hunterStageOutput,
+        issues: [{ ...hunterStageOutput.issues[0]!, sourceAnchorIds: ["source-private"] }],
+      } as HunterOutput,
+    }],
+    ["Defender", {
+      hunterPayload: hunterStageOutput,
+      defenderPayload: {
+        ...defenderStageOutput,
+        issueAssessments: [{ ...defenderStageOutput.issueAssessments[0]!, sourceAnchorIds: ["source-private"] }],
+      } as DefenderOutput,
+    }],
+    ["Judge", {
+      hunterPayload: hunterStageOutput,
+      defenderPayload: defenderStageOutput,
+      judgePayload: {
+        ...judgeStageOutput,
+        issueDecisions: [{ ...judgeStageOutput.issueDecisions[0]!, sourceAnchorIds: ["source-private"] }],
+      } as JudgeOutput,
+    }],
+  ] as const)("rejects unregistered per-issue evidence sources from %s in the compatibility orchestrator", async (label, overrides) => {
+    const runId = `review-role-source-${label.toLowerCase()}`;
+    const adapter = buildInlineAdapter(runId, overrides);
+    const orchestrator = new ReviewOrchestrator({ modelExecutionPort: adapter, sourceProvider, maxAttemptsPerRole: 1 });
+
+    await expect(orchestrator.run(input(runId), new AbortController().signal))
+      .resolves.toMatchObject({ status: "fallback", errorCode: "source_conflict" });
   });
 
   it("rejects unknown Judge references restored from checkpoint without model calls", async () => {
@@ -998,6 +1068,7 @@ describe("ReviewOrchestrator", () => {
           ...judgeStageOutput,
           finalSafeFeedback: "Contradictory model feedback must not replace C.",
           summary: "Contradictory model summary.",
+          issueDecisions: [],
         },
       });
       const reviewInput = input(runId);

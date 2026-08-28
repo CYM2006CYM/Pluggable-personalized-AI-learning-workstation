@@ -59,7 +59,11 @@
           {
             "issueId": "issue-source-scope",
             "severity": "high",
+            "category": "source_support",
+            "candidateField": "candidateFeedback",
             "message": "The candidate contains a disputed statement outside the supplied public summary.",
+            "evidenceSummary": "The registered public source supports only the scoped statement in the supplied summary.",
+            "sourceAnchorIds": ["source-public-1"],
             "disputed": true
           }
         ],
@@ -78,9 +82,13 @@
       "status": "ok",
       "payload": {
         "defenseSummary": "The registered public summary supports only the scoped statement.",
-        "acceptedIssueIds": ["issue-source-scope"],
-        "rebuttedIssueIds": [],
-        "residualRisks": ["scope_requires_revision"]
+        "issueAssessments": [{
+          "issueId": "issue-source-scope",
+          "position": "conceded",
+          "rationale": "The registered source supports only the scoped public statement.",
+          "sourceAnchorIds": ["source-public-1"],
+          "residualRisk": "scope_requires_revision"
+        }]
       },
       "sourceRefs": ["source-public-1"],
       "traceSummary": "redacted defender dispute recording",
@@ -96,6 +104,8 @@
         "verdict": "accepted",
         "finalSafeFeedback": "Use the public source summary for the next step.",
         "summary": "All supplied deterministic checks passed.",
+        "issueDecisions": [],
+        "additionalIssues": [],
         "blockedIssueIds": []
       },
       "sourceRefs": ["source-public-1"],
@@ -112,6 +122,13 @@
         "verdict": "rejected",
         "finalSafeFeedback": "A pre-reviewed public activity remains available.",
         "summary": "An unresolved public-source scope issue blocked publication.",
+        "issueDecisions": [{
+          "issueId": "issue-source-scope",
+          "decision": "upheld",
+          "rationale": "The candidate exceeds the scope supported by the registered public source.",
+          "sourceAnchorIds": ["source-public-1"]
+        }],
+        "additionalIssues": [],
         "blockedIssueIds": ["issue-source-scope"]
       },
       "sourceRefs": ["source-public-1"],
@@ -169,6 +186,8 @@
         "verdict": "accepted",
         "finalSafeFeedback": "Use the registered public source summary for the next step.",
         "summary": "The port response is structurally valid; the orchestrator must reject its stale model binding.",
+        "issueDecisions": [],
+        "additionalIssues": [],
         "blockedIssueIds": []
       },
       "sourceRefs": ["source-public-1"],

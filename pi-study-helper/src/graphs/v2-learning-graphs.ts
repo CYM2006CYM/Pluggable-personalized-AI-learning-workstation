@@ -38,6 +38,12 @@ export interface ReviewSafeContext {
     learnerProfileEvidenceRefs: string[];
     learnerProfileSource: "agent" | "deterministic";
   };
+  /** Deterministic, answer-free record of Safety normalization applied before review. */
+  safetySummary?: {
+    inputCandidateSha256: string;
+    outputCandidateSha256: string;
+    normalization: "none" | "quiz_option_order_balanced";
+  };
 }
 
 export interface GeneratorInput {
@@ -59,7 +65,11 @@ export interface GeneratorOutput {
 export interface HunterIssue {
   issueId: string;
   severity: "low" | "medium" | "high";
+  category: string;
+  candidateField: string;
   message: string;
+  evidenceSummary: string;
+  sourceAnchorIds: string[];
   disputed: boolean;
 }
 
@@ -80,13 +90,21 @@ export interface DefenderInput {
   context: ReviewSafeContext;
   generator: GeneratorOutput;
   hunter: HunterOutput;
+  /** Present only when the first Defender response failed deterministic validation. */
+  reviewInstruction?: string;
+}
+
+export interface DefenderIssueAssessment {
+  issueId: string;
+  position: "rebutted" | "conceded";
+  rationale: string;
+  sourceAnchorIds: string[];
+  residualRisk: string | null;
 }
 
 export interface DefenderOutput {
   defenseSummary: string;
-  acceptedIssueIds: string[];
-  rebuttedIssueIds: string[];
-  residualRisks: string[];
+  issueAssessments: DefenderIssueAssessment[];
 }
 
 export interface JudgeInput {
@@ -98,10 +116,29 @@ export interface JudgeInput {
   reviewInstruction?: string;
 }
 
+export interface JudgeIssueDecision {
+  issueId: string;
+  decision: "upheld" | "overruled";
+  rationale: string;
+  sourceAnchorIds: string[];
+}
+
+export interface JudgeAdditionalIssue {
+  issueId: string;
+  severity: "low" | "medium" | "high";
+  category: string;
+  candidateField: string;
+  message: string;
+  evidenceSummary: string;
+  sourceAnchorIds: string[];
+}
+
 export interface JudgeOutput {
   verdict: "accepted" | "revise" | "rejected";
   finalSafeFeedback: string;
   summary: string;
+  issueDecisions: JudgeIssueDecision[];
+  additionalIssues: JudgeAdditionalIssue[];
   blockedIssueIds: string[];
 }
 
@@ -122,6 +159,10 @@ function isNonEmptyString(value: unknown): value is string {
 
 function isStringArray(value: unknown): value is string[] {
   return Array.isArray(value) && value.every(isNonEmptyString);
+}
+
+function isNonEmptyStringArray(value: unknown): value is string[] {
+  return isStringArray(value) && value.length > 0;
 }
 
 function hasOnlyKeys(value: Record<string, unknown>, required: readonly string[], optional: readonly string[] = []): boolean {
@@ -156,7 +197,7 @@ function isReviewSafeContext(value: unknown): value is ReviewSafeContext {
     "safeFeedback",
     "sourceIds",
     "sourceSummary",
-  ], ["allowedSourceIds", "teachingContent", "personalizationContext", "retryContext"])
+  ], ["allowedSourceIds", "teachingContent", "personalizationContext", "retryContext", "safetySummary"])
     && isActivityContext(value.activity)
     && isNonEmptyString(value.safeFeedback)
     && isStringArray(sourceIds)
@@ -166,7 +207,15 @@ function isReviewSafeContext(value: unknown): value is ReviewSafeContext {
       && value.allowedSourceIds.every((sourceId, index) => sourceId === sourceIds[index])))
     && (value.teachingContent === undefined || isNonEmptyString(value.teachingContent))
     && (value.personalizationContext === undefined || isPersonalizationContext(value.personalizationContext))
-    && (value.retryContext === undefined || isRetryContext(value.retryContext, sourceIds));
+    && (value.retryContext === undefined || isRetryContext(value.retryContext, sourceIds))
+    && (value.safetySummary === undefined || (isRecord(value.safetySummary)
+      && hasOnlyKeys(value.safetySummary, ["inputCandidateSha256", "outputCandidateSha256", "normalization"])
+      && typeof value.safetySummary.inputCandidateSha256 === "string"
+      && /^[a-f0-9]{64}$/u.test(value.safetySummary.inputCandidateSha256)
+      && typeof value.safetySummary.outputCandidateSha256 === "string"
+      && /^[a-f0-9]{64}$/u.test(value.safetySummary.outputCandidateSha256)
+      && (value.safetySummary.normalization === "none"
+        || value.safetySummary.normalization === "quiz_option_order_balanced")));
 }
 
 function isPersonalizationContext(value: unknown): value is LessonPersonalizationContext {
@@ -254,10 +303,23 @@ function isGeneratorOutput(value: unknown): value is GeneratorOutput {
 
 function isHunterIssue(value: unknown): value is HunterIssue {
   return isRecord(value)
-    && hasOnlyKeys(value, ["issueId", "severity", "message", "disputed"])
+    && hasOnlyKeys(value, [
+      "issueId",
+      "severity",
+      "category",
+      "candidateField",
+      "message",
+      "evidenceSummary",
+      "sourceAnchorIds",
+      "disputed",
+    ])
     && isNonEmptyString(value.issueId)
     && (value.severity === "low" || value.severity === "medium" || value.severity === "high")
+    && isNonEmptyString(value.category)
+    && isNonEmptyString(value.candidateField)
     && isNonEmptyString(value.message)
+    && isNonEmptyString(value.evidenceSummary)
+    && isNonEmptyStringArray(value.sourceAnchorIds)
     && (value.disputed === true || value.disputed === false);
 }
 
@@ -280,19 +342,30 @@ function isHunterOutput(value: unknown): value is HunterOutput {
 
 function isDefenderInput(value: unknown): value is DefenderInput {
   return isRecord(value)
-    && hasOnlyKeys(value, ["context", "generator", "hunter"])
+    && hasOnlyKeys(value, ["context", "generator", "hunter"], ["reviewInstruction"])
     && isReviewSafeContext(value.context)
     && isGeneratorOutput(value.generator)
-    && isHunterOutput(value.hunter);
+    && isHunterOutput(value.hunter)
+    && (value.reviewInstruction === undefined || isNonEmptyString(value.reviewInstruction));
+}
+
+function isDefenderIssueAssessment(value: unknown): value is DefenderIssueAssessment {
+  return isRecord(value)
+    && hasOnlyKeys(value, ["issueId", "position", "rationale", "sourceAnchorIds", "residualRisk"])
+    && isNonEmptyString(value.issueId)
+    && (value.position === "rebutted" || value.position === "conceded")
+    && isNonEmptyString(value.rationale)
+    && isNonEmptyStringArray(value.sourceAnchorIds)
+    && (value.residualRisk === null || isNonEmptyString(value.residualRisk));
 }
 
 function isDefenderOutput(value: unknown): value is DefenderOutput {
   return isRecord(value)
-    && hasOnlyKeys(value, ["defenseSummary", "acceptedIssueIds", "rebuttedIssueIds", "residualRisks"])
+    && hasOnlyKeys(value, ["defenseSummary", "issueAssessments"])
     && isNonEmptyString(value.defenseSummary)
-    && isStringArray(value.acceptedIssueIds)
-    && isStringArray(value.rebuttedIssueIds)
-    && isStringArray(value.residualRisks);
+    && Array.isArray(value.issueAssessments)
+    && value.issueAssessments.length > 0
+    && value.issueAssessments.every(isDefenderIssueAssessment);
 }
 
 function isJudgeInput(value: unknown): value is JudgeInput {
@@ -305,12 +378,52 @@ function isJudgeInput(value: unknown): value is JudgeInput {
     && (value.reviewInstruction === undefined || isNonEmptyString(value.reviewInstruction));
 }
 
+function isJudgeIssueDecision(value: unknown): value is JudgeIssueDecision {
+  return isRecord(value)
+    && hasOnlyKeys(value, ["issueId", "decision", "rationale", "sourceAnchorIds"])
+    && isNonEmptyString(value.issueId)
+    && (value.decision === "upheld" || value.decision === "overruled")
+    && isNonEmptyString(value.rationale)
+    && isNonEmptyStringArray(value.sourceAnchorIds);
+}
+
+function isJudgeAdditionalIssue(value: unknown): value is JudgeAdditionalIssue {
+  return isRecord(value)
+    && hasOnlyKeys(value, [
+      "issueId",
+      "severity",
+      "category",
+      "candidateField",
+      "message",
+      "evidenceSummary",
+      "sourceAnchorIds",
+    ])
+    && isNonEmptyString(value.issueId)
+    && (value.severity === "low" || value.severity === "medium" || value.severity === "high")
+    && isNonEmptyString(value.category)
+    && isNonEmptyString(value.candidateField)
+    && isNonEmptyString(value.message)
+    && isNonEmptyString(value.evidenceSummary)
+    && isNonEmptyStringArray(value.sourceAnchorIds);
+}
+
 function isJudgeOutput(value: unknown): value is JudgeOutput {
   return isRecord(value)
-    && hasOnlyKeys(value, ["verdict", "finalSafeFeedback", "summary", "blockedIssueIds"])
+    && hasOnlyKeys(value, [
+      "verdict",
+      "finalSafeFeedback",
+      "summary",
+      "issueDecisions",
+      "additionalIssues",
+      "blockedIssueIds",
+    ])
     && (value.verdict === "accepted" || value.verdict === "revise" || value.verdict === "rejected")
     && isNonEmptyString(value.finalSafeFeedback)
     && isNonEmptyString(value.summary)
+    && Array.isArray(value.issueDecisions)
+    && value.issueDecisions.every(isJudgeIssueDecision)
+    && Array.isArray(value.additionalIssues)
+    && value.additionalIssues.every(isJudgeAdditionalIssue)
     && isStringArray(value.blockedIssueIds);
 }
 
@@ -436,17 +549,21 @@ function hunterPrompt(input: HunterInput): string {
     ] : [
       "candidateFeedback 是只供审核链使用的私有候选视图。你必须逐题读取 prompt、options、correctAnswer 和 explanation，并逐项对照 teachingContent；不能只检查题目样式或来源 ID。",
       "重点检查：题干是否清楚；选项是否互斥且只有一个正确项；correctAnswer 是否在语义上确实正确；explanation 是否与候选答案、题干和正文一致；概念、代码行为、反例与修正方法是否都有正文依据；sourceAnchorIds 是否来自 allowedSourceIds。",
-      "检查整组 correctAnswer 在 options 中的位置是否已打散，不能全部集中在 A 或其他同一位置；若分布明显失衡，必须报告非争议 issue 并建议 revise。",
       "还要逐项检查题目独立性：任一题干、选项或解析引用上一题、下一题、第一问、其他第几问的答案或结论，都属于跨题答案提示，必须报告非争议 issue 并建议 revise。",
     ]),
     ...(input.context.retryContext === undefined ? [] : [
       "这是重做题组。还必须检查：所有 questionId 均未出现在 excludedQuestionIds；没有逐字复用旧题 prompt；每个 missedQuestions 暴露的薄弱知识都至少被一道新题再次考察。",
       "若只是换了ID却复用旧题面，或遗漏任一错题知识点，必须报告非争议 issue 并建议 revise。",
     ]),
+    ...(input.context.safetySummary === undefined ? [] : [
+      `Safety已完成确定性检查：normalization=${input.context.safetySummary.normalization}，inputSha256=${input.context.safetySummary.inputCandidateSha256}，outputSha256=${input.context.safetySummary.outputCandidateSha256}。`,
+      "你审核的是Safety输出候选。若normalization=quiz_option_order_balanced，只表示程序按固定算法调整了选项顺序；题干、答案文本、解析和来源均未由Safety修改。",
+    ]),
     "服务端只会确定性检查 correctAnswer 是否属于 options，这不代表答案在知识上正确。若正文不能唯一支持候选答案、题目存在多解、答案或解析与正文冲突，必须报告具体 issue 并给出 recommendedVerdict=revise；事实错误不得标成可直接接受。",
-    "不得重写题目、替换答案、补充正文没有的事实，也不得在 message 或其他输出字段中复述正确答案、解析原文、Evidence、KnowledgeState、路径或隐藏资产。",
-    "只返回 issues、requiresDefender、recommendedVerdict；issueId 必须唯一。requiresDefender 必须严格等于是否存在 disputed=true 的 issue：有争议必须为 true，没有争议必须为 false。只要 issues 非空，recommendedVerdict 必须为 revise；没有问题时 issues=[]、requiresDefender=false、recommendedVerdict=accepted。",
-    "如果候选标记 riskLevel=high，你必须把需要交叉验证的答案风险写成至少一个 disputed=true 的具体 issue，并令 requiresDefender=true；不能把高风险候选按无争议低风险直接放行。",
+    "不得重写题目、替换答案、补充正文没有的事实，也不得在 message、evidenceSummary 或其他输出字段中复述正确答案、解析原文、Evidence、KnowledgeState、路径或隐藏资产。",
+    "每个 issue 必须且只能包含 issueId、severity、category、candidateField、message、evidenceSummary、sourceAnchorIds、disputed。category 使用简短稳定的问题类别；candidateField 指向具体候选字段或字段路径；message 描述可公开的问题；evidenceSummary 概括正文如何支持该指控但不得复述私有答案；sourceAnchorIds 至少包含一个 allowedSourceIds 中的原始ID。禁止只写『需要复核』『可能有问题』而不给候选位置和正文依据。",
+    "只返回 issues、requiresDefender、recommendedVerdict；issueId 必须唯一。你只负责找错和举证，无权命令Generator返修、否决发布或决定是否调用Defender。requiresDefender仅保留为你的审查建议，程序路由器会按预设规则独立决定后续工位。只要 issues 非空，recommendedVerdict 必须为 revise；没有问题时 issues=[]、requiresDefender=false、recommendedVerdict=accepted。",
+    "如果候选标记riskLevel=high，你必须把Generator给出的具体高风险逐项转化为可核查的issue，但不得编造正文中不存在的事实；程序路由器会根据高风险标记独立触发Defender。",
     ...(input.reviewInstruction === undefined ? [] : [
       `REVIEW_REPAIR=${input.reviewInstruction}`,
       "这是Hunter审查合同修复：保持对同一候选独立复核，但必须纠正失败类别对应的结构或条件关系；不得为了通过校验而隐瞒真实问题。",
@@ -457,11 +574,16 @@ function hunterPrompt(input: HunterInput): string {
 
 function defenderPrompt(input: DefenderInput): string {
   return [
-    "你是 Defender（辩护智能体），只为 Hunter 标记 disputed=true 的问题提供基于正文的反证或承认。",
-    "逐个处理且只能处理这些争议 issueId：acceptedIssueIds 与 rebuttedIssueIds 合并后必须恰好覆盖每个争议 ID 一次，不能遗漏、重复或新增。",
+    "你是 Defender（辩护智能体），只为程序路由器交付的 Hunter 语义问题或高风险问题提供基于正文的反证或承认。",
+    "逐个处理且只能处理 Hunter 的 issueId。issueAssessments 必须与输入问题一一对应，不能遗漏、重复或新增。每项必须包含 issueId、position、rationale、sourceAnchorIds、residualRisk。",
+    "position=rebutted 表示正文中存在足以反驳Hunter指控的证据；position=conceded 表示Hunter指控有事实依据，应如实承认。rationale 必须说明正文依据，sourceAnchorIds 至少包含一个输入允许的来源ID；仍有风险时写入 residualRisk，否则必须为 null。",
     "只能引用 teachingContent 和 allowedSourceIds；可以核对私有候选中的答案与解析，但不能修改或在输出中复述它们，不能发明正文没有的事实，也不能把模型意见伪装成权威判分。",
-    "没有争议时不应被调用；若被调用，defenseSummary 只说明正文依据，residualRisks 只写仍存在的安全风险短语。",
-    `disputedIssueCount=${input.hunter.issues.filter((issue) => issue.disputed).length}`,
+    "没有语义问题且候选不是高风险时不应被调用；若被调用，defenseSummary 只能给出可公开的整体审查概述。Defender无权决定发布、返修或拒绝。",
+    ...(input.reviewInstruction === undefined ? [] : [
+      `REVIEW_REPAIR=${input.reviewInstruction}`,
+      "这是Defender输出合同修复。必须继续如实承认或反驳每个问题，不能为了通过校验而把成立的问题改成已反驳。",
+    ]),
+    `reviewIssueCount=${input.hunter.issues.length}`,
   ].join("\n");
 }
 
@@ -479,14 +601,20 @@ function judgePrompt(input: JudgeInput): string {
       "你必须确认 Hunter 已逐题审核 prompt、options、correctAnswer 和 explanation，并结合 Hunter 问题对私有候选作最终复核；不能只检查 JSON 结构或引用格式。",
       "accepted 只表示候选通过内容与安全审查，不表示改变权威判分；候选答案无法由正文唯一支持、答案或解析存在事实错误、题目多解，或存在其他未解决的高风险时，必须 revise 或 rejected。",
       "你必须复核每道题能否脱离其他题独立作答；题干、选项或解析一旦借用上一题、下一题或第几问已经给出的答案或结论，不得 accepted。",
-      "你还必须确认整组正确答案位置没有全部集中在同一选项，并已在各题可用位置间尽量均衡分布；明显失衡的题组不得 accepted。",
+      "答案位置分布、字段结构、题量、ID唯一性和来源ID允许列表已由Safety确定性程序检查；不要重复承担这些可由代码直接验证的规则。你只裁决正文一致性、唯一答案、语义歧义和安全边界。",
     ]),
     ...(input.context.retryContext === undefined ? [] : [
       "这是重做题组。你必须最终确认新旧题ID不同、题面未逐字复用，并且上一轮每个错题知识都在新题组中得到重复考察；任一条件不满足都不得 accepted。",
     ]),
-    "blockedIssueIds 只能引用 Hunter 已报告的 issueId；verdict=accepted 时必须为空。存在非争议 issue 时不能 accepted；若存在 disputed=true，必须使用 Defender 的逐项结论，只有全部争议均被反驳且没有 residualRisks 时才可 accepted。不能改写题目、答案、Rubric、hidden tests、reference solution、Evidence、KnowledgeState 或路径。",
+    ...(input.context.safetySummary === undefined ? [] : [
+      `Safety确定性摘要：normalization=${input.context.safetySummary.normalization}，inputSha256=${input.context.safetySummary.inputCandidateSha256}，outputSha256=${input.context.safetySummary.outputCandidateSha256}。`,
+      "当前候选是Safety输出版本；选项顺序标准化不代表Generator原始输出已满足分布要求，也不改变答案语义。",
+    ]),
+    "issueDecisions 必须逐项且仅覆盖 Hunter 的全部 issueId。每项包含 issueId、decision=upheld|overruled、rationale、sourceAnchorIds；你必须依据正文独立判断，不得把Hunter或Defender意见当成既定事实。",
+    "如果独立复核发现Hunter遗漏的问题，写入additionalIssues；每项必须包含新的issueId、severity、category、candidateField、message、evidenceSummary、sourceAnchorIds，且不得与Hunter问题ID重复。没有遗漏时返回空数组。",
+    "blockedIssueIds只能引用decision=upheld的Hunter问题或additionalIssues中的问题；verdict=accepted时必须为空，verdict=revise或rejected时必须列出至少一个阻塞问题。Hunter和Defender只提供审查意见：即使Defender为conceded，你仍可依据正文overruled；即使Defender为rebutted，你仍可upheld。问题成立但可通过改写候选闭合时返回revise，安全或权威问题无法闭合时返回rejected。你是唯一有权决定accepted、revise或rejected的工位。不能改写题目、答案、Rubric、hidden tests、reference solution、Evidence、KnowledgeState或路径。",
     "Hunter 输出代表它已经执行了逐题审核，不要求 Hunter 在 issues 为空时复述检查过程。若 Hunter 返回 issues=[]、requiresDefender=false、recommendedVerdict=accepted，且你复核候选后没有发现新的正文、唯一答案、安全或来源问题，则必须返回 verdict=accepted、blockedIssueIds=[]。不得因为缺少额外审计说明而凭空拒绝。",
-    "finalSafeFeedback 和 summary 只能是可公开的简短审查结论，不得复述正确答案、解析原文、私有评测内容、主机路径、密钥或 token。",
+    "只返回verdict、finalSafeFeedback、summary、issueDecisions、additionalIssues、blockedIssueIds六个字段。所有理由只能是可公开的简短审查结论，不得复述正确答案、解析原文、私有评测内容、主机路径、密钥或token。",
     "若修复要求指出 authority_violation，只清理 finalSafeFeedback 和 summary 中对受限资产或权威状态的复述；不得改变 verdict、blockedIssueIds 或候选题，也不要复述受限名称来说明没有泄漏。",
     `hunterRecommended=${input.hunter.recommendedVerdict}`,
     `defenderPresent=${input.defender ? "yes" : "no"}`,

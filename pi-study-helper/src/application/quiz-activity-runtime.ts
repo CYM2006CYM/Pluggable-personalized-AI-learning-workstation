@@ -180,7 +180,7 @@ export class QuizActivityRuntime {
           ...(remediation === undefined ? {} : { remediation }),
         })
       : undefined;
-    if (agentRun !== undefined && agentRun.stages.length === 0) {
+    if (agentRun !== undefined && !this.preparationStagesComplete(agentRun)) {
       await this.recordPreparationStages(agentRun.runId, lessonVariantId, assets, remediationContext);
     }
     const dynamic = assets.legacyQuestion === undefined
@@ -209,6 +209,20 @@ export class QuizActivityRuntime {
       ? dynamic?.origin === "live_model" ? "ai_live" as const : "ai_recorded" as const
       : selected.source === "supplemental" ? "ai_supplemented" as const
         : selected.source === "fixed" ? "profile_fixed" as const : "insufficient" as const;
+    const fixedFallbackReasonCode = dynamic?.reasonCode === "review_rejected"
+      ? "AI_REVIEW_REJECTED_FIXED"
+      : dynamic?.reasonCode === "repair_exhausted"
+        ? "AI_REPAIR_EXHAUSTED_FIXED"
+        : dynamic?.reasonCode === "generation_timeout" || dynamicTimedOut
+          ? "AI_GENERATION_TIMEOUT_FIXED"
+          : "AI_UNAVAILABLE_FIXED";
+    const fixedFallbackSummary = fixedFallbackReasonCode === "AI_REVIEW_REJECTED_FIXED"
+      ? "AI候选已完成生成，但未通过Judge最终审核，正在选择固定保障内容。"
+      : fixedFallbackReasonCode === "AI_REPAIR_EXHAUSTED_FIXED"
+        ? "AI候选按Judge要求返修后仍未通过审核，正在选择固定保障内容。"
+        : fixedFallbackReasonCode === "AI_GENERATION_TIMEOUT_FIXED"
+          ? `AI题组生成超过${Math.ceil(this.dynamicGenerationTimeoutMs / 1_000)}秒未完成，正在选择固定保障内容。`
+          : "模型服务未形成可审核题组，正在选择固定保障内容。";
     if (agentRun !== undefined && this.options.agentRuns !== undefined) {
       if (dynamicTimedOut) {
         const timeoutFinishedAt = this.now();
@@ -228,8 +242,7 @@ export class QuizActivityRuntime {
       await this.options.agentRuns.append(agentRun.runId, {
         role: "publish", label: "发布题组或固定保障", status: "running", startedAt: publishStartedAt.toISOString(), attemptNumber: 1,
         publicSummary: selected.source === "dynamic" ? "正在发布已通过多Agent审核的AI题组。"
-          : dynamicTimedOut ? `AI题组生成超过${Math.ceil(this.dynamicGenerationTimeoutMs / 1_000)}秒未完成，正在选择固定保障内容。`
-            : "AI题组未能安全发布，正在选择固定保障内容。",
+          : fixedFallbackSummary,
       });
       const publishFinishedAt = this.now();
       const isDynamic = selected.source === "dynamic";
@@ -239,9 +252,13 @@ export class QuizActivityRuntime {
         durationMs: Math.max(0, publishFinishedAt.getTime() - publishStartedAt.getTime()), attemptNumber: 1,
         publicSummary: isDynamic ? `已发布${selected.questions.length}道审核通过的AI客观题。`
           : selected.source === "insufficient" ? "AI题组和固定保障内容均不可用，本轮活动已阻塞。"
-            : dynamicTimedOut
-              ? `AI题组生成超过${Math.ceil(this.dynamicGenerationTimeoutMs / 1_000)}秒仍未返回，已切换为${selected.questions.length}道固定保障题。`
-              : `已切换为${selected.questions.length}道固定保障题，未将失败AI候选展示给用户。`,
+            : fixedFallbackReasonCode === "AI_REVIEW_REJECTED_FIXED"
+              ? `AI候选未通过Judge最终审核，已切换为${selected.questions.length}道固定保障题。`
+              : fixedFallbackReasonCode === "AI_REPAIR_EXHAUSTED_FIXED"
+                ? `AI候选返修预算耗尽，已切换为${selected.questions.length}道固定保障题。`
+                : fixedFallbackReasonCode === "AI_GENERATION_TIMEOUT_FIXED"
+                  ? `AI题组生成超过${Math.ceil(this.dynamicGenerationTimeoutMs / 1_000)}秒仍未返回，已切换为${selected.questions.length}道固定保障题。`
+                  : `模型服务未形成可审核题组，已切换为${selected.questions.length}道固定保障题。`,
         metrics: [
           { metricId: "question-count", label: "发布题量", value: `${selected.questions.length}道`, tone: selected.questions.length > 0 ? "success" : "danger" },
           { metricId: "content-origin", label: "内容来源", value: questionSource, tone: isDynamic ? "success" : "warning" },
@@ -253,7 +270,7 @@ export class QuizActivityRuntime {
         resultOrigin: isDynamic ? dynamic?.origin === "live_model" ? "ai_live" : "ai_recorded" : selected.source === "insufficient" ? "unknown" : "profile_fixed",
         questionCount: selected.questions.length,
         artifactSha256: quizQuestionSetSha256(selected.questions),
-        ...(isDynamic || selected.source === "insufficient" ? {} : { fallbackReasonCode: selected.source === "supplemental" ? "AI_UNAVAILABLE_SUPPLEMENTAL" : dynamicTimedOut ? "AI_GENERATION_TIMEOUT_FIXED" : "AI_UNAVAILABLE_FIXED" }),
+        ...(isDynamic || selected.source === "insufficient" ? {} : { fallbackReasonCode: selected.source === "supplemental" ? "AI_UNAVAILABLE_SUPPLEMENTAL" : fixedFallbackReasonCode }),
       });
     }
     let gradingBinding: QuizGradingBinding;
@@ -336,36 +353,49 @@ export class QuizActivityRuntime {
     remediationContext: QuizRemediationContext | undefined,
   ): Promise<void> {
     if (this.options.agentRuns === undefined) return;
-    const sourceStartedAt = this.now();
-    await this.options.agentRuns.append(runId, {
-      role: "source", label: "教学依据准备", status: "running", startedAt: sourceStartedAt.toISOString(), attemptNumber: 1,
-      publicSummary: "正在绑定当前章节正式中文正文、版本和公开来源。",
-    });
-    const sourceFinishedAt = this.now();
+    const existing = await this.options.agentRuns.getByRunId(runId);
+    const sourceComplete = existing?.stages.some((stage) => stage.role === "source" && stage.status === "succeeded") ?? false;
     const sourceClaimIds = (assets.allowedSourceAnchorIds ?? assets.knowledgePoint.sourceAnchorIds).slice(0, 32);
-    await this.options.agentRuns.append(runId, {
-      role: "source", label: "教学依据准备", status: "succeeded",
-      startedAt: sourceStartedAt.toISOString(), finishedAt: sourceFinishedAt.toISOString(),
-      durationMs: Math.max(0, sourceFinishedAt.getTime() - sourceStartedAt.getTime()), attemptNumber: 1,
-      publicSummary: "已绑定当前章节正式中文正文；Agent只能据此生成题目，不能替换教材事实。",
-      metrics: [
-        { metricId: "lesson-variant", label: "正文版本", value: lessonVariantId, tone: "success" },
-        { metricId: "source-count", label: "公开来源", value: `${sourceClaimIds.length}项`, tone: "neutral" },
-      ],
-      sourceClaimIds,
-    });
-    const profileStartedAt = this.now();
-    await this.options.agentRuns.append(runId, {
-      role: "profile", label: "学情画像分析", status: "running", startedAt: profileStartedAt.toISOString(), attemptNumber: 1,
-      publicSummary: remediationContext === undefined ? "正在读取当前会话的确定性学情事实。" : "正在结合上一轮错题和学情画像形成补救重点。",
-    });
+    if (!sourceComplete) {
+      const sourceStartedAt = existing?.stages.find((stage) => stage.role === "source" && stage.status === "running")?.startedAt
+        ?? this.now().toISOString();
+      const sourceStartedMs = Date.parse(sourceStartedAt);
+      const sourceFinishedAt = this.now();
+      await this.options.agentRuns.append(runId, {
+        role: "source", label: "教学依据准备", status: "succeeded",
+        startedAt: Number.isFinite(sourceStartedMs) ? new Date(sourceStartedMs).toISOString() : sourceFinishedAt.toISOString(),
+        finishedAt: sourceFinishedAt.toISOString(),
+        durationMs: Number.isFinite(sourceStartedMs) ? Math.max(0, sourceFinishedAt.getTime() - sourceStartedMs) : 0,
+        attemptNumber: 1,
+        publicSummary: "已绑定当前章节正式中文正文；Agent只能据此生成题目，不能替换教材事实。",
+        metrics: [
+          { metricId: "lesson-variant", label: "正文版本", value: lessonVariantId, tone: "success" },
+          { metricId: "source-count", label: "公开来源", value: `${sourceClaimIds.length}项`, tone: "neutral" },
+        ],
+        sourceClaimIds,
+      });
+    }
+    const profileComplete = existing?.stages.some((stage) => stage.role === "profile" && stage.status === "succeeded") ?? false;
+    if (profileComplete) return;
+    const profileStartedAt = existing?.stages.find((stage) => stage.role === "profile" && stage.status === "running")?.startedAt
+      ?? this.now().toISOString();
+    const profileStartedMs = Date.parse(profileStartedAt);
+    const profileRunning = existing?.stages.some((stage) => stage.role === "profile" && stage.status === "running") ?? false;
+    if (!profileRunning) {
+      await this.options.agentRuns.append(runId, {
+        role: "profile", label: "学情画像分析", status: "running",
+        startedAt: Number.isFinite(profileStartedMs) ? new Date(profileStartedMs).toISOString() : this.now().toISOString(), attemptNumber: 1,
+        publicSummary: remediationContext === undefined ? "正在读取当前会话的确定性学情事实。" : "正在结合上一轮错题和学情画像形成补救重点。",
+      });
+    }
     const profileFinishedAt = this.now();
     const missedCount = remediationContext?.missedQuestions.length ?? 0;
     const evidenceCount = remediationContext?.learnerProfileEvidenceRefs.length ?? 0;
     await this.options.agentRuns.append(runId, {
       role: "profile", label: "学情画像分析", status: "succeeded",
-      startedAt: profileStartedAt.toISOString(), finishedAt: profileFinishedAt.toISOString(),
-      durationMs: Math.max(0, profileFinishedAt.getTime() - profileStartedAt.getTime()), attemptNumber: 1,
+      startedAt: Number.isFinite(profileStartedMs) ? new Date(profileStartedMs).toISOString() : profileFinishedAt.toISOString(),
+      finishedAt: profileFinishedAt.toISOString(),
+      durationMs: Number.isFinite(profileStartedMs) ? Math.max(0, profileFinishedAt.getTime() - profileStartedMs) : 0, attemptNumber: 1,
       publicSummary: remediationContext === undefined
         ? "已建立本轮生成所需的会话画像基线。"
         : `已识别上一轮${missedCount}道错题，生成时将重复考察对应薄弱知识。`,
@@ -375,6 +405,10 @@ export class QuizActivityRuntime {
         { metricId: "profile-source", label: "画像来源", value: remediationContext?.learnerProfileSource ?? "deterministic", tone: remediationContext?.learnerProfileSource === "agent" ? "success" : "neutral" },
       ],
     });
+  }
+
+  private preparationStagesComplete(run: { stages: readonly { role: string; status: string }[] }): boolean {
+    return ["source", "profile"].every((role) => run.stages.some((stage) => stage.role === role && stage.status === "succeeded"));
   }
 
   private async buildRemediationContext(

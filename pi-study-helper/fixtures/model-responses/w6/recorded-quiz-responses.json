@@ -46,6 +46,8 @@
         "verdict": "accepted",
         "finalSafeFeedback": "录制题组通过正文依据与安全边界检查。",
         "summary": "该记录仅用于离线演示与回归。",
+        "issueDecisions": [],
+        "additionalIssues": [],
         "blockedIssueIds": []
       },
       "sourceRefs": [
@@ -102,6 +104,8 @@
         "verdict": "accepted",
         "finalSafeFeedback": "录制题组通过正文依据与安全边界检查。",
         "summary": "该记录仅用于离线演示与回归。",
+        "issueDecisions": [],
+        "additionalIssues": [],
         "blockedIssueIds": []
       },
       "sourceRefs": [
@@ -158,6 +162,8 @@
         "verdict": "accepted",
         "finalSafeFeedback": "录制题组通过正文依据与安全边界检查。",
         "summary": "该记录仅用于离线演示与回归。",
+        "issueDecisions": [],
+        "additionalIssues": [],
         "blockedIssueIds": []
       },
       "sourceRefs": [
@@ -217,6 +223,8 @@
         "verdict": "accepted",
         "finalSafeFeedback": "录制题组通过正文依据与安全边界检查。",
         "summary": "该记录仅用于离线演示与回归。",
+        "issueDecisions": [],
+        "additionalIssues": [],
         "blockedIssueIds": []
       },
       "sourceRefs": [
@@ -280,6 +288,8 @@
         "verdict": "accepted",
         "finalSafeFeedback": "录制题组通过正文依据与安全边界检查。",
         "summary": "该记录仅用于离线演示与回归。",
+        "issueDecisions": [],
+        "additionalIssues": [],
         "blockedIssueIds": []
       },
       "sourceRefs": [
@@ -326,7 +336,11 @@
           {
             "issueId": "validation-scope",
             "severity": "medium",
+            "category": "factual_accuracy",
+            "candidateField": "candidateFeedback.questions",
             "message": "检查题目是否把程序运行与结果正确混为一谈。",
+            "evidenceSummary": "正文要求同时验证程序执行和业务结果，二者不能混为同一结论。",
+            "sourceAnchorIds": ["src-pandas-testing"],
             "disputed": true
           }
         ],
@@ -348,11 +362,13 @@
       "status": "ok",
       "payload": {
         "defenseSummary": "题目明确区分了运行成功与业务结果验证，并绑定公开来源。",
-        "acceptedIssueIds": [],
-        "rebuttedIssueIds": [
-          "validation-scope"
-        ],
-        "residualRisks": []
+        "issueAssessments": [{
+          "issueId": "validation-scope",
+          "position": "rebutted",
+          "rationale": "候选题已经分别要求核对程序执行和业务结果，符合正文中的验证边界。",
+          "sourceAnchorIds": ["src-pandas-testing"],
+          "residualRisk": null
+        }]
       },
       "sourceRefs": [
         "src-pandas-testing",
@@ -371,6 +387,13 @@
         "verdict": "accepted",
         "finalSafeFeedback": "题组通过公开来源和风险边界审核。",
         "summary": "问题均围绕可复验的清洗结果，不替代确定性判分。",
+        "issueDecisions": [{
+          "issueId": "validation-scope",
+          "decision": "overruled",
+          "rationale": "候选题已经分别核对程序执行与业务结果，符合正文的验证边界。",
+          "sourceAnchorIds": ["src-pandas-testing"]
+        }],
+        "additionalIssues": [],
         "blockedIssueIds": []
       },
       "sourceRefs": [

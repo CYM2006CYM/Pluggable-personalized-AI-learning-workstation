@@ -287,6 +287,8 @@ MIT — 见 [LICENSE](LICENSE)。
 
 ## Windows 本地网页 Demo 完整部署流程
 
+比赛测评方可直接双击根目录的 [`start-competition-demo.cmd`](start-competition-demo.cmd)。启动器会探测陌生 Windows 机器、引导首次安装、安全读取 DeepSeek API Key，并由当前教材 seal 自动隔离运行数据。完整说明见 [`比赛方部署与启动说明.md`](比赛方部署与启动说明.md)。下文保留逐步手动部署流程，供审计和故障排查使用。
+
 本节用于在一台新的 Windows 10/11 电脑上，从零部署当前六节 Pandas 中文教学网页。下面的命令均在 **PowerShell** 中执行；除非步骤明确要求，否则不需要管理员权限。
 
 当前比赛 Demo 的合同环境为：
@@ -430,14 +432,13 @@ npm.cmd run build:web
 $env:PYTHONNOUSERSITE = "1"
 $env:PI_PYTHON_EXECUTABLE = (python -c "import sys; print(sys.executable)").Trim()
 $env:PI_STUDY_API_PORT = "4311"
-$env:PI_STUDY_DATA = Join-Path $projectRoot ".demo-data-live"
-New-Item -ItemType Directory -Force -Path $env:PI_STUDY_DATA | Out-Null
+Remove-Item Env:PI_STUDY_DATA -ErrorAction SilentlyContinue
 Write-Host "PI_PYTHON_EXECUTABLE=$env:PI_PYTHON_EXECUTABLE"
 Write-Host "PI_STUDY_API_PORT=$env:PI_STUDY_API_PORT"
-Write-Host "PI_STUDY_DATA=$env:PI_STUDY_DATA"
+Write-Host "PI_STUDY_DATA=由启动器按当前教材 Seal 自动选择"
 ```
 
-`PI_PYTHON_EXECUTABLE` 应指向 `pi-study-py313` 环境中的 `python.exe`。`.demo-data-live` 是本机运行数据，不得提交到 Git。
+`PI_PYTHON_EXECUTABLE` 应指向 `pi-study-py313` 环境中的 `python.exe`。不要长期固定 `PI_STUDY_DATA`；启动器会使用 `.demo-data-<当前Seal>`，教材更新时自动切换目录，旧数据不会删除。这些本机运行数据不得提交到 Git。
 
 如果 4311 被占用，先检查占用者：
 
@@ -539,7 +540,7 @@ mode=live_model promptVersion=w4-d2-v16
 
 如果没有，说明启动方式或运行进程不正确。回到旧窗口按 `Ctrl+C`，在保留三个 `OPENAI_*` 变量的同一窗口重新执行 `npm.cmd run demo:live`，然后创建新会话。
 
-如果启动标志正确但仍回退，可能是API错误、超时、Generator结构不合法或Agent审核拒绝。保留本地 `.demo-data-live` 供负责人读取脱敏轨迹，不要把该目录上传。
+如果启动标志正确但仍回退，可能是API错误、超时、Generator结构不合法或Agent审核拒绝。保留本地 `.demo-data-<当前Seal>` 供负责人读取脱敏轨迹，不要把该目录上传。
 
 #### 页面打不开或端口被占用
 
@@ -587,7 +588,7 @@ conda activate pi-study-py313
 $env:PYTHONNOUSERSITE = "1"
 $env:PI_PYTHON_EXECUTABLE = (python -c "import sys; print(sys.executable)").Trim()
 $env:PI_STUDY_API_PORT = "4311"
-$env:PI_STUDY_DATA = Join-Path $projectRoot ".demo-data-live"
+Remove-Item Env:PI_STUDY_DATA -ErrorAction SilentlyContinue
 $env:OPENAI_BASE_URL = "https://api.deepseek.com/v1"
 $env:OPENAI_MODEL = "deepseek-chat"
 $secret = Read-Host "请输入 DeepSeek API Key（输入时不显示）" -AsSecureString

@@ -40,6 +40,8 @@
         "verdict": "accepted",
         "finalSafeFeedback": "Approved safe feedback.",
         "summary": "Judge accepted the safe candidate.",
+        "issueDecisions": [],
+        "additionalIssues": [],
         "blockedIssueIds": []
       },
       "sourceRefs": ["source-public-1"],
@@ -72,8 +74,12 @@
         "issues": [
           {
             "issueId": "issue-boundary-1",
-            "severity": "medium",
+            "severity": "high",
+            "category": "candidate_boundary",
+            "candidateField": "candidateFeedback",
             "message": "Clarify that the feedback is derived from public result metadata.",
+            "evidenceSummary": "The public source only supports feedback derived from public result metadata.",
+            "sourceAnchorIds": ["source-public-1"],
             "disputed": true
           }
         ],
@@ -91,9 +97,13 @@
       "status": "ok",
       "payload": {
         "defenseSummary": "The disputed issue is answered using safe result metadata.",
-        "acceptedIssueIds": ["issue-boundary-1"],
-        "rebuttedIssueIds": [],
-        "residualRisks": []
+        "issueAssessments": [{
+          "issueId": "issue-boundary-1",
+          "position": "conceded",
+          "rationale": "The public source requires the candidate wording to stay within public result metadata.",
+          "sourceAnchorIds": ["source-public-1"],
+          "residualRisk": null
+        }]
       },
       "sourceRefs": ["source-public-1"],
       "traceSummary": "defender dispute fixture",
@@ -108,6 +118,13 @@
         "verdict": "accepted",
         "finalSafeFeedback": "Approved after defender response.",
         "summary": "Judge accepted the defended candidate.",
+        "issueDecisions": [{
+          "issueId": "issue-boundary-1",
+          "decision": "overruled",
+          "rationale": "The candidate wording remains within the public result metadata supported by the source.",
+          "sourceAnchorIds": ["source-public-1"]
+        }],
+        "additionalIssues": [],
         "blockedIssueIds": []
       },
       "sourceRefs": ["source-public-1"],
@@ -163,6 +180,8 @@
         "verdict": "accepted",
         "finalSafeFeedback": "Approved after retry path.",
         "summary": "Judge accepted retry output.",
+        "issueDecisions": [],
+        "additionalIssues": [],
         "blockedIssueIds": []
       },
       "sourceRefs": ["source-public-1"],
@@ -228,6 +247,8 @@
         "verdict": "accepted",
         "finalSafeFeedback": "Approved from resumed checkpoint.",
         "summary": "Judge accepted resumed output.",
+        "issueDecisions": [],
+        "additionalIssues": [],
         "blockedIssueIds": []
       },
       "sourceRefs": ["source-public-1"],
@@ -271,7 +292,11 @@
         "issues": [{
           "issueId": "issue-reject-1",
           "severity": "high",
+          "category": "safety",
+          "candidateField": "candidateFeedback",
           "message": "Candidate is not safe to publish.",
+          "evidenceSummary": "The public lesson source does not support the unsafe candidate claim.",
+          "sourceAnchorIds": ["source-public-1"],
           "disputed": false
         }],
         "requiresDefender": false,
@@ -284,12 +309,38 @@
     },
     {
       "runId": "review-judge-rejected",
+      "graphId": "defender",
+      "status": "ok",
+      "payload": {
+        "defenseSummary": "The Hunter issue is supported by the public source.",
+        "issueAssessments": [{
+          "issueId": "issue-reject-1",
+          "position": "conceded",
+          "rationale": "The public source does not support the unsafe candidate claim.",
+          "sourceAnchorIds": ["source-public-1"],
+          "residualRisk": "Candidate remains unsafe to publish."
+        }]
+      },
+      "sourceRefs": ["source-public-1"],
+      "traceSummary": "defender rejection fixture",
+      "modelId": "fixture-model",
+      "promptVersion": "review-v1"
+    },
+    {
+      "runId": "review-judge-rejected",
       "graphId": "judge",
       "status": "ok",
       "payload": {
         "verdict": "rejected",
         "finalSafeFeedback": "Candidate text that must not be published.",
         "summary": "Judge rejected the candidate.",
+        "issueDecisions": [{
+          "issueId": "issue-reject-1",
+          "decision": "upheld",
+          "rationale": "The public source does not support the unsafe candidate claim.",
+          "sourceAnchorIds": ["source-public-1"]
+        }],
+        "additionalIssues": [],
         "blockedIssueIds": ["issue-reject-1"]
       },
       "sourceRefs": ["source-public-1"],

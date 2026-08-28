@@ -226,6 +226,22 @@ describe("W4 real API pages", () => {
     expect(host.textContent).toContain("可以开始");
   });
 
+  it("only exposes the first unfinished path node as startable after diagnostic skips", async () => {
+    const session = recovery({ stage: "path" });
+    session.path = {
+      pathId: "path-sequential", pathVersion: 1, status: "active",
+      nodes: [
+        { ...pathNodes[0]!, nodeId: "node-first", status: "available" },
+        { ...pathNodes[0]!, nodeId: "node-skipped", status: "skipped", reasonCodes: ["diagnostic_skip_selected"] },
+        { ...pathNodes[0]!, nodeId: "node-later-1", status: "available" },
+        { ...pathNodes[0]!, nodeId: "node-later-2", status: "available" },
+      ],
+    };
+    const { host } = await renderRoute("/path/session-w4", vi.fn().mockResolvedValue(ok(bootstrap(session))));
+    const statuses = [...host.querySelectorAll(".path-node .path-node-meta strong")].map((item) => item.textContent);
+    expect(statuses).toEqual(["可以开始", "已跳过", "等待先修", "等待先修"]);
+  });
+
   it("shows elapsed-time feedback while the learning path is being confirmed", async () => {
     const session = recovery({ stage: "path" });
     session.path = undefined;
