@@ -1,0 +1,755 @@
+/*
+ * LearnPage(学习页)样式 —— 米色纸感三段式。
+ *
+ * 全部颜色、字号、间距、圆角、阴影都从 design/tokens.css 取,
+ * 本文件不出现任何硬编码色值、字号与间距。
+ *
+ * 三段式结构:
+ * - .learn-task:任务卡(本节目标 + 主操作),全页唯一主操作卡,白卡 + 阴影。
+ * - .lesson-manual:正文阅读区,衬线字体、最大宽度 --read-width、不包卡壳、
+ *   不限高——读起来像一页教材。各节仍保留 <details> 展开/收起行为,只换呈现。
+ * - .learn-facts / .lesson-module.is-info / .learn-fact:折叠信息卡
+ *   (误区 / 术语依据),默认折叠(<details> 不带 open),并列卡同组样式一致。
+ *
+ * 规则统一挂在 [data-page="learn"] 根节点下;唯一例外是顶栏徽章
+ * .header-badge 属于页面级 chrome,与 DiagnosticPage.css 对 .page-heading
+ * 的处理一致全局生效(所有重写页共用同一 token 体系)。
+ */
+
+/* ---------- 页面底座 ---------- */
+
+[data-page="learn"] {
+  display: grid;
+  gap: var(--space-5);
+  align-items: start;
+}
+
+/* 顶栏徽章:页面级 chrome,全局 token 化 */
+.header-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--space-6);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+  color: var(--text-soft);
+  background: var(--card);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+  white-space: nowrap;
+}
+
+[data-page="learn"] .learning-content {
+  min-width: 0;
+  display: grid;
+  gap: var(--space-5);
+}
+
+/* 三段内容收进阅读列宽;八站点流水线是过程面,保持整行宽 */
+[data-page="learn"] .learn-task,
+[data-page="learn"] .lesson-personal-tip,
+[data-page="learn"] .lesson-controls,
+[data-page="learn"] .lesson-manual,
+[data-page="learn"] .learn-facts {
+  width: min(var(--read-width), 100%);
+  margin-inline: auto;
+}
+
+/* ---------- 任务卡:本节目标 + 主操作 ---------- */
+
+[data-page="learn"] .learn-task {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-6);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+  box-shadow: var(--shadow-2);
+}
+
+[data-page="learn"] .lesson-blocked {
+  border-left: var(--space-1) solid var(--danger);
+}
+
+[data-page="learn"] .lesson-helper {
+  border-left: var(--space-1) solid var(--warm);
+}
+
+[data-page="learn"] .learn-task-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+[data-page="learn"] .learn-task-heading > div {
+  min-width: 0;
+}
+
+[data-page="learn"] .task-kicker {
+  margin: 0 0 var(--space-1);
+  color: var(--accent);
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--ls-wide);
+  line-height: var(--lh-caption);
+}
+
+[data-page="learn"] .learn-task h2 {
+  margin: 0;
+  color: var(--text);
+  font-family: var(--font-serif);
+  font-size: var(--fs-h2);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-h2);
+  letter-spacing: var(--ls-tight);
+}
+
+[data-page="learn"] .task-lede {
+  max-width: var(--read-width);
+  margin: 0;
+  color: var(--text-soft);
+  font-size: var(--fs-ui);
+  line-height: var(--lh-ui);
+}
+
+[data-page="learn"] .learn-task > .button {
+  justify-self: start;
+}
+
+[data-page="learn"] .objective-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-5);
+  margin-top: var(--space-2);
+}
+
+[data-page="learn"] .objective-columns > div + div {
+  padding-left: var(--space-5);
+  border-left: 1px solid var(--rule);
+}
+
+[data-page="learn"] .objective-columns h3 {
+  margin: 0 0 var(--space-2);
+  color: var(--text);
+  font-size: var(--fs-ui);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-ui);
+}
+
+[data-page="learn"] .objective-columns ul {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding-left: var(--space-5);
+  color: var(--text);
+  line-height: var(--lh-body);
+}
+
+/* ---------- 任务卡主操作区 ---------- */
+
+[data-page="learn"] .task-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  margin-top: var(--space-2);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--rule);
+}
+
+/* ---------- 共用类在本页的纸感覆盖(不修改 styles.css) ---------- */
+
+[data-page="learn"] .status-tag {
+  min-height: 0;
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+  color: var(--text-soft);
+  background: var(--card-soft);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+}
+
+[data-page="learn"] .status-tag.success {
+  border-color: var(--step-completed);
+  color: var(--step-completed);
+  background: var(--accent-soft);
+}
+
+[data-page="learn"] .status-tag.neutral {
+  border-color: var(--rule);
+  color: var(--text-soft);
+  background: var(--card-soft);
+}
+
+[data-page="learn"] .quiet-label {
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  color: var(--text-soft);
+  background: transparent;
+  font-size: var(--fs-ui);
+  line-height: var(--lh-ui);
+}
+
+[data-page="learn"] .button {
+  min-height: var(--space-6);
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-ui);
+  line-height: var(--lh-ui);
+}
+
+[data-page="learn"] .button.primary {
+  color: var(--card);
+  background: var(--accent);
+}
+
+[data-page="learn"] .button.primary:hover:not(:disabled) {
+  background: var(--text);
+}
+
+[data-page="learn"] .button.secondary {
+  border-color: var(--rule);
+  color: var(--text);
+  background: var(--card);
+}
+
+[data-page="learn"] .button.text-button {
+  border-color: transparent;
+  color: var(--accent);
+  background: transparent;
+}
+
+[data-page="learn"] .button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+[data-page="learn"] .async-action-status {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: var(--fs-ui);
+  line-height: var(--lh-ui);
+  overflow-wrap: break-word;
+}
+
+[data-page="learn"] .button-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+/* ---------- 个性化课前导学 ---------- */
+
+[data-page="learn"] .lesson-personal-tip {
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--rule);
+  border-left: var(--space-1) solid var(--accent);
+  border-radius: var(--radius-md);
+  background: var(--accent-soft);
+}
+
+[data-page="learn"] .lesson-personal-tip.is-unavailable {
+  border-left-color: var(--warm);
+  background: var(--card-soft);
+}
+
+[data-page="learn"] .lesson-personal-tip-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+[data-page="learn"] .lesson-personal-tip-heading strong {
+  max-width: min(70%, calc(var(--read-width) * 0.72));
+  color: var(--accent);
+  font-size: var(--fs-caption);
+  font-variant-numeric: tabular-nums;
+  line-height: var(--lh-caption);
+  overflow-wrap: anywhere;
+  text-align: right;
+}
+
+[data-page="learn"] .lesson-personal-tip.is-unavailable .lesson-personal-tip-heading strong {
+  color: var(--warm);
+}
+
+[data-page="learn"] .lesson-personal-tip-title {
+  min-width: 0;
+  display: grid;
+  gap: var(--space-1);
+}
+
+[data-page="learn"] .lesson-personal-tip-title span {
+  color: var(--text);
+  font-size: var(--fs-ui);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-ui);
+}
+
+[data-page="learn"] .lesson-personal-tip-title small {
+  color: var(--text-soft);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+}
+
+[data-page="learn"] .lesson-personal-tip > .button {
+  margin-top: var(--space-3);
+}
+
+[data-page="learn"] .lesson-personal-tip p {
+  margin: var(--space-2) 0 0;
+  color: var(--text);
+  line-height: var(--lh-body);
+}
+
+[data-page="learn"] .lesson-guide {
+  margin-top: var(--space-4);
+}
+
+[data-page="learn"] .lesson-personal-tip .lesson-guide-overview {
+  max-width: var(--read-width);
+  margin: 0;
+  color: var(--text);
+  font-size: var(--fs-body);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-body);
+}
+
+[data-page="learn"] .lesson-guide-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: var(--space-4);
+  border-top: 1px solid var(--rule);
+}
+
+[data-page="learn"] .lesson-guide-grid section {
+  min-width: 0;
+  padding: var(--space-3) var(--space-4) var(--space-3) 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+[data-page="learn"] .lesson-guide-grid section:nth-child(2n) {
+  padding-right: 0;
+  padding-left: var(--space-4);
+  border-left: 1px solid var(--rule);
+}
+
+[data-page="learn"] .lesson-guide-grid span,
+[data-page="learn"] .lesson-guide-question span {
+  display: block;
+  margin-bottom: var(--space-1);
+  color: var(--accent);
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-caption);
+}
+
+[data-page="learn"] .lesson-personal-tip .lesson-guide-grid p,
+[data-page="learn"] .lesson-personal-tip .lesson-guide-question p {
+  margin: 0;
+  color: var(--text);
+}
+
+[data-page="learn"] .lesson-guide-question {
+  margin-top: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-left: var(--space-1) solid var(--accent);
+  background: var(--glass);
+}
+
+/* ---------- 模块控制条 ---------- */
+
+[data-page="learn"] .lesson-controls {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-2) 0 var(--space-3);
+  border-bottom: 1px solid var(--rule);
+  color: var(--text-soft);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+}
+
+[data-page="learn"] .lesson-controls > div {
+  display: flex;
+  gap: var(--space-2);
+}
+
+/* ---------- 正文阅读区:教材的一页 ---------- */
+
+[data-page="learn"] .lesson-manual {
+  min-width: 0;
+  display: grid;
+  gap: var(--space-5);
+  font-family: var(--font-serif);
+}
+
+/* 阅读区小节:不包卡壳、不限高,只保留章节标题的视觉层级 */
+[data-page="learn"] .lesson-module {
+  min-width: 0;
+  width: 100%;
+  content-visibility: visible;
+}
+
+[data-page="learn"] .lesson-module > summary {
+  position: relative;
+  display: grid;
+  gap: var(--space-1);
+  padding: 0 var(--space-6) var(--space-3) 0;
+  border-bottom: 1px solid var(--rule);
+  cursor: pointer;
+  list-style: none;
+}
+
+[data-page="learn"] .lesson-module > summary::-webkit-details-marker {
+  display: none;
+}
+
+[data-page="learn"] .lesson-module > summary::after {
+  content: "";
+  position: absolute;
+  top: var(--space-1);
+  right: var(--space-1);
+  width: var(--space-2);
+  height: var(--space-2);
+  border-right: 1px solid var(--text-soft);
+  border-bottom: 1px solid var(--text-soft);
+  transform: rotate(45deg);
+  transition: transform var(--dur-fast) var(--ease);
+}
+
+[data-page="learn"] .lesson-module[open] > summary::after {
+  transform: rotate(-45deg);
+}
+
+[data-page="learn"] .lesson-module > summary span {
+  color: var(--text);
+  font-family: var(--font-serif);
+  font-size: var(--fs-h3);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-h3);
+}
+
+[data-page="learn"] .lesson-module > summary small {
+  color: var(--text-soft);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+}
+
+[data-page="learn"] .lesson-module-body {
+  min-width: 0;
+  padding: var(--space-4) 0 0;
+}
+
+[data-page="learn"] .lesson-subheading {
+  margin: var(--space-3) 0 var(--space-2);
+  color: var(--text);
+  font-family: var(--font-serif);
+  font-size: var(--fs-h3);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-h3);
+}
+
+[data-page="learn"] .lesson-paragraph {
+  margin: 0 0 var(--space-4);
+  color: var(--text);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+}
+
+[data-page="learn"] .lesson-list {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-4);
+  padding-left: var(--space-5);
+  color: var(--text);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+}
+
+[data-page="learn"] .lesson-code {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  margin: var(--space-1) 0 var(--space-4);
+  padding: var(--space-4);
+  overflow-x: auto;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-md);
+  color: var(--text);
+  background: var(--card);
+  font-family: var(--font-mono);
+  font-size: var(--fs-mono);
+  line-height: var(--lh-mono);
+  white-space: pre;
+}
+
+[data-page="learn"] .lesson-callout {
+  margin: var(--space-4) 0;
+  padding: var(--space-3) var(--space-4);
+  border-left: var(--space-1) solid var(--accent);
+  border-radius: var(--radius-sm);
+  background: var(--accent-soft);
+}
+
+[data-page="learn"] .lesson-callout.warning {
+  border-left-color: var(--warm);
+  background: var(--card-soft);
+}
+
+[data-page="learn"] .lesson-callout.term {
+  border-left-color: var(--step-completed);
+  background: var(--accent-soft);
+}
+
+[data-page="learn"] .lesson-callout strong {
+  color: var(--text);
+}
+
+[data-page="learn"] .lesson-callout p {
+  margin: var(--space-1) 0 0;
+  color: var(--text);
+  line-height: var(--lh-body);
+}
+
+[data-page="learn"] .lesson-terms {
+  margin: 0 0 var(--space-4);
+}
+
+[data-page="learn"] .lesson-terms > div {
+  display: grid;
+  grid-template-columns: minmax(calc(var(--space-8) * 1.5), calc(var(--space-8) * 2.5)) minmax(0, 1fr);
+  gap: var(--space-4);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+[data-page="learn"] .lesson-terms dt {
+  color: var(--text);
+  font-weight: var(--fw-bold);
+}
+
+[data-page="learn"] .lesson-terms dd {
+  margin: 0;
+  color: var(--text);
+  line-height: var(--lh-body);
+}
+
+[data-page="learn"] .lesson-sources {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+[data-page="learn"] .lesson-sources li {
+  padding: var(--space-3) var(--space-4);
+  border-left: var(--space-1) solid var(--rule);
+  background: var(--card-soft);
+  color: var(--text);
+  line-height: var(--lh-body);
+}
+
+/* ---------- 折叠信息卡:误区 / 术语依据(并列卡同组样式一致) ---------- */
+
+[data-page="learn"] .learn-facts {
+  display: grid;
+  gap: var(--space-4);
+}
+
+[data-page="learn"] .learn-fact,
+[data-page="learn"] .lesson-module.is-info {
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-md);
+  background: var(--card-soft);
+}
+
+[data-page="learn"] .learn-fact > summary,
+[data-page="learn"] .lesson-module.is-info > summary {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--space-7);
+  padding: var(--space-2) var(--space-6) var(--space-2) var(--space-4);
+  cursor: pointer;
+  list-style: none;
+}
+
+[data-page="learn"] .learn-fact > summary::-webkit-details-marker,
+[data-page="learn"] .lesson-module.is-info > summary::-webkit-details-marker {
+  display: none;
+}
+
+[data-page="learn"] .learn-fact > summary::after,
+[data-page="learn"] .lesson-module.is-info > summary::after {
+  content: "";
+  position: absolute;
+  top: calc(50% - var(--space-1));
+  right: var(--space-4);
+  width: var(--space-2);
+  height: var(--space-2);
+  border-right: 1px solid var(--text-soft);
+  border-bottom: 1px solid var(--text-soft);
+  transform: rotate(45deg);
+  transition: transform var(--dur-fast) var(--ease);
+}
+
+[data-page="learn"] .learn-fact[open] > summary::after,
+[data-page="learn"] .lesson-module.is-info[open] > summary::after {
+  transform: rotate(-45deg);
+}
+
+[data-page="learn"] .learn-fact > summary span,
+[data-page="learn"] .lesson-module.is-info > summary span {
+  color: var(--text);
+  font-size: var(--fs-ui);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-ui);
+}
+
+[data-page="learn"] .lesson-module.is-info > summary small {
+  min-width: 0;
+  margin-left: auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-soft);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+}
+
+[data-page="learn"] .learn-fact-body,
+[data-page="learn"] .lesson-module.is-info .lesson-module-body {
+  margin: 0;
+  padding: var(--space-3) var(--space-4) var(--space-4);
+  border-top: 1px solid var(--rule);
+  color: var(--text);
+  font-size: var(--fs-ui);
+  line-height: var(--lh-ui);
+}
+
+/* ---------- 旧版卡片的阅读区元素 ---------- */
+
+[data-page="learn"] .lesson-manual-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--rule);
+}
+
+[data-page="learn"] .lesson-manual-heading h3,
+[data-page="learn"] .lesson-reading-subheading {
+  margin: 0;
+  color: var(--text);
+  font-family: var(--font-serif);
+  font-size: var(--fs-h3);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-h3);
+}
+
+[data-page="learn"] .lesson-reading-subheading {
+  margin-top: var(--space-4);
+}
+
+[data-page="learn"] .explanation-list {
+  display: grid;
+  gap: var(--space-3);
+  margin: var(--space-3) 0 0;
+  padding-left: var(--space-5);
+  color: var(--text);
+  font-family: var(--font-serif);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+}
+
+/* ---------- 八站点流水线:内容与行为不动,只调它在外层布局里的间距 ---------- */
+
+[data-page="learn"] .agent-pipeline {
+  margin: 0;
+}
+
+/* ---------- 窄屏收窄 ---------- */
+
+@media (max-width: 700px) {
+  [data-page="learn"] .learn-task {
+    padding: var(--space-4);
+  }
+
+  [data-page="learn"] .objective-columns {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
+  }
+
+  [data-page="learn"] .objective-columns > div + div {
+    padding-top: var(--space-4);
+    padding-left: 0;
+    border-top: 1px solid var(--rule);
+    border-left: 0;
+  }
+
+  [data-page="learn"] .lesson-personal-tip-heading {
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+
+  [data-page="learn"] .lesson-personal-tip-heading strong {
+    max-width: 100%;
+    text-align: left;
+  }
+
+  [data-page="learn"] .lesson-guide-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  [data-page="learn"] .lesson-guide-grid section,
+  [data-page="learn"] .lesson-guide-grid section:nth-child(2n) {
+    padding: var(--space-3) 0;
+    border-left: 0;
+  }
+
+  [data-page="learn"] .lesson-controls {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  [data-page="learn"] .lesson-controls > div {
+    width: 100%;
+  }
+
+  [data-page="learn"] .lesson-controls button {
+    flex: 1 1 0;
+  }
+
+  [data-page="learn"] .lesson-terms > div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-1);
+  }
+
+  [data-page="learn"] .task-footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+/* ---------- 减少动效 ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  [data-page="learn"] .lesson-module > summary::after,
+  [data-page="learn"] .learn-fact > summary::after,
+  [data-page="learn"] .lesson-module.is-info > summary::after {
+    transition: none;
+  }
+}

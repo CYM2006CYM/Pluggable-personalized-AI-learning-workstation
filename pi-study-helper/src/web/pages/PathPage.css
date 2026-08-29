@@ -1,0 +1,426 @@
+/*
+ * PathPage 样式 —— 米色纸感视觉体系。
+ *
+ * 全部颜色、字号、间距、圆角、阴影都取 design/tokens.css，本文件不出现
+ * 硬编码色值、字号与间距。规则统一挂在 [data-page="path"] 根节点下，
+ * 只作用于本页，不污染其他页面。
+ *
+ * 卡片模型：一页恰好一个任务卡（.path-task-card）；并列的证据信息卡
+ * 共用 .path-info-card 同组样式；信息卡默认折叠（<details> 不带 open）。
+ * 节点状态用 data-status 表达，不在 class 名里堆砌状态。
+ */
+
+[data-page="path"] {
+  display: grid;
+  gap: var(--space-5);
+  align-items: start;
+}
+
+/* ---------- 任务卡：这是依据你的诊断算出来的路径 ---------- */
+
+[data-page="path"] .path-task-card {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-6);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+  box-shadow: var(--shadow-2);
+}
+
+[data-page="path"] .path-task-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+[data-page="path"] .path-task-heading > div {
+  min-width: 0;
+}
+
+[data-page="path"] .path-task-title {
+  margin: 0;
+  color: var(--text);
+  font-family: var(--font-serif);
+  font-size: var(--fs-h2);
+  line-height: var(--lh-h2);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-tight);
+}
+
+[data-page="path"] .path-task-body {
+  max-width: var(--read-width);
+  margin: var(--space-2) 0 0;
+  color: var(--text-soft);
+  font-size: var(--fs-ui);
+  line-height: var(--lh-ui);
+}
+
+[data-page="path"] .path-task-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+/* 状态徽章与共用类在本页的纸感覆盖（不修改 styles.css） */
+[data-page="path"] .status-tag {
+  min-height: 0;
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+  color: var(--text-soft);
+  background: var(--card-soft);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+}
+
+[data-page="path"] .status-tag.success {
+  border-color: var(--step-completed);
+  color: var(--step-completed);
+  background: var(--accent-soft);
+}
+
+[data-page="path"] .status-tag.neutral {
+  border-color: var(--rule);
+  color: var(--text-soft);
+  background: var(--card-soft);
+}
+
+[data-page="path"] .quiet-label {
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  color: var(--text-soft);
+  background: transparent;
+  font-size: var(--fs-ui);
+  line-height: var(--lh-ui);
+}
+
+[data-page="path"] .button {
+  min-height: var(--space-6);
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-ui);
+  line-height: var(--lh-ui);
+}
+
+[data-page="path"] .button.primary {
+  color: var(--card);
+  background: var(--accent);
+}
+
+[data-page="path"] .button.primary:hover:not(:disabled) {
+  background: var(--text);
+}
+
+[data-page="path"] .button.secondary {
+  border-color: var(--rule);
+  color: var(--text);
+  background: var(--card);
+}
+
+[data-page="path"] .button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+[data-page="path"] .async-action-status {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: var(--fs-ui);
+  line-height: var(--lh-ui);
+  overflow-wrap: break-word;
+}
+
+/* ---------- 重算结果：动作的即时反馈，不折叠 ---------- */
+
+[data-page="path"] .path-replan-result {
+  padding: var(--space-5);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  background: var(--card-soft);
+  box-shadow: var(--shadow-1);
+}
+
+[data-page="path"] .path-replan-title {
+  margin: 0 0 var(--space-3);
+  color: var(--text);
+  font-family: var(--font-serif);
+  font-size: var(--fs-h3);
+  line-height: var(--lh-h3);
+}
+
+[data-page="path"] .path-change-reasons {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--text-soft);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+}
+
+/* ---------- 证据信息卡（默认折叠，并排两张同组样式一致） ---------- */
+
+[data-page="path"] .path-card-grid {
+  display: grid;
+  gap: var(--space-5);
+}
+
+[data-page="path"] .path-info-card {
+  padding: var(--space-5);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+  box-shadow: var(--shadow-1);
+}
+
+[data-page="path"] .path-card-summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  cursor: pointer;
+  list-style: none;
+}
+
+[data-page="path"] .path-card-summary::-webkit-details-marker {
+  display: none;
+}
+
+[data-page="path"] .path-card-summary:focus-visible {
+  outline-offset: var(--space-1);
+}
+
+[data-page="path"] .path-card-title {
+  color: var(--text);
+  font-family: var(--font-serif);
+  font-size: var(--fs-h3);
+  line-height: var(--lh-h3);
+  font-weight: var(--fw-bold);
+}
+
+[data-page="path"] .path-caret {
+  width: 0;
+  height: 0;
+  border-left: 4px solid currentColor;
+  border-top: 3px solid transparent;
+  border-bottom: 3px solid transparent;
+  color: var(--text-soft);
+  transition: transform var(--dur-fast) var(--ease);
+}
+
+[data-page="path"] .path-info-card[open] .path-caret {
+  transform: rotate(90deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-page="path"] .path-caret {
+    transition: none;
+  }
+}
+
+/* ---------- 路径明细：诊断证据的展示，不再是伪步骤条 ---------- */
+
+[data-page="path"] .path-evidence-list {
+  display: grid;
+  gap: var(--space-2);
+  margin: var(--space-4) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+[data-page="path"] .path-evidence-node {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--rule);
+  border-left-width: var(--space-1);
+  border-left-color: var(--step-locked);
+  border-radius: var(--radius-md);
+  background: var(--card);
+}
+
+[data-page="path"] .path-evidence-main {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+[data-page="path"] .path-evidence-main strong {
+  overflow-wrap: anywhere;
+  color: var(--text);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+}
+
+[data-page="path"] .path-evidence-main span {
+  color: var(--text-soft);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+}
+
+[data-page="path"] .path-evidence-main small {
+  color: var(--text-soft);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+}
+
+[data-page="path"] .path-evidence-meta {
+  display: grid;
+  justify-items: end;
+  gap: var(--space-1);
+  text-align: right;
+}
+
+[data-page="path"] .path-evidence-meta > span {
+  color: var(--text-soft);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+}
+
+/* 状态徽章与节点行的五态配色，teaching-skipped 与 skipped 绝不混同 */
+
+[data-page="path"] .path-status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--space-4);
+  padding: 0 var(--space-2);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+  color: var(--text-soft);
+  background: var(--card);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+  font-weight: var(--fw-medium);
+  white-space: nowrap;
+}
+
+[data-page="path"] .path-evidence-node[data-status="completed"] {
+  border-left-color: var(--step-completed);
+}
+
+[data-page="path"] .path-evidence-node[data-status="completed"] .path-status-badge {
+  border-color: var(--step-completed);
+  color: var(--step-completed);
+}
+
+[data-page="path"] .path-evidence-node[data-status="available"] {
+  border-left-color: var(--step-current);
+  background: var(--accent-soft);
+}
+
+[data-page="path"] .path-evidence-node[data-status="available"] .path-status-badge {
+  border-color: var(--step-current);
+  color: var(--step-current);
+  background: var(--card);
+}
+
+[data-page="path"] .path-evidence-node[data-status="in_progress"] {
+  border-left-color: var(--step-current);
+  background: var(--accent-soft);
+}
+
+[data-page="path"] .path-evidence-node[data-status="in_progress"] .path-status-badge {
+  border-color: var(--step-current);
+  color: var(--step-current);
+}
+
+[data-page="path"] .path-evidence-node[data-status="locked"] {
+  border-left-color: var(--step-locked);
+  background: var(--card-soft);
+}
+
+[data-page="path"] .path-evidence-node[data-status="locked"] .path-evidence-main strong,
+[data-page="path"] .path-evidence-node[data-status="locked"] .path-evidence-main span,
+[data-page="path"] .path-evidence-node[data-status="locked"] .path-evidence-main small,
+[data-page="path"] .path-evidence-node[data-status="locked"] .path-evidence-meta > span {
+  color: var(--text-soft);
+}
+
+[data-page="path"] .path-evidence-node[data-status="skipped"] {
+  border-left-color: var(--step-skipped-line);
+}
+
+[data-page="path"] .path-evidence-node[data-status="skipped"] .path-evidence-main strong {
+  color: var(--step-skipped-text);
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+}
+
+[data-page="path"] .path-evidence-node[data-status="skipped"] .path-status-badge {
+  border-color: var(--step-skipped-line);
+  color: var(--step-skipped-text);
+}
+
+/* 跳过教学但保留实操：暖色虚线圈 + 暖色文本，与「已跳过」区分开 */
+[data-page="path"] .path-evidence-node[data-status="teaching-skipped"] {
+  border-left-color: var(--step-teaching-skipped);
+  border-left-style: dashed;
+  background: var(--card-soft);
+}
+
+[data-page="path"] .path-evidence-node[data-status="teaching-skipped"] .path-status-badge {
+  border-color: var(--step-teaching-skipped);
+  border-style: dashed;
+  color: var(--step-teaching-skipped);
+  background: var(--card);
+}
+
+/* ---------- 时间与诊断依据 ---------- */
+
+[data-page="path"] .metric-list {
+  margin: 0;
+  border-top: 1px solid var(--rule);
+}
+
+[data-page="path"] .metric-list > div {
+  color: var(--text);
+  font-size: var(--fs-ui);
+  line-height: var(--lh-ui);
+}
+
+[data-page="path"] .metric-list dt {
+  color: var(--text-soft);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+  font-weight: var(--fw-regular);
+}
+
+[data-page="path"] .metric-list dd {
+  font-size: var(--fs-ui);
+  line-height: var(--lh-ui);
+  font-weight: var(--fw-medium);
+}
+
+[data-page="path"] .metric-list.horizontal > div {
+  padding: var(--space-2) var(--space-3);
+  border-right-color: var(--rule);
+}
+
+[data-page="path"] .path-subheading {
+  margin: var(--space-5) 0 var(--space-3);
+  color: var(--text);
+  font-family: var(--font-serif);
+  font-size: var(--fs-h3);
+  line-height: var(--lh-h3);
+}
+
+[data-page="path"] .notice-line {
+  margin: var(--space-3) 0 0;
+  padding: var(--space-3);
+  border-left-width: var(--space-1);
+  border-left-color: var(--step-locked);
+  border-radius: var(--radius-sm);
+  color: var(--text-soft);
+  background: var(--card-soft);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+}

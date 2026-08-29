@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import type {
   ActivityDraftOutput,
@@ -27,6 +27,135 @@ import {
 import { useUiStore } from "../state/ui-store.js";
 import { STABLE_LAYOUT } from "../styles/layout-contract.js";
 import { relearnNodeIdForActivity } from "../relearn-context.js";
+import { buildFlowContext, buildStudyFlow, type StudyFlowView } from "../flow/study-flow.js";
+import { stepLabel } from "../copy/ui-copy.js";
+import {
+  ACTIVITY_SUMMARY_FALLBACK,
+  ACTIVITY_TITLE_FALLBACK,
+  AGENT_DISCOVERY_PENDING,
+  ANSWER_REVIEW_LEGACY_PROMPT,
+  ANSWER_REVIEW_ORIGINAL,
+  ANSWER_REVIEW_TITLE,
+  BACK_TO_LESSON_LABEL,
+  BACK_TO_PATH_LABEL,
+  CODE_ABANDON_GAP_BUTTON,
+  CODE_DRAFT_LABEL,
+  CODE_INFO_NOTICE,
+  CODE_RESULT_TITLE,
+  CODE_RETRY_EVALUATION_BUTTON,
+  CODE_RETRY_MODIFIED_BUTTON,
+  CODE_SAVE_DRAFT_BUTTON,
+  CODE_SUBMIT_BUTTON,
+  CONTRACT_ACCEPTANCE_CRITERIA,
+  CONTRACT_BACKGROUND,
+  CONTRACT_EDITABLE,
+  CONTRACT_IMPLEMENT,
+  CONTRACT_INPUT,
+  CONTRACT_LIBRARIES,
+  CONTRACT_MISSING_ALERT,
+  CONTRACT_OUTPUT,
+  CONTRACT_PROHIBITED,
+  CONTRACT_RETURN,
+  CONTRACT_RULES,
+  CONTRACT_TITLE,
+  CONTINUE_NEXT_BUTTON,
+  DRAFT_ABSENT_NOTICE,
+  DRAFT_KEPT_NOTICE,
+  DRAFT_STATE_PREFIX,
+  editableRegionsLabel,
+  errorKindLabel,
+  EVALUATOR_UNAVAILABLE_BODY,
+  EVALUATOR_UNAVAILABLE_HEADING,
+  EVIDENCE_NOT_GENERATED,
+  EVIDENCE_RECORDED,
+  EXECUTION_COMPLETED,
+  EXECUTION_FAILED,
+  FEEDBACK_ANSWER_CORRECT,
+  FEEDBACK_ANSWER_WRONG,
+  FEEDBACK_STATE,
+  FLOW_RETURN_BACK,
+  FLOW_RETURN_NEXT,
+  FLOW_RETURN_STEP,
+  FLOW_RETURN_TITLE,
+  flowReturnBackLabel,
+  flowReturnNextLabel,
+  HEADER_BADGE_LOADING,
+  HEADER_BADGE_NODE_PYTHON,
+  INFO_CARD_KNOWLEDGE_POINT,
+  INFO_CARD_SUMMARY,
+  JUDGMENT_FALSE_LABEL,
+  JUDGMENT_TRUE_LABEL,
+  LEGACY_TEST_POINTS_NOTICE,
+  METRIC_CORRECT_COUNT,
+  METRIC_EVIDENCE,
+  METRIC_EXECUTION,
+  METRIC_PASS_REQUIREMENT,
+  METRIC_PROBLEM_TYPE,
+  NO_POINT_DETAIL,
+  PASSED_POINTS_LABEL,
+  passRequirementLabel,
+  PENDING_ACTION_COPY,
+  pendingStatusLabel,
+  PYODIDE_CLOSED_CODE,
+  PYODIDE_CLOSED_NOTICE,
+  QUIZ_INFO_NOTICE,
+  QUIZ_LEGEND,
+  QUIZ_NEXT_BUTTON,
+  QUIZ_PREV_BUTTON,
+  QUIZ_RESULT_TITLE,
+  QUIZ_RETRY_NEW_SET_BUTTON,
+  QUIZ_SKIP_GAP_BUTTON,
+  QUIZ_SUBMIT_BUTTON,
+  QUIZ_SCORE_NONE,
+  quizAnsweredLabel,
+  quizPagerAriaLabel,
+  quizPagerLabel,
+  questionSourceLabel,
+  RECOVERED_DONE_HEADING,
+  RECOVERED_RETRY_HEADING,
+  RECOVERED_STATE_CODE,
+  recoveredBodyLabel,
+  activityProgressLabel,
+  activityResultLabel,
+  RECOVERY_BODY,
+  RECOVERY_CAN_TRY_AGAIN,
+  RECOVERY_LIMIT_REACHED,
+  RECOVERY_RETRY_BUTTON,
+  recoveryCategoryLabel,
+  REMEDIATION_IMPROVED,
+  REMEDIATION_REGRESSED,
+  REMEDIATION_TITLE,
+  REMEDIATION_UNCHANGED,
+  remediationBodyLabel,
+  RETRY_MODIFY_BUTTON,
+  SAMPLE_DOWNLOAD_BUTTON,
+  SAMPLE_FILE_NAME_PREFIX,
+  SAMPLE_HEADING,
+  SAMPLE_INPUT_TITLE,
+  SAMPLE_KICKER,
+  SAMPLE_NOTE,
+  SAMPLE_OUTPUT_TITLE,
+  sampleCsvAriaLabel,
+  sampleExplanationLabel,
+  sampleRowsLabel,
+  safeFeedbackLabel,
+  TEST_POINT_COL_STATUS,
+  TEST_POINT_COL_TEST,
+  TEST_POINT_COL_TYPE,
+  TEST_POINT_GLYPH,
+  TEST_POINT_HEADING,
+  TEST_POINT_KICKER,
+  TEST_POINT_NOTE,
+  TEST_POINT_SCOPE_PUBLIC,
+  TEST_POINT_SCOPE_SEALED,
+  testPointStatusLabel,
+  verdictLabel,
+  answerReviewIndexLabel,
+  correctAnswerLabel,
+  explanationLabel,
+  activityEyebrowLabel,
+} from "../copy/activity-page-copy.js";
+import "./ActivityPage.css";
 
 type SubmitResult = ActivitySubmissionOutput | EvaluatorFailureView;
 type PendingAction = "advance" | "continue_with_gap";
@@ -67,7 +196,6 @@ export function ActivityPage() {
     .flatMap((node) => node.activities)
     .find((activity) => activity.activityId === activityId && activity.result !== undefined);
   const localDraft = opened?.kind === "code" ? drafts[opened.attemptId] ?? opened.userText : "";
-
   const captureActionError = async (error: unknown, fallback: string) => {
     const normalized = error instanceof Error ? error : new Error(fallback);
     setActionError(normalized);
@@ -95,9 +223,9 @@ export function ActivityPage() {
     if (bootstrap.loading || bootstrap.error !== undefined || session === undefined || routeStateChecked.current === activityId) return;
     routeStateChecked.current = activityId;
     if (result !== undefined || opened === undefined || submittedProgress === undefined) return;
-      setOpened(undefined);
-      setAnswers({});
-      setQuestionIndex(0);
+    setOpened(undefined);
+    setAnswers({});
+    setQuestionIndex(0);
   }, [activityId, bootstrap.error, bootstrap.loading, opened, result, session, submittedProgress]);
 
   useEffect(() => {
@@ -160,7 +288,7 @@ export function ActivityPage() {
   const submit = async () => {
     if (opened === undefined) return;
     setBusy(true); setActionError(undefined);
-    actionProgress.start(opened.kind === "code" ? "正在提交并评测代码" : "正在提交并评测客观题");
+    actionProgress.start(opened.kind === "code" ? PENDING_ACTION_COPY.submittingCode : PENDING_ACTION_COPY.submittingQuiz);
     try {
       const submissionDraft = opened.kind === "code" && localDraft !== opened.userText
         ? await persistCodeDraft(opened, localDraft)
@@ -183,7 +311,7 @@ export function ActivityPage() {
 
   const advance = async (retry: boolean) => {
     setBusy(true); setPendingAction("advance"); setActionError(undefined);
-    actionProgress.start(retry ? "正在确认重试条件" : "正在准备下一步");
+    actionProgress.start(retry ? PENDING_ACTION_COPY.confirmingRetry : PENDING_ACTION_COPY.preparingNext);
     try {
       const fresh = await api.getBootstrap(sessionId);
       if (fresh.session?.path === undefined) throw new Error("path_not_recoverable");
@@ -201,8 +329,8 @@ export function ActivityPage() {
       const continueInsideNode = retry || currentNodeId === next.node.nodeId;
       if (continueInsideNode) {
         actionProgress.update(next.activity.kind === "mcq"
-          ? retry ? "正在生成并审核新题组" : "正在准备题组"
-          : "正在准备代码活动");
+          ? retry ? PENDING_ACTION_COPY.generatingNewQuizSet : PENDING_ACTION_COPY.preparingQuizSet
+          : PENDING_ACTION_COPY.preparingCodeActivity);
         const openRequestId = newRequestId("web-open-retry");
         setAgentRequestId(next.activity.kind === "mcq" ? openRequestId : undefined);
         const nextOpened = await api.openActivity({ requestId: openRequestId, sessionId, sessionVersion: next.sessionVersion, profileRevision: next.profileRevision, activityId: next.activity.activityId, activityVersion: next.activity.activityVersion, pathVersion: next.pathVersion, ...(next.card === undefined ? {} : { acknowledgedCardId: next.card.cardId }), ...(next.relearnAllowed === true ? { relearn: true } : {}) });
@@ -243,7 +371,7 @@ export function ActivityPage() {
     if (opened === undefined || result === undefined || isEvaluatorFailure(result)
         || result.kind !== opened.kind || result.result.verdict === "pass") return;
     setBusy(true); setPendingAction("continue_with_gap"); setActionError(undefined);
-    actionProgress.start("正在记录未掌握状态");
+    actionProgress.start(PENDING_ACTION_COPY.recordingGap);
     try {
       const fresh = await api.getBootstrap(sessionId);
       if (fresh.session?.path === undefined) throw new Error("path_not_recoverable");
@@ -277,43 +405,80 @@ export function ActivityPage() {
   const error = actionError ?? bootstrap.error;
   const retryPending = submittedProgress?.status === "in_progress";
   const refreshBlocked = !bootstrap.loading && !recovering && error === undefined && recoveryError === undefined && opened === undefined && recoveryAttempts >= MAX_RECOVERY_ATTEMPTS && session?.currentAttempt?.activityId === activityId;
-  const title = opened?.activity.title ?? "活动恢复";
-  const summary = opened?.activity.prompt ?? "从服务端 Attempt 安全视图恢复当前活动。";
+  const title = opened?.activity.title ?? ACTIVITY_TITLE_FALLBACK;
+  const summary = opened?.activity.prompt ?? ACTIVITY_SUMMARY_FALLBACK;
   const activityNodeId = session?.path?.nodes.find((node) => node.activityIds.includes(activityId))?.nodeId
     ?? (location.state as { nodeId?: string } | null)?.nodeId;
   const currentQuestion = opened?.kind === "quiz" ? opened.activity.questions[questionIndex] : undefined;
   const codeNeedsRetry = result !== undefined && !isEvaluatorFailure(result) && result.kind === "code" && result.result.verdict !== "pass";
   const codeCanContinueWithGap = codeNeedsRetry && (submittedProgress?.attemptIds.length ?? 0) >= 2;
-  return <PageFrame eyebrow={opened?.kind === "quiz" ? "课后客观题" : "主观代码题"} title={title} summary={summary} back={{ to: activityNodeId === undefined ? `/path/${sessionId}` : `/learn/${sessionId}/${activityNodeId}`, label: "返回教学内容" }} actions={<span className="header-badge">{opened?.kind === "quiz" ? questionSourceLabel(opened.activity.questionSource) : opened?.kind === "code" ? "Node/Python权威评测" : "加载中"}</span>}>
+  const flowContext = buildFlowContext(session, {
+    currentStep: "activity",
+    activeNodeId: activityNodeId,
+    hasActivity: opened !== undefined,
+  });
+  const flowView = buildStudyFlow(session?.path?.nodes ?? [], flowContext);
+  return <PageFrame eyebrow={activityEyebrowLabel(opened?.activity.kind)} title={title} summary={summary} back={{ to: activityNodeId === undefined ? `/path/${sessionId}` : `/learn/${sessionId}/${activityNodeId}`, label: BACK_TO_LESSON_LABEL }} actions={<span className="header-badge">{opened?.kind === "quiz" ? questionSourceLabel(opened.activity.questionSource) : opened?.kind === "code" ? HEADER_BADGE_NODE_PYTHON : HEADER_BADGE_LOADING}</span>}>
     {bootstrap.loading || recovering ? <PageStatePanel page="activity" state="loading" /> : null}
     {!bootstrap.loading && !recovering && error ? <PageStatePanel page="activity" state={isApiError(error) && error.status === 409 ? "conflict" : "error"} code={isApiError(error) ? error.code : error.message} onRetry={() => { setActionError(undefined); void bootstrap.reload(); }} /> : null}
     {!bootstrap.loading && !recovering && error === undefined && recoveryError !== undefined ? <ActivityRecoveryFailure error={recoveryError} attempts={recoveryAttempts} hasBrowserDraft={localDraft.length > 0} activityNodeId={activityNodeId} sessionId={sessionId} onRetry={() => { setRecoveryError(undefined); setRecoveryTrigger((current) => current + 1); }} /> : null}
     {refreshBlocked ? <ActivityRecoveryFailure error={new Error("ACTIVITY_SAFE_VIEW_INCOMPLETE")} attempts={recoveryAttempts} hasBrowserDraft={localDraft.length > 0} activityNodeId={activityNodeId} sessionId={sessionId} /> : null}
-    {!bootstrap.loading && !recovering && error === undefined && recoveryError === undefined && !refreshBlocked && opened === undefined && submittedProgress !== undefined ? <section className="state-panel recovery-state" data-state="recovery" aria-live="polite" style={{ minHeight: STABLE_LAYOUT.statePanelMinHeight }}><p className="state-code">已恢复服务端进度</p><h2>{retryPending ? "上次结果需要修改后重试" : "该活动已经完成"}</h2><p>服务端记录：{progressLabel(submittedProgress.status)} / {resultLabel(submittedProgress.result)}。系统不会重复创建已完成的提交。</p><div className="button-row">{activityNodeId === undefined ? null : <button type="button" className="button secondary" onClick={() => navigate(`/learn/${sessionId}/${activityNodeId}`)}>返回教学内容</button>}<button type="button" className="button primary" disabled={busy} onClick={() => void advance(retryPending)}>{retryPending ? "修改并重新评测" : "继续下一步"}</button></div></section> : null}
+    {!bootstrap.loading && !recovering && error === undefined && recoveryError === undefined && !refreshBlocked && opened === undefined && submittedProgress !== undefined ? <section className="state-panel recovery-state activity-state-panel" data-state="recovery" aria-live="polite" style={{ minHeight: STABLE_LAYOUT.statePanelMinHeight }}><p className="state-code">{RECOVERED_STATE_CODE}</p><h2>{retryPending ? RECOVERED_RETRY_HEADING : RECOVERED_DONE_HEADING}</h2><p>{recoveredBodyLabel(activityProgressLabel(submittedProgress.status), activityResultLabel(submittedProgress.result))}</p><div className="button-row">{activityNodeId === undefined ? null : <button type="button" className="button secondary" onClick={() => navigate(`/learn/${sessionId}/${activityNodeId}`)}>{BACK_TO_LESSON_LABEL}</button>}<button type="button" className="button primary" disabled={busy} onClick={() => void advance(retryPending)}>{retryPending ? RETRY_MODIFY_BUTTON : CONTINUE_NEXT_BUTTON}</button></div></section> : null}
     {!bootstrap.loading && !recovering && error === undefined && recoveryError === undefined && !refreshBlocked && opened === undefined && submittedProgress === undefined ? <PageStatePanel page="activity" state="empty" /> : null}
-    {!bootstrap.loading && error === undefined && recoveryError === undefined && agentRun.run !== undefined ? <AgentPipeline run={agentRun.run} mode={agentRun.transport === "complete" ? "snapshot" : "live"} onExport={() => downloadAgentRunExport(agentRun.run!.runId).then(() => undefined)} />
-      : !bootstrap.loading && error === undefined && recoveryError === undefined && agentRequestId !== undefined ? <AgentPipelineDiscovery statusText={actionProgress.text ?? "正在等待服务端响应"} /> : null}
+    {!bootstrap.loading && error === undefined && recoveryError === undefined && agentRun.run !== undefined ? <div className="activity-pipeline-slot"><AgentPipeline run={agentRun.run} mode={agentRun.transport === "complete" ? "snapshot" : "live"} onExport={() => downloadAgentRunExport(agentRun.run!.runId).then(() => undefined)} /></div>
+      : !bootstrap.loading && error === undefined && recoveryError === undefined && agentRequestId !== undefined ? <div className="activity-pipeline-slot"><AgentPipelineDiscovery statusText={actionProgress.text ?? AGENT_DISCOVERY_PENDING} /></div> : null}
     {!bootstrap.loading && error === undefined && recoveryError === undefined && opened !== undefined ? <div className="activity-layout" data-page="activity">
-      <aside className="activity-brief"><p className="section-kicker">活动信息</p><dl className="metric-list"><div><dt>知识点</dt><dd>{knowledgePointLabel(opened.activity.primaryKnowledgePointId)}</dd></div><div><dt>活动版本</dt><dd>{opened.activity.activityVersion}</dd></div><div><dt>当前尝试</dt><dd>{opened.attemptId}</dd></div><div><dt>会话版本</dt><dd>{opened.sessionVersion}</dd></div></dl><p className="notice-line">{opened.kind === "quiz" ? "提交前不显示答案；提交后只展示本题组的安全复盘。" : "题面、公开样例和验收点可以查看；隐藏测试与参考答案始终留在服务端。"}</p></aside>
-      <div className="activity-workspace"><section className="activity-stage" style={{ minHeight: STABLE_LAYOUT.activityStageMinHeight }}>
-        {actionProgress.active ? <p className="async-action-status" role="status" aria-live="polite">{actionProgress.text}</p> : null}
-        {result !== undefined ? <ResultView value={result} /> : opened.kind === "quiz" && currentQuestion !== undefined ? <>
-          <div className="quiz-pager" aria-label={`第 ${questionIndex + 1} 题，共 ${opened.activity.questions.length} 题`}><span>第 {questionIndex + 1} / {opened.activity.questions.length} 题</span><span>{completeAnswers.length} 题已作答</span></div>
-          <fieldset className="answer-list"><legend className="sr-only">当前题目答案</legend><div className="quiz-question" key={currentQuestion.questionId}><h2>{currentQuestion.prompt}</h2>{currentQuestion.kind === "judgment" ? [true, false].map((value) => <label className="answer-option" key={String(value)}><input type="radio" name={currentQuestion.questionId} checked={answers[currentQuestion.questionId] === value} onChange={() => setAnswers({ ...answers, [currentQuestion.questionId]: value })} /><span>{value ? "正确" : "错误"}</span></label>) : currentQuestion.options.map((option, index) => <label className="answer-option" key={option}><input type="radio" name={currentQuestion.questionId} checked={answers[currentQuestion.questionId] === option} onChange={() => setAnswers({ ...answers, [currentQuestion.questionId]: option })} /><span className="option-key">{String.fromCharCode(65 + index)}</span><span className="option-copy">{option}</span></label>)}</div></fieldset>
-          <div className="section-footer"><button type="button" className="button secondary" disabled={busy || questionIndex === 0} onClick={() => setQuestionIndex((current) => Math.max(0, current - 1))}>← 上一题</button>{questionIndex < opened.activity.questions.length - 1 ? <button type="button" className="button primary" disabled={busy || answers[currentQuestion.questionId] === undefined} onClick={() => setQuestionIndex((current) => current + 1)}>下一题 →</button> : <button type="button" className="button primary async-action-button" disabled={busy || completeAnswers.length !== opened.activity.questions.length} onClick={() => void submit()}>{busy ? actionProgress.text ?? "正在提交并评测客观题（已处理 0 秒）" : "提交完整题组"}</button>}</div>
-        </> : opened.kind === "code" ? <>
-          <CodeContractView activity={opened.activity} />
-          <label htmlFor="code-draft">代码草稿</label>
-          <textarea id="code-draft" value={localDraft} onChange={(event) => updateCodeDraft(opened, event.target.value)} spellCheck={false} />
-          <div className="notice-line" role="status" data-preview-enabled="false"><strong>PYODIDE_DISABLED_WITH_NODE_FALLBACK</strong><br />浏览器预览未启用；正式评测由本地 Node/Python 执行。</div>
-          <div className="section-footer"><div className="button-row"><button type="button" className="button secondary" disabled={busy} onClick={() => void saveCodeDraft()}>保存草稿</button></div><button type="button" className="button primary async-action-button" disabled={busy || localDraft === ""} onClick={() => void submit()}>{busy ? actionProgress.text ?? "正在提交并评测代码（已处理 0 秒）" : "提交正式评测"}</button></div>
-        </> : null}
-        {result !== undefined && isEvaluatorFailure(result) ? <div className="section-footer"><button type="button" className="button secondary" onClick={() => activityNodeId === undefined ? navigate(`/path/${sessionId}`) : navigate(`/learn/${sessionId}/${activityNodeId}`)}>返回教学内容</button><button type="button" className="button primary" disabled={busy || opened.kind !== "code"} onClick={() => void retryEvaluation()}>恢复草稿并重试评测</button></div>
-          : codeNeedsRetry ? <div className="section-footer"><button type="button" className="button secondary" onClick={() => activityNodeId === undefined ? navigate(`/path/${sessionId}`) : navigate(`/learn/${sessionId}/${activityNodeId}`)}>返回教学内容</button><div className="button-row">{codeCanContinueWithGap ? <button type="button" className="button secondary async-action-button" disabled={busy} onClick={() => void continueWithGap()}>{pendingAction === "continue_with_gap" ? actionProgress.text : "放弃并进入下一环节"}</button> : null}<button type="button" className="button primary async-action-button" disabled={busy} onClick={() => void advance(true)}>{pendingAction === "advance" ? actionProgress.text : "修改代码后重试"}</button></div></div>
-            : result !== undefined ? <div className="section-footer">{result.kind === "quiz" && result.result.retryAllowed ? <div className="button-row">{opened.kind === "quiz" && opened.activity.retryNumber >= 1 ? <button type="button" className="button secondary async-action-button" disabled={busy} onClick={() => void continueWithGap()}>{pendingAction === "continue_with_gap" ? actionProgress.text : "暂时跳过，进入下一环节"}</button> : null}<button type="button" className="button primary async-action-button" disabled={busy} onClick={() => void advance(true)}>{pendingAction === "advance" ? actionProgress.text : "使用新题组重试"}</button></div> : <button type="button" className="button primary" disabled={busy} onClick={() => void advance(false)}>继续下一步</button>}</div> : null}
-      </section></div>
+      <aside className="activity-brief">
+        <details className="activity-info activity-card">
+          <summary>{INFO_CARD_SUMMARY}</summary>
+          <dl className="metric-list"><div><dt>{INFO_CARD_KNOWLEDGE_POINT}</dt><dd>{knowledgePointLabel(opened.activity.primaryKnowledgePointId)}</dd></div></dl>
+          <p className="notice-line">{opened.kind === "quiz" ? QUIZ_INFO_NOTICE : CODE_INFO_NOTICE}</p>
+        </details>
+        <FlowReturnCard flow={flowView} activeNodeId={activityNodeId} />
+      </aside>
+      <div className="activity-workspace">
+        <div className="activity-toolbar" style={{ minHeight: STABLE_LAYOUT.activityTabsHeight }}>
+          <span className="kind-badge">{activityEyebrowLabel(opened.activity.kind)}</span>
+          {opened.kind === "quiz" && result === undefined && currentQuestion !== undefined
+            ? <div className="quiz-pager" aria-label={quizPagerAriaLabel(questionIndex + 1, opened.activity.questions.length)}><span>{quizPagerLabel(questionIndex + 1, opened.activity.questions.length)}</span><span>{quizAnsweredLabel(completeAnswers.length)}</span></div>
+            : null}
+        </div>
+        <section className="activity-stage" style={{ minHeight: STABLE_LAYOUT.activityStageMinHeight }}>
+          {actionProgress.active ? <p className="async-action-status feedback-status" data-state={FEEDBACK_STATE.pending} role="status" aria-live="polite">{actionProgress.text}</p> : null}
+          {result !== undefined ? <ResultView value={result} /> : opened.kind === "quiz" && currentQuestion !== undefined ? <>
+            <fieldset className="answer-list"><legend className="sr-only">{QUIZ_LEGEND}</legend><div className="quiz-question" key={currentQuestion.questionId}><h2>{currentQuestion.prompt}</h2>{currentQuestion.kind === "judgment" ? [true, false].map((value) => <label className="answer-option" key={String(value)}><input type="radio" name={currentQuestion.questionId} checked={answers[currentQuestion.questionId] === value} onChange={() => setAnswers({ ...answers, [currentQuestion.questionId]: value })} /><span>{value ? JUDGMENT_TRUE_LABEL : JUDGMENT_FALSE_LABEL}</span></label>) : currentQuestion.options.map((option, index) => <label className="answer-option" key={option}><input type="radio" name={currentQuestion.questionId} checked={answers[currentQuestion.questionId] === option} onChange={() => setAnswers({ ...answers, [currentQuestion.questionId]: option })} /><span className="option-key">{String.fromCharCode(65 + index)}</span><span className="option-copy">{option}</span></label>)}</div></fieldset>
+            <div className="section-footer"><button type="button" className="button secondary" disabled={busy || questionIndex === 0} onClick={() => setQuestionIndex((current) => Math.max(0, current - 1))}>{QUIZ_PREV_BUTTON}</button>{questionIndex < opened.activity.questions.length - 1 ? <button type="button" className="button primary" disabled={busy || answers[currentQuestion.questionId] === undefined} onClick={() => setQuestionIndex((current) => current + 1)}>{QUIZ_NEXT_BUTTON}</button> : <button type="button" className="button primary async-action-button" disabled={busy || completeAnswers.length !== opened.activity.questions.length} onClick={() => void submit()}>{busy ? actionProgress.text ?? pendingStatusLabel(PENDING_ACTION_COPY.submittingQuiz, 0) : QUIZ_SUBMIT_BUTTON}</button>}</div>
+          </> : opened.kind === "code" ? <>
+            <CodeContractView activity={opened.activity} />
+            <label htmlFor="code-draft">{CODE_DRAFT_LABEL}</label>
+            <textarea id="code-draft" value={localDraft} onChange={(event) => updateCodeDraft(opened, event.target.value)} spellCheck={false} />
+            <div className="notice-line" role="status" data-preview-enabled="false"><strong>{PYODIDE_CLOSED_CODE}</strong><br />{PYODIDE_CLOSED_NOTICE}</div>
+            <div className="section-footer"><div className="button-row"><button type="button" className="button secondary" disabled={busy} onClick={() => void saveCodeDraft()}>{CODE_SAVE_DRAFT_BUTTON}</button></div><button type="button" className="button primary async-action-button" disabled={busy || localDraft === ""} onClick={() => void submit()}>{busy ? actionProgress.text ?? pendingStatusLabel(PENDING_ACTION_COPY.submittingCode, 0) : CODE_SUBMIT_BUTTON}</button></div>
+          </> : null}
+          {result !== undefined && isEvaluatorFailure(result) ? <div className="section-footer"><button type="button" className="button secondary" onClick={() => activityNodeId === undefined ? navigate(`/path/${sessionId}`) : navigate(`/learn/${sessionId}/${activityNodeId}`)}>{BACK_TO_LESSON_LABEL}</button><button type="button" className="button primary" disabled={busy || opened.kind !== "code"} onClick={() => void retryEvaluation()}>{CODE_RETRY_EVALUATION_BUTTON}</button></div>
+            : codeNeedsRetry ? <div className="section-footer"><button type="button" className="button secondary" onClick={() => activityNodeId === undefined ? navigate(`/path/${sessionId}`) : navigate(`/learn/${sessionId}/${activityNodeId}`)}>{BACK_TO_LESSON_LABEL}</button><div className="button-row">{codeCanContinueWithGap ? <button type="button" className="button secondary async-action-button" disabled={busy} onClick={() => void continueWithGap()}>{pendingAction === "continue_with_gap" ? actionProgress.text : CODE_ABANDON_GAP_BUTTON}</button> : null}<button type="button" className="button primary async-action-button" disabled={busy} onClick={() => void advance(true)}>{pendingAction === "advance" ? actionProgress.text : CODE_RETRY_MODIFIED_BUTTON}</button></div></div>
+              : result !== undefined ? <div className="section-footer">{result.kind === "quiz" && result.result.retryAllowed ? <div className="button-row">{opened.kind === "quiz" && opened.activity.retryNumber >= 1 ? <button type="button" className="button secondary async-action-button" disabled={busy} onClick={() => void continueWithGap()}>{pendingAction === "continue_with_gap" ? actionProgress.text : QUIZ_SKIP_GAP_BUTTON}</button> : null}<button type="button" className="button primary async-action-button" disabled={busy} onClick={() => void advance(true)}>{pendingAction === "advance" ? actionProgress.text : QUIZ_RETRY_NEW_SET_BUTTON}</button></div> : <button type="button" className="button primary" disabled={busy} onClick={() => void advance(false)}>{CONTINUE_NEXT_BUTTON}</button>}</div> : null}
+        </section>
+      </div>
     </div> : null}
   </PageFrame>;
+}
+
+/** 回流动线提示卡：告诉用户当前环节、回到哪一节、下一步是什么。 */
+function FlowReturnCard({ flow, activeNodeId }: { flow: StudyFlowView; activeNodeId?: string }) {
+  return <section className="flow-return activity-card" aria-label={FLOW_RETURN_TITLE}>
+    <h3 className="flow-return-title">{FLOW_RETURN_TITLE}</h3>
+    <dl className="flow-return-list">
+      <div><dt>{FLOW_RETURN_STEP}</dt><dd>{stepLabel("activity")}</dd></div>
+      <div><dt>{FLOW_RETURN_BACK}</dt><dd>{flowReturnBackLabel(flow, activeNodeId)}</dd></div>
+      <div><dt>{FLOW_RETURN_NEXT}</dt><dd>{flowReturnNextLabel(flow)}</dd></div>
+    </dl>
+  </section>;
+}
+
+/** 统一反馈状态节点：文案与 class 的单一调用点，动效由 ticket 15 在此挂载。 */
+function FeedbackStatus({ state, children }: { state: string; children: ReactNode }) {
+  return <span className="feedback-status" data-state={state}>{children}</span>;
 }
 
 function ActivityRecoveryFailure({
@@ -331,18 +496,14 @@ function ActivityRecoveryFailure({
   sessionId: string;
   onRetry?: () => void;
 }) {
-  const category = isApiError(error)
-    ? error.status === 409 ? "服务端版本已经变化" : error.status === 404 ? "原活动或作答记录不存在" : "服务连接暂时失败"
-    : error.message === "activity_safe_view_incomplete" || error.message === "ACTIVITY_SAFE_VIEW_INCOMPLETE"
-      ? "活动安全内容不完整"
-      : "活动恢复失败";
+  const category = recoveryCategoryLabel(isApiError(error) ? { status: error.status } : { message: error.message });
   const canRetry = attempts < MAX_RECOVERY_ATTEMPTS && onRetry !== undefined;
-  return <section className="state-panel recovery-state" data-state="recovery-error" role="alert" aria-live="polite" style={{ minHeight: STABLE_LAYOUT.statePanelMinHeight }}>
+  return <section className="state-panel recovery-state activity-state-panel" data-state="recovery-error" role="alert" aria-live="polite" style={{ minHeight: STABLE_LAYOUT.statePanelMinHeight }}>
     <p className="state-code">{isApiError(error) ? error.code : error.message}</p>
     <h2>{category}</h2>
-    <p>服务端保留原 Attempt，页面没有创建替代作答，也没有生成新的 Evidence。{attempts >= MAX_RECOVERY_ATTEMPTS ? "已达到本页恢复上限，自动恢复现已停止。" : "你可以再尝试一次恢复。"}</p>
-    <p className="notice-line"><strong>草稿状态：</strong>{hasBrowserDraft ? "浏览器中的代码草稿仍然保留；服务端是否收到最后一次保存尚未确认。" : "当前没有可确认的浏览器代码草稿；未提交的题目答案不会被冒充为已保存。"}</p>
-    <div className="button-row">{canRetry ? <button type="button" className="button primary" onClick={onRetry}>再次尝试恢复</button> : null}{activityNodeId === undefined ? null : <Link className="button secondary" to={`/learn/${sessionId}/${activityNodeId}`}>返回教学内容</Link>}<Link className="button secondary" to={`/path/${sessionId}`}>返回学习路径</Link></div>
+    <p>{RECOVERY_BODY}{attempts >= MAX_RECOVERY_ATTEMPTS ? RECOVERY_LIMIT_REACHED : RECOVERY_CAN_TRY_AGAIN}</p>
+    <p className="notice-line"><strong>{DRAFT_STATE_PREFIX}</strong>{hasBrowserDraft ? DRAFT_KEPT_NOTICE : DRAFT_ABSENT_NOTICE}</p>
+    <div className="button-row">{canRetry ? <button type="button" className="button primary" onClick={onRetry}>{RECOVERY_RETRY_BUTTON}</button> : null}{activityNodeId === undefined ? null : <Link className="button secondary" to={`/learn/${sessionId}/${activityNodeId}`}>{BACK_TO_LESSON_LABEL}</Link>}<Link className="button secondary" to={`/path/${sessionId}`}>{BACK_TO_PATH_LABEL}</Link></div>
   </section>;
 }
 
@@ -371,45 +532,47 @@ function removeBrowserDraft(attemptId: string, clearUiDraft: (attemptId: string)
 }
 
 function ResultView({ value }: { value: SubmitResult }) {
-  if (isEvaluatorFailure(value)) return <div className="evaluator-stage" role="alert"><p className="state-code">{errorLabel(value.errorCode)}</p><h2>评测服务暂时不可用</h2><p>本次没有评分，也没有推进学习状态。代码草稿仍然保留。</p></div>;
+  if (isEvaluatorFailure(value)) return <div className="evaluator-stage" data-state={FEEDBACK_STATE.error} role="alert"><p className="state-code">{errorKindLabel(value.errorCode)}</p><h2>{EVALUATOR_UNAVAILABLE_HEADING}</h2><p>{EVALUATOR_UNAVAILABLE_BODY}</p></div>;
   if (value.kind === "code") {
     const testPoints = value.result.testPoints;
     const passedCount = testPoints?.filter((point) => point.status === "passed").length;
-    return <div className="result-stage">
+    return <div className="result-stage" data-state={verdictFeedbackState(value.result.verdict)}>
       <div className="result-header">
-        <div><p className="section-kicker">权威评测结果</p><h2>{verdictLabel(value.result.verdict)}</h2></div>
-        <span className="score-block">{testPoints === undefined ? "无逐点明细" : `${passedCount} / ${testPoints.length}`}<small>通过测试点</small></span>
+        <div><p className="section-kicker">{CODE_RESULT_TITLE}</p><h2>{verdictLabel(value.result.verdict)}</h2></div>
+        <span className="score-block">{testPoints === undefined ? NO_POINT_DETAIL : `${passedCount} / ${testPoints.length}`}<small>{PASSED_POINTS_LABEL}</small></span>
       </div>
       <p className="feedback-copy">{safeFeedbackLabel(value.result.safeFeedback, value.result.errorCode)}</p>
-      <dl className="metric-list horizontal"><div><dt>执行状态</dt><dd>{value.result.executionStatus === "completed" ? "执行完成" : "执行失败"}</dd></div><div><dt>问题类型</dt><dd>{errorLabel(value.result.errorCode)}</dd></div><div><dt>评测版本</dt><dd>{value.result.evaluatorVersion}</dd></div></dl>
+      <dl className="metric-list horizontal"><div><dt>{METRIC_EXECUTION}</dt><dd><FeedbackStatus state={value.result.executionStatus === "completed" ? FEEDBACK_STATE.success : FEEDBACK_STATE.error}>{value.result.executionStatus === "completed" ? EXECUTION_COMPLETED : EXECUTION_FAILED}</FeedbackStatus></dd></div><div><dt>{METRIC_PROBLEM_TYPE}</dt><dd>{errorKindLabel(value.result.errorCode)}</dd></div></dl>
       {testPoints === undefined
-        ? <p className="notice-line">该历史评测结果生成时尚未记录逐测试点状态，请修改代码后重新评测。</p>
+        ? <p className="notice-line">{LEGACY_TEST_POINTS_NOTICE}</p>
         : <TestPointTable testPoints={testPoints} />}
     </div>;
   }
   const score = quizScore(value.result);
-  return <div className="result-stage"><div className="result-header"><div><p className="section-kicker">确定性判分结果</p><h2>{verdictLabel(value.result.verdict)}</h2></div><span className="score-block">{score === null ? "未形成" : score.toFixed(2)}</span></div><p className="feedback-copy">{value.result.safeFeedback}</p><dl className="metric-list horizontal"><div><dt>正确题数</dt><dd>{value.result.correctCount}/{value.result.totalCount}</dd></div><div><dt>通过要求</dt><dd>至少答对 {value.result.requiredCorrectCount} 题</dd></div><div><dt>学习证据</dt><dd>{value.evidenceId === undefined ? "未生成" : "已记录"}</dd></div></dl>{value.result.remediationOutcome === undefined ? null : <section className={`remediation-outcome is-${value.result.remediationOutcome.status}`} aria-label="本轮补救变化"><div><span>本轮补救变化</span><strong>{value.result.remediationOutcome.status === "improved" ? "错题减少，有改善" : value.result.remediationOutcome.status === "regressed" ? "错题增加，需要继续巩固" : "错题数量未变化"}</strong></div><p>错题由 {value.result.remediationOutcome.previousMissedQuestionCount} 道变为 {value.result.remediationOutcome.currentMissedQuestionCount} 道。{value.result.remediationOutcome.stillWeakKnowledgePointIds.length === 0 ? "本轮未留下待巩固知识标签。" : `仍需巩固：${value.result.remediationOutcome.stillWeakKnowledgePointIds.join("、")}。`}</p></section>}{value.result.answerReview === undefined ? null : <section className="answer-review"><h2>提交后安全复盘</h2>{value.result.answerReview.map((item, index) => <div key={item.questionId}><p className="answer-review-prompt"><span>原题</span>{item.prompt ?? "旧版作答记录未保存原题题干"}</p><strong>第 {index + 1} 题 · {item.correct ? "回答正确" : "需要复习"}</strong><p>正确答案：{String(item.correctAnswer)}</p><p><strong>正文解释：</strong>{item.explanation}</p></div>)}</section>}</div>;
+  return <div className="result-stage" data-state={verdictFeedbackState(value.result.verdict)}><div className="result-header"><div><p className="section-kicker">{QUIZ_RESULT_TITLE}</p><h2>{verdictLabel(value.result.verdict)}</h2></div><span className="score-block">{score === null ? QUIZ_SCORE_NONE : score.toFixed(2)}</span></div><p className="feedback-copy">{value.result.safeFeedback}</p><dl className="metric-list horizontal"><div><dt>{METRIC_CORRECT_COUNT}</dt><dd>{value.result.correctCount}/{value.result.totalCount}</dd></div><div><dt>{METRIC_PASS_REQUIREMENT}</dt><dd>{passRequirementLabel(value.result.requiredCorrectCount)}</dd></div><div><dt>{METRIC_EVIDENCE}</dt><dd>{value.evidenceId === undefined ? EVIDENCE_NOT_GENERATED : EVIDENCE_RECORDED}</dd></div></dl>{value.result.remediationOutcome === undefined ? null : <section className={`remediation-outcome is-${value.result.remediationOutcome.status}`} data-state={value.result.remediationOutcome.status} aria-label={REMEDIATION_TITLE}><div><span>{REMEDIATION_TITLE}</span><strong>{value.result.remediationOutcome.status === "improved" ? REMEDIATION_IMPROVED : value.result.remediationOutcome.status === "regressed" ? REMEDIATION_REGRESSED : REMEDIATION_UNCHANGED}</strong></div><p>{remediationBodyLabel(value.result.remediationOutcome.previousMissedQuestionCount, value.result.remediationOutcome.currentMissedQuestionCount, value.result.remediationOutcome.stillWeakKnowledgePointIds)}</p></section>}{value.result.answerReview === undefined ? null : <section className="answer-review"><h2>{ANSWER_REVIEW_TITLE}</h2>{value.result.answerReview.map((item, index) => <div key={item.questionId}><p className="answer-review-prompt"><span>{ANSWER_REVIEW_ORIGINAL}</span>{item.prompt ?? ANSWER_REVIEW_LEGACY_PROMPT}</p><FeedbackStatus state={item.correct ? FEEDBACK_STATE.correct : FEEDBACK_STATE.wrong}><strong>{answerReviewIndexLabel(index)}{item.correct ? FEEDBACK_ANSWER_CORRECT : FEEDBACK_ANSWER_WRONG}</strong></FeedbackStatus><p>{correctAnswerLabel(item.correctAnswer)}</p><p><strong>{explanationLabel(item.explanation)}</strong></p></div>)}</section>}</div>;
 }
 
-function testPointStatusLabel(status: ActivityTestPointResult["status"]): string {
-  if (status === "passed") return "通过";
-  if (status === "failed") return "未通过";
-  return "未运行";
+/** 判分结论 → 统一反馈状态词表。 */
+function verdictFeedbackState(verdict: string | undefined): string {
+  if (verdict === "pass") return FEEDBACK_STATE.success;
+  if (verdict === "partial") return FEEDBACK_STATE.warning;
+  if (verdict === "fail" || verdict === "not_graded") return FEEDBACK_STATE.error;
+  return FEEDBACK_STATE.neutral;
 }
 
 function TestPointTable({ testPoints }: { testPoints: readonly ActivityTestPointResult[] }) {
   return <section className="test-point-section" aria-labelledby="test-point-heading">
     <div className="test-point-heading">
-      <div><p className="section-kicker">逐点结果</p><h3 id="test-point-heading">测试点明细</h3></div>
-      <p>公开测试使用题面样例；密封测试只显示结论，不公开输入、预期输出和判定规则。</p>
+      <div><p className="section-kicker">{TEST_POINT_KICKER}</p><h3 id="test-point-heading">{TEST_POINT_HEADING}</h3></div>
+      <p>{TEST_POINT_NOTE}</p>
     </div>
     <div className="test-point-table-wrap">
       <table className="test-point-table">
-        <thead><tr><th scope="col">测试点</th><th scope="col">类型</th><th scope="col">状态</th></tr></thead>
+        <thead><tr><th scope="col">{TEST_POINT_COL_TEST}</th><th scope="col">{TEST_POINT_COL_TYPE}</th><th scope="col">{TEST_POINT_COL_STATUS}</th></tr></thead>
         <tbody>{testPoints.map((point) => <tr key={point.pointNumber} data-status={point.status}>
           <th scope="row">#{point.pointNumber}</th>
-          <td>{point.scope === "public" ? "公开测试点" : "密封测试点"}</td>
-          <td><span className={`test-point-status ${point.status}`}><span aria-hidden="true">{point.status === "passed" ? "✓" : point.status === "failed" ? "×" : "−"}</span>{testPointStatusLabel(point.status)}</span></td>
+          <td>{point.scope === "public" ? TEST_POINT_SCOPE_PUBLIC : TEST_POINT_SCOPE_SEALED}</td>
+          <td><FeedbackStatus state={point.status === "passed" ? FEEDBACK_STATE.passed : point.status === "failed" ? FEEDBACK_STATE.failed : FEEDBACK_STATE.notRun}><span className="test-point-status"><span aria-hidden="true">{point.status === "passed" ? TEST_POINT_GLYPH.passed : point.status === "failed" ? TEST_POINT_GLYPH.failed : TEST_POINT_GLYPH.not_run}</span>{testPointStatusLabel(point.status)}</span></FeedbackStatus></td>
         </tr>)}</tbody>
       </table>
     </div>
@@ -420,35 +583,35 @@ function CodeContractView({ activity }: { activity: CodeActivitySafeView }) {
   const criteria = activity.publicAcceptanceCriteria ?? (activity.outputContract === undefined ? [] : [activity.outputContract]);
   const statement = activity.problemStatement;
   return <section className="code-contract" aria-labelledby="code-contract-heading">
-    <p className="section-kicker">完整题面</p>
+    <p className="section-kicker">{CONTRACT_TITLE}</p>
     <h2 id="code-contract-heading">{activity.title}</h2>
-    {statement === undefined ? <p role="alert">该代码题缺少正式题面，当前不能提交。请返回教学内容后重试。</p> : <>
-      <h3>任务背景</h3>
+    {statement === undefined ? <p role="alert">{CONTRACT_MISSING_ALERT}</p> : <>
+      <h3>{CONTRACT_BACKGROUND}</h3>
       <p>{statement.background}</p>
       <div className="code-contract-copy">
-        <section><h3>输入说明</h3><p>{statement.inputDescription}</p></section>
-        <section><h3>输出说明</h3><p>{statement.outputDescription}</p></section>
+        <section><h3>{CONTRACT_INPUT}</h3><p>{statement.inputDescription}</p></section>
+        <section><h3>{CONTRACT_OUTPUT}</h3><p>{statement.outputDescription}</p></section>
       </div>
     </>}
     <dl className="code-contract-grid">
-      {activity.entryPoint === undefined ? null : <div><dt>需要实现</dt><dd><code>{activity.entryPoint}</code></dd></div>}
-      {activity.outputContract === undefined ? null : <div><dt>返回要求</dt><dd>{activity.outputContract}</dd></div>}
-      {activity.allowedLibraries?.length ? <div><dt>可用库</dt><dd>{activity.allowedLibraries.join("、")}</dd></div> : null}
-      {activity.editableRegions?.length ? <div><dt>编辑范围</dt><dd>{activity.editableRegions.map((region) => `${region.startMarker} 到 ${region.endMarker}（最多 ${region.maxCharacters} 字符）`).join("；")}</dd></div> : null}
+      {activity.entryPoint === undefined ? null : <div><dt>{CONTRACT_IMPLEMENT}</dt><dd><code>{activity.entryPoint}</code></dd></div>}
+      {activity.outputContract === undefined ? null : <div><dt>{CONTRACT_RETURN}</dt><dd>{activity.outputContract}</dd></div>}
+      {activity.allowedLibraries?.length ? <div><dt>{CONTRACT_LIBRARIES}</dt><dd>{activity.allowedLibraries.join("、")}</dd></div> : null}
+      {activity.editableRegions?.length ? <div><dt>{CONTRACT_EDITABLE}</dt><dd>{editableRegionsLabel(activity.editableRegions)}</dd></div> : null}
     </dl>
     {statement === undefined ? null : <div className="code-rule-columns">
-      <section><h3>处理规则</h3><ol>{statement.rules.map((item) => <li key={item}>{item}</li>)}</ol></section>
-      <section><h3>禁止事项</h3><ul>{statement.prohibitedActions.map((item) => <li key={item}>{item}</li>)}</ul></section>
+      <section><h3>{CONTRACT_RULES}</h3><ol>{statement.rules.map((item) => <li key={item}>{item}</li>)}</ol></section>
+      <section><h3>{CONTRACT_PROHIBITED}</h3><ul>{statement.prohibitedActions.map((item) => <li key={item}>{item}</li>)}</ul></section>
     </div>}
-    {criteria.length === 0 ? null : <><h3>公开验收要点</h3><ul>{criteria.map((item) => <li key={item}>{item}</li>)}</ul></>}
-    {statement === undefined ? null : <section className="code-sample" aria-labelledby="code-sample-heading">
-      <div className="sample-section-heading"><div><p className="section-kicker">可复验公开样例</p><h3 id="code-sample-heading">完整输入与期望输出 CSV</h3></div><p>页面显示的是完整样例文件，不是截断预览；下载后可直接用表格软件或 pandas 打开。</p></div>
+    {criteria.length === 0 ? null : <><h3>{CONTRACT_ACCEPTANCE_CRITERIA}</h3><ul>{criteria.map((item) => <li key={item}>{item}</li>)}</ul></>}
+    {statement === undefined ? null : <details className="code-sample" aria-labelledby="code-sample-heading">
+      <summary><div className="sample-section-heading"><div><p className="section-kicker">{SAMPLE_KICKER}</p><h3 id="code-sample-heading">{SAMPLE_HEADING}</h3></div><p>{SAMPLE_NOTE}</p></div></summary>
       <div className="code-sample-grid">
-        <CsvSample title="处理前 CSV" fileName={statement.sample.inputFileName} content={statement.sample.inputCsv} />
-        <CsvSample title="期望输出 CSV" fileName={statement.sample.outputFileName} content={statement.sample.outputCsv} />
+        <CsvSample title={SAMPLE_INPUT_TITLE} fileName={statement.sample.inputFileName} content={statement.sample.inputCsv} />
+        <CsvSample title={SAMPLE_OUTPUT_TITLE} fileName={statement.sample.outputFileName} content={statement.sample.outputCsv} />
       </div>
-      <p className="sample-explanation"><strong>样例解释：</strong>{statement.sample.explanation}</p>
-    </section>}
+      <p className="sample-explanation"><strong>{sampleExplanationLabel(statement.sample.explanation)}</strong></p>
+    </details>}
   </section>;
 }
 
@@ -457,51 +620,8 @@ function CsvSample({ title, fileName, content }: { title: string; fileName: stri
   const href = `data:text/csv;charset=utf-8,${encodeURIComponent(`\uFEFF${normalized}`)}`;
   const dataRows = Math.max(0, normalized.trimEnd().split(/\r?\n/u).length - 1);
   return <section className="csv-sample">
-    <div className="csv-sample-heading"><div><h4>{title}</h4><span>{dataRows} 行数据 · UTF-8 CSV</span></div><a className="button secondary compact" href={href} download={fileName}>下载完整 CSV</a></div>
-    <pre className="lesson-code" aria-label={`${title}完整内容`}><code>{normalized}</code></pre>
-    <p className="csv-file-name">文件名：<code>{fileName}</code></p>
+    <div className="csv-sample-heading"><div><h4>{title}</h4><span>{sampleRowsLabel(dataRows)}</span></div><a className="button secondary compact" href={href} download={fileName}>{SAMPLE_DOWNLOAD_BUTTON}</a></div>
+    <pre className="lesson-code" aria-label={sampleCsvAriaLabel(title)}><code>{normalized}</code></pre>
+    <p className="csv-file-name">{SAMPLE_FILE_NAME_PREFIX}<code>{fileName}</code></p>
   </section>;
-}
-
-function questionSourceLabel(source: NonNullable<import("../../contracts/index.js").QuizActivitySafeView["questionSource"]> | undefined): string {
-  switch (source) {
-    case "ai_recorded": return "AI录制响应题组";
-    case "ai_live": return "AI个性化生成题组";
-    case "ai_supplemented": return "AI生成 + 固定补位";
-    case "profile_fixed": return "固定题保障";
-    case "insufficient": return "题量不足";
-    default: return "题组来源待确认";
-  }
-}
-
-function verdictLabel(verdict: string | undefined): string {
-  if (verdict === "pass") return "通过";
-  if (verdict === "partial") return "部分通过，需要修改";
-  if (verdict === "fail") return "未通过，需要重做";
-  return "本次未评分";
-}
-
-function errorLabel(code: string | undefined): string {
-  const labels: Record<string, string> = {
-    syntax_error: "语法错误", test_failed: "验收项未通过", timeout: "运行超时",
-    output_limit: "输出过多", evaluator_timeout: "评测服务超时", evaluator_error: "评测服务错误",
-    submission_contract_error: "提交内容不符合题目合同",
-  };
-  return code === undefined ? "无" : labels[code] ?? code;
-}
-
-function safeFeedbackLabel(feedback: string, errorCode: string | undefined): string {
-  if (feedback === "One or more deterministic checks did not pass.") {
-    return "公开验收项尚未全部通过。请对照题目要求检查函数返回值、字段规则和允许编辑范围，修改后重新提交。";
-  }
-  if (feedback === "All deterministic checks passed.") return "全部确定性验收项已通过。";
-  return feedback;
-}
-
-function progressLabel(status: string): string {
-  return status === "completed" ? "已完成" : status === "in_progress" ? "等待重做" : status === "insufficient" ? "证据不足" : "尚未开始";
-}
-
-function resultLabel(result: string | undefined): string {
-  return result === "pass" ? "通过" : result === "partial" ? "部分通过" : result === "fail" ? "未通过" : result === "insufficient" ? "证据不足" : "尚未判定";
 }

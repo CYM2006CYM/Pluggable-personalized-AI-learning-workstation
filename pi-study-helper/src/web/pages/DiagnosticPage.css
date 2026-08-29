@@ -1,0 +1,451 @@
+/*
+ * DiagnosticPage 样式 —— 摸底问卷页(米色纸感)。
+ *
+ * 全部颜色、字号、间距、圆角、阴影都从 design/tokens.css 取,
+ * 本文件不出现任何硬编码色值与字号。
+ *
+ * 页面结构:根容器 .diagnostic-page(单列)+ 定位提示区(.diagnostic-orientation,
+ * 「摸底不是考试」)+ 恰好一张任务卡(.diagnostic-task,承载「现在要做什么」与
+ * 主操作按钮)。信息卡(.diagnostic-info)默认折叠,用 <details> 不设 open 达成。
+ * 进度表达保留既有形态:progress-track 进度条 + 计数,不新增第二套可视化。
+ */
+
+/* ---------- 页面底座:进入米色纸感体系 ---------- */
+
+body {
+  background: var(--paper);
+  color: var(--text);
+}
+
+/* ---------- 页面级文字 chrome(与 06 起 token 化的侧栏同一套) ---------- */
+
+.page-heading {
+  border-bottom-color: var(--rule);
+}
+
+.page-heading h1 {
+  margin-bottom: var(--space-2);
+  color: var(--text);
+  font-family: var(--font-serif);
+  font-size: var(--fs-h1);
+  line-height: var(--lh-h1);
+  font-weight: var(--fw-bold);
+}
+
+.eyebrow {
+  color: var(--accent);
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-wide);
+  text-transform: none;
+}
+
+.page-summary {
+  max-width: var(--read-width);
+  color: var(--text-soft);
+  font-size: var(--fs-ui);
+  line-height: var(--lh-ui);
+}
+
+.page-back {
+  color: var(--accent);
+  font-weight: var(--fw-medium);
+}
+
+.page-back:hover {
+  color: var(--accent);
+}
+
+/* ---------- 单列布局 ---------- */
+
+.diagnostic-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  width: min(100%, var(--read-width));
+  margin: 0 auto;
+  font-family: var(--font-sans);
+}
+
+/* ---------- 定位提示区:「摸底不是考试」 ---------- */
+
+.diagnostic-orientation {
+  padding: var(--space-5);
+  border: 1px solid var(--rule);
+  border-left: var(--space-1) solid var(--accent);
+  border-radius: var(--radius-md);
+  background: var(--accent-soft);
+}
+
+.diagnostic-orientation-title {
+  margin: 0 0 var(--space-2);
+  color: var(--accent);
+  font-family: var(--font-serif);
+  font-size: var(--fs-h3);
+  line-height: var(--lh-h3);
+  font-weight: var(--fw-bold);
+}
+
+.diagnostic-orientation p {
+  margin: 0;
+  color: var(--text);
+  font-size: var(--fs-ui);
+  line-height: var(--lh-ui);
+}
+
+/* ---------- 任务卡:每页恰好一张,承载「现在要做什么」与主操作 ---------- */
+
+.diagnostic-task {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-6);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+  box-shadow: var(--shadow-1);
+}
+
+.diagnostic-kicker {
+  margin: 0;
+  color: var(--accent);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-wide);
+}
+
+.diagnostic-task h2 {
+  margin: 0;
+  color: var(--text);
+  font-family: var(--font-serif);
+  font-size: var(--fs-h2);
+  line-height: var(--lh-h2);
+  font-weight: var(--fw-bold);
+}
+
+.diagnostic-lead {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: var(--fs-ui);
+  line-height: var(--lh-ui);
+}
+
+/* ---------- 进度:保留既有形态(进度条 + 计数),只换 token 与配色 ---------- */
+
+.diagnostic-progress {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.diagnostic-page .progress-track {
+  height: var(--space-1);
+  margin: 0;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  background: var(--rule);
+}
+
+.diagnostic-page .progress-track span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  transition: width var(--dur-base) var(--ease);
+}
+
+.diagnostic-counter {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+}
+
+/* ---------- 选项列表 ---------- */
+
+.diagnostic-options {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.diagnostic-option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-md);
+  background: var(--card);
+  color: var(--text);
+  font-size: var(--fs-body);
+  line-height: var(--lh-ui);
+  cursor: pointer;
+  transition: border-color var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease);
+}
+
+.diagnostic-option:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.diagnostic-option:has(input:checked) {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.diagnostic-option input {
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.diagnostic-option-key {
+  color: var(--accent);
+  font-weight: var(--fw-bold);
+}
+
+.diagnostic-option-copy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.diagnostic-option-copy strong {
+  font-weight: var(--fw-medium);
+}
+
+.diagnostic-option-copy small {
+  color: var(--text-soft);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+}
+
+/* ---------- 操作区与按钮 ---------- */
+
+.diagnostic-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+
+.diagnostic-actions-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.diagnostic-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-5);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  font-family: inherit;
+  font-size: var(--fs-ui);
+  line-height: var(--lh-ui);
+  font-weight: var(--fw-medium);
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease),
+    box-shadow var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+
+.diagnostic-btn--primary {
+  background: var(--accent);
+  color: var(--card);
+}
+
+.diagnostic-btn--primary:hover:not(:disabled) {
+  box-shadow: var(--shadow-2);
+}
+
+.diagnostic-btn--secondary {
+  border-color: var(--accent);
+  background: var(--card);
+  color: var(--accent);
+}
+
+.diagnostic-btn--secondary:hover:not(:disabled) {
+  background: var(--accent-soft);
+}
+
+.diagnostic-btn--text {
+  padding: var(--space-2) var(--space-3);
+  background: transparent;
+  color: var(--accent);
+}
+
+.diagnostic-btn--text:hover:not(:disabled) {
+  background: var(--accent-soft);
+}
+
+.diagnostic-btn:disabled {
+  border-color: transparent;
+  background: var(--card-soft);
+  color: var(--text-soft);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.diagnostic-quiet {
+  color: var(--text-soft);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+}
+
+/* ---------- 信息卡:默认折叠 ---------- */
+
+.diagnostic-info {
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-md);
+  background: var(--card-soft);
+}
+
+.diagnostic-info summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  color: var(--text);
+  font-size: var(--fs-ui);
+  line-height: var(--lh-ui);
+  font-weight: var(--fw-medium);
+  cursor: pointer;
+  list-style: none;
+}
+
+.diagnostic-info summary::-webkit-details-marker {
+  display: none;
+}
+
+.diagnostic-info summary::before {
+  content: "";
+  width: 0;
+  height: 0;
+  border-left: 4px solid currentColor;
+  border-top: 3px solid transparent;
+  border-bottom: 3px solid transparent;
+  transition: transform var(--dur-fast) var(--ease);
+}
+
+.diagnostic-info[open] summary::before {
+  transform: rotate(90deg);
+}
+
+.diagnostic-info-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: 0 var(--space-4) var(--space-4);
+}
+
+.diagnostic-info-body > p {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+}
+
+.diagnostic-facts {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.diagnostic-facts > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--rule);
+}
+
+.diagnostic-facts > div:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.diagnostic-facts dt {
+  color: var(--text-soft);
+  font-size: var(--fs-ui);
+  line-height: var(--lh-ui);
+}
+
+.diagnostic-facts dd {
+  margin: 0;
+  color: var(--text);
+  font-size: var(--fs-ui);
+  line-height: var(--lh-ui);
+  font-weight: var(--fw-medium);
+}
+
+/* ---------- 提示行 ---------- */
+
+.diagnostic-note {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border-left: var(--space-1) solid var(--warm);
+  border-radius: var(--radius-sm);
+  background: var(--card-soft);
+  color: var(--text);
+  font-size: var(--fs-ui);
+  line-height: var(--lh-ui);
+}
+
+/* ---------- 无障碍与动效 ---------- */
+
+.diagnostic-page .visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.diagnostic-page a:focus-visible,
+.diagnostic-page button:focus-visible,
+.diagnostic-page input:focus-visible,
+.diagnostic-page summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .diagnostic-option,
+  .diagnostic-btn,
+  .diagnostic-page .progress-track span,
+  .diagnostic-info summary::before {
+    transition: none;
+  }
+}
+
+/* ---------- 窄屏收窄 ---------- */
+
+@media (max-width: 640px) {
+  .diagnostic-task {
+    padding: var(--space-4);
+  }
+
+  .diagnostic-actions,
+  .diagnostic-actions-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .diagnostic-actions .diagnostic-btn {
+    justify-content: center;
+  }
+}

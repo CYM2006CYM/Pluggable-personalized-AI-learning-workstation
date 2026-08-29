@@ -2,6 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { RouterProvider } from "react-router-dom";
 import { createAppRouter } from "./app/routes.js";
+import "./design/tokens.css";
 import "./styles.css";
 
 const root = document.getElementById("root");

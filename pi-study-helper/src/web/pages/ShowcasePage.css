@@ -1,0 +1,426 @@
+/*
+ * ShowcasePage 样式。
+ *
+ * 全部颜色、字号、间距、圆角、阴影都从 design/tokens.css 取，
+ * 本文件不出现任何硬编码色值与字号。两处例外需要说明：
+ * - 断点宽度（媒体查询）没有对应 token，沿用 px，属 ticket 14 响应式范围；
+ * - 行内 min-height 来自 layout-contract.ts 的 STABLE_LAYOUT（共享布局契约）。
+ *
+ * 状态用 data-status 表达，不在 class 名里堆砌状态。
+ */
+
+/* ---------- 案例选择工具栏 ---------- */
+
+.case-picker-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+
+.case-picker-bar label {
+  color: var(--text-soft);
+  font-size: var(--fs-ui);
+  line-height: var(--lh-ui);
+}
+
+.case-picker-bar select {
+  min-height: 38px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  color: var(--text);
+  font-size: var(--fs-ui);
+  line-height: var(--lh-ui);
+}
+
+/* ---------- 页面主体布局 ---------- */
+
+.showcase-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: var(--space-5);
+  align-items: start;
+}
+
+.showcase-side {
+  display: grid;
+  gap: var(--space-4);
+}
+
+/* ---------- 任务卡：当前案例的学习路径 ---------- */
+
+.showcase-task-card {
+  padding: var(--space-5);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+  box-shadow: var(--shadow-1);
+}
+
+.showcase-case-title {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: var(--fs-h2);
+  line-height: var(--lh-h2);
+}
+
+/* 案例编号：公开的稳定标识，供评审核对 JSON 证据，不作主文案 */
+.showcase-case-id {
+  display: inline-block;
+  max-width: 100%;
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+  background: var(--card-soft);
+  color: var(--text-soft);
+  font-family: var(--font-mono);
+  font-size: var(--fs-mono);
+  line-height: var(--lh-mono);
+  overflow-wrap: anywhere;
+}
+
+.showcase-path-list {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.showcase-path-node {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-md);
+  background: var(--card);
+}
+
+.showcase-path-node[data-status="locked"] {
+  background: var(--card-soft);
+}
+
+.showcase-node-seq {
+  flex: 0 0 auto;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--card-soft);
+  color: var(--text-soft);
+  font-family: var(--font-mono);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+}
+
+.showcase-node-main {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.showcase-node-main strong {
+  display: block;
+  color: var(--text);
+  font-size: var(--fs-ui);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-ui);
+}
+
+.showcase-node-main span {
+  display: block;
+  margin-top: var(--space-1);
+  color: var(--text-soft);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+}
+
+.showcase-node-main small {
+  display: block;
+  margin-top: var(--space-1);
+  color: var(--text-soft);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+}
+
+.showcase-node-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-1);
+  flex: 0 0 auto;
+}
+
+.showcase-node-meta span {
+  color: var(--text-soft);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+  white-space: nowrap;
+}
+
+.showcase-node-status {
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-caption);
+}
+
+.showcase-node-status[data-status="available"] {
+  color: var(--success);
+}
+
+.showcase-node-status[data-status="locked"] {
+  color: var(--text-soft);
+}
+
+/* ---------- 信息卡（默认折叠） ---------- */
+
+.showcase-info-card {
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-md);
+  background: var(--card);
+  box-shadow: var(--shadow-1);
+}
+
+.showcase-info-card > summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  color: var(--text);
+  font-size: var(--fs-ui);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-ui);
+  list-style: none;
+  cursor: pointer;
+}
+
+.showcase-info-card > summary::-webkit-details-marker {
+  display: none;
+}
+
+/* chevron 纯用边框画，不引入文案 */
+.showcase-info-card > summary::after {
+  content: "";
+  width: 6px;
+  height: 6px;
+  margin-left: auto;
+  border-right: 1.5px solid var(--text-soft);
+  border-bottom: 1.5px solid var(--text-soft);
+  transform: rotate(45deg);
+  transition: transform var(--dur-fast) var(--ease);
+}
+
+.showcase-info-card[open] > summary {
+  border-bottom: 1px solid var(--rule);
+}
+
+.showcase-info-card[open] > summary::after {
+  transform: rotate(-135deg);
+}
+
+.showcase-info-body {
+  padding: var(--space-4);
+}
+
+/* ---------- 关键数据 ---------- */
+
+.showcase-metric-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+  margin: 0;
+}
+
+.showcase-metric-list dt {
+  color: var(--text-soft);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+}
+
+.showcase-metric-list dd {
+  margin: var(--space-1) 0 0;
+  color: var(--text);
+  font-size: var(--fs-ui);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-ui);
+  overflow-wrap: anywhere;
+}
+
+/* ---------- 校验与归档 ---------- */
+
+.showcase-hash-note {
+  margin: 0 0 var(--space-3);
+  color: var(--text-soft);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+}
+
+.showcase-hash-list {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+}
+
+.showcase-hash-list dt {
+  color: var(--text-soft);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+}
+
+.showcase-hash-list dd {
+  margin: var(--space-1) 0 0;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: var(--fs-mono);
+  line-height: var(--lh-mono);
+  overflow-wrap: anywhere;
+  word-break: break-all;
+}
+
+/* ---------- 案例差异对比 ---------- */
+
+.showcase-diff-zone {
+  margin-top: var(--space-5);
+}
+
+.showcase-diff-panel {
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+  box-shadow: var(--shadow-1);
+}
+
+.showcase-diff-panel > summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-5);
+  color: var(--text);
+  font-family: var(--font-serif);
+  font-size: var(--fs-h3);
+  line-height: var(--lh-h3);
+  list-style: none;
+  cursor: pointer;
+}
+
+.showcase-diff-panel > summary::-webkit-details-marker {
+  display: none;
+}
+
+.showcase-diff-panel > summary::after {
+  content: "";
+  width: 6px;
+  height: 6px;
+  margin-left: auto;
+  border-right: 1.5px solid var(--text-soft);
+  border-bottom: 1.5px solid var(--text-soft);
+  transform: rotate(45deg);
+  transition: transform var(--dur-fast) var(--ease);
+}
+
+.showcase-diff-panel[open] > summary {
+  border-bottom: 1px solid var(--rule);
+}
+
+.showcase-diff-panel[open] > summary::after {
+  transform: rotate(-135deg);
+}
+
+.showcase-diff-body {
+  padding: var(--space-4) var(--space-5) var(--space-5);
+}
+
+.showcase-diff-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.showcase-diff-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-md);
+  background: var(--card);
+  box-shadow: var(--shadow-1);
+}
+
+.showcase-diff-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--rule);
+}
+
+.showcase-diff-names {
+  color: var(--text);
+  font-size: var(--fs-ui);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-ui);
+}
+
+.showcase-diff-count {
+  flex: 0 0 auto;
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+  color: var(--accent);
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-caption);
+  white-space: nowrap;
+}
+
+.showcase-diff-list {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.showcase-diff-list dt {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  color: var(--text-soft);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+}
+
+.showcase-diff-observable {
+  flex: 0 0 auto;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+  color: var(--text-soft);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+}
+
+.showcase-diff-list dd {
+  margin: var(--space-1) 0 0;
+  color: var(--text);
+  font-size: var(--fs-ui);
+  line-height: var(--lh-ui);
+  overflow-wrap: anywhere;
+}
+
+/* ---------- 响应式 ---------- */
+
+@media (max-width: 980px) {
+  .showcase-shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .showcase-diff-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

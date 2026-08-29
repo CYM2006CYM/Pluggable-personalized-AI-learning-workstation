@@ -1,0 +1,388 @@
+/*
+ * StudyStepper 样式。
+ *
+ * 全部颜色、字号、间距、圆角、阴影都从 design/tokens.css 取，
+ * 本文件不出现任何硬编码色值与字号。状态用 data-status 表达，
+ * 不在 class 名里堆砌状态，方便新增状态时只改一处映射。
+ */
+
+.study-stepper {
+  --stepper-gap: var(--space-4);
+  --stepper-mark-size: 22px;
+}
+
+/* 进行中（current）的柔和脉冲，强化与已完成的区分度 */
+@keyframes stepper-pulse {
+  0% { transform: scale(1); opacity: 0.45; }
+  70% { transform: scale(2.3); opacity: 0; }
+  100% { transform: scale(2.3); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stepper-mark::after {
+    animation: none !important;
+  }
+}
+
+.study-stepper .visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.stepper-track {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stepper-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+}
+
+/* 连接线占满剩余空间，让两端环节贴边、中间均分 */
+.stepper-connector {
+  flex: 1 1 auto;
+  min-width: var(--space-5);
+  height: 1px;
+  margin: 0 var(--space-3);
+  background: var(--rule);
+}
+
+.stepper-item[data-status="completed"] ~ .stepper-item .stepper-connector,
+.stepper-item[data-status="completed"] .stepper-connector {
+  background: var(--step-completed);
+}
+
+.stepper-node-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.stepper-node {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text);
+  font-size: var(--fs-ui);
+  line-height: var(--lh-ui);
+  transition: color var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease);
+  cursor: default;
+}
+
+.stepper-mark {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: var(--stepper-mark-size);
+  height: var(--stepper-mark-size);
+  border: 1px solid var(--rule);
+  border-radius: 50%;
+  background: var(--card);
+  transition: background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
+}
+
+.stepper-mark::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--step-current);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.stepper-text {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.stepper-label {
+  font-weight: var(--fw-medium);
+}
+
+/* ---------- 环节状态 ---------- */
+
+.stepper-item[data-status="completed"] .stepper-mark {
+  border-color: var(--step-completed);
+  background: var(--step-completed);
+}
+
+.stepper-item[data-status="completed"] .stepper-node {
+  color: var(--text-soft);
+}
+
+/*
+  当前项不再加卡片背景——一行一个圆点 + 文字才是侧栏该有的样子。
+  区分度交给圆点本身：实心 + 脉冲 + 外圈光晕。
+*/
+.stepper-item[data-status="current"] .stepper-node {
+  color: var(--text);
+}
+
+.stepper-item[data-status="current"] .stepper-label {
+  color: var(--step-current);
+  font-weight: var(--fw-medium);
+}
+
+.stepper-item[data-status="current"] .stepper-mark {
+  border-color: var(--step-current);
+  background: var(--step-current);
+  box-shadow: 0 0 0 3px var(--step-current-bg);
+}
+
+.stepper-item[data-status="current"] .stepper-mark::after {
+  animation: stepper-pulse 1.6s cubic-bezier(0.2, 0, 0, 1) infinite;
+}
+
+.stepper-item[data-status="locked"] .stepper-node {
+  color: var(--step-locked);
+}
+
+.stepper-item[data-status="locked"] .stepper-mark {
+  border-style: dashed;
+  /* 封锁格栅：3px/5px 是图案尺寸， unavoidable */
+  background: var(--card) repeating-linear-gradient(
+    135deg,
+    transparent 0px,
+    transparent 3px,
+    var(--text-soft) 3px,
+    var(--text-soft) 5px
+  );
+}
+
+/* ---------- 循环体浮层 ---------- */
+
+/*
+ * 进度浮层。
+ *
+ * 刻意不占文档流：它不把下方环节推开，也不会被侧栏容器裁掉（之前全屏时
+ * 内联面板被截断就是这个原因）。显隐交给 CSS：
+ * - 鼠标 hover 在循环体项上，或键盘 focus 在循环体项内时，渐显。
+ * - 鼠标移出该项/浮层，或 blur 时，自动收起。
+ */
+.stepper-lessons {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  left: 0;
+  z-index: 30;
+  min-width: 220px;
+  padding: var(--space-4);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  background: var(--glass);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.1);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.1);
+  box-shadow: var(--shadow-3);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-4px);
+  transition: opacity var(--dur-base) var(--ease), transform var(--dur-base) var(--ease),
+    visibility var(--dur-base) var(--ease);
+  pointer-events: none;
+}
+
+@media (hover: hover) {
+  .stepper-item.is-cycle:hover .stepper-lessons,
+  .stepper-item.is-cycle:focus-within .stepper-lessons {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stepper-lessons {
+    transition: opacity var(--dur-fast) var(--ease);
+  }
+}
+
+.stepper-progress-title {
+  margin: 0 0 var(--space-1);
+  color: var(--text);
+  font-size: var(--fs-ui);
+  font-weight: var(--fw-medium);
+}
+
+.stepper-progress {
+  margin: 0 0 var(--space-3);
+  color: var(--text-soft);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+}
+
+.lesson-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lesson-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+}
+
+.lesson-index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--rule);
+  border-radius: 50%;
+  color: var(--text-soft);
+  background: var(--card);
+}
+
+.lesson-text {
+  color: var(--text-soft);
+}
+
+/* 独立标记：跳过教学但保留实操的节，用暖色区分于「已跳过」 */
+.lesson-flag {
+  width: 6px;
+  height: 6px;
+  margin-left: auto;
+  border-radius: 50%;
+  background: var(--step-teaching-skipped);
+}
+
+.lesson-item[data-status="completed"] .lesson-index {
+  border-color: var(--step-completed);
+  background: var(--step-completed);
+  color: var(--card);
+}
+
+.lesson-item[data-status="completed"] .lesson-text {
+  color: var(--text);
+}
+
+.lesson-item[data-status="current"] {
+  background: var(--step-current-bg);
+}
+
+.lesson-item[data-status="current"] .lesson-index {
+  border-color: var(--step-current);
+  color: var(--step-current);
+}
+
+.lesson-item[data-status="current"] .lesson-text {
+  color: var(--text);
+  font-weight: var(--fw-medium);
+}
+
+.lesson-item[data-status="locked"] .lesson-index {
+  border-style: dashed;
+  background: var(--card) repeating-linear-gradient(
+    135deg,
+    transparent 0px,
+    transparent 3px,
+    var(--text-soft) 3px,
+    var(--text-soft) 5px
+  );
+}
+
+.lesson-item[data-status="skipped"] .lesson-index {
+  border-color: var(--step-skipped-line);
+  color: var(--step-skipped-text);
+}
+
+.lesson-item[data-status="skipped"] .lesson-text {
+  color: var(--step-skipped-text);
+  text-decoration: line-through;
+}
+
+.lesson-item[data-status="teaching-skipped"] {
+  background: var(--card-soft);
+}
+
+.lesson-item[data-status="teaching-skipped"] .lesson-index {
+  border-color: var(--step-teaching-skipped);
+  border-style: dashed;
+  color: var(--step-teaching-skipped);
+}
+
+.lesson-item[data-status="teaching-skipped"] .lesson-text {
+  color: var(--text);
+}
+
+.stepper-notice {
+  margin: var(--space-2) 0 0;
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--rule);
+  color: var(--step-teaching-skipped);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+}
+
+/* ---------- 纵向（左侧栏） ---------- */
+
+.study-stepper[data-orientation="vertical"] .stepper-track {
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-1);
+}
+
+.study-stepper[data-orientation="vertical"] .stepper-item {
+  flex-direction: column;
+  align-items: stretch;
+  flex: 0 0 auto;
+}
+
+.study-stepper[data-orientation="vertical"] .stepper-node {
+  align-self: stretch;
+}
+
+.study-stepper[data-orientation="vertical"] .stepper-connector {
+  flex: 0 0 auto;
+  align-self: flex-start;
+  width: 1px;
+  min-width: 0;
+  height: var(--space-4);
+  margin: var(--space-1) 0 var(--space-1)
+    calc(var(--space-3) + var(--stepper-mark-size) / 2);
+}
+
+/* 侧栏里浮层从行的右侧滑出，覆盖到主内容区边缘，不受侧栏宽度限制 */
+.study-stepper[data-orientation="vertical"] .stepper-lessons {
+  top: 0;
+  left: calc(100% + var(--space-2));
+  transform: translateX(-6px);
+}
+
+@media (hover: hover) {
+  .study-stepper[data-orientation="vertical"] .stepper-item.is-cycle:hover .stepper-lessons,
+  .study-stepper[data-orientation="vertical"] .stepper-item.is-cycle:focus-within .stepper-lessons {
+    transform: translateX(0);
+  }
+}

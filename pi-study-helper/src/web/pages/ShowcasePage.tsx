@@ -1,47 +1,156 @@
 import { useSearchParams } from "react-router-dom";
 import { PageFrame } from "../components/PageFrame.js";
+import { experienceLabel } from "../copy/ui-copy.js";
+import {
+  DIFF_ARROW,
+  PAGE_COPY,
+  activitiesText,
+  chapterCountText,
+  differenceCountText,
+  differenceFieldLabel,
+  differencePairTitle,
+  differenceValueLabel,
+  estimatedTotalText,
+  gapText,
+  minutesText,
+  nextNodeText,
+  nextPracticeText,
+  nodeStatusLabel,
+  observableLabel,
+  pathStatusLabel,
+  personaLabel,
+  preferenceLabel,
+  reasonCodesText,
+  scaffoldLabel,
+} from "../copy/showcase-page-copy.js";
+import { difficultyLabel, knowledgePointLabel } from "../learning-labels.js";
 import { FORMAL_DIFFERENCES, FORMAL_SHOWCASES, FORMAL_SHOWCASE_SEAL } from "../showcase/formal-showcase-data.js";
 import { STABLE_LAYOUT } from "../styles/layout-contract.js";
+import "./ShowcasePage.css";
+
+/*
+ * 案例页 —— 展示层。页面不再直出任何英文数据值：
+ * 画像名、路径状态、节点状态、安排原因、辅助方式、难度、兜底文案
+ * 全部经由 copy/showcase-page-copy.ts 映射为中文。
+ *
+ * 刻意保留两个英文原值（均有理由，见 copy 模块头注释）：
+ * - 案例编号 caseId：公开的稳定标识，供评审核对 JSON 证据；
+ * - 三组校验哈希：与完成归档哈希同性质的复验证据，受既有测试锁定。
+ */
+
+/** caseId → 中文画像名。差异卡头部配对名用。 */
+const PERSONA_BY_CASE_ID = new Map<string, string>(
+  FORMAL_SHOWCASES.map((item) => [item.input.caseId, personaLabel(item.semantic.personaType)]),
+);
 
 export function ShowcasePage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const requestedCaseId = searchParams.get("case");
   const selected = FORMAL_SHOWCASES.find((item) => item.input.caseId === requestedCaseId) ?? FORMAL_SHOWCASES[0]!;
-  const pairs = FORMAL_DIFFERENCES.filter((pair) => pair.leftCaseId === selected.input.caseId || pair.rightCaseId === selected.input.caseId);
+  const pairs = FORMAL_DIFFERENCES.filter(
+    (pair) => pair.leftCaseId === selected.input.caseId || pair.rightCaseId === selected.input.caseId,
+  );
 
-  return <PageFrame eyebrow="W5-D4 正式输出" title="三类学习路径" summary="A-D4 PathEngine 实际结果 · Profile revision 3" actions={<span className="header-badge">3 个案例</span>}>
-    <section className="showcase-toolbar" aria-label="案例选择">
-      <label htmlFor="showcase-case">正式案例</label>
+  const nextStep = selected.semantic.nextStep;
+  const nextNode = nextStep.completed
+    ? undefined
+    : selected.semantic.path.nodes.find((node) => node.nodeId === nextStep.nodeId);
+  const totalMinutes = selected.semantic.path.nodes.reduce((total, node) => total + node.estimatedMinutes, 0);
+
+  return <PageFrame eyebrow={PAGE_COPY.eyebrow} title={PAGE_COPY.title} summary={PAGE_COPY.summary} actions={<span className="header-badge">{PAGE_COPY.actionBadge}</span>}>
+    <section className="case-picker-bar" aria-label={PAGE_COPY.pickerDescription}>
+      <label htmlFor="showcase-case">{PAGE_COPY.pickerLabel}</label>
       <select id="showcase-case" value={selected.input.caseId} onChange={(event) => setSearchParams({ case: event.target.value }, { replace: true })}>
-        {FORMAL_SHOWCASES.map((item) => <option key={item.input.caseId} value={item.input.caseId}>{item.semantic.personaType}</option>)}
+        {FORMAL_SHOWCASES.map((item) => <option key={item.input.caseId} value={item.input.caseId}>{personaLabel(item.semantic.personaType)}</option>)}
       </select>
-      <span className="status-tag success">{selected.semantic.path.status}</span>
+      <span className="status-tag success">{pathStatusLabel(selected.semantic.path.status)}</span>
     </section>
 
-    <div className="showcase-layout" data-page="showcase" data-formal-source="w5-a-d4">
-      <section className="work-section showcase-path-section">
-        <div className="section-heading"><div><p className="section-kicker">PATH VERSION {selected.semantic.path.pathVersion}</p><h2>{selected.input.caseId}</h2></div><span className="status-tag">{selected.semantic.personaType}</span></div>
-        <ol className="path-list">{selected.semantic.path.nodes.map((node, index) => <li className={`path-node ${node.status}`} key={node.nodeId} style={{ minHeight: STABLE_LAYOUT.pathNodeMinHeight }}><span className="path-sequence">{String(index + 1).padStart(2, "0")}</span><div className="path-node-main"><strong>{node.knowledgePointId}</strong><span>{node.reasonCodes.join(" · ")}</span><small>{node.difficulty} · {node.scaffold} · {node.activityIds.join(" / ")}</small></div><div className="path-node-meta"><span>{node.estimatedMinutes}分钟</span><strong>{node.status}</strong></div></li>)}</ol>
+    <div className="showcase-shell" data-page="showcase" data-formal-source="w5-a-d4">
+      <section className="showcase-task-card" aria-label={personaLabel(selected.semantic.personaType)}>
+        <div className="section-heading">
+          <div>
+            <p className="section-kicker">{PAGE_COPY.pathKicker}</p>
+            <h2 className="showcase-case-title">
+              {personaLabel(selected.semantic.personaType)}
+              <code className="showcase-case-id">{selected.input.caseId}</code>
+            </h2>
+          </div>
+          <span className="status-tag">{estimatedTotalText(totalMinutes)}</span>
+        </div>
+        <ol className="showcase-path-list">
+          {selected.semantic.path.nodes.map((node, index) => (
+            <li className="showcase-path-node" data-status={node.status} key={node.nodeId} style={{ minHeight: STABLE_LAYOUT.pathNodeMinHeight }}>
+              <span className="showcase-node-seq">{String(index + 1).padStart(2, "0")}</span>
+              <div className="showcase-node-main">
+                <strong>{knowledgePointLabel(node.knowledgePointId)}</strong>
+                <span>{reasonCodesText(node.reasonCodes)}</span>
+                <small>{difficultyLabel(node.difficulty)} · {scaffoldLabel(node.scaffold)} · {activitiesText(node.activityIds.length)}</small>
+              </div>
+              <div className="showcase-node-meta">
+                <span>{minutesText(node.estimatedMinutes)}</span>
+                <strong className="showcase-node-status" data-status={node.status}>{nodeStatusLabel(node.status)}</strong>
+              </div>
+            </li>
+          ))}
+        </ol>
+        <p className="quiet-label">{chapterCountText(selected.semantic.path.nodes.length)}</p>
       </section>
 
-      <aside className="work-section showcase-facts">
-        <p className="section-kicker">FORMAL BINDING</p>
-        <h2>输入与输出</h2>
-        <dl className="metric-list"><div><dt>Profile revision</dt><dd>{selected.profileBinding.profileRevision}</dd></div><div><dt>下一节点</dt><dd>{selected.semantic.nextStep.nodeId ?? "completed"}</dd></div><div><dt>下一活动</dt><dd>{selected.semantic.nextStep.activityId ?? "none"}</dd></div><div><dt>诊断缺口</dt><dd>{selected.semantic.diagnostic.insufficientKnowledgePointIds.length}</dd></div></dl>
-        <dl className="hash-list"><div><dt>seal</dt><dd>{FORMAL_SHOWCASE_SEAL}</dd></div><div><dt>input</dt><dd>{selected.input.sha256}</dd></div><div><dt>path</dt><dd>{selected.pathSha256}</dd></div><div><dt>output</dt><dd>{selected.outputSha256}</dd></div></dl>
+      <aside className="showcase-side" aria-label={PAGE_COPY.facts.summary}>
+        <details className="showcase-info-card">
+          <summary>{PAGE_COPY.facts.summary}</summary>
+          <div className="showcase-info-body">
+            <dl className="showcase-metric-list">
+              <div><dt>{PAGE_COPY.metrics.nextNode}</dt><dd>{nextNodeText(nextNode === undefined ? undefined : knowledgePointLabel(nextNode.knowledgePointId), nextStep.completed)}</dd></div>
+              <div><dt>{PAGE_COPY.metrics.nextPractice}</dt><dd>{nextPracticeText(nextNode?.activityIds.length)}</dd></div>
+              <div><dt>{PAGE_COPY.metrics.diagnosticGap}</dt><dd>{gapText(selected.semantic.diagnostic.insufficientKnowledgePointIds.length)}</dd></div>
+              <div><dt>{PAGE_COPY.metrics.pythonExperience}</dt><dd>{experienceLabel(selected.semantic.background.python_experience)}</dd></div>
+              <div><dt>{PAGE_COPY.metrics.pandasExperience}</dt><dd>{experienceLabel(selected.semantic.background.pandas_experience)}</dd></div>
+              <div><dt>{PAGE_COPY.metrics.explanationPreference}</dt><dd>{preferenceLabel(selected.semantic.background.explanation_preference)}</dd></div>
+            </dl>
+          </div>
+        </details>
+
+        <details className="showcase-info-card">
+          <summary>{PAGE_COPY.hash.summary}</summary>
+          <div className="showcase-info-body">
+            <p className="showcase-hash-note">{PAGE_COPY.hash.note}</p>
+            <dl className="showcase-hash-list">
+              <div><dt>{PAGE_COPY.hash.seal}</dt><dd>{FORMAL_SHOWCASE_SEAL}</dd></div>
+              <div><dt>{PAGE_COPY.hash.input}</dt><dd>{selected.input.sha256}</dd></div>
+              <div><dt>{PAGE_COPY.hash.path}</dt><dd>{selected.pathSha256}</dd></div>
+              <div><dt>{PAGE_COPY.hash.output}</dt><dd>{selected.outputSha256}</dd></div>
+            </dl>
+          </div>
+        </details>
       </aside>
     </div>
 
-    <section className="work-section difference-section">
-      <div className="section-heading"><div><p className="section-kicker">OBSERVED DIFFERENCES</p><h2>实际差异</h2></div></div>
-      <div className="difference-grid">{pairs.map((pair) => <article key={`${pair.leftCaseId}:${pair.rightCaseId}`} className="difference-group"><header><strong>{pair.leftCaseId}<br />{pair.rightCaseId}</strong><span className="score-block">{pair.differenceCount}</span></header><dl>{pair.differences.slice(0, 3).map((difference) => <div key={`${difference.observable}:${difference.key}`}><dt>{difference.observable} · {difference.key}</dt><dd>{formatValue(difference.left)} → {formatValue(difference.right)}</dd></div>)}</dl></article>)}</div>
+    <section className="showcase-diff-zone">
+      <details className="showcase-diff-panel">
+        <summary>{PAGE_COPY.diff.summary}</summary>
+        <div className="showcase-diff-body">
+          <div className="showcase-diff-grid">
+            {pairs.map((pair) => (
+              <article className="showcase-diff-card" key={`${pair.leftCaseId}:${pair.rightCaseId}`}>
+                <header className="showcase-diff-head">
+                  <strong className="showcase-diff-names">{differencePairTitle(PERSONA_BY_CASE_ID.get(pair.leftCaseId) ?? "", PERSONA_BY_CASE_ID.get(pair.rightCaseId) ?? "")}</strong>
+                  <span className="showcase-diff-count">{differenceCountText(pair.differenceCount)}</span>
+                </header>
+                <dl className="showcase-diff-list">
+                  {pair.differences.map((difference) => (
+                    <div key={`${difference.observable}:${difference.key}`}>
+                      <dt><span className="showcase-diff-observable">{observableLabel(difference.observable)}</span>{differenceFieldLabel(difference.key)}</dt>
+                      <dd>{differenceValueLabel(difference.key, difference.left)}{DIFF_ARROW}{differenceValueLabel(difference.key, difference.right)}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </article>
+            ))}
+          </div>
+        </div>
+      </details>
     </section>
   </PageFrame>;
-}
-
-function formatValue(value: unknown): string {
-  if (Array.isArray(value)) return value.length === 0 ? "[]" : value.join(", ");
-  if (value === null) return "null";
-  if (typeof value === "object") return JSON.stringify(value);
-  return String(value);
 }

@@ -5,7 +5,10 @@ import { api, isApiError, newRequestId } from "../api/client.js";
 import { useBootstrap } from "../api/use-bootstrap.js";
 import { PageFrame } from "../components/PageFrame.js";
 import { PageStatePanel } from "../components/PageStatePanel.js";
+import { DIAGNOSTIC_PAGE_COPY } from "../copy/diagnostic-page-copy.js";
+import { explanationPreferenceLabel, experienceLabel } from "../copy/ui-copy.js";
 import { knowledgePointLabel } from "../learning-labels.js";
+import "./DiagnosticPage.css";
 
 export function DiagnosticPage() {
   const { sessionId = "" } = useParams<{ sessionId: string }>();
@@ -105,17 +108,69 @@ export function DiagnosticPage() {
     finally { setBusy(false); }
   };
 
+  const copy = DIAGNOSTIC_PAGE_COPY;
   const error = actionError ?? bootstrap.error;
   const state = error === undefined ? undefined : isApiError(error) && error.status === 409 ? "conflict" : "error";
-  return <PageFrame eyebrow={session?.view.mode === "chapter" ? "背景问卷" : "固定诊断"} title="确认当前学习起点" summary="可返回检查并修改答案；只有完成诊断后，最新草稿才会生成正式学习画像。" back={{ to: "/", label: "返回主菜单" }} actions={<span className="header-badge">草稿 v{session?.diagnosticDraftVersion ?? 0}</span>}>
+  return <PageFrame eyebrow={session?.view.mode === "chapter" ? copy.eyebrowChapter : copy.eyebrowRecommended} title={copy.title} summary={copy.summary} back={{ to: "/", label: copy.backLabel }}>
     {bootstrap.loading ? <PageStatePanel page="diagnostic" state="loading" /> : null}
     {!bootstrap.loading && error ? <PageStatePanel page="diagnostic" state={state!} code={isApiError(error) ? error.code : error.message} onRetry={() => { setActionError(undefined); void bootstrap.reload(); }} /> : null}
     {!bootstrap.loading && error === undefined && session === undefined ? <PageStatePanel page="diagnostic" state="empty" /> : null}
-    {!bootstrap.loading && error === undefined && session !== undefined ? <div className="diagnostic-layout" data-page="diagnostic">
-      <section className="work-section question-section" aria-labelledby="question-heading">
-        {session.view.mode === "chapter" ? <><p className="section-kicker">背景问卷</p><h2 id="question-heading">章节模式不生成诊断证据</h2><dl className="metric-list"><div><dt>Python经验</dt><dd>{session.diagnosticDraft?.background?.python_experience}</dd></div><div><dt>Pandas经验</dt><dd>{session.diagnosticDraft?.background?.pandas_experience}</dd></div><div><dt>讲解偏好</dt><dd>{session.diagnosticDraft?.background?.explanation_preference}</dd></div></dl><div className="section-footer"><button type="button" className="button secondary" onClick={() => navigate("/")}>返回修改问卷</button><button type="button" className="button primary" disabled={busy} onClick={() => void completeDiagnostic()}>完成问卷并生成路径</button></div></> : session.view.stage === "path" ? <><p className="section-kicker">诊断完成 · 跳过资格确认</p><h2 id="question-heading">选择需要跳过的教学章节</h2><p>同时答对“概念理解”和“代码/应用辨析”的模块可以跳过。默认继续学习；选择跳过只省略对应章节教学和普通练习，最终综合实操仍然保留。</p>{session.path === undefined ? <fieldset className="answer-list"><legend className="sr-only">可选择跳过的章节</legend>{diagnosticSkipOptions.length === 0 ? <p className="notice-line">本次没有模块同时通过两类客观诊断证据，系统将保留全部章节。</p> : diagnosticSkipOptions.map((state) => <label className="answer-option" key={state.knowledgePointId}><input type="checkbox" checked={diagnosticSkipIds.has(state.knowledgePointId)} onChange={(event) => setDiagnosticSkipIds((current) => { const next = new Set(current); if (event.target.checked) next.add(state.knowledgePointId); else next.delete(state.knowledgePointId); return next; })} /><span className="option-copy"><strong>{knowledgePointLabel(state.knowledgePointId)}</strong><small>两类客观诊断证据均通过，可选择跳过</small></span></label>)}</fieldset> : <p className="notice-line">路径已经生成，可以返回路径页继续确认。</p>}<div className="section-footer"><span className="quiet-label">已选择跳过 {diagnosticSkipIds.size} 个章节</span>{session.path === undefined ? <button type="button" className="button primary" disabled={busy} onClick={() => { setBusy(true); setActionError(undefined); void buildPath([...diagnosticSkipIds]).catch((error) => setActionError(error instanceof Error ? error : new Error("path_build_failed"))).finally(() => setBusy(false)); }}>按选择生成学习路径</button> : <button type="button" className="button primary" onClick={() => navigate(`/path/${sessionId}`)}>返回学习路径</button>}</div></> : question === undefined ? <><p className="section-kicker">诊断题已处理</p><h2 id="question-heading">请确认答案后生成学习画像</h2><p>你可以返回上一题检查或修改，系统只会采用每道题最后保存的答案。</p><div className="section-footer"><button type="button" className="button secondary" disabled={busy || questions.length === 0} onClick={() => setQuestionIndex(Math.max(0, questions.length - 1))}>← 返回上一题</button><button type="button" className="button primary" disabled={busy} onClick={() => void completeDiagnostic()}>完成诊断并选择学习章节</button></div></> : <><div className="progress-track" aria-label={`已保存诊断进度 ${answeredCount}/${questions.length}`}><span style={{ width: `${diagnosticProgressPercent}%` }} /></div><p className="section-kicker">第 {questionIndex + 1} 题 / 共 {questions.length} 题 · {question.evidenceForm === "code_reasoning" ? "代码/应用辨析" : "概念理解"} · {processed.includes(question.questionId) ? "已保存，可修改" : "尚未保存"}</p><h2 id="question-heading">{question.prompt}</h2><fieldset className="answer-list"><legend className="sr-only">请选择答案</legend>{question.kind === "judgment" ? [true, false].map((value) => <label className="answer-option" key={String(value)}><input type="radio" name="diagnostic-answer" checked={answer === value} onChange={() => setAnswer(value)} /><span>{value ? "正确" : "错误"}</span></label>) : question.options?.map((option, index) => <label className="answer-option" key={option}><input type="radio" name="diagnostic-answer" checked={answer === option} onChange={() => setAnswer(option)} /><span className="option-key">{String.fromCharCode(65 + index)}</span><span className="option-copy">{option}</span></label>)}</fieldset><div className="section-footer diagnostic-actions"><button type="button" className="button secondary" disabled={busy || questionIndex === 0} onClick={() => setQuestionIndex((current) => Math.max(0, current - 1))}>← 上一题</button><div className="button-row"><button type="button" className="button text-button" disabled={busy} onClick={() => void submitQuestion(question, true)}>跳过本题</button>{processed.includes(question.questionId) && answer === savedAnswer?.submittedAnswer ? <button type="button" className="button primary" disabled={busy} onClick={() => setQuestionIndex((current) => Math.min(questions.length, current + 1))}>下一题 →</button> : <button type="button" className="button primary" disabled={busy || answer === undefined} onClick={() => void submitQuestion(question, false)}>{processed.includes(question.questionId) ? "保存修改并继续" : "保存并继续"}</button>}</div></div></>}
+    {!bootstrap.loading && error === undefined && session !== undefined ? <div className="diagnostic-page" data-page="diagnostic">
+      <section className="diagnostic-orientation" aria-labelledby="diagnostic-orientation-title">
+        <h2 id="diagnostic-orientation-title" className="diagnostic-orientation-title">{copy.orientation.title}</h2>
+        <p>{copy.orientation.body}</p>
       </section>
-      <aside className="work-section evidence-summary"><p className="section-kicker">SERVER SNAPSHOT</p><h2>恢复状态</h2><dl className="metric-list"><div><dt>会话版本</dt><dd>{session.view.sessionVersion}</dd></div><div><dt>草稿版本</dt><dd>{session.diagnosticDraftVersion}</dd></div><div><dt>已处理题目</dt><dd>{processed.length}</dd></div></dl><p className="notice-line">刷新后重新读取 Bootstrap，不依赖浏览器内存恢复。</p></aside>
+      {session.view.mode === "chapter" ? <section className="diagnostic-task" aria-labelledby="diagnostic-task-heading">
+        <p className="diagnostic-kicker">{copy.chapter.sectionKicker}</p>
+        <h2 id="diagnostic-task-heading">{copy.chapter.title}</h2>
+        <p className="diagnostic-lead">{copy.chapter.lead}</p>
+        <details className="diagnostic-info">
+          <summary>{copy.chapter.infoSummary}</summary>
+          <div className="diagnostic-info-body">
+            <p>{copy.chapter.infoIntro}</p>
+            <dl className="diagnostic-facts">
+              <div><dt>{copy.chapter.pythonLabel}</dt><dd>{experienceLabel(session.diagnosticDraft?.background?.python_experience)}</dd></div>
+              <div><dt>{copy.chapter.pandasLabel}</dt><dd>{experienceLabel(session.diagnosticDraft?.background?.pandas_experience)}</dd></div>
+              <div><dt>{copy.chapter.explanationLabel}</dt><dd>{explanationPreferenceLabel(session.diagnosticDraft?.background?.explanation_preference)}</dd></div>
+            </dl>
+          </div>
+        </details>
+        <div className="diagnostic-actions">
+          <button type="button" className="diagnostic-btn diagnostic-btn--secondary" onClick={() => navigate("/")}>{copy.chapter.secondary}</button>
+          <button type="button" className="diagnostic-btn diagnostic-btn--primary" disabled={busy} onClick={() => void completeDiagnostic()}>{copy.chapter.primary}</button>
+        </div>
+      </section> : session.view.stage === "path" ? <section className="diagnostic-task" aria-labelledby="diagnostic-task-heading">
+        <p className="diagnostic-kicker">{copy.skip.sectionKicker}</p>
+        <h2 id="diagnostic-task-heading">{copy.skip.title}</h2>
+        <p className="diagnostic-lead">{copy.skip.lead}</p>
+        {session.path === undefined ? <fieldset className="diagnostic-options"><legend className="visually-hidden">{copy.skip.legend}</legend>{diagnosticSkipOptions.length === 0 ? <p className="diagnostic-note">{copy.skip.noneHint}</p> : diagnosticSkipOptions.map((state) => <label className="diagnostic-option" key={state.knowledgePointId}><input type="checkbox" checked={diagnosticSkipIds.has(state.knowledgePointId)} onChange={(event) => setDiagnosticSkipIds((current) => { const next = new Set(current); if (event.target.checked) next.add(state.knowledgePointId); else next.delete(state.knowledgePointId); return next; })} /><span className="diagnostic-option-copy"><strong>{knowledgePointLabel(state.knowledgePointId)}</strong><small>{copy.skip.optionHint}</small></span></label>)}</fieldset> : <p className="diagnostic-note">{copy.skip.alreadyBuilt}</p>}
+        <div className="diagnostic-actions">
+          <span className="diagnostic-quiet">{copy.skip.selectedCount(diagnosticSkipIds.size)}</span>
+          {session.path === undefined ? <button type="button" className="diagnostic-btn diagnostic-btn--primary" disabled={busy} onClick={() => { setBusy(true); setActionError(undefined); void buildPath([...diagnosticSkipIds]).catch((error) => setActionError(error instanceof Error ? error : new Error("path_build_failed"))).finally(() => setBusy(false)); }}>{copy.skip.primary}</button> : <button type="button" className="diagnostic-btn diagnostic-btn--primary" onClick={() => navigate(`/path/${sessionId}`)}>{copy.skip.backToPath}</button>}
+        </div>
+      </section> : question === undefined ? <section className="diagnostic-task" aria-labelledby="diagnostic-task-heading">
+        <p className="diagnostic-kicker">{copy.confirm.sectionKicker}</p>
+        <h2 id="diagnostic-task-heading">{copy.confirm.title}</h2>
+        <p className="diagnostic-lead">{copy.confirm.lead}</p>
+        <div className="diagnostic-actions">
+          <button type="button" className="diagnostic-btn diagnostic-btn--secondary" disabled={busy || questions.length === 0} onClick={() => setQuestionIndex(Math.max(0, questions.length - 1))}>{copy.confirm.secondary}</button>
+          <button type="button" className="diagnostic-btn diagnostic-btn--primary" disabled={busy} onClick={() => void completeDiagnostic()}>{copy.confirm.primary}</button>
+        </div>
+      </section> : <section className="diagnostic-task" aria-labelledby="diagnostic-task-heading">
+        <div className="diagnostic-progress">
+          <div className="progress-track" aria-label={copy.answer.progressAria(answeredCount, questions.length)}><span style={{ width: `${diagnosticProgressPercent}%` }} /></div>
+          <p className="diagnostic-counter">{copy.answer.counter(questionIndex + 1, questions.length)} · {question.evidenceForm === "code_reasoning" ? copy.answer.codeEvidence : copy.answer.conceptEvidence} · {processed.includes(question.questionId) ? copy.answer.savedEditable : copy.answer.notSaved}</p>
+        </div>
+        <h2 id="diagnostic-task-heading">{question.prompt}</h2>
+        <fieldset className="diagnostic-options"><legend className="visually-hidden">{copy.answer.legend}</legend>{question.kind === "judgment" ? [true, false].map((value) => <label className="diagnostic-option" key={String(value)}><input type="radio" name="diagnostic-answer" checked={answer === value} onChange={() => setAnswer(value)} /><span>{value ? copy.answer.judgmentTrue : copy.answer.judgmentFalse}</span></label>) : question.options?.map((option, index) => <label className="diagnostic-option" key={option}><input type="radio" name="diagnostic-answer" checked={answer === option} onChange={() => setAnswer(option)} /><span className="diagnostic-option-key">{String.fromCharCode(65 + index)}</span><span className="diagnostic-option-copy">{option}</span></label>)}</fieldset>
+        <div className="diagnostic-actions">
+          <button type="button" className="diagnostic-btn diagnostic-btn--secondary" disabled={busy || questionIndex === 0} onClick={() => setQuestionIndex((current) => Math.max(0, current - 1))}>{copy.answer.prev}</button>
+          <div className="diagnostic-actions-row">
+            <button type="button" className="diagnostic-btn diagnostic-btn--text" disabled={busy} onClick={() => void submitQuestion(question, true)}>{copy.answer.skip}</button>
+            {processed.includes(question.questionId) && answer === savedAnswer?.submittedAnswer ? <button type="button" className="diagnostic-btn diagnostic-btn--primary" disabled={busy} onClick={() => setQuestionIndex((current) => Math.min(questions.length, current + 1))}>{copy.answer.next}</button> : <button type="button" className="diagnostic-btn diagnostic-btn--primary" disabled={busy || answer === undefined} onClick={() => void submitQuestion(question, false)}>{processed.includes(question.questionId) ? copy.answer.saveEdit : copy.answer.save}</button>}
+          </div>
+        </div>
+      </section>}
     </div> : null}
   </PageFrame>;
 }

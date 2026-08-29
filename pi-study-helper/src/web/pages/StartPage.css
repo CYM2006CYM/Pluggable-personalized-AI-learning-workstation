@@ -1,0 +1,388 @@
+/*
+ * StartPage(学习入口页)样式 —— 米色纸感视觉体系。
+ *
+ * 全部颜色、字号、间距、圆角、阴影都从 design/tokens.css 取,
+ * 本文件不出现任何硬编码色值与字号。间距走 --space-*,字阶走 --fs-*。
+ * 唯一的例外是折叠箭头的三角图案尺寸,属于不可避免的图案维度,与
+ * StudyStepper 的格栅(3px/5px)、箭头(3px/4px)同类。
+ *
+ * 分区分工(三类卡片):
+ * - .start-task:任务卡(会话设置),全页唯一主操作卡,白卡 + 阴影 + 唯一主按钮。
+ * - .info-card:信息卡(当前教材),浅米色次级卡,默认折叠(<details> 不带 open)。
+ * - .resume-item:可恢复会话,同一组并列卡,样式一致。
+ */
+
+.start-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  width: min(var(--read-width), 100%);
+  margin: 0 auto;
+}
+
+/* ---------- 任务卡(会话设置):主操作 ---------- */
+
+.start-task {
+  margin: 0;
+  padding: var(--space-6);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+  box-shadow: var(--shadow-2);
+}
+
+.task-heading {
+  margin-bottom: var(--space-5);
+}
+
+.task-kicker {
+  margin: 0 0 var(--space-1);
+  color: var(--accent);
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--ls-wide);
+  line-height: var(--lh-caption);
+}
+
+.task-title {
+  margin: 0 0 var(--space-2);
+  color: var(--text);
+  font-family: var(--font-serif);
+  font-size: var(--fs-h2);
+  line-height: var(--lh-h2);
+}
+
+.task-lede {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: var(--fs-ui);
+  line-height: var(--lh-ui);
+}
+
+.start-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.start-field {
+  display: grid;
+  gap: var(--space-2);
+  align-content: start;
+  color: var(--text);
+  font-size: var(--fs-ui);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-ui);
+}
+
+.start-select {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  color: var(--text);
+  font-family: inherit;
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+}
+
+.start-select:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.start-mode-field {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-md);
+}
+
+.start-mode-field legend {
+  padding: 0 var(--space-1);
+  color: var(--text);
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-caption);
+}
+
+.start-choice-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--space-6);
+  color: var(--text);
+  font-size: var(--fs-ui);
+  line-height: var(--lh-ui);
+}
+
+.start-time-note {
+  display: grid;
+  gap: var(--space-1);
+  align-content: center;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--card-soft);
+}
+
+.start-time-note strong {
+  color: var(--text);
+  font-size: var(--fs-ui);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-ui);
+}
+
+.start-time-note span {
+  color: var(--text-soft);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+}
+
+.task-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  margin-top: var(--space-5);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--rule);
+}
+
+.task-footer-note {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+}
+
+.cta-start {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  padding: var(--space-3) var(--space-5);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: var(--accent);
+  color: var(--paper);
+  font-family: inherit;
+  font-size: var(--fs-body);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-body);
+  cursor: pointer;
+  transition: filter var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
+}
+
+.cta-start:hover:not(:disabled) {
+  filter: brightness(0.94);
+}
+
+.cta-start:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.cta-start:disabled {
+  background: var(--card-soft);
+  color: var(--text-soft);
+  cursor: not-allowed;
+}
+
+/* ---------- 信息卡(当前教材):次级、默认折叠 ---------- */
+
+.info-card {
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  background: var(--card-soft);
+}
+
+.info-card summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  list-style: none;
+  cursor: pointer;
+}
+
+.info-card summary::-webkit-details-marker {
+  display: none;
+}
+
+.info-card-title {
+  color: var(--text);
+  font-size: var(--fs-ui);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-ui);
+}
+
+.info-card-facts {
+  min-width: 0;
+  margin-left: auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-soft);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+}
+
+.info-card-chevron {
+  flex: 0 0 auto;
+  width: 0;
+  height: 0;
+  border-left: 4px solid currentColor;
+  border-top: 3px solid transparent;
+  border-bottom: 3px solid transparent;
+  color: var(--text-soft);
+  transition: transform var(--dur-fast) var(--ease);
+}
+
+.info-card[open] .info-card-chevron {
+  transform: rotate(90deg);
+}
+
+.info-card-body {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: var(--space-1) var(--space-5) var(--space-5);
+}
+
+.info-card-body > div {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.info-card-body dt {
+  color: var(--text-soft);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+}
+
+.info-card-body dd {
+  margin: 0;
+  color: var(--text);
+  font-size: var(--fs-ui);
+  line-height: var(--lh-ui);
+}
+
+/* ---------- 可恢复会话:同一组并列卡 ---------- */
+
+.resume-group {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.resume-group-heading {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.resume-heading {
+  margin: 0;
+  color: var(--text);
+  font-family: var(--font-serif);
+  font-size: var(--fs-h3);
+  line-height: var(--lh-h3);
+}
+
+.resume-lede {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+}
+
+.resume-list {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.resume-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-md);
+  background: var(--card);
+  box-shadow: var(--shadow-1);
+}
+
+.resume-item-main {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.resume-item-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0;
+  color: var(--text);
+  font-size: var(--fs-ui);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-ui);
+}
+
+.resume-stage {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-caption);
+}
+
+.resume-item-meta {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+}
+
+.resume-cta {
+  flex: 0 0 auto;
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  color: var(--accent);
+  font-family: inherit;
+  font-size: var(--fs-ui);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-ui);
+  cursor: pointer;
+  transition: border-color var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease);
+}
+
+.resume-cta:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.resume-cta:disabled {
+  color: var(--text-soft);
+  cursor: not-allowed;
+}
+
+/* ---------- 减少动效 ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .cta-start,
+  .info-card-chevron,
+  .resume-cta {
+    transition: none;
+  }
+}

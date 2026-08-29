@@ -72,7 +72,19 @@ h3 {
 .app-shell {
   min-height: 100vh;
   display: grid;
-  grid-template-columns: 232px minmax(0, 1fr);
+  grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
+  transition: grid-template-columns var(--dur-base) var(--ease);
+}
+
+/* 收起后侧栏只剩一列圆点：宽度、文字一起收，动线结构不丢。 */
+.app-shell[data-sidebar="collapsed"] {
+  grid-template-columns: var(--sidebar-w-collapsed) minmax(0, 1fr);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-shell {
+    transition: none;
+  }
 }
 
 .app-sidebar {
@@ -83,30 +95,19 @@ h3 {
   display: flex;
   flex-direction: column;
   padding: 22px 14px 18px;
-  color: #f6faf7;
-  background: var(--sidebar);
-  border-right: 1px solid #34413c;
+  color: var(--text);
+  background: var(--card-soft);
+  border-right: 1px solid var(--rule);
 }
 
 .brand-block {
   display: flex;
-  align-items: center;
-  gap: 11px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
   min-height: 46px;
   padding: 0 8px 18px;
-  border-bottom: 1px solid #3a4742;
-}
-
-.brand-mark {
-  width: 34px;
-  height: 34px;
-  display: grid;
-  place-items: center;
-  flex: 0 0 auto;
-  border: 1px solid #769186;
-  border-radius: 4px;
-  color: #d9f3e7;
-  font-weight: 800;
+  border-bottom: 1px solid var(--rule);
 }
 
 .brand-block strong,
@@ -116,69 +117,84 @@ h3 {
 
 .brand-block strong {
   font-size: 14px;
+  color: var(--text);
 }
 
-.brand-block div > span {
-  margin-top: 3px;
-  color: #aebdb7;
+.brand-block > span {
+  color: var(--text-soft);
   font-size: 11px;
 }
 
-.primary-nav {
+/* 步骤条容器。旧导航（primary-nav / nav-link / nav-index / session-identity）
+   已随 Stepper 接入下线，相关样式一并移除。 */
+.sidebar-flow {
   min-width: 0;
-  display: grid;
-  gap: 4px;
-  padding: 18px 0;
+  flex: 1 1 auto;
+  padding: var(--space-4) 0;
+  overflow-y: auto;
 }
 
-.nav-link {
-  min-height: 42px;
-  display: grid;
-  grid-template-columns: 34px 1fr;
+/* ---------- 侧栏折叠 ---------- */
+
+.sidebar-toggle {
+  display: flex;
   align-items: center;
-  padding: 0 10px;
+  gap: var(--space-2);
+  width: 100%;
+  margin: 0;
+  padding: var(--space-2);
   border: 1px solid transparent;
-  border-radius: 5px;
-  color: #c2cec9;
-  text-decoration: none;
-  font-size: 14px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-soft);
+  font: inherit;
+  font-size: var(--fs-caption);
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
 }
 
-.nav-link:hover {
-  background: #273631;
-  color: #ffffff;
+.sidebar-toggle:hover {
+  background: var(--card);
+  color: var(--text);
 }
 
-.nav-link.active {
-  border-color: #45675b;
-  color: #ffffff;
-  background: #304b41;
+.sidebar-toggle-icon {
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+  border-left: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg) translate(1px, -1px); /* 指向「收起」方向 */
+  transition: transform var(--dur-fast) var(--ease);
 }
 
-.nav-index {
-  color: #81948d;
-  font-size: 11px;
-  font-variant-numeric: tabular-nums;
+.app-shell[data-sidebar="collapsed"] .sidebar-toggle-icon {
+  transform: rotate(-135deg) translate(1px, -1px); /* 反过来指向「展开」 */
 }
 
-.nav-link.active .nav-index {
-  color: #9fe0c5;
+/* 收起态：品牌名、环节名、按钮文字全部让位，圆点和连线保留。 */
+.app-shell[data-sidebar="collapsed"] .brand-block > strong,
+.app-shell[data-sidebar="collapsed"] .brand-block > span,
+.app-shell[data-sidebar="collapsed"] .sidebar-toggle-text,
+.app-shell[data-sidebar="collapsed"] .sidebar-flow .stepper-label {
+  display: none;
 }
 
-.session-identity {
-  display: grid;
-  gap: 5px;
-  margin-top: auto;
-  padding: 14px 8px 0;
-  border-top: 1px solid #3a4742;
-  color: #aebdb7;
-  font-size: 11px;
+.app-shell[data-sidebar="collapsed"] .brand-block {
+  justify-content: center;
+  padding: 0 0 var(--space-4);
 }
 
-.session-identity code {
-  overflow: hidden;
-  color: #ecf5f1;
-  text-overflow: ellipsis;
+.app-shell[data-sidebar="collapsed"] .sidebar-toggle {
+  justify-content: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar-toggle,
+  .sidebar-toggle-icon {
+    transition: none;
+  }
 }
 
 /* The agent pipeline is a process surface, not a stack of decorative cards. */
@@ -736,6 +752,33 @@ h3 {
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+/* 主流程之外的辅助导航。「案例」是展示材料，不进学习动线。 */
+.topbar-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-left: auto;
+}
+
+.topbar-nav a {
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--text-soft);
+  font-size: var(--fs-ui);
+  text-decoration: none;
+}
+
+.topbar-nav a:hover {
+  background: var(--card-soft);
+  color: var(--text);
+}
+
+.topbar-nav a.active {
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .topbar-label {
@@ -1376,104 +1419,10 @@ h3 {
 
 .learn-layout {
   display: grid;
-  grid-template-columns: 225px minmax(0, 1fr);
+  /* 目录侧栏已下线，功能并入左侧 Stepper；正文独占整行以保证阅读宽度 */
+  grid-template-columns: minmax(0, 1fr);
   gap: 20px;
   align-items: start;
-}
-
-.path-rail {
-  min-width: 0;
-  max-width: 100%;
-  min-height: 540px;
-  padding: 18px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: #26332e;
-  color: #ffffff;
-}
-
-.path-rail-toggle {
-  display: none;
-}
-
-.path-rail-nodes {
-  display: grid;
-}
-
-.path-rail .section-kicker {
-  color: #91d8ba;
-}
-
-.rail-node {
-  width: 100%;
-  min-height: 68px;
-  display: grid;
-  grid-template-columns: 30px 1fr;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 4px;
-  border-bottom: 1px solid #3d4a45;
-  color: #b9c7c1;
-  border-top: 0;
-  border-right: 0;
-  border-left: 0;
-  background: transparent;
-  text-align: left;
-  cursor: pointer;
-}
-
-.rail-node:disabled {
-  cursor: not-allowed;
-  opacity: 0.58;
-}
-
-.rail-node-index {
-  width: 25px;
-  height: 25px;
-  display: grid;
-  place-items: center;
-  border: 1px solid #65766f;
-  border-radius: 50%;
-  font-size: 11px;
-}
-
-.rail-node-copy {
-  min-width: 0;
-  width: auto;
-  height: auto;
-  display: block;
-}
-
-.rail-node strong,
-.rail-node small {
-  display: block;
-  overflow-wrap: break-word;
-  word-break: normal;
-}
-
-.rail-node strong {
-  line-height: 1.45;
-}
-
-.rail-node strong {
-  font-size: 12px;
-}
-
-.rail-node small {
-  margin-top: 4px;
-  color: #8ea198;
-  font-size: 10px;
-}
-
-.rail-node.current {
-  color: #ffffff;
-  background: #31413a;
-}
-
-.rail-node.current > .rail-node-index {
-  border-color: #85d3b2;
-  color: #0e3d2e;
-  background: #85d3b2;
 }
 
 .learning-content {
@@ -2851,20 +2800,6 @@ h3 {
     padding-bottom: 12px;
   }
 
-  .primary-nav {
-    grid-template-columns: repeat(7, minmax(92px, 1fr));
-    overflow-x: auto;
-    padding: 10px 0 0;
-  }
-
-  .nav-link {
-    grid-template-columns: 24px 1fr;
-  }
-
-  .session-identity {
-    display: none;
-  }
-
   .topbar {
     position: static;
   }
@@ -2879,53 +2814,8 @@ h3 {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .path-rail,
   .activity-brief {
     min-height: auto;
-  }
-
-  .path-rail {
-    display: block;
-    padding: 12px 14px;
-    overflow: visible;
-  }
-
-  .path-rail .section-kicker {
-    margin: 10px 0 4px;
-  }
-
-  .path-rail-toggle {
-    width: 100%;
-    min-height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0;
-    border: 0;
-    color: #ffffff;
-    background: transparent;
-    cursor: pointer;
-    font-weight: 800;
-  }
-
-  .path-rail-toggle span {
-    color: #91d8ba;
-    font-size: 12px;
-  }
-
-  .path-rail-nodes {
-    display: none;
-    margin-top: 6px;
-  }
-
-  .path-rail.open .path-rail-nodes {
-    display: grid;
-  }
-
-  .rail-node {
-    border: 1px solid #3d4a45;
-    border-radius: 4px;
-    padding: 8px;
   }
 
   .recommendation-section,

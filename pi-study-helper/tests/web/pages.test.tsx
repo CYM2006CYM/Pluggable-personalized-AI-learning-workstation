@@ -22,6 +22,7 @@ import {
   replan,
   savedCode,
 } from "./fixtures/w4-api.js";
+import { reasonLabel } from "../../src/web/copy/path-page-copy.js";
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 let root: Root | undefined;
@@ -116,7 +117,7 @@ describe("W4 real API pages", () => {
     expect(host.textContent).toContain("系统推荐");
     expect(host.textContent).toContain("按章节学习");
     expect(host.querySelectorAll("select")).toHaveLength(5);
-    expect(host.textContent).toContain("学习时长由系统计算");
+    expect(host.textContent).toContain("时长由系统估算");
     expect(host.querySelector('select[aria-label="可用时间"]')).toBeNull();
     expect(Array.from(host.querySelectorAll('select[aria-label="讲解偏好"] option')).map((option) => option.textContent))
       .toEqual(["逐步讲解", "重点速览", "案例优先"]);
@@ -133,8 +134,8 @@ describe("W4 real API pages", () => {
     const { host } = await renderRoute("/", fetchMock);
     await selectValue(host.querySelector('select[aria-label="学习资料包"]')!, "python-core");
     expect(host.textContent).toContain("Python Core");
-    expect(host.textContent).toContain("Revision 8");
-    expect(host.textContent).toContain("reading / quiz");
+    expect(host.textContent).not.toContain("Revision");
+    expect(host.textContent).toContain("阅读理解 / 客观练习");
     await click(button(host, "开始学习"));
     expect(bodyAt(fetchMock, 1)).toMatchObject({ subjectId: "python-core" });
   });
@@ -145,7 +146,7 @@ describe("W4 real API pages", () => {
     payload.diagnostic.questions[0]!.evidenceForm = "selected_response";
     const { host } = await renderRoute("/diagnostic/session-w4", vi.fn().mockResolvedValue(ok(payload)));
     expect(host.textContent).toContain("哪个表达式创建列表");
-    expect(host.textContent).toContain("草稿 v1");
+    expect(host.textContent).not.toContain("草稿 v");
     expect(host.textContent).toContain("概念理解");
   });
 
@@ -238,7 +239,7 @@ describe("W4 real API pages", () => {
       ],
     };
     const { host } = await renderRoute("/path/session-w4", vi.fn().mockResolvedValue(ok(bootstrap(session))));
-    const statuses = [...host.querySelectorAll(".path-node .path-node-meta strong")].map((item) => item.textContent);
+    const statuses = [...host.querySelectorAll(".path-evidence-node .path-status-badge")].map((item) => item.textContent);
     expect(statuses).toEqual(["可以开始", "已跳过", "等待先修", "等待先修"]);
   });
 
@@ -530,7 +531,6 @@ describe("W4 real API pages", () => {
       .mockResolvedValueOnce(ok(nextStep))
       .mockResolvedValueOnce(ok(openedQuiz));
     const { host } = await renderRoute("/activity/session-w4/act-basic", fetchMock);
-    expect(host.textContent).toContain("attempt-1");
     const prompts: Array<string | null> = [];
     for (let index = 0; index < 4; index += 1) {
       prompts.push(host.querySelector(".quiz-question h2")?.textContent ?? null);
@@ -561,7 +561,6 @@ describe("W4 real API pages", () => {
 
     const { host } = await renderRoute("/activity/session-w4/act-basic", fetchMock);
 
-    expect(host.textContent).toContain("attempt-1");
     expect(String(fetchMock.mock.calls[1]?.[0])).toContain("nodeId=node-basic");
     expect(bodyAt(fetchMock, 2)).toMatchObject({ relearn: true });
   });
@@ -589,7 +588,6 @@ describe("W4 real API pages", () => {
 
     const { host } = await renderRoute("/activity/session-w4/act-basic", fetchMock);
 
-    expect(host.textContent).toContain("attempt-1");
     expect(String(fetchMock.mock.calls[1]?.[0])).toContain("nodeId=node-basic");
     expect(bodyAt(fetchMock, 2)).toMatchObject({ relearn: true });
   });
@@ -657,7 +655,7 @@ describe("W4 real API pages", () => {
     expect(host.textContent).toContain("等待重做 / 证据不足");
     await click(button(host, "修改并重新评测"));
     expect(router.state.location.pathname).toBe("/activity/session-w4/act-basic");
-    expect(host.textContent).toContain("attempt-2");
+    expect(host.querySelectorAll(".quiz-question")).toHaveLength(1);
     expect(fetchMock.mock.calls.some((call) => String(call[0]).includes("/activities/act-basic/open"))).toBe(true);
   });
 
@@ -814,8 +812,8 @@ describe("W4 real API pages", () => {
       }],
     };
     const { host } = await renderRoute("/path/session-w4", vi.fn().mockResolvedValue(ok(bootstrap(recovery({ stage: "path" })))), state);
-    expect(host.textContent).toContain("能力画像修订4");
-    expect(host.textContent).toContain("Python基础准备未验证 · 尚未验证");
+    expect(host.textContent).not.toContain("能力画像修订");
+    expect(host.textContent).toContain("Python基础准备尚未验证 · 尚未验证");
     expect(host.textContent).not.toContain("Python基础准备0.00");
   });
 
@@ -849,7 +847,7 @@ describe("W4 real API pages", () => {
       .mockResolvedValueOnce(ok(savedCode));
     const { host } = await renderRoute("/activity/session-w4/act-code", fetchMock);
     expect((host.querySelector("textarea") as HTMLTextAreaElement).value).toBe("print('edited draft')");
-    expect(host.textContent).toContain("attempt-code-1");
+    expect(fetchMock.mock.calls.some((call) => String(call[0]).includes("/activities/act-code/open"))).toBe(true);
     expect(fetchMock.mock.calls.map((call) => String(call[0]))).toContain("/api/activities/act-code/recover");
   });
 
@@ -920,7 +918,7 @@ describe("W4 real API pages", () => {
     expect(host.textContent).toContain(output.changed ? "路径变化是" : "路径变化否");
     expect(host.textContent).toContain(output.fallbackToPrevious ? "沿用旧路径是" : "沿用旧路径否");
     expect(bodyAt(fetchMock, 1)).toMatchObject({ evidenceVersion: 7, pathVersion: 1, trigger: "user_constraint_changed" });
-    for (const reason of output.changeReasons) expect(host.textContent).toContain(reason);
+    for (const reason of output.changeReasons) expect(host.textContent).toContain(reasonLabel(reason));
   });
 
   it("shows replan conflicts and disables replan after a refresh without evidenceVersion", async () => {
@@ -1107,7 +1105,7 @@ describe("W4 real API pages", () => {
     const reviewText = host.querySelector(".answer-review")?.textContent ?? "";
     expect(reviewText.indexOf("列表字面量？")).toBeLessThan(reviewText.indexOf("正确答案："));
     await click(button(host, "使用新题组重试"));
-    expect(host.textContent).toContain("attempt-2");
+    expect(host.querySelectorAll(".quiz-question")).toHaveLength(1);
     expect(String(fetchMock.mock.calls[5]?.[0])).toBe("/api/activities/act-basic/open");
   });
 
@@ -1136,7 +1134,7 @@ describe("W4 real API pages", () => {
     expect(host.querySelector('.async-action-status[role="status"]')?.textContent).toContain("正在生成并审核新题组（已处理 0 秒）");
     await act(async () => { resolveRetry?.(ok(retryQuiz)); });
     await settle();
-    expect(host.textContent).toContain("attempt-2");
+    expect(host.querySelectorAll(".quiz-question")).toHaveLength(1);
   });
 
   it("shows the eight-station live pipeline before the pending quiz-open request completes", async () => {
@@ -1242,7 +1240,7 @@ describe("W4 real API pages", () => {
 
     await act(async () => { resolveRetry?.(ok(retryQuiz)); });
     await settle();
-    expect(host.textContent).toContain("attempt-2");
+    expect(host.querySelectorAll(".quiz-question")).toHaveLength(1);
   });
 
   it("offers retry or explicit gap continuation after the second unresolved quiz", async () => {
