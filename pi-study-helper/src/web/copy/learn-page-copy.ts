@@ -111,6 +111,31 @@ export const LEARN_PAGE_COPY = {
   mistakeHeading: "常见误区",
 } as const;
 
+/* ---------- AI 工作台收纳条 ----------
+ *
+ * 流水线是比赛的核心证据,但它是「机房」,不该压过正文。
+ * 默认收纳成一条状态带,展开后仍是完整的八工位工作台;
+ * 运行失败时自动展开,保证随时可查。
+ */
+export const PIPELINE_DRAWER = {
+  title: "AI 学习资源流水线",
+  view: "查看工作台",
+  collapse: "收起工作台",
+  toggleAria: "展开或收起 AI 学习资源流水线工作台",
+} as const;
+
+/** 任务卡上的「本节位置」:一排小圆点 + 节次文案,与侧栏大动线同一套视觉语言。 */
+export function lessonPositionAriaLabel(
+  index: number | undefined,
+  total: number,
+  lessonName: string | undefined,
+): string {
+  const counter = index === undefined ? `共 ${total} 节` : `第 ${index} 节，共 ${total} 节`;
+  return lessonName === undefined
+    ? `本节位置：${counter}`
+    : `本节位置：${counter}，本节是${lessonName}`;
+}
+
 /**
  * 正文动线各站点的动作短语。
  *

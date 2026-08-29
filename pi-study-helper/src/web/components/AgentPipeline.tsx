@@ -18,7 +18,6 @@ const ROLE_COPY: Record<AgentStageRole, { index: string; label: string; shortLab
   publish: { index: "08", label: "发布题组或固定保障", shortLabel: "发布" },
 };
 
-type PipelineResourceKind = "quiz" | "tip";
 const STALE_RUNNING_RUN_AFTER_MS = 120_000;
 
 function roleCopy(role: AgentStageRole, resourceKind: PipelineResourceKind) {
@@ -92,6 +91,45 @@ export interface AgentPipelineProps {
   resourceKind?: PipelineResourceKind;
   initiallyExpanded?: boolean;
   onExport?: () => Promise<void> | void;
+}
+
+export type PipelineResourceKind = "quiz" | "tip";
+
+export interface AgentPipelineSummary {
+  state: "discovering" | "running" | "succeeded" | "fallback" | "failed" | "timeout";
+  /** 收纳态状态条的一行式文字。 */
+  text: string;
+}
+
+/**
+ * 流水线被收纳成一条状态带时,用它给状态条供数。
+ * 刻意不输出逐秒计时——展开后的工作台自带秒级计时,
+ * 状态条只表达「到哪一步了」,不与工作台抢戏。
+ */
+export function agentPipelineSummary(
+  run: SafeAgentRunView | undefined,
+  resourceKind: PipelineResourceKind,
+  discoveringText: string | undefined,
+): AgentPipelineSummary {
+  if (run === undefined) {
+    return {
+      state: "discovering",
+      text: discoveringText === undefined || discoveringText === "" ? "正在登记运行" : discoveringText,
+    };
+  }
+  const stale = run.status === "running" && Number.isFinite(Date.parse(run.startedAt))
+    && Date.now() - Date.parse(run.startedAt) >= STALE_RUNNING_RUN_AFTER_MS;
+  if (stale) return { state: "timeout", text: "已超时，已停止等待" };
+  if (run.status === "running") {
+    return { state: "running", text: `运行中 · 当前工位：${roleCopy(run.currentStage, resourceKind).label}` };
+  }
+  if (run.status === "succeeded") {
+    return { state: "succeeded", text: `已完成发布 · ${originLabel(run.resultOrigin, resourceKind)}` };
+  }
+  if (run.status === "fallback") {
+    return { state: "fallback", text: originLabel(run.resultOrigin, resourceKind) };
+  }
+  return { state: "failed", text: "已停止 · 展开可查看各工位记录" };
 }
 
 export function AgentPipelineDiscovery({ statusText, resourceKind = "quiz" }: { statusText: string; resourceKind?: PipelineResourceKind }) {

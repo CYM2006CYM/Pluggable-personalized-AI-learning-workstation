@@ -778,6 +778,214 @@
   margin: 0;
 }
 
+/* ---------- 站点语言的延续:任务卡与导学卡的圆点标记 ---------- */
+
+/*
+ * 任务卡、导学卡、AI 工作台各带一枚圆点:实心绿点 = 学习者主线
+ * (目标 → 导学 → 正文),空心灰点 = 机房(流水线)。
+ * 三张卡由此读作同一份简报的三个部分,而不是三张互不相干的卡。
+ */
+
+[data-page="learn"] .kicker-dot {
+  display: inline-block;
+  width: var(--space-2);
+  height: var(--space-2);
+  margin-right: var(--space-2);
+  border: 1px solid var(--accent);
+  border-radius: 50%;
+  background: var(--accent);
+  vertical-align: baseline;
+}
+
+[data-page="learn"] .learn-task {
+  border-left: var(--space-1) solid var(--accent);
+}
+
+/* ---------- 任务卡上的本节位置 ---------- */
+
+[data-page="learn"] .lesson-position {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border: 1px dashed var(--rule);
+  border-radius: var(--radius-sm);
+  background: var(--card-soft);
+}
+
+[data-page="learn"] .lesson-position-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+[data-page="learn"] .lesson-position-dots i {
+  width: var(--space-2);
+  height: var(--space-2);
+  border: 1px solid var(--rule);
+  border-radius: 50%;
+  background: var(--card);
+}
+
+[data-page="learn"] .lesson-position-dots i[data-status="completed"] {
+  border-color: var(--step-completed);
+  background: var(--step-completed);
+}
+
+[data-page="learn"] .lesson-position-dots i[data-status="current"] {
+  border-color: var(--step-current);
+  background: var(--step-current);
+  box-shadow: 0 0 0 2px var(--step-current-bg);
+}
+
+[data-page="learn"] .lesson-position-dots i[data-status="locked"] {
+  border-style: dashed;
+  /* 封锁格栅:3px/5px 是图案尺寸,与侧栏动线一致 */
+  background: var(--card) repeating-linear-gradient(
+    135deg,
+    transparent 0px,
+    transparent 2px,
+    var(--text-soft) 2px,
+    var(--text-soft) 4px
+  );
+}
+
+[data-page="learn"] .lesson-position-dots i[data-status="skipped"] {
+  border-style: dashed;
+  background: var(--card);
+  opacity: 0.75;
+}
+
+[data-page="learn"] .lesson-position-dots i[data-status="teaching-skipped"] {
+  border-color: var(--step-teaching-skipped);
+  background: var(--step-teaching-skipped);
+  opacity: 0.6;
+}
+
+[data-page="learn"] .lesson-position-text {
+  min-width: 0;
+  color: var(--text-soft);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+}
+
+/* ---------- AI 工作台收纳条 ---------- */
+
+/*
+ * 收纳态是一条 44px 上下的状态带:圆点 + 标题 + 一行状态 + 展开入口。
+ * 机房退到背景里,但运行中有呼吸点、失败时自动展开,随时可查。
+ */
+
+[data-page="learn"] .pipeline-drawer {
+  width: min(var(--read-width), 100%);
+  margin-inline: auto;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-md);
+  background: var(--card);
+  box-shadow: var(--shadow-1);
+}
+
+[data-page="learn"] .pipeline-drawer > summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--space-7);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  list-style: none;
+  transition: background var(--dur-fast) var(--ease);
+}
+
+[data-page="learn"] .pipeline-drawer > summary:hover {
+  background: var(--card-soft);
+}
+
+[data-page="learn"] .pipeline-drawer > summary::-webkit-details-marker {
+  display: none;
+}
+
+/* 机房的点是空心的:同一条动线,不同的角色 */
+[data-page="learn"] .kicker-dot.drawer-dot {
+  flex: 0 0 auto;
+  border-color: var(--text-soft);
+  background: transparent;
+}
+
+[data-page="learn"] .pipeline-drawer[data-state="running"] .drawer-dot,
+[data-page="learn"] .pipeline-drawer[data-state="discovering"] .drawer-dot {
+  border-color: var(--accent);
+  background: var(--accent);
+  animation: drawer-breathe 1.6s var(--ease) infinite;
+}
+
+@keyframes drawer-breathe {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+[data-page="learn"] .pipeline-drawer[data-state="failed"] .drawer-dot,
+[data-page="learn"] .pipeline-drawer[data-state="timeout"] .drawer-dot {
+  border-color: var(--warm);
+  background: var(--warm);
+}
+
+[data-page="learn"] .pipeline-drawer-title {
+  flex: 0 0 auto;
+  color: var(--text);
+  font-size: var(--fs-ui);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-ui);
+}
+
+[data-page="learn"] .pipeline-drawer-status {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-soft);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+[data-page="learn"] .pipeline-drawer[data-state="running"] .pipeline-drawer-status,
+[data-page="learn"] .pipeline-drawer[data-state="discovering"] .pipeline-drawer-status {
+  color: var(--accent);
+}
+
+[data-page="learn"] .pipeline-drawer[data-state="failed"] .pipeline-drawer-status,
+[data-page="learn"] .pipeline-drawer[data-state="timeout"] .pipeline-drawer-status {
+  color: var(--warm);
+}
+
+[data-page="learn"] .pipeline-drawer-toggle {
+  flex: 0 0 auto;
+  color: var(--accent);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+}
+
+[data-page="learn"] .pipeline-drawer-body {
+  padding: 0 0 var(--space-4);
+  border-top: 1px dashed var(--rule);
+}
+
+/* 展开态去掉组件自带的外框:工作台住在抽屉里,不再另开一张卡 */
+[data-page="learn"] .pipeline-drawer-body .agent-pipeline {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-page="learn"] .pipeline-drawer[data-state="running"] .drawer-dot,
+  [data-page="learn"] .pipeline-drawer[data-state="discovering"] .drawer-dot {
+    animation: none;
+  }
+}
+
 /* ---------- 窄屏收窄 ---------- */
 
 @media (max-width: 700px) {

@@ -425,11 +425,15 @@ describe("W4 real API pages", () => {
     const content = host.querySelector(".learning-content")!;
     const children = [...content.children];
     const objectiveIndex = children.findIndex((item) => item.classList.contains("lesson-objectives"));
-    const pipelineIndex = children.findIndex((item) => item.classList.contains("agent-pipeline"));
     const tipIndex = children.findIndex((item) => item.classList.contains("lesson-personal-tip"));
+    const drawerIndex = children.findIndex((item) => item.classList.contains("pipeline-drawer"));
     const manualIndex = children.findIndex((item) => item.classList.contains("lesson-manual"));
 
-    expect([objectiveIndex, pipelineIndex, tipIndex, manualIndex]).toEqual([0, 1, 2, 4]);
+    // 学习者优先:目标 → 导学 → 正文;流水线收纳成一条状态带,住在抽屉里。
+    expect([objectiveIndex, tipIndex, drawerIndex, manualIndex]).toEqual([0, 1, 2, 4]);
+    expect(children[drawerIndex]!.querySelector(".agent-pipeline")).not.toBeNull();
+    expect(children[drawerIndex]!.querySelector(".pipeline-drawer-status")?.textContent)
+      .toContain("正在生成并审核个性化提醒");
     expect(host.querySelectorAll(".agent-pipeline")).toHaveLength(1);
     expect(host.querySelector(".lesson-personal-tip-heading strong")?.textContent)
       .toBe("正在生成并审核个性化提醒（已处理 0 秒）");

@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import type {
   LearningCardSafeView,
@@ -15,13 +15,22 @@ import { api, isApiError, newRequestId } from "../api/client.js";
 import { useBootstrap } from "../api/use-bootstrap.js";
 import { PageFrame } from "../components/PageFrame.js";
 import { PageStatePanel } from "../components/PageStatePanel.js";
-import { AgentPipeline, AgentPipelineDiscovery } from "../components/AgentPipeline.js";
+import { AgentPipeline, AgentPipelineDiscovery, agentPipelineSummary } from "../components/AgentPipeline.js";
 import { downloadAgentRunExport } from "../api/agent-run-client.js";
 import { useAsyncActionProgress } from "../hooks/use-async-action-progress.js";
 import { useAgentRun } from "../hooks/use-agent-run.js";
-import { activityKindLabel, contentReadinessLabel } from "../learning-labels.js";
+import { activityKindLabel, contentReadinessLabel, knowledgePointLabel } from "../learning-labels.js";
 import { relearnNodeIdForActivity } from "../relearn-context.js";
-import { AGENT_PIPELINE_STATUS_FALLBACK, LEARN_PAGE_COPY, requestErrorLabel, stationLabel } from "../copy/learn-page-copy.js";
+import { buildFlowContext, buildStudyFlow, type StudyFlowView } from "../flow/study-flow.js";
+import { lessonCounterLabel } from "../copy/ui-copy.js";
+import {
+  AGENT_PIPELINE_STATUS_FALLBACK,
+  LEARN_PAGE_COPY,
+  PIPELINE_DRAWER,
+  lessonPositionAriaLabel,
+  requestErrorLabel,
+  stationLabel,
+} from "../copy/learn-page-copy.js";
 import "./LearnPage.css";
 
 const DEFAULT_OPEN_MODULES: Record<LessonVariantId, readonly LessonModuleId[]> = {
@@ -104,13 +113,35 @@ function PersonalizedLessonGuide({ tip }: { tip: PersonalizedLessonTip }) {
   </div>;
 }
 
+/** 任务卡上的「本节位置」:一排小圆点 + 节次文案,把任务卡、侧栏大动线和正文站点串成同一条线。 */
+function LessonPositionStrip({ flow, activeNodeId }: { flow: StudyFlowView; activeNodeId: string | undefined }) {
+  if (flow.totalLessons === 0) return null;
+  const current = flow.cycles.find((cycle) => cycle.nodeId === activeNodeId);
+  const lessonName = current === undefined ? undefined : knowledgePointLabel(current.knowledgePointId);
+  return <div className="lesson-position" role="img" aria-label={lessonPositionAriaLabel(current?.index, flow.totalLessons, lessonName)}>
+    <span className="lesson-position-dots" aria-hidden="true">
+      {flow.cycles.map((cycle) => <i key={cycle.nodeId} data-status={cycle.status} />)}
+    </span>
+    <span className="lesson-position-text">
+      {current === undefined
+        ? `共 ${flow.totalLessons} 节`
+        : lessonCounterLabel(current.index, flow.totalLessons)}
+      {lessonName === undefined ? null : ` · ${lessonName}`}
+    </span>
+  </div>;
+}
+
 /**
- * 丰富卡片:任务卡(本节目标 + 主操作)→ 八站点流水线 → 个性化课前导学 →
- * 模块控制条 → 正文阅读区 → 折叠信息卡(误区 / 术语依据)。
+ * 丰富卡片:任务卡(本节位置 + 本节目标 + 主操作)→ 个性化课前导学 →
+ * AI 工作台收纳条 → 模块控制条 → 正文站点动线 → 折叠信息卡。
+ * 优先级遵循学习者视角:目标 → 导学 → 正文;流水线是机房,默认收纳、
+ * 随时可查(比赛要求的八工位内部状态一个不少)。
  * 模块开合状态与流水线渲染完全沿用重构前逻辑,只换展示结构与文案。
  */
 function RichLessonView({
   card,
+  flow,
+  activeNodeId,
   pipeline,
   footer,
   tipLoading,
@@ -118,6 +149,8 @@ function RichLessonView({
   onGenerateTip,
 }: {
   card: LearningCardSafeView & { selectedLesson: SelectedLessonSafeView };
+  flow: StudyFlowView;
+  activeNodeId: string | undefined;
   pipeline?: ReactNode;
   footer: ReactNode;
   tipLoading: boolean;
@@ -137,21 +170,21 @@ function RichLessonView({
     <section className="learn-task lesson-objectives" aria-labelledby="learn-task-heading">
       <div className="learn-task-heading">
         <div>
-          <p className="task-kicker">{LEARN_PAGE_COPY.taskKicker}</p>
+          <p className="task-kicker"><span className="kicker-dot" aria-hidden="true" />{LEARN_PAGE_COPY.taskKicker}</p>
           <h2 id="learn-task-heading">{LEARN_PAGE_COPY.taskTitle}</h2>
         </div>
         <span className="status-tag success">{lesson.label}</span>
       </div>
+      <LessonPositionStrip flow={flow} activeNodeId={activeNodeId} />
       <div className="objective-columns">
         <div><h3>{LEARN_PAGE_COPY.understandHeading}</h3><ul>{lesson.learningObjectives.understand.map((item) => <li key={item}>{item}</li>)}</ul></div>
         <div><h3>{LEARN_PAGE_COPY.masterHeading}</h3><ul>{lesson.learningObjectives.master.map((item) => <li key={item}>{item}</li>)}</ul></div>
       </div>
       {footer}
     </section>
-    {pipeline}
     <aside className={`lesson-personal-tip ${tipLoading ? "is-loading" : card.personalizedTip === undefined ? "is-unavailable" : "is-generated"}`} role="status" aria-live="polite">
       <div className="lesson-personal-tip-heading">
-        <div className="lesson-personal-tip-title"><span>{LEARN_PAGE_COPY.tipTitle}</span>{card.personalizedTip?.lessonVariantLabel === undefined ? null : <small>{card.personalizedTip.lessonVariantLabel}</small>}</div>
+        <div className="lesson-personal-tip-title"><span><span className="kicker-dot" aria-hidden="true" />{LEARN_PAGE_COPY.tipTitle}</span>{card.personalizedTip?.lessonVariantLabel === undefined ? null : <small>{card.personalizedTip.lessonVariantLabel}</small>}</div>
         <strong>{tipLoading ? tipProgressText ?? LEARN_PAGE_COPY.tipGenerating : card.personalizedTip === undefined ? LEARN_PAGE_COPY.tipUnavailableStatus : structuredTipReady ? LEARN_PAGE_COPY.tipStructuredStatus : LEARN_PAGE_COPY.tipLegacyStatus}</strong>
       </div>
       {tipLoading
@@ -161,6 +194,7 @@ function RichLessonView({
           : <PersonalizedLessonGuide tip={card.personalizedTip} />}
       {!tipLoading && !structuredTipReady ? <button type="button" className="button text-button" onClick={onGenerateTip}>{card.personalizedTip === undefined ? LEARN_PAGE_COPY.tipRegenerate : LEARN_PAGE_COPY.tipUpgrade}</button> : null}
     </aside>
+    {pipeline}
     <div className="lesson-controls" aria-label={LEARN_PAGE_COPY.controlsAriaLabel}>
       <span>{LEARN_PAGE_COPY.moduleCountLabel(lesson.modules.length)}</span>
       <div><button type="button" className="button text-button" onClick={() => setAll(true)}>{LEARN_PAGE_COPY.expandAll}</button><button type="button" className="button text-button" onClick={() => setAll(false)}>{LEARN_PAGE_COPY.collapseAll}</button></div>
@@ -353,11 +387,49 @@ export function LearnPage() {
   }, [busy, displayCard, displayNode, loading, next?.node?.nodeId, reviewingEarlierLesson, tipAttemptedNodeId, tipBusy]);
 
   const pipelineResourceKind = agentRequestId?.startsWith("web-personalized-tip") || agentRun.run?.activityId.startsWith("node-") ? "tip" : "quiz";
-  const pipeline = agentRun.run !== undefined
+  const pipelineBody = agentRun.run !== undefined
     ? <AgentPipeline run={agentRun.run} mode={agentRun.transport === "complete" ? "snapshot" : "live"} resourceKind={pipelineResourceKind} onExport={() => downloadAgentRunExport(agentRun.run!.runId).then(() => undefined)} />
     : agentRequestId !== undefined
       ? <AgentPipelineDiscovery resourceKind={pipelineResourceKind} statusText={actionProgress.text ?? AGENT_PIPELINE_STATUS_FALLBACK} />
       : null;
+
+  /*
+   * 流水线收纳:默认只露一条状态带,展开后是完整八工位工作台。
+   * 运行失败时自动展开——出错恰恰是最需要看内部状态的时刻。
+   */
+  const [pipelineOpen, setPipelineOpen] = useState(false);
+  const pipelineFailed = agentRun.run?.status === "failed";
+  useEffect(() => {
+    if (pipelineFailed) setPipelineOpen(true);
+  }, [pipelineFailed]);
+  const pipelineSummary = agentPipelineSummary(
+    agentRun.run,
+    pipelineResourceKind,
+    agentRun.run === undefined && agentRequestId !== undefined
+      ? actionProgress.text ?? AGENT_PIPELINE_STATUS_FALLBACK
+      : undefined,
+  );
+  const pipeline = pipelineBody === null ? null : <details
+    className="pipeline-drawer"
+    data-state={pipelineSummary.state}
+    open={pipelineOpen}
+  >
+    <summary onClick={(event) => { event.preventDefault(); setPipelineOpen((open) => !open); }} aria-label={PIPELINE_DRAWER.toggleAria}>
+      <span className="kicker-dot drawer-dot" aria-hidden="true" />
+      <span className="pipeline-drawer-title">{PIPELINE_DRAWER.title}</span>
+      <span className="pipeline-drawer-status" role="status">{pipelineSummary.text}</span>
+      <span className="pipeline-drawer-toggle" aria-hidden="true">{pipelineOpen ? PIPELINE_DRAWER.collapse : PIPELINE_DRAWER.view}</span>
+    </summary>
+    <div className="pipeline-drawer-body">{pipelineBody}</div>
+  </details>;
+
+  // 任务卡上的「本节位置」与正文站点共用同一份动线数据。
+  const activeNodeId = displayNode?.nodeId;
+  const flowView = useMemo(() => buildStudyFlow(session?.path?.nodes ?? [], buildFlowContext(session, {
+    currentStep: "lesson",
+    ...(activeNodeId === undefined ? {} : { activeNodeId }),
+    hasActivity: next?.activity !== undefined,
+  })), [session, activeNodeId, next?.activity]);
 
   const taskFooter = next === undefined ? null : reviewingEarlierLesson ? (
     <div className="task-footer">
@@ -397,7 +469,7 @@ export function LearnPage() {
                 <button type="button" className="button primary" onClick={() => { setNext(undefined); void bootstrap.reload(); }}>{LEARN_PAGE_COPY.reloadSession}</button>
               </section>
               : displayCard.selectedLesson === undefined ? <LegacyLessonView card={displayCard} readiness={next.contentReadiness} pipeline={pipeline} footer={taskFooter} />
-                : <RichLessonView card={displayCard as LearningCardSafeView & { selectedLesson: SelectedLessonSafeView }} pipeline={pipeline} footer={taskFooter} tipLoading={tipBusy} tipProgressText={tipBusy ? actionProgress.text : undefined} onGenerateTip={() => { setTipAttemptedNodeId(undefined); void prepareTip(); }} />}
+                : <RichLessonView card={displayCard as LearningCardSafeView & { selectedLesson: SelectedLessonSafeView }} flow={flowView} activeNodeId={activeNodeId} pipeline={pipeline} footer={taskFooter} tipLoading={tipBusy} tipProgressText={tipBusy ? actionProgress.text : undefined} onGenerateTip={() => { setTipAttemptedNodeId(undefined); void prepareTip(); }} />}
         </article>
       </div>
     </> : null}
