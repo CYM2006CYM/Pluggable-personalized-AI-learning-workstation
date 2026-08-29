@@ -5,6 +5,7 @@ import { api, isApiError, newRequestId } from "../api/client.js";
 import { useBootstrap } from "../api/use-bootstrap.js";
 import { PageFrame } from "../components/PageFrame.js";
 import { PageStatePanel } from "../components/PageStatePanel.js";
+import { PaperFlip } from "../components/PaperFlip.js";
 import { DIAGNOSTIC_PAGE_COPY } from "../copy/diagnostic-page-copy.js";
 import { explanationPreferenceLabel, experienceLabel } from "../copy/ui-copy.js";
 import { knowledgePointLabel } from "../learning-labels.js";
@@ -19,6 +20,7 @@ export function DiagnosticPage() {
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState<Error>();
   const [diagnosticSkipIds, setDiagnosticSkipIds] = useState<Set<string>>(() => new Set());
+  const [flipForward, setFlipForward] = useState(true);
   const session = bootstrap.data?.session;
   const processed = session?.diagnosticDraft?.processedQuestionIds ?? [];
   const questions = useMemo(() => bootstrap.data?.diagnostic.questions ?? [], [bootstrap.data]);
@@ -158,16 +160,18 @@ export function DiagnosticPage() {
         </div>
       </section> : <section className="diagnostic-task" aria-labelledby="diagnostic-task-heading">
         <div className="diagnostic-progress">
-          <div className="progress-track" aria-label={copy.answer.progressAria(answeredCount, questions.length)}><span style={{ width: `${diagnosticProgressPercent}%` }} /></div>
+          <div className="progress-track" aria-label={copy.answer.progressAria(answeredCount, questions.length)}><span style={{ transform: `scaleX(${diagnosticProgressPercent / 100})` }} /></div>
           <p className="diagnostic-counter">{copy.answer.counter(questionIndex + 1, questions.length)} · {question.evidenceForm === "code_reasoning" ? copy.answer.codeEvidence : copy.answer.conceptEvidence} · {processed.includes(question.questionId) ? copy.answer.savedEditable : copy.answer.notSaved}</p>
         </div>
-        <h2 id="diagnostic-task-heading">{question.prompt}</h2>
-        <fieldset className="diagnostic-options"><legend className="visually-hidden">{copy.answer.legend}</legend>{question.kind === "judgment" ? [true, false].map((value) => <label className="diagnostic-option" key={String(value)}><input type="radio" name="diagnostic-answer" checked={answer === value} onChange={() => setAnswer(value)} /><span>{value ? copy.answer.judgmentTrue : copy.answer.judgmentFalse}</span></label>) : question.options?.map((option, index) => <label className="diagnostic-option" key={option}><input type="radio" name="diagnostic-answer" checked={answer === option} onChange={() => setAnswer(option)} /><span className="diagnostic-option-key">{String.fromCharCode(65 + index)}</span><span className="diagnostic-option-copy">{option}</span></label>)}</fieldset>
+        <PaperFlip key={question.questionId} direction={flipForward ? 1 : -1} className="diagnostic-question-flip">
+          <h2 id="diagnostic-task-heading">{question.prompt}</h2>
+          <fieldset className="diagnostic-options"><legend className="visually-hidden">{copy.answer.legend}</legend>{question.kind === "judgment" ? [true, false].map((value) => <label className="diagnostic-option" key={String(value)}><input type="radio" name="diagnostic-answer" checked={answer === value} onChange={() => setAnswer(value)} /><span>{value ? copy.answer.judgmentTrue : copy.answer.judgmentFalse}</span></label>) : question.options?.map((option, index) => <label className="diagnostic-option" key={option}><input type="radio" name="diagnostic-answer" checked={answer === option} onChange={() => setAnswer(option)} /><span className="diagnostic-option-key">{String.fromCharCode(65 + index)}</span><span className="diagnostic-option-copy">{option}</span></label>)}</fieldset>
+        </PaperFlip>
         <div className="diagnostic-actions">
-          <button type="button" className="diagnostic-btn diagnostic-btn--secondary" disabled={busy || questionIndex === 0} onClick={() => setQuestionIndex((current) => Math.max(0, current - 1))}>{copy.answer.prev}</button>
+          <button type="button" className="diagnostic-btn diagnostic-btn--secondary" disabled={busy || questionIndex === 0} onClick={() => { setFlipForward(false); setQuestionIndex((current) => Math.max(0, current - 1)); }}>{copy.answer.prev}</button>
           <div className="diagnostic-actions-row">
             <button type="button" className="diagnostic-btn diagnostic-btn--text" disabled={busy} onClick={() => void submitQuestion(question, true)}>{copy.answer.skip}</button>
-            {processed.includes(question.questionId) && answer === savedAnswer?.submittedAnswer ? <button type="button" className="diagnostic-btn diagnostic-btn--primary" disabled={busy} onClick={() => setQuestionIndex((current) => Math.min(questions.length, current + 1))}>{copy.answer.next}</button> : <button type="button" className="diagnostic-btn diagnostic-btn--primary" disabled={busy || answer === undefined} onClick={() => void submitQuestion(question, false)}>{processed.includes(question.questionId) ? copy.answer.saveEdit : copy.answer.save}</button>}
+            {processed.includes(question.questionId) && answer === savedAnswer?.submittedAnswer ? <button type="button" className="diagnostic-btn diagnostic-btn--primary" disabled={busy} onClick={() => { setFlipForward(true); setQuestionIndex((current) => Math.min(questions.length, current + 1)); }}>{copy.answer.next}</button> : <button type="button" className="diagnostic-btn diagnostic-btn--primary" disabled={busy || answer === undefined} onClick={() => void submitQuestion(question, false)}>{busy ? copy.answer.saving : processed.includes(question.questionId) ? copy.answer.saveEdit : copy.answer.save}</button>}
           </div>
         </div>
       </section>}

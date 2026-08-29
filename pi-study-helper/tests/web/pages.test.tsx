@@ -207,13 +207,13 @@ describe("W4 real API pages", () => {
 
     const progress = () => host.querySelector<HTMLElement>(".progress-track");
     expect(progress()?.getAttribute("aria-label")).toBe("已保存诊断进度 0/2");
-    expect(progress()?.querySelector("span")?.getAttribute("style")).toContain("width: 0%");
+    expect(progress()?.querySelector("span")?.getAttribute("style")).toContain("scaleX(0)");
 
     await click(host.querySelector<HTMLInputElement>('input[type="radio"]')!);
     await click(button(host, "保存并继续"));
 
     expect(progress()?.getAttribute("aria-label")).toBe("已保存诊断进度 1/2");
-    expect(progress()?.querySelector("span")?.getAttribute("style")).toContain("width: 50%");
+    expect(progress()?.querySelector("span")?.getAttribute("style")).toContain("scaleX(0.5)");
     expect(host.textContent).toContain("第 2 题 / 共 2 题");
     expect(host.textContent).toContain("尚未保存");
   });
@@ -386,30 +386,47 @@ describe("W4 real API pages", () => {
     expect(router.state.location.pathname).toBe("/activity/session-w4/act-basic");
   });
 
-  it("keeps rich lesson bulk and individual disclosure controls in sync", async () => {
+  it("keeps the station stack and per-module disclosure in sync", async () => {
     const richStep = richLearningStep();
     const fetchMock = vi.fn().mockResolvedValueOnce(ok(bootstrap(recovery()))).mockResolvedValueOnce(ok(richStep));
     const { host } = await renderRoute("/learn/session-w4/node-basic", fetchMock);
-    const details = () => [...host.querySelectorAll<HTMLDetailsElement>(".lesson-module")];
+    const activeModule = () => host.querySelector<HTMLDetailsElement>(".lesson-paper.is-active .lesson-module")!;
 
-    expect(details().map((item) => item.open)).toEqual([true, true, true, false, false, false]);
-    await click(button(host, "全部收起"));
-    expect(details().every((item) => !item.open)).toBe(true);
-    expect(details().every((item) => item.querySelector("summary")?.getAttribute("aria-expanded") === "false")).toBe(true);
+    // 分幕:默认停在引入幕,点「翻开正文」才进入学习幕
+    expect(host.querySelector(".lesson-briefing")).not.toBeNull();
+    expect(host.querySelector(".lesson-study")).toBeNull();
+    await click(button(host, "翻开正文"));
+    expect(host.querySelector(".lesson-briefing")).toBeNull();
 
-    await click(button(host, "展开全部"));
-    expect(details().every((item) => item.open)).toBe(true);
-    expect(details().every((item) => item.querySelector("summary")?.getAttribute("aria-expanded") === "true")).toBe(true);
+    // 一次只亮一站:第一站(为什么学)默认展开
+    expect(host.querySelectorAll(".lesson-paper.is-active")).toHaveLength(1);
+    expect(activeModule().getAttribute("data-role")).toBe("intuition");
+    expect(activeModule().open).toBe(true);
+    expect(host.querySelector(".stack-nav-count")?.textContent).toContain("第 1 站");
 
-    await click(details()[0]!.querySelector("summary")!);
-    expect(details()[0]!.open).toBe(false);
-    expect(details().slice(1).every((item) => item.open)).toBe(true);
-    await click(button(host, "全部收起"));
-    await click(button(host, "全部收起"));
-    expect(details().every((item) => !item.open)).toBe(true);
+    // 单卡内折叠/展开仍然可用
+    await click(activeModule().querySelector("summary")!);
+    expect(activeModule().open).toBe(false);
+    await click(activeModule().querySelector("summary")!);
+    expect(activeModule().open).toBe(true);
+
+    // 下一站:纸张翻到「学什么」,计数与刻度同步
+    await click(button(host, "下一站"));
+    expect(activeModule().getAttribute("data-role")).toBe("concepts");
+    expect(host.querySelector(".stack-nav-count")?.textContent).toContain("第 2 站");
+    expect(host.querySelectorAll('.stack-nav-ticks button[data-current="true"]')).toHaveLength(1);
+
+    // 上一站翻回
+    await click(button(host, "上一站"));
+    expect(activeModule().getAttribute("data-role")).toBe("intuition");
+
+    // 返回简报
+    await click(button(host, "返回简报"));
+    expect(host.querySelector(".lesson-briefing")).not.toBeNull();
+    expect(host.querySelector(".lesson-study")).toBeNull();
   });
 
-  it("places the personalized-tip pipeline above the reminder and lesson body with a live elapsed timer", async () => {
+  it("collapses the personalized-tip pipeline into a status drawer below the reminder, keeping a live elapsed timer", async () => {
     const pendingTip = new Promise<Response>(() => undefined);
     const pendingRun = new Promise<Response>(() => undefined);
     const fixedResponses = [ok(bootstrap(recovery())), ok(richLearningStep())];
@@ -423,16 +440,15 @@ describe("W4 real API pages", () => {
     const { host } = await renderRoute("/learn/session-w4/node-basic", fetchMock);
 
     const content = host.querySelector(".learning-content")!;
-    const children = [...content.children];
-    const objectiveIndex = children.findIndex((item) => item.classList.contains("lesson-objectives"));
-    const tipIndex = children.findIndex((item) => item.classList.contains("lesson-personal-tip"));
-    const drawerIndex = children.findIndex((item) => item.classList.contains("pipeline-drawer"));
-    const manualIndex = children.findIndex((item) => item.classList.contains("lesson-manual"));
+    const briefing = content.querySelector(".lesson-briefing")!;
 
-    // 学习者优先:目标 → 导学 → 正文;流水线收纳成一条状态带,住在抽屉里。
-    expect([objectiveIndex, tipIndex, drawerIndex, manualIndex]).toEqual([0, 1, 2, 4]);
-    expect(children[drawerIndex]!.querySelector(".agent-pipeline")).not.toBeNull();
-    expect(children[drawerIndex]!.querySelector(".pipeline-drawer-status")?.textContent)
+    // 分幕:引入幕承载目标、导学与流水线抽屉;学习幕此刻不存在。
+    expect(content.querySelector(".lesson-study")).toBeNull();
+    expect(briefing.querySelector("#learn-task-heading")).not.toBeNull();
+    expect(briefing.querySelector(".lesson-personal-tip-heading")).not.toBeNull();
+    const drawer = briefing.querySelector(".pipeline-drawer")!;
+    expect(drawer.querySelector(".agent-pipeline")).not.toBeNull();
+    expect(drawer.querySelector(".pipeline-drawer-status")?.textContent)
       .toContain("正在生成并审核个性化提醒");
     expect(host.querySelectorAll(".agent-pipeline")).toHaveLength(1);
     expect(host.querySelector(".lesson-personal-tip-heading strong")?.textContent)
@@ -832,7 +848,7 @@ describe("W4 real API pages", () => {
     expect(fetchMock).toHaveBeenCalledTimes(3);
     expect(fetchMock.mock.calls.some((call) => String(call[0]).endsWith("/run"))).toBe(false);
     expect(useUiStore.getState().activityDrafts["attempt-code-1"]).toBe("print('unsaved local')");
-    expect(host.textContent).toContain("draft_version_conflict");
+    expect(host.querySelector(".state-panel")?.getAttribute("data-error-code")).toBe("draft_version_conflict");
   });
 
   it("restores a saved code draft from the same server Attempt after refresh", async () => {
@@ -929,7 +945,7 @@ describe("W4 real API pages", () => {
     const conflictFetch = vi.fn().mockResolvedValueOnce(ok(bootstrap(recovery({ stage: "path" })))).mockResolvedValueOnce(fail(409, "path_version_conflict"));
     const first = await renderRoute("/path/session-w4", conflictFetch, { evidenceVersion: 7 });
     await click(button(first.host, "按最新诊断重算"));
-    expect(first.host.textContent).toContain("path_version_conflict");
+    expect(first.host.querySelector(".state-panel")?.getAttribute("data-error-code")).toBe("path_version_conflict");
     act(() => root?.unmount()); root = undefined; document.body.innerHTML = "";
     const refreshed = await renderRoute("/path/session-w4", vi.fn().mockResolvedValue(ok(bootstrap(recovery({ stage: "path" })))));
     expect(button(refreshed.host, "按最新诊断重算").disabled).toBe(true);
@@ -1056,7 +1072,7 @@ describe("W4 real API pages", () => {
     session.activityProgress = [{ nodeId: "node-basic", activities: [{ activityId: "act-pending", status: "pending", attemptIds: [], quizRetryCount: 0, updatedAt: "2026-08-16T00:00:00.000Z" }] }];
     const fetchMock = vi.fn().mockResolvedValue(ok(bootstrap(session)));
     const { host } = await renderRoute("/summary/session-w4", fetchMock);
-    expect(host.textContent).toContain("COMPLETED_SUMMARY_ARCHIVE_MISSING");
+    expect(host.querySelector(".state-panel")?.getAttribute("data-error-code")).toBe("COMPLETED_SUMMARY_ARCHIVE_MISSING");
     expect(host.textContent).toContain("尚未验证 · 作答 0 次");
     expect(host.textContent).toContain("返回主菜单");
     expect(fetchMock).toHaveBeenCalledTimes(1);
@@ -1354,7 +1370,7 @@ describe("W4 real API pages", () => {
 
   it("renders transport errors without leaking server messages", async () => {
     const { host } = await renderRoute("/", vi.fn().mockResolvedValue(fail(503, "initialization_not_ready")));
-    expect(host.textContent).toContain("initialization_not_ready");
+    expect(host.querySelector(".state-panel")?.getAttribute("data-error-code")).toBe("initialization_not_ready");
     expect(host.textContent).not.toContain("safe error");
   });
 });

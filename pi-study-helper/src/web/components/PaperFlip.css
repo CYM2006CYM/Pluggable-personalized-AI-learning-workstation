@@ -1,0 +1,19 @@
+/*
+ * PaperFlip 样式。颜色/字阶不在此文件;动画时长与缓动取自 design/tokens.css,
+ * 学习页站点纸叠(lesson-paper)与这里是同一套动效语言。
+ */
+
+.paper-flip {
+  animation: paper-flip-in var(--dur-base) var(--ease);
+}
+
+@keyframes paper-flip-in {
+  from { opacity: 0; transform: translateX(var(--paper-from, 32px)); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .paper-flip {
+    animation: none;
+  }
+}

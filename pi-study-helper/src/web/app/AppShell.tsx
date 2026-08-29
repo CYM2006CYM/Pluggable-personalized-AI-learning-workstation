@@ -76,6 +76,34 @@ export function AppShell() {
   });
   const flow = buildStudyFlow(session?.path?.nodes ?? [], context);
 
+  /*
+   * 当前环节的 id。首帧没有会话快照时它是 undefined(整条动线锁定),
+   * bootstrap 回来后才变成实际环节——横滚条的跟随效果靠它重新触发。
+   */
+  const flowCurrentStepId = flow.steps.find((step) => step.status === "current")?.id;
+
+  /*
+   * 平板/手机上步骤条是顶部横滚条,当前环节可能落在滚动盲区(比如已经
+   * 走到「学习」,条上还停在「准备」)。路由变化或快照落定后,把当前环节
+   * 水平轻推到条中央——只动 scrollLeft,绝不竖向滚动页面。桌面竖排轨道
+   * 的 scrollLeft 恒为 0,这条 effect 对它没有副作用。
+   */
+  useEffect(() => {
+    const strip = document.querySelector<HTMLElement>('.study-stepper[data-variant="rail"]');
+    const current = strip?.querySelector('[aria-current="step"]') ?? null;
+    if (strip === null || !(current instanceof HTMLElement)) return;
+    if (typeof strip.scrollTo !== "function") return;
+    const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+    // 用视口几何而不是 offsetLeft:节点的 offsetParent 是最近的定位祖先(li),
+    // 不是滚动容器本身,按 offsetLeft 算会永远回到起点。
+    const stripRect = strip.getBoundingClientRect();
+    const currentRect = current.getBoundingClientRect();
+    strip.scrollTo({
+      left: strip.scrollLeft + (currentRect.left + currentRect.width / 2 - stripRect.left) - strip.clientWidth / 2,
+      behavior: reduced ? "auto" : "smooth",
+    });
+  }, [pathname, flowCurrentStepId]);
+
   // 没有会话时整条动线置灰。这样结构稳定，不会在有无会话之间跳变。
   const steps = sessionId === undefined
     ? flow.steps.map((step) => ({ ...step, status: "locked" as const, enterable: false }))

@@ -45,13 +45,29 @@
   gap: var(--space-5);
 }
 
-/* 三段内容收进阅读列宽;八站点流水线是过程面,保持整行宽 */
-[data-page="learn"] .learn-task,
-[data-page="learn"] .lesson-personal-tip,
-[data-page="learn"] .lesson-controls,
-[data-page="learn"] .lesson-manual,
-[data-page="learn"] .learn-facts {
-  width: min(var(--read-width), 100%);
+/* 铺开:内容带加宽居中;目标卡与导学卡在桌面并排,是同一份简报的两联 */
+[data-page="learn"] .learning-content {
+  width: min(1160px, 100%);
+  margin-inline: auto;
+}
+
+[data-page="learn"] .learning-content:has(.lesson-personal-tip) {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: var(--space-5);
+  align-items: start;
+}
+
+/* 抽屉、正文堆叠、附录卡横贯两栏 */
+[data-page="learn"] .learning-content:has(.lesson-personal-tip) .pipeline-drawer,
+[data-page="learn"] .learning-content:has(.lesson-personal-tip) .lesson-manual,
+[data-page="learn"] .learning-content:has(.lesson-personal-tip) .learn-facts {
+  grid-column: 1 / -1;
+}
+
+/* 非富文本视图(辅助节点/旧版卡)退回单列,正文列同样加宽 */
+[data-page="learn"] .learning-content:not(:has(.lesson-personal-tip)) .lesson-manual {
+  width: min(920px, 100%);
   margin-inline: auto;
 }
 
@@ -384,66 +400,269 @@
   gap: var(--space-2);
 }
 
-/* ---------- 正文阅读区:一条贯穿的站点动线 ----------
- *
- * 意象与左侧栏大动线同构:一节正文也是一段旅程,
- * 每个模块是一站(为什么学 → 学什么 → 看示范 → 该你做),
- * 圆点标记骑在一条竖向脊柱上,卡片按站点角色分层:
- * - 站点层:脊柱 + 序号圆点,给出一节的行进顺序;
- * - 卡片层:单体卡(标题盒和内容盒不再分家),末站「该你做」
- *   用虚线边框表示轮到学习者上手;
- * - 内容层:站点短语 → 衬线标题 → 导语 → 正文/代码四级字阶。
+
+/* ---------- 引入幕:一本摊开的书 ---------- */
+
+/*
+ * 左页本节目标、右页个性化导学,中间书脊绑定。
+ * 高度不齐在「书」的语境里是自然的;引导问题单独拉成通栏,
+ * 紧贴「翻开正文」,作为从引入滑向正文的钩子。
  */
 
-[data-page="learn"] .lesson-manual {
-  min-width: 0;
-  font-family: var(--font-serif);
+[data-page="learn"] .lesson-briefing {
+  display: grid;
+  gap: var(--space-5);
 }
 
-[data-page="learn"] .lesson-path {
-  position: relative;
-  display: block;
+[data-page="learn"] .briefing-band {
+  padding: var(--space-2) var(--space-3);
+  border: 1px dashed var(--rule);
+  border-radius: var(--radius-sm);
+  background: var(--card-soft);
+}
+
+[data-page="learn"] .lesson-spread {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 1px minmax(0, 1fr);
+  gap: var(--space-5);
+  align-items: stretch;
+}
+
+[data-page="learn"] .spread-spine {
+  width: 1px;
+  background: var(--rule);
+}
+
+[data-page="learn"] .spread-page {
+  min-width: 0;
+  display: grid;
+  gap: var(--space-3);
+  align-content: start;
+  padding: var(--space-6);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+  box-shadow: var(--shadow-2);
+}
+
+[data-page="learn"] .spread-page-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+[data-page="learn"] .spread-page-heading .task-kicker {
   margin: 0;
-  padding: 0;
+}
+
+[data-page="learn"] .spread-page h2 {
+  margin: 0;
+  color: var(--text);
+  font-family: var(--font-serif);
+  font-size: var(--fs-h2);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-h2);
+  letter-spacing: var(--ls-tight);
+}
+
+[data-page="learn"] .spread-variant {
+  color: var(--text-soft);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+}
+
+[data-page="learn"] .lesson-personal-tip-heading strong {
+  max-width: none;
+  color: var(--accent);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+  text-align: right;
+}
+
+[data-page="learn"] .spread-overview {
+  margin: 0;
+  color: var(--text);
+  font-size: var(--fs-body);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-body);
+}
+
+[data-page="learn"] .spread-tip-body {
+  margin: 0;
+  color: var(--text);
+  line-height: var(--lh-body);
+}
+
+[data-page="learn"] .lesson-guide-grid {
+  grid-template-columns: minmax(0, 1fr);
+  margin-top: 0;
+  border-top: 1px dashed var(--rule);
+}
+
+/* 引导问题通栏:从引入滑向正文的钩子 */
+[data-page="learn"] .question-band {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--rule);
+  border-left: var(--space-1) solid var(--accent);
+  border-radius: var(--radius-md);
+  background: var(--glass);
+}
+
+[data-page="learn"] .question-band span {
+  color: var(--accent);
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-caption);
+}
+
+[data-page="learn"] .question-band p {
+  margin: 0;
+  color: var(--text);
+  font-family: var(--font-serif);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+}
+
+[data-page="learn"] .briefing-cta {
+  display: grid;
+  gap: var(--space-4);
+}
+
+[data-page="learn"] .briefing-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-4);
+}
+
+/* ---------- 学习幕 ---------- */
+
+[data-page="learn"] .lesson-study {
+  width: min(920px, 100%);
+  margin-inline: auto;
+  display: grid;
+  gap: var(--space-4);
+}
+
+[data-page="learn"] .study-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+[data-page="learn"] .study-head .lesson-position {
+  flex: 1 1 auto;
+}
+
+[data-page="learn"] .study-footer {
+  margin-top: var(--space-2);
+}
+
+/* ---------- 正文阅读区:站点纸张堆叠 ----------
+ *
+ * 意象:一叠纸。亮着的站在最上,底下两页错位的纸边暗示后面还有内容;
+ * 翻站时旧纸向翻页反方向滑出淡去,新纸从翻页方向滑入。
+ * 站点序号印在纸卡头部,与侧栏大动线、任务卡的位置条同一套语言。
+ */
+
+[data-page="learn"] .lesson-stack {
+  position: relative;
+}
+
+/* 纸叠:两张错位微旋的纸边,只在底部和右侧露出一点厚度 */
+[data-page="learn"] .lesson-stack::before,
+[data-page="learn"] .lesson-stack::after {
+  content: "";
+  position: absolute;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  background: var(--card-soft);
+  pointer-events: none;
+}
+
+[data-page="learn"] .lesson-stack::before {
+  inset: var(--space-4) calc(var(--space-2) * -1) calc(var(--space-2) * -1) var(--space-4);
+  transform: rotate(0.8deg);
+  opacity: 0.8;
+}
+
+[data-page="learn"] .lesson-stack::after {
+  inset: var(--space-2) calc(var(--space-1) * -1) calc(var(--space-1) * -1) var(--space-2);
+  transform: rotate(-0.5deg);
+  opacity: 0.55;
+}
+
+[data-page="learn"] .lesson-paper {
+  position: relative;
+  z-index: 1;
+}
+
+[data-page="learn"] .lesson-paper.is-active {
+  animation: paper-in var(--dur-base) var(--ease);
+}
+
+/* 离场纸:绝对定位盖在原地,向反方向滑出淡去;动画结束停在透明 */
+[data-page="learn"] .lesson-paper.is-leaving {
+  position: absolute;
+  inset: 0 0 auto 0;
+  z-index: 0;
+  opacity: 0;
+  animation: paper-out var(--dur-base) var(--ease) forwards;
+  pointer-events: none;
+}
+
+@keyframes paper-in {
+  from { opacity: 0; transform: translateX(var(--paper-from, 32px)) rotate(0.4deg); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes paper-out {
+  from { opacity: 1; transform: none; }
+  to { opacity: 0; transform: translateX(calc(var(--paper-from, 32px) * -0.55)) rotate(-0.35deg); }
+}
+
+/* 纸卡:单站单体卡,序号圆章 + 站点短语 + 标题 + 导语 */
+[data-page="learn"] .lesson-module {
+  min-width: 0;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+  box-shadow: var(--shadow-2);
+}
+
+[data-page="learn"] .lesson-module[data-role="final-task"] {
+  border-style: dashed;
+}
+
+[data-page="learn"] .lesson-module > summary {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  align-items: center;
+  column-gap: var(--space-3);
+  row-gap: var(--space-1);
+  padding: var(--space-4) calc(var(--space-6) + var(--space-2)) var(--space-4) var(--space-5);
+  cursor: pointer;
   list-style: none;
 }
 
-/* 脊柱段:从圆点下缘补到本站底部,站与站之间不留断口 */
-[data-page="learn"] .lesson-station {
-  position: relative;
-  padding: 0 0 var(--space-5) calc(var(--space-6) + var(--space-4));
-}
-
-[data-page="learn"] .lesson-station::before {
-  content: "";
-  position: absolute;
-  top: var(--space-6);
-  bottom: 0;
-  left: calc(var(--space-6) / 2);
-  border-left: 1px solid var(--rule);
-}
-
-[data-page="learn"] .lesson-station:last-child {
-  padding-bottom: 0;
-}
-
-[data-page="learn"] .lesson-station:last-child::before {
+[data-page="learn"] .lesson-module > summary::-webkit-details-marker {
   display: none;
 }
 
 [data-page="learn"] .station-marker {
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: 1;
-  display: grid;
-  place-items: center;
-  width: var(--space-6);
-  height: var(--space-6);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--space-5);
+  height: var(--space-5);
   border: 1px solid var(--rule);
   border-radius: 50%;
-  background: var(--card);
-  box-shadow: var(--shadow-1);
+  background: var(--card-soft);
 }
 
 [data-page="learn"] .station-marker i {
@@ -456,15 +675,13 @@
   line-height: var(--lh-caption);
 }
 
-/* 末站「该你做」:虚线圆点预告这是学习者的回合 */
-[data-page="learn"] .lesson-station[data-role="final-task"] .station-marker {
+[data-page="learn"] .lesson-module[data-role="final-task"] .station-marker {
   border-style: dashed;
   background: var(--accent-soft);
 }
 
 [data-page="learn"] .station-tag {
   display: inline-flex;
-  width: fit-content;
   padding: 0 var(--space-2);
   border-radius: var(--radius-sm);
   color: var(--accent);
@@ -473,36 +690,34 @@
   font-style: normal;
   font-weight: var(--fw-medium);
   line-height: var(--lh-caption);
+  white-space: nowrap;
 }
 
-[data-page="learn"] .lesson-station[data-role="final-task"] .station-tag {
+[data-page="learn"] .lesson-module[data-role="final-task"] .station-tag {
   color: var(--warm);
 }
 
-/* 单体站卡:标题与正文同壳,不再一上一下两个框 */
-[data-page="learn"] .lesson-module {
+[data-page="learn"] .lesson-module > summary > span {
   min-width: 0;
-  border: 1px solid var(--rule);
-  border-radius: var(--radius-lg);
-  background: var(--card);
-  box-shadow: var(--shadow-1);
+  color: var(--text);
+  font-family: var(--font-serif);
+  font-size: var(--fs-h2);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-h2);
+  letter-spacing: var(--ls-tight);
 }
 
-[data-page="learn"] .lesson-station[data-role="final-task"] .lesson-module {
-  border-style: dashed;
+[data-page="learn"] .lesson-module > summary small {
+  grid-column: 3;
+  color: var(--text-soft);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
 }
 
-[data-page="learn"] .lesson-module > summary {
-  position: relative;
-  display: grid;
-  gap: var(--space-1);
-  padding: var(--space-4) calc(var(--space-6) + var(--space-2)) var(--space-4) var(--space-5);
-  cursor: pointer;
-  list-style: none;
-}
-
-[data-page="learn"] .lesson-module > summary::-webkit-details-marker {
-  display: none;
+/* 展开后的标题区与正文之间用虚线分隔:同一张纸的内部分层。
+   附录卡(is-info)有自己的实线分隔,不套用。 */
+[data-page="learn"] .lesson-module:not(.is-info)[open] > summary {
+  border-bottom: 1px dashed var(--rule);
 }
 
 [data-page="learn"] .lesson-module > summary::after {
@@ -522,139 +737,98 @@
   transform: rotate(-45deg);
 }
 
-[data-page="learn"] .lesson-module > summary span {
-  color: var(--text);
-  font-family: var(--font-serif);
-  font-size: var(--fs-h3);
-  font-weight: var(--fw-bold);
-  line-height: var(--lh-h3);
-}
-
-[data-page="learn"] .lesson-module > summary small {
-  color: var(--text-soft);
-  font-size: var(--fs-caption);
-  line-height: var(--lh-caption);
-}
-
-/* 展开后的标题区与正文之间用虚线分隔:同一张卡的内部分层。
-   附录卡(is-info)有自己的实线分隔,不套用。 */
-[data-page="learn"] .lesson-module:not(.is-info)[open] > summary {
-  border-bottom: 1px dashed var(--rule);
-}
-
 [data-page="learn"] .lesson-module-body {
   min-width: 0;
   padding: var(--space-4) var(--space-5) var(--space-5);
 }
 
-[data-page="learn"] .lesson-subheading {
-  margin: var(--space-3) 0 var(--space-2);
-  color: var(--text);
-  font-family: var(--font-serif);
-  font-size: var(--fs-h3);
-  font-weight: var(--fw-bold);
-  line-height: var(--lh-h3);
-}
+/* ---------- 站点导航条 ---------- */
 
-[data-page="learn"] .lesson-paragraph {
-  margin: 0 0 var(--space-4);
-  color: var(--text);
-  font-size: var(--fs-body);
-  line-height: var(--lh-body);
-}
-
-[data-page="learn"] .lesson-list {
-  display: grid;
-  gap: var(--space-2);
-  margin: 0 0 var(--space-4);
-  padding-left: var(--space-5);
-  color: var(--text);
-  font-size: var(--fs-body);
-  line-height: var(--lh-body);
-}
-
-[data-page="learn"] .lesson-code {
-  width: 100%;
-  min-width: 0;
-  max-width: 100%;
-  margin: var(--space-1) 0 var(--space-4);
-  padding: var(--space-4);
-  overflow-x: auto;
+[data-page="learn"] .stack-nav {
+  position: sticky;
+  top: var(--space-3);
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  margin: var(--space-4) 0;
+  padding: var(--space-2) var(--space-3);
   border: 1px solid var(--rule);
   border-radius: var(--radius-md);
-  color: var(--text);
-  background: var(--card-soft);
-  font-family: var(--font-mono);
-  font-size: var(--fs-mono);
-  line-height: var(--lh-mono);
-  white-space: pre;
+  background: var(--card);
+  box-shadow: var(--shadow-2);
 }
 
-[data-page="learn"] .lesson-callout {
-  margin: var(--space-4) 0;
-  padding: var(--space-3) var(--space-4);
-  border-left: var(--space-1) solid var(--accent);
-  border-radius: var(--radius-sm);
-  background: var(--accent-soft);
-}
-
-[data-page="learn"] .lesson-callout.warning {
-  border-left-color: var(--warm);
-  background: var(--card-soft);
-}
-
-[data-page="learn"] .lesson-callout.term {
-  border-left-color: var(--step-completed);
-  background: var(--accent-soft);
-}
-
-[data-page="learn"] .lesson-callout strong {
-  color: var(--text);
-}
-
-[data-page="learn"] .lesson-callout p {
-  margin: var(--space-1) 0 0;
-  color: var(--text);
-  line-height: var(--lh-body);
-}
-
-[data-page="learn"] .lesson-terms {
-  margin: 0 0 var(--space-4);
-}
-
-[data-page="learn"] .lesson-terms > div {
-  display: grid;
-  grid-template-columns: minmax(calc(var(--space-8) * 1.5), calc(var(--space-8) * 2.5)) minmax(0, 1fr);
+[data-page="learn"] .stack-nav-state {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   gap: var(--space-4);
-  padding: var(--space-2) 0;
-  border-bottom: 1px solid var(--rule);
+  flex-wrap: wrap;
 }
 
-[data-page="learn"] .lesson-terms dt {
+[data-page="learn"] .stack-nav-count {
   color: var(--text);
-  font-weight: var(--fw-bold);
+  font-size: var(--fs-ui);
+  font-weight: var(--fw-medium);
+  font-variant-numeric: tabular-nums;
+  line-height: var(--lh-ui);
+  white-space: nowrap;
 }
 
-[data-page="learn"] .lesson-terms dd {
-  margin: 0;
-  color: var(--text);
-  line-height: var(--lh-body);
-}
-
-[data-page="learn"] .lesson-sources {
-  display: grid;
-  gap: var(--space-3);
+[data-page="learn"] .stack-nav-ticks {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-[data-page="learn"] .lesson-sources li {
-  padding: var(--space-3) var(--space-4);
-  border-left: var(--space-1) solid var(--rule);
-  background: var(--card-soft);
-  color: var(--text);
-  line-height: var(--lh-body);
+[data-page="learn"] .stack-nav-ticks button {
+  width: var(--space-2);
+  height: var(--space-2);
+  padding: 0;
+  border: 1px solid var(--rule);
+  border-radius: 50%;
+  background: var(--card);
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
+}
+
+[data-page="learn"] .stack-nav-ticks button:hover {
+  border-color: var(--accent);
+}
+
+[data-page="learn"] .stack-nav-ticks button[data-current="true"] {
+  border-color: var(--step-current);
+  background: var(--step-current);
+  box-shadow: 0 0 0 2px var(--step-current-bg);
+}
+
+[data-page="learn"] .stack-nav-label {
+  color: var(--text-soft);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-page="learn"] .lesson-paper.is-active {
+    animation: none;
+  }
+
+  [data-page="learn"] .lesson-paper.is-leaving {
+    animation: none;
+    opacity: 0;
+  }
+
+  [data-page="learn"] .stack-nav-ticks button {
+    transition: none;
+  }
 }
 
 /* ---------- 折叠信息卡:误区 / 术语依据(并列卡同组样式一致) ---------- */
@@ -877,8 +1051,7 @@
  */
 
 [data-page="learn"] .pipeline-drawer {
-  width: min(var(--read-width), 100%);
-  margin-inline: auto;
+  width: 100%;
   border: 1px solid var(--rule);
   border-radius: var(--radius-md);
   background: var(--card);
@@ -989,6 +1162,21 @@
 /* ---------- 窄屏收窄 ---------- */
 
 @media (max-width: 700px) {
+  /* 简报对页在手机上收成上下两页:书脊横过来当分隔线,不再挤压成窄条 */
+  [data-page="learn"] .lesson-spread {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
+  }
+
+  [data-page="learn"] .spread-spine {
+    width: auto;
+    height: 1px;
+  }
+
+  [data-page="learn"] .spread-page {
+    padding: var(--space-4);
+  }
+
   [data-page="learn"] .learn-task {
     padding: var(--space-4);
   }

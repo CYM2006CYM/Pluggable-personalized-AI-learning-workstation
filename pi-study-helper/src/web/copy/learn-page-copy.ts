@@ -94,13 +94,8 @@ export const LEARN_PAGE_COPY = {
   guideQuestion: "带着这个问题进入正文",
 
   /* ---------- 正文阅读区与折叠信息卡 ---------- */
-  controlsAriaLabel: "教学模块显示控制",
   readingAriaLabel: "结构化教学正文",
   factsAriaLabel: "误区与术语",
-  expandAll: "展开全部",
-  collapseAll: "全部收起",
-  /** 模块数量运行时读取,不允许写死节数。 */
-  moduleCountLabel: (count: number) => `共 ${count} 个教学模块`,
   codeAriaLabel: "代码示例",
   termsHeading: "术语解释",
   sourcesHeading: "本节依据",
@@ -109,6 +104,30 @@ export const LEARN_PAGE_COPY = {
   stepByStepHeading: "分步理解",
   exampleHeading: "示例",
   mistakeHeading: "常见误区",
+} as const;
+
+/* ---------- 站点纸张堆叠导航 ----------
+ *
+ * 正文各站像一叠纸:一次只翻到一站,翻动时渐入渐出。
+ * 导航条提供上一站/下一站和站点刻度,可以按站跳转。
+ */
+export const STATION_STACK = {
+  navAria: "教学站点导航",
+  prev: "上一站",
+  next: "下一站",
+  count: (index: number, total: number) => `第 ${index} 站 · 共 ${total} 站`,
+  jumpAria: (label: string) => `跳到${label}`,
+} as const;
+
+/* ---------- 学习页两幕:引入 → 学习 ----------
+ *
+ * 引入幕回答「你在哪 / 学什么 / 怎么学」;学习幕是正文纸叠。
+ * 同一路由内切换,地址 #study 对应学习幕,浏览器后退可回简报。
+ */
+export const LESSON_ACTS = {
+  openStudy: "翻开正文",
+  skipToActivity: "直接进入活动",
+  backToBriefing: "返回简报",
 } as const;
 
 /* ---------- AI 工作台收纳条 ----------

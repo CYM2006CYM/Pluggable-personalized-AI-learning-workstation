@@ -95,6 +95,11 @@ body {
 
 /* ---------- 任务卡:每页恰好一张,承载「现在要做什么」与主操作 ---------- */
 
+.diagnostic-question-flip {
+  /* 翻页时题目长短不一,给纸面一个稳定最小高度,避免卡片塌陷跳动(布局几何) */
+  min-height: 240px;
+}
+
 .diagnostic-task {
   display: flex;
   flex-direction: column;
@@ -149,9 +154,12 @@ body {
 
 .diagnostic-page .progress-track span {
   display: block;
-  height: 100%;
+  width: 100%;
   background: var(--accent);
-  transition: width var(--dur-base) var(--ease);
+  /* 填充走 scaleX 而不是 width:transform 不触发重排（动效票的硬约束），
+     进度百分比由 TSX 以内联 transform 提供。 */
+  transform-origin: 0 50%;
+  transition: transform var(--dur-base) var(--ease);
 }
 
 .diagnostic-counter {

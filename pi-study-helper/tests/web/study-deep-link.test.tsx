@@ -66,7 +66,7 @@ describe("W5 D2 study deep link", () => {
   ])("rejects %s without creating a replacement session", async (_label, url, code) => {
     const fetchMock = vi.fn().mockResolvedValue(ok(bootstrap(recovery({ stage: "learning" }))));
     const { host } = await renderStudy(url, fetchMock);
-    expect(host.textContent).toContain(code);
+    expect(host.querySelector(".state-panel")?.getAttribute("data-error-code")).toBe(code);
     expect(host.textContent).toContain("从开始页恢复");
     expect(fetchMock.mock.calls.some((call) => String(call[0]) === "/api/sessions")).toBe(false);
   });
@@ -75,12 +75,12 @@ describe("W5 D2 study deep link", () => {
     const session = recovery({ stage: "learning" });
     session.sessionVersion = 99;
     const { host } = await renderStudy("/study?sessionId=session-w4&nodeId=node-basic&activityId=act-basic", vi.fn().mockResolvedValue(ok(bootstrap(session))));
-    expect(host.textContent).toContain("deep_link_session_revision_mismatch");
+    expect(host.querySelector(".state-panel")?.getAttribute("data-error-code")).toBe("deep_link_session_revision_mismatch");
   });
 
   it("shows start-page recovery for an unknown session", async () => {
     const { host } = await renderStudy("/study?sessionId=session-missing&nodeId=node-basic&activityId=act-basic", vi.fn().mockResolvedValue(ok(bootstrap())));
-    expect(host.textContent).toContain("deep_link_session_not_found");
+    expect(host.querySelector(".state-panel")?.getAttribute("data-error-code")).toBe("deep_link_session_not_found");
     expect(host.textContent).toContain("从开始页恢复");
   });
 
@@ -88,6 +88,6 @@ describe("W5 D2 study deep link", () => {
     const session = recovery({ stage: "activity" });
     session.currentAttempt = { kind: "code", activityId: "act-other", attemptId: "attempt-other", status: "draft", draftVersion: 1 };
     const { host } = await renderStudy("/study?sessionId=session-w4&nodeId=node-basic&activityId=act-basic", vi.fn().mockResolvedValue(ok(bootstrap(session))));
-    expect(host.textContent).toContain("deep_link_attempt_mismatch");
+    expect(host.querySelector(".state-panel")?.getAttribute("data-error-code")).toBe("deep_link_attempt_mismatch");
   });
 });

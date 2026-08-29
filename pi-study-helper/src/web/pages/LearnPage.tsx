@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import type {
   LearningCardSafeView,
@@ -26,7 +26,9 @@ import { lessonCounterLabel } from "../copy/ui-copy.js";
 import {
   AGENT_PIPELINE_STATUS_FALLBACK,
   LEARN_PAGE_COPY,
+  LESSON_ACTS,
   PIPELINE_DRAWER,
+  STATION_STACK,
   lessonPositionAriaLabel,
   requestErrorLabel,
   stationLabel,
@@ -59,6 +61,7 @@ function LessonModuleView({
   onToggle,
   lesson,
   station,
+  index,
 }: {
   module: LessonModule;
   open: boolean;
@@ -66,11 +69,18 @@ function LessonModuleView({
   lesson: SelectedLessonSafeView;
   /** 正文动线的站点短语(为什么学 / 学什么 / …)。附录卡没有站点,不传。 */
   station?: string;
+  /** 站点序号(1 起)。纸张堆叠里印在卡头,和侧栏/任务卡的圆点同一套语言。 */
+  index?: number;
 }) {
   const isInfo = INFO_MODULE_IDS.has(module.moduleId);
   const showsReferences = module.moduleId === "terms-sources";
-  return <details className={`lesson-module${isInfo ? " is-info" : ""}`} open={open}>
+  return <details
+    className={`lesson-module${isInfo ? " is-info" : ""}`}
+    data-role={module.moduleId}
+    open={open}
+  >
     <summary aria-expanded={open} onClick={(event) => { event.preventDefault(); onToggle(!open); }}>
+      {index === undefined ? null : <span className="station-marker" aria-hidden="true"><i>{index}</i></span>}
       {station === undefined ? null : <em className="station-tag">{station}</em>}
       <span>{module.title}</span><small>{module.summary}</small>
     </summary>
@@ -98,21 +108,6 @@ function hasStructuredLessonGuide(tip: PersonalizedLessonTip | undefined): boole
   return hasStructuredLessonGuideBody(tip) && isSelfContainedGuidingQuestion(tip?.guidingQuestion);
 }
 
-function PersonalizedLessonGuide({ tip }: { tip: PersonalizedLessonTip }) {
-  if (!hasStructuredLessonGuideBody(tip)) return <p>{tip.text}</p>;
-  const guidingQuestionReady = isSelfContainedGuidingQuestion(tip.guidingQuestion);
-  return <div className="lesson-guide">
-    <p className="lesson-guide-overview">{tip.lessonOverview}</p>
-    <div className="lesson-guide-grid">
-      <section><span>{LEARN_PAGE_COPY.guidePrior}</span><p>{tip.priorConnection}</p></section>
-      <section><span>{LEARN_PAGE_COPY.guideFocus}</span><p>{tip.learningFocus}</p></section>
-      <section><span>{LEARN_PAGE_COPY.guideNext}</span><p>{tip.nextConnection}</p></section>
-      <section><span>{LEARN_PAGE_COPY.guideAdvice}</span><p>{tip.studyAdvice}</p></section>
-    </div>
-    {guidingQuestionReady ? <div className="lesson-guide-question"><span>{LEARN_PAGE_COPY.guideQuestion}</span><p>{tip.guidingQuestion}</p></div> : null}
-  </div>;
-}
-
 /** 任务卡上的「本节位置」:一排小圆点 + 节次文案,把任务卡、侧栏大动线和正文站点串成同一条线。 */
 function LessonPositionStrip({ flow, activeNodeId }: { flow: StudyFlowView; activeNodeId: string | undefined }) {
   if (flow.totalLessons === 0) return null;
@@ -132,11 +127,11 @@ function LessonPositionStrip({ flow, activeNodeId }: { flow: StudyFlowView; acti
 }
 
 /**
- * 丰富卡片:任务卡(本节位置 + 本节目标 + 主操作)→ 个性化课前导学 →
- * AI 工作台收纳条 → 模块控制条 → 正文站点动线 → 折叠信息卡。
- * 优先级遵循学习者视角:目标 → 导学 → 正文;流水线是机房,默认收纳、
- * 随时可查(比赛要求的八工位内部状态一个不少)。
- * 模块开合状态与流水线渲染完全沿用重构前逻辑,只换展示结构与文案。
+ * 学习页两幕(同一路由,#study 哈希对应学习幕):
+ * - 引入幕:一本摊开的书——左页本节目标,右页个性化导学,
+ *   引导问题做通栏钩子;CTA 是「翻开正文」。
+ * - 学习幕:正文站点纸叠 + 附录卡 + 进入正式活动。
+ * 流水线收纳条两幕共用,随时可查;模块开合与流水线渲染沿用原逻辑。
  */
 function RichLessonView({
   card,
@@ -147,6 +142,7 @@ function RichLessonView({
   tipLoading,
   tipProgressText,
   onGenerateTip,
+  onEnterActivity,
 }: {
   card: LearningCardSafeView & { selectedLesson: SelectedLessonSafeView };
   flow: StudyFlowView;
@@ -156,82 +152,180 @@ function RichLessonView({
   tipLoading: boolean;
   tipProgressText?: string;
   onGenerateTip: () => void;
+  onEnterActivity?: () => void;
 }) {
   const lesson = card.selectedLesson;
   const defaults = new Set(DEFAULT_OPEN_MODULES[lesson.variantId]);
   const [openState, setOpenState] = useState<Partial<Record<LessonModuleId, boolean>>>({});
   const isOpen = (moduleId: LessonModuleId) => openState[moduleId] ?? defaults.has(moduleId);
-  const setAll = (open: boolean) => setOpenState(Object.fromEntries(lesson.modules.map((module) => [module.moduleId, open])));
   const structuredTipReady = hasStructuredLessonGuide(card.personalizedTip);
   const readingModules = lesson.modules.filter((module) => !INFO_MODULE_IDS.has(module.moduleId));
   const infoModules = lesson.modules.filter((module) => INFO_MODULE_IDS.has(module.moduleId));
 
-  return <>
-    <section className="learn-task lesson-objectives" aria-labelledby="learn-task-heading">
-      <div className="learn-task-heading">
-        <div>
-          <p className="task-kicker"><span className="kicker-dot" aria-hidden="true" />{LEARN_PAGE_COPY.taskKicker}</p>
-          <h2 id="learn-task-heading">{LEARN_PAGE_COPY.taskTitle}</h2>
+  /*
+   * 分幕:#study 对应学习幕。进出都直接改状态,hashchange 只服务
+   * 浏览器前进/后退;返回简报用 replaceState 抹掉哈希,不留历史垃圾。
+   */
+  const [act, setAct] = useState<"briefing" | "study">(
+    () => (typeof window === "undefined" ? "briefing" : window.location.hash === "#study" ? "study" : "briefing"),
+  );
+  useEffect(() => {
+    const onHash = () => setAct(window.location.hash === "#study" ? "study" : "briefing");
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
+  const openStudy = () => {
+    window.location.hash = "study";
+    setAct("study");
+  };
+  const backToBriefing = () => {
+    window.history.replaceState(null, "", window.location.pathname + window.location.search);
+    setAct("briefing");
+  };
+
+  /*
+   * 站点纸张堆叠:一次只亮一站,翻动时旧纸滑出淡去、新纸滑入。
+   * 翻站后把学习幕顶部滚回视口——否则上一站很长、下一站很短时,
+   * 视口会悬在空白里。
+   */
+  const [station, setStation] = useState(0);
+  const [leaving, setLeaving] = useState<number | null>(null);
+  const dirRef = useRef<1 | -1>(1);
+  const studyRef = useRef<HTMLElement | null>(null);
+  const stationTotal = readingModules.length;
+  const goToStation = (target: number) => {
+    const next = Math.max(0, Math.min(stationTotal - 1, target));
+    if (next === station) return;
+    dirRef.current = next > station ? 1 : -1;
+    setLeaving(station);
+    setStation(next);
+    requestAnimationFrame(() => {
+      const el = studyRef.current;
+      if (el === null || typeof el.scrollIntoView !== "function") return;
+      const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+      el.scrollIntoView({ block: "start", behavior: reduced ? "auto" : "smooth" });
+    });
+  };
+  const paperDirection = { "--paper-from": dirRef.current === 1 ? "32px" : "-32px" } as CSSProperties;
+  const renderModule = (index: number) => <LessonModuleView
+    module={readingModules[index]!}
+    open={isOpen(readingModules[index]!.moduleId)}
+    onToggle={(open) => setOpenState((current) => ({ ...current, [readingModules[index]!.moduleId]: open }))}
+    lesson={lesson}
+    station={stationLabel(readingModules[index]!.moduleId)}
+    index={index + 1}
+  />;
+
+  if (act === "study") return (
+    <section className="lesson-study" ref={studyRef}>
+      <div className="study-head">
+        <LessonPositionStrip flow={flow} activeNodeId={activeNodeId} />
+        <button type="button" className="button text-button" onClick={backToBriefing}>{LESSON_ACTS.backToBriefing}</button>
+      </div>
+      {stationTotal === 0 ? null : <>
+        <nav className="stack-nav" aria-label={STATION_STACK.navAria}>
+          <button type="button" className="button secondary stack-nav-step" disabled={station === 0} onClick={() => goToStation(station - 1)}>{STATION_STACK.prev}</button>
+          <div className="stack-nav-state">
+            <span className="stack-nav-count">{STATION_STACK.count(station + 1, stationTotal)}</span>
+            <ol className="stack-nav-ticks" aria-hidden="true">
+              {readingModules.map((module, index) => <li key={module.moduleId}>
+                <button
+                  type="button"
+                  data-current={index === station}
+                  aria-label={STATION_STACK.jumpAria(stationLabel(module.moduleId))}
+                  onClick={() => goToStation(index)}
+                />
+              </li>)}
+            </ol>
+            <span className="stack-nav-label">{readingModules[station] === undefined ? "" : stationLabel(readingModules[station]!.moduleId)}</span>
+          </div>
+          <button type="button" className="button primary stack-nav-step" disabled={station === stationTotal - 1} onClick={() => goToStation(station + 1)}>{STATION_STACK.next}</button>
+        </nav>
+        <div className="lesson-stack" style={paperDirection}>
+          {leaving === null ? null : <div
+            className="lesson-paper is-leaving"
+            aria-hidden="true"
+            key={`leaving-${leaving}-${station}`}
+          >{renderModule(leaving)}</div>}
+          <div className="lesson-paper is-active" key={station}>{renderModule(station)}</div>
         </div>
-        <span className="status-tag success">{lesson.label}</span>
-      </div>
-      <LessonPositionStrip flow={flow} activeNodeId={activeNodeId} />
-      <div className="objective-columns">
-        <div><h3>{LEARN_PAGE_COPY.understandHeading}</h3><ul>{lesson.learningObjectives.understand.map((item) => <li key={item}>{item}</li>)}</ul></div>
-        <div><h3>{LEARN_PAGE_COPY.masterHeading}</h3><ul>{lesson.learningObjectives.master.map((item) => <li key={item}>{item}</li>)}</ul></div>
-      </div>
-      {footer}
-    </section>
-    <aside className={`lesson-personal-tip ${tipLoading ? "is-loading" : card.personalizedTip === undefined ? "is-unavailable" : "is-generated"}`} role="status" aria-live="polite">
-      <div className="lesson-personal-tip-heading">
-        <div className="lesson-personal-tip-title"><span><span className="kicker-dot" aria-hidden="true" />{LEARN_PAGE_COPY.tipTitle}</span>{card.personalizedTip?.lessonVariantLabel === undefined ? null : <small>{card.personalizedTip.lessonVariantLabel}</small>}</div>
-        <strong>{tipLoading ? tipProgressText ?? LEARN_PAGE_COPY.tipGenerating : card.personalizedTip === undefined ? LEARN_PAGE_COPY.tipUnavailableStatus : structuredTipReady ? LEARN_PAGE_COPY.tipStructuredStatus : LEARN_PAGE_COPY.tipLegacyStatus}</strong>
-      </div>
-      {tipLoading
-        ? <p>{LEARN_PAGE_COPY.tipLoadingBody}</p>
-        : card.personalizedTip === undefined
-          ? <p>{LEARN_PAGE_COPY.tipUnavailableBody}</p>
-          : <PersonalizedLessonGuide tip={card.personalizedTip} />}
-      {!tipLoading && !structuredTipReady ? <button type="button" className="button text-button" onClick={onGenerateTip}>{card.personalizedTip === undefined ? LEARN_PAGE_COPY.tipRegenerate : LEARN_PAGE_COPY.tipUpgrade}</button> : null}
-    </aside>
-    {pipeline}
-    <div className="lesson-controls" aria-label={LEARN_PAGE_COPY.controlsAriaLabel}>
-      <span>{LEARN_PAGE_COPY.moduleCountLabel(lesson.modules.length)}</span>
-      <div><button type="button" className="button text-button" onClick={() => setAll(true)}>{LEARN_PAGE_COPY.expandAll}</button><button type="button" className="button text-button" onClick={() => setAll(false)}>{LEARN_PAGE_COPY.collapseAll}</button></div>
-    </div>
-    <section className="lesson-manual" aria-label={LEARN_PAGE_COPY.readingAriaLabel}>
-      {/*
-        正文动线:各模块挂在一条贯穿的脊柱上,每站一个动作
-        (为什么学 → 学什么 → 看示范 → 该你做),与左侧栏的大动线同构。
-        附录卡(误区/术语依据)不属于动线,收在 learn-facts 里。
-      */}
-      <ol className="lesson-path">
-        {readingModules.map((module, index) => <li
-          className="lesson-station"
-          data-role={module.moduleId}
+      </>}
+      {infoModules.length === 0 ? null : <section className="learn-facts" aria-label={LEARN_PAGE_COPY.factsAriaLabel}>
+        {infoModules.map((module) => <LessonModuleView
           key={module.moduleId}
-        >
-          <span className="station-marker" aria-hidden="true"><i>{index + 1}</i></span>
-          <LessonModuleView
-            module={module}
-            open={isOpen(module.moduleId)}
-            onToggle={(open) => setOpenState((current) => ({ ...current, [module.moduleId]: open }))}
-            lesson={lesson}
-            station={stationLabel(module.moduleId)}
-          />
-        </li>)}
-      </ol>
+          module={module}
+          open={isOpen(module.moduleId)}
+          onToggle={(open) => setOpenState((current) => ({ ...current, [module.moduleId]: open }))}
+          lesson={lesson}
+        />)}
+      </section>}
+      <div className="study-footer">{footer}</div>
     </section>
-    {infoModules.length === 0 ? null : <section className="learn-facts" aria-label={LEARN_PAGE_COPY.factsAriaLabel}>
-      {infoModules.map((module) => <LessonModuleView
-        key={module.moduleId}
-        module={module}
-        open={isOpen(module.moduleId)}
-        onToggle={(open) => setOpenState((current) => ({ ...current, [module.moduleId]: open }))}
-        lesson={lesson}
-      />)}
-    </section>}
-  </>;
+  );
+
+  const tip = card.personalizedTip;
+  const tipStatus = tipLoading
+    ? tipProgressText ?? LEARN_PAGE_COPY.tipGenerating
+    : tip === undefined
+      ? LEARN_PAGE_COPY.tipUnavailableStatus
+      : structuredTipReady ? LEARN_PAGE_COPY.tipStructuredStatus : LEARN_PAGE_COPY.tipLegacyStatus;
+
+  return (
+    <section className="lesson-briefing">
+      <div className="briefing-band">
+        <LessonPositionStrip flow={flow} activeNodeId={activeNodeId} />
+      </div>
+      <div className="lesson-spread">
+        <article className="spread-page" aria-labelledby="learn-task-heading">
+          <header className="spread-page-heading">
+            <p className="task-kicker"><span className="kicker-dot" aria-hidden="true" />{LEARN_PAGE_COPY.taskKicker}</p>
+            <span className="status-tag success">{lesson.label}</span>
+          </header>
+          <h2 id="learn-task-heading">{LEARN_PAGE_COPY.taskTitle}</h2>
+          <div className="objective-columns">
+            <div><h3>{LEARN_PAGE_COPY.understandHeading}</h3><ul>{lesson.learningObjectives.understand.map((item) => <li key={item}>{item}</li>)}</ul></div>
+            <div><h3>{LEARN_PAGE_COPY.masterHeading}</h3><ul>{lesson.learningObjectives.master.map((item) => <li key={item}>{item}</li>)}</ul></div>
+          </div>
+        </article>
+        <div className="spread-spine" aria-hidden="true" />
+        <article className="spread-page">
+          <header className="spread-page-heading">
+            <p className="task-kicker"><span className="kicker-dot" aria-hidden="true" />{LEARN_PAGE_COPY.tipTitle}</p>
+            <div className="lesson-personal-tip-heading"><strong>{tipStatus}</strong></div>
+          </header>
+          <small className="spread-variant">{card.personalizedTip?.lessonVariantLabel ?? lesson.label}</small>
+          {tipLoading ? <p className="spread-tip-body">{LEARN_PAGE_COPY.tipLoadingBody}</p>
+            : tip === undefined ? <p className="spread-tip-body">{LEARN_PAGE_COPY.tipUnavailableBody}</p>
+              : hasStructuredLessonGuideBody(tip) ? <>
+                <p className="spread-overview">{tip.lessonOverview}</p>
+                <div className="lesson-guide-grid">
+                  <section><span>{LEARN_PAGE_COPY.guidePrior}</span><p>{tip.priorConnection}</p></section>
+                  <section><span>{LEARN_PAGE_COPY.guideFocus}</span><p>{tip.learningFocus}</p></section>
+                  <section><span>{LEARN_PAGE_COPY.guideNext}</span><p>{tip.nextConnection}</p></section>
+                  <section><span>{LEARN_PAGE_COPY.guideAdvice}</span><p>{tip.studyAdvice}</p></section>
+                </div>
+              </>
+                : <p className="spread-tip-body">{tip.text}</p>}
+          {tipLoading || structuredTipReady ? null : <button type="button" className="button text-button" onClick={onGenerateTip}>{tip === undefined ? LEARN_PAGE_COPY.tipRegenerate : LEARN_PAGE_COPY.tipUpgrade}</button>}
+        </article>
+      </div>
+      {structuredTipReady && isSelfContainedGuidingQuestion(tip?.guidingQuestion) ? (
+        <div className="question-band">
+          <span>{LEARN_PAGE_COPY.guideQuestion}</span>
+          <p>{tip!.guidingQuestion}</p>
+        </div>
+      ) : null}
+      <div className="briefing-cta">
+        {pipeline}
+        <div className="briefing-actions">
+          <button type="button" className="button primary" onClick={openStudy}>{LESSON_ACTS.openStudy}</button>
+          {onEnterActivity === undefined ? null : (
+            <button type="button" className="button text-button" disabled={tipLoading} onClick={onEnterActivity}>{LESSON_ACTS.skipToActivity}</button>
+          )}
+        </div>
+      </div>
+    </section>
+  );
 }
 
 /**
@@ -469,7 +563,7 @@ export function LearnPage() {
                 <button type="button" className="button primary" onClick={() => { setNext(undefined); void bootstrap.reload(); }}>{LEARN_PAGE_COPY.reloadSession}</button>
               </section>
               : displayCard.selectedLesson === undefined ? <LegacyLessonView card={displayCard} readiness={next.contentReadiness} pipeline={pipeline} footer={taskFooter} />
-                : <RichLessonView card={displayCard as LearningCardSafeView & { selectedLesson: SelectedLessonSafeView }} flow={flowView} activeNodeId={activeNodeId} pipeline={pipeline} footer={taskFooter} tipLoading={tipBusy} tipProgressText={tipBusy ? actionProgress.text : undefined} onGenerateTip={() => { setTipAttemptedNodeId(undefined); void prepareTip(); }} />}
+                : <RichLessonView card={displayCard as LearningCardSafeView & { selectedLesson: SelectedLessonSafeView }} flow={flowView} activeNodeId={activeNodeId} pipeline={pipeline} footer={taskFooter} tipLoading={tipBusy} tipProgressText={tipBusy ? actionProgress.text : undefined} onGenerateTip={() => { setTipAttemptedNodeId(undefined); void prepareTip(); }} onEnterActivity={next.activity === undefined || reviewingEarlierLesson ? undefined : () => void open()} />}
         </article>
       </div>
     </> : null}

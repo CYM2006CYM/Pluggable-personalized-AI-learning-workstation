@@ -73,6 +73,7 @@ export const DIAGNOSTIC_PAGE_COPY = {
     next: "下一题 →",
     skip: "跳过本题",
     save: "保存并继续",
+    saving: "保存中…",
     saveEdit: "保存修改并继续",
   },
 } as const;

@@ -52,13 +52,15 @@
   flex: 0 0 auto;
 }
 
-/* 连接线占满剩余空间，让两端环节贴边、中间均分 */
+/* 连接线占满剩余空间，让两端环节贴边、中间均分。
+   背景色带过渡：完成一个环节时连线「填」过去，步骤推进因此看得见。 */
 .stepper-connector {
   flex: 1 1 auto;
   min-width: var(--space-5);
   height: 1px;
   margin: 0 var(--space-3);
   background: var(--rule);
+  transition: background var(--dur-base) var(--ease);
 }
 
 .stepper-item[data-status="completed"] ~ .stepper-item .stepper-connector,
@@ -153,7 +155,7 @@
 }
 
 .stepper-item[data-status="current"] .stepper-mark::after {
-  animation: stepper-pulse 1.6s cubic-bezier(0.2, 0, 0, 1) infinite;
+  animation: stepper-pulse 1.6s var(--ease) infinite;
 }
 
 .stepper-item[data-status="locked"] .stepper-node {

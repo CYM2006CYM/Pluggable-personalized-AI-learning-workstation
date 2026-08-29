@@ -948,6 +948,35 @@ h3 {
   padding: 34px 34px 52px;
 }
 
+/*
+ * 动效（ticket 15）:
+ * - 页面切换淡入:PageFrame 是每个页面的根,路由切换时新页面自然播放。
+ * - 信息卡展开过渡:所有 <details> 卡(教学模块/误区卡/诊断背景信息/AI 工作台)
+ *   展开时内容整体上滑淡入;收起是瞬时的——与 PaperFlip 同一套「只做进场」
+ *   的克制原则,不为离场维护计时器状态。
+ * 两段动画都只作用于 opacity 与 transform,不触发重排;时长与缓动全部取
+ * token;no-preference 包裹即天然覆盖「减弱动效」偏好。
+ */
+@keyframes page-enter {
+  from { opacity: 0; transform: translateY(var(--space-1)); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes disclose-in {
+  from { opacity: 0; transform: translateY(calc(var(--space-1) * -1)); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .page-frame {
+    animation: page-enter var(--dur-base) var(--ease);
+  }
+
+  details[open] > :not(summary) {
+    animation: disclose-in var(--dur-base) var(--ease);
+  }
+}
+
 .page-heading {
   min-height: 112px;
   display: flex;
@@ -2459,56 +2488,99 @@ h3 {
     grid-template-columns: 1fr;
   }
 
+  /*
+   * 动线票 14 的壳层决策:平板与手机共用同一套折叠形态——
+   * 侧栏退化为页面顶部的横向滚动步骤条。
+   * - 不选抽屉:抽屉把「进度」藏进一次点击之后,与步骤条常显的职责相悖;
+   *   触屏没有 hover,桌面那套「轨道悬停弹毛玻璃面板」在触屏上没有舞台。
+   * - 横向滚动条复用同一条动线数据(轨道实例),只重排不改结构:
+   *   圆点 + 环节名一行排开,溢出交给横滚;逐节五态由页面内的
+   *   「本节位置」圆点承担,不在顶栏堆第二层进度。
+   */
   .app-sidebar {
     position: static;
     height: auto;
-    padding: 12px 16px;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--space-4);
+    padding: var(--space-2) var(--space-4);
+    border-right: 0;
+    border-bottom: 1px solid var(--rule);
   }
 
   .brand-block {
-    padding-bottom: 12px;
-  }
-
-  /*
-   * 窄屏下侧栏变成静态条,没有「悬停轨道」的舞台:
-   * 无论钉住与否,都停靠显示完整动线面板。
-   * 选择器用裸 [data-sidebar] 与状态规则同权重,靠源顺序取胜。
-   */
-  .app-shell[data-sidebar] .sidebar-flow > .study-stepper[data-variant="rail"] {
-    display: none;
-  }
-
-  .app-shell[data-sidebar] .sidebar-panel {
-    position: static;
-    width: auto;
-    max-height: none;
+    flex: 0 0 auto;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 0;
     padding: 0;
-    border: 0;
-    border-radius: 0;
-    background: transparent;
-    box-shadow: none;
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-    opacity: 1;
-    visibility: visible;
-    transform: none;
-    transition: none;
-    pointer-events: auto;
-    overflow-y: visible;
+    border-bottom: 0;
   }
 
-  .app-shell[data-sidebar] .sidebar-panel::before {
-    display: none;
-  }
-
-  .app-shell[data-sidebar] .brand-block > strong,
-  .app-shell[data-sidebar] .brand-block > span:not(.brand-mark),
-  .app-shell[data-sidebar] .sidebar-toggle-text {
+  /* 品牌整行文字回归;「本地演示模式」副标与圆章让位给动线 */
+  .app-shell[data-sidebar] .brand-block > strong {
     display: block;
+  }
+
+  .app-shell[data-sidebar] .brand-block > span:not(.brand-mark) {
+    display: none;
   }
 
   .app-shell[data-sidebar] .brand-mark {
     display: none;
+  }
+
+  /* 悬停毛玻璃面板在触屏上没有舞台,钉住按钮随之失去意义:一并退场 */
+  .app-shell[data-sidebar] .sidebar-panel,
+  .sidebar-toggle {
+    display: none;
+  }
+
+  .sidebar-flow {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 0;
+  }
+
+  /* 轨道实例横向铺开成滚动步骤条。内边距留给当前环节的脉冲环,
+     否则 overflow 裁剪会把光环切成生硬的方边。 */
+  .app-shell[data-sidebar] .sidebar-flow > .study-stepper[data-variant="rail"] {
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: var(--space-2) 0;
+  }
+
+  .app-shell[data-sidebar] .study-stepper[data-variant="rail"] .stepper-track {
+    flex-direction: row;
+    align-items: center;
+    gap: 0;
+    width: max-content;
+    min-width: 100%;
+  }
+
+  .app-shell[data-sidebar] .study-stepper[data-variant="rail"] .stepper-item,
+  .app-shell[data-sidebar] .study-stepper[data-variant="rail"] .stepper-node-wrap {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  /* 环节名在条上回归(轨道态的隐藏规则只属于桌面) */
+  .app-shell[data-sidebar] .study-stepper[data-variant="rail"] .stepper-text {
+    display: inline-flex;
+  }
+
+  .app-shell[data-sidebar] .study-stepper[data-variant="rail"] .stepper-label {
+    white-space: nowrap;
+  }
+
+  /* 纵向连线复位为横向短接线;flex-grow 保留,环节少时连线摊满整行 */
+  .app-shell[data-sidebar] .study-stepper[data-variant="rail"] .stepper-connector {
+    align-self: center;
+    width: auto;
+    min-width: var(--space-5);
+    height: 1px;
+    margin: 0 var(--space-3);
   }
 
   .topbar {
@@ -2536,6 +2608,22 @@ h3 {
 }
 
 @media (max-width: 700px) {
+  /*
+   * 动线票 14 的主操作决策:不吸底,保持随文。
+   * 各页主操作都紧跟其输入内容(选项 / 草稿区 / 正文收尾)之后,单屏滚动
+   * 即可够到;吸底栏的收益要等内容长过两屏才显现,代价是遮挡内容尾部、
+   * 与移动端浏览器的底部手势条叠加易误触。改用触摸目标兜底:
+   * 全部可点控件抬到 44px(HIG 最小值),随文按钮也好按。
+   */
+  .button,
+  .diagnostic-btn,
+  .topbar-nav a,
+  .page-back,
+  .activity-tabs button,
+  .segmented-control button {
+    min-height: 44px;
+  }
+
   .topbar {
     align-items: flex-start;
     padding: 12px 16px;

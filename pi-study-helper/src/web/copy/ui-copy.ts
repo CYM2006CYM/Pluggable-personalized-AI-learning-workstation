@@ -210,7 +210,31 @@ export function profileStatusLabel(status: string | undefined): string {
 }
 
 /**
- * 分区标签。返回空串表示这项不该显示——调用方必须直接不渲染，
+ * 状态面板的错误码翻译。服务端/框架错误码是内部标识符,不上界面:
+ * 翻成稳定的中文大类,未知码一律回落通称;原始码保留在面板的
+ * data-error-code 属性里,排查问题时开发者工具仍能看到。
+ */
+const STATE_CODE_LABELS: Readonly<Record<string, string>> = {
+  request_failed: "请求未完成",
+  session_version_conflict: "会话版本已变化",
+  "PREREQUISITE VIOLATION": "尚未满足结束条件",
+  prerequisite_violation: "尚未满足结束条件",
+  ACTIVITY_SAFE_VIEW_INCOMPLETE: "活动安全内容不完整",
+  activity_safe_view_incomplete: "活动安全内容不完整",
+  COMPLETED_SUMMARY_ARCHIVE_MISSING: "总结归档缺失",
+  RECOVERY_BLOCKED: "恢复受阻",
+};
+
+const FALLBACK_STATE_CODE = "状态待确认";
+
+export function statePanelCodeLabel(code: string | undefined): string {
+  if (code === undefined || code === "") return FALLBACK_STATE_CODE;
+  if (code.startsWith("deep_link_")) return "深链核对未通过";
+  return STATE_CODE_LABELS[code] ?? FALLBACK_STATE_CODE;
+}
+
+/**
+ * 分区标签。返回空串表示这项不该显示——调用方必须直接不渲染,
  * 不能渲染成空白标签占位。
  */
 export function sectionLabel(section: string | undefined): string {
