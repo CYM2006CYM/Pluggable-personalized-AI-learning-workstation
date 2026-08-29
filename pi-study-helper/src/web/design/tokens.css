@@ -101,4 +101,5 @@
   --read-width: 720px; /* 正文阅读区最大宽度 */
   --sidebar-w: 232px; /* 侧栏展开宽度 */
   --sidebar-w-collapsed: 68px; /* 侧栏收起后只剩圆点列的宽度 */
+  --sidebar-panel-w: 280px; /* 收起态悬停弹出的毛玻璃动线面板宽度 */
 }

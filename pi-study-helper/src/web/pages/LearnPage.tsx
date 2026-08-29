@@ -21,7 +21,7 @@ import { useAsyncActionProgress } from "../hooks/use-async-action-progress.js";
 import { useAgentRun } from "../hooks/use-agent-run.js";
 import { activityKindLabel, contentReadinessLabel } from "../learning-labels.js";
 import { relearnNodeIdForActivity } from "../relearn-context.js";
-import { AGENT_PIPELINE_STATUS_FALLBACK, LEARN_PAGE_COPY, requestErrorLabel } from "../copy/learn-page-copy.js";
+import { AGENT_PIPELINE_STATUS_FALLBACK, LEARN_PAGE_COPY, requestErrorLabel, stationLabel } from "../copy/learn-page-copy.js";
 import "./LearnPage.css";
 
 const DEFAULT_OPEN_MODULES: Record<LessonVariantId, readonly LessonModuleId[]> = {
@@ -49,16 +49,22 @@ function LessonModuleView({
   open,
   onToggle,
   lesson,
+  station,
 }: {
   module: LessonModule;
   open: boolean;
   onToggle: (open: boolean) => void;
   lesson: SelectedLessonSafeView;
+  /** 正文动线的站点短语(为什么学 / 学什么 / …)。附录卡没有站点,不传。 */
+  station?: string;
 }) {
   const isInfo = INFO_MODULE_IDS.has(module.moduleId);
   const showsReferences = module.moduleId === "terms-sources";
   return <details className={`lesson-module${isInfo ? " is-info" : ""}`} open={open}>
-    <summary aria-expanded={open} onClick={(event) => { event.preventDefault(); onToggle(!open); }}><span>{module.title}</span><small>{module.summary}</small></summary>
+    <summary aria-expanded={open} onClick={(event) => { event.preventDefault(); onToggle(!open); }}>
+      {station === undefined ? null : <em className="station-tag">{station}</em>}
+      <span>{module.title}</span><small>{module.summary}</small>
+    </summary>
     <div className="lesson-module-body">
       {module.blocks.map((block) => <LessonBlockView block={block} key={block.blockId} />)}
       {showsReferences ? <>
@@ -160,13 +166,27 @@ function RichLessonView({
       <div><button type="button" className="button text-button" onClick={() => setAll(true)}>{LEARN_PAGE_COPY.expandAll}</button><button type="button" className="button text-button" onClick={() => setAll(false)}>{LEARN_PAGE_COPY.collapseAll}</button></div>
     </div>
     <section className="lesson-manual" aria-label={LEARN_PAGE_COPY.readingAriaLabel}>
-      {readingModules.map((module) => <LessonModuleView
-        key={module.moduleId}
-        module={module}
-        open={isOpen(module.moduleId)}
-        onToggle={(open) => setOpenState((current) => ({ ...current, [module.moduleId]: open }))}
-        lesson={lesson}
-      />)}
+      {/*
+        正文动线:各模块挂在一条贯穿的脊柱上,每站一个动作
+        (为什么学 → 学什么 → 看示范 → 该你做),与左侧栏的大动线同构。
+        附录卡(误区/术语依据)不属于动线,收在 learn-facts 里。
+      */}
+      <ol className="lesson-path">
+        {readingModules.map((module, index) => <li
+          className="lesson-station"
+          data-role={module.moduleId}
+          key={module.moduleId}
+        >
+          <span className="station-marker" aria-hidden="true"><i>{index + 1}</i></span>
+          <LessonModuleView
+            module={module}
+            open={isOpen(module.moduleId)}
+            onToggle={(open) => setOpenState((current) => ({ ...current, [module.moduleId]: open }))}
+            lesson={lesson}
+            station={stationLabel(module.moduleId)}
+          />
+        </li>)}
+      </ol>
     </section>
     {infoModules.length === 0 ? null : <section className="learn-facts" aria-label={LEARN_PAGE_COPY.factsAriaLabel}>
       {infoModules.map((module) => <LessonModuleView

@@ -58,7 +58,7 @@ const STEP_STATUS_LABELS: Readonly<Record<StepStatus, string>> = {
 
 /** 步骤条自身的中文标签。它也是用户可见字符串，因此归语义层所有。 */
 export const STEPPER_LABELS = {
-  nav: "学习动线",
+  nav: "学习流程",
   lessons: "各节进度",
   /** hover/点开后浮层卡片的标题。 */
   progress: "学习进度",

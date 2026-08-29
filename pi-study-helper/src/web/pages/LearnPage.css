@@ -384,28 +384,119 @@
   gap: var(--space-2);
 }
 
-/* ---------- 正文阅读区:教材的一页 ---------- */
+/* ---------- 正文阅读区:一条贯穿的站点动线 ----------
+ *
+ * 意象与左侧栏大动线同构:一节正文也是一段旅程,
+ * 每个模块是一站(为什么学 → 学什么 → 看示范 → 该你做),
+ * 圆点标记骑在一条竖向脊柱上,卡片按站点角色分层:
+ * - 站点层:脊柱 + 序号圆点,给出一节的行进顺序;
+ * - 卡片层:单体卡(标题盒和内容盒不再分家),末站「该你做」
+ *   用虚线边框表示轮到学习者上手;
+ * - 内容层:站点短语 → 衬线标题 → 导语 → 正文/代码四级字阶。
+ */
 
 [data-page="learn"] .lesson-manual {
   min-width: 0;
-  display: grid;
-  gap: var(--space-5);
   font-family: var(--font-serif);
 }
 
-/* 阅读区小节:不包卡壳、不限高,只保留章节标题的视觉层级 */
+[data-page="learn"] .lesson-path {
+  position: relative;
+  display: block;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* 脊柱段:从圆点下缘补到本站底部,站与站之间不留断口 */
+[data-page="learn"] .lesson-station {
+  position: relative;
+  padding: 0 0 var(--space-5) calc(var(--space-6) + var(--space-4));
+}
+
+[data-page="learn"] .lesson-station::before {
+  content: "";
+  position: absolute;
+  top: var(--space-6);
+  bottom: 0;
+  left: calc(var(--space-6) / 2);
+  border-left: 1px solid var(--rule);
+}
+
+[data-page="learn"] .lesson-station:last-child {
+  padding-bottom: 0;
+}
+
+[data-page="learn"] .lesson-station:last-child::before {
+  display: none;
+}
+
+[data-page="learn"] .station-marker {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: var(--space-6);
+  height: var(--space-6);
+  border: 1px solid var(--rule);
+  border-radius: 50%;
+  background: var(--card);
+  box-shadow: var(--shadow-1);
+}
+
+[data-page="learn"] .station-marker i {
+  color: var(--accent);
+  font-family: var(--font-sans);
+  font-size: var(--fs-caption);
+  font-style: normal;
+  font-weight: var(--fw-bold);
+  font-variant-numeric: tabular-nums;
+  line-height: var(--lh-caption);
+}
+
+/* 末站「该你做」:虚线圆点预告这是学习者的回合 */
+[data-page="learn"] .lesson-station[data-role="final-task"] .station-marker {
+  border-style: dashed;
+  background: var(--accent-soft);
+}
+
+[data-page="learn"] .station-tag {
+  display: inline-flex;
+  width: fit-content;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-sm);
+  color: var(--accent);
+  background: var(--accent-soft);
+  font-size: var(--fs-caption);
+  font-style: normal;
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-caption);
+}
+
+[data-page="learn"] .lesson-station[data-role="final-task"] .station-tag {
+  color: var(--warm);
+}
+
+/* 单体站卡:标题与正文同壳,不再一上一下两个框 */
 [data-page="learn"] .lesson-module {
   min-width: 0;
-  width: 100%;
-  content-visibility: visible;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+  box-shadow: var(--shadow-1);
+}
+
+[data-page="learn"] .lesson-station[data-role="final-task"] .lesson-module {
+  border-style: dashed;
 }
 
 [data-page="learn"] .lesson-module > summary {
   position: relative;
   display: grid;
   gap: var(--space-1);
-  padding: 0 var(--space-6) var(--space-3) 0;
-  border-bottom: 1px solid var(--rule);
+  padding: var(--space-4) calc(var(--space-6) + var(--space-2)) var(--space-4) var(--space-5);
   cursor: pointer;
   list-style: none;
 }
@@ -417,8 +508,8 @@
 [data-page="learn"] .lesson-module > summary::after {
   content: "";
   position: absolute;
-  top: var(--space-1);
-  right: var(--space-1);
+  top: var(--space-5);
+  right: var(--space-5);
   width: var(--space-2);
   height: var(--space-2);
   border-right: 1px solid var(--text-soft);
@@ -445,9 +536,15 @@
   line-height: var(--lh-caption);
 }
 
+/* 展开后的标题区与正文之间用虚线分隔:同一张卡的内部分层。
+   附录卡(is-info)有自己的实线分隔,不套用。 */
+[data-page="learn"] .lesson-module:not(.is-info)[open] > summary {
+  border-bottom: 1px dashed var(--rule);
+}
+
 [data-page="learn"] .lesson-module-body {
   min-width: 0;
-  padding: var(--space-4) 0 0;
+  padding: var(--space-4) var(--space-5) var(--space-5);
 }
 
 [data-page="learn"] .lesson-subheading {
@@ -486,7 +583,7 @@
   border: 1px solid var(--rule);
   border-radius: var(--radius-md);
   color: var(--text);
-  background: var(--card);
+  background: var(--card-soft);
   font-family: var(--font-mono);
   font-size: var(--fs-mono);
   line-height: var(--lh-mono);

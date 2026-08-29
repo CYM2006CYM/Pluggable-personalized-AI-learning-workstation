@@ -37,6 +37,17 @@ export interface StudyStepperProps {
    * 侧栏只有 232px，横向放不下六个环节。
    */
   orientation?: "horizontal" | "vertical";
+  /**
+   * rail：收缩轨道里的圆点列，只保留动线结构，环节名交给
+   * 毛玻璃面板（AppShell 里另一个 full 实例）补全。
+   */
+  variant?: "full" | "rail";
+  /**
+   * 循环体逐节进度的展示方式。popover 是悬浮毛玻璃卡（demo05 的行为）；
+   * inline 直接平铺在「学习」一项下方，用于已经整体悬浮出来的动线面板——
+   * 面板本身就是 hover 的产物，里面再套一层 hover 没有意义。
+   */
+  progress?: "popover" | "inline";
 }
 
 const CYCLE_STEP: StudyStepId = "lesson";
@@ -49,9 +60,17 @@ export function StudyStepper({
   flow,
   hrefFor: _hrefFor,
   orientation = "horizontal",
+  variant = "full",
+  progress = "popover",
 }: StudyStepperProps) {
+  const inline = progress === "inline";
   return (
-    <nav className="study-stepper" aria-label={STEPPER_LABELS.nav} data-orientation={orientation}>
+    <nav
+      className="study-stepper"
+      aria-label={STEPPER_LABELS.nav}
+      data-orientation={orientation}
+      data-variant={variant}
+    >
       <ol className="stepper-track">
         {flow.steps.map((step, index) => {
           const cycle = isCycleStep(step.id);
@@ -86,12 +105,12 @@ export function StudyStepper({
               </div>
 
               {/*
-                浮层始终在 DOM 里，显隐交给 CSS：
-                鼠标 hover 或键盘 focus 在循环项上时渐显。
-                它不占文档流，所以不会把下方环节推开，也不会被容器裁掉。
+                逐节进度。popover 形态：浮层始终在 DOM 里，显隐交给 CSS，
+                hover/focus 在循环项上时渐显；不占文档流，不会推开下方环节，
+                也不会被容器裁掉。inline 形态：随面板整体悬浮，直接平铺。
               */}
               {cycle && flow.cycles.length > 0 ? (
-                <div className="stepper-lessons">
+                <div className={`stepper-lessons${inline ? " is-inline" : ""}`}>
                   <p className="stepper-progress-title">{STEPPER_LABELS.progress}</p>
                   <p className="stepper-progress">{progressLabel(flow.completedLessons, flow.totalLessons)}</p>
                   <ol className="lesson-list">

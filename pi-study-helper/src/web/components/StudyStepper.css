@@ -369,8 +369,12 @@
   width: 1px;
   min-width: 0;
   height: var(--space-4);
+  /*
+   * 连线必须落在圆点正中。圆点左缘 = 节点内 padding(var(--space-2))，
+   * 圆心再往右半个标记宽——之前误用 space-3，整条竖线右漂 4px。
+   */
   margin: var(--space-1) 0 var(--space-1)
-    calc(var(--space-3) + var(--stepper-mark-size) / 2);
+    calc(var(--space-2) + var(--stepper-mark-size) / 2);
 }
 
 /* 侧栏里浮层从行的右侧滑出，覆盖到主内容区边缘，不受侧栏宽度限制 */
@@ -385,4 +389,40 @@
   .study-stepper[data-orientation="vertical"] .stepper-item.is-cycle:focus-within .stepper-lessons {
     transform: translateX(0);
   }
+}
+
+/* ---------- 收缩轨道（rail 变体） ---------- */
+
+/*
+ * 轨道里只保留圆点与连线，环节名交给毛玻璃面板补全。
+ * 节点 padding 保持不变——连线对齐依赖这个 padding 算出的圆心位置。
+ */
+.study-stepper[data-variant="rail"] .stepper-text {
+  display: none;
+}
+
+/* 轨道不渲染浮层：逐节进度由动线面板整体呈现，避免两层玻璃叠着 */
+.study-stepper[data-variant="rail"] .stepper-lessons {
+  display: none;
+}
+
+/* ---------- 动线面板里的平铺进度（inline 形态） ---------- */
+
+.stepper-lessons.is-inline {
+  position: static;
+  min-width: 0;
+  margin: var(--space-1) 0 0 var(--space-6);
+  padding: 0 0 0 var(--space-3);
+  border: 0;
+  border-left: 1px dashed var(--rule);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition: none;
+  pointer-events: auto;
 }

@@ -1,5 +1,5 @@
 import type { StudyFlowView } from "../flow/study-flow.js";
-import { lessonCounterLabel } from "./ui-copy.js";
+import { knowledgePointLabel } from "../learning-labels.js";
 
 /*
  * ActivityPage 专属文案（活动页：客观题组 / 代码题 / 综合实操）。
@@ -94,23 +94,25 @@ export const QUIZ_INFO_NOTICE = "提交前不显示答案；提交后只展示�
 /** 代码题作答阶段的信息提示。 */
 export const CODE_INFO_NOTICE = "题面、公开样例和验收点可以查看；隐藏测试与参考答案始终留在服务端。";
 
-/* ---------- 回流动线提示卡 ---------- */
+/* ---------- 当前位置与下一步 ---------- */
 
-export const FLOW_RETURN_TITLE = "回流动线";
+/*
+ * 这张卡告诉学习者：现在在做什么、做完回到哪、接下来去哪。
+ * 措辞必须是学习者语言。「回流动线」「循环体」是设计概念，
+ * 不允许出现在界面上——历史上曾把「回流动线」「「学习 ⇄ 测试」循环体」
+ * 直接印在卡片上，使用者看不懂。
+ */
+
+export const FLOW_RETURN_TITLE = "学习安排";
 export const FLOW_RETURN_STEP = "当前环节";
-export const FLOW_RETURN_BACK = "回到";
+export const FLOW_RETURN_BACK = "完成后回到";
 export const FLOW_RETURN_NEXT = "下一步";
-/** 活动不属于任何教材节（例如准备节点）时，回到循环体本身。 */
-export const FLOW_RETURN_BACK_CYCLE = "「学习 ⇄ 测试」循环体";
+/** 活动不属于任何教材节（例如准备节点）时的兜底措辞。 */
+export const FLOW_RETURN_BACK_CYCLE = "本节学习内容";
 export const FLOW_RETURN_NEXT_SUMMARY = "生成学习总结";
-export const FLOW_RETURN_NEXT_LESSON = "继续下一节正文";
+export const FLOW_RETURN_NEXT_LESSON = "进入下一节学习";
 
-/** 回到第几节的措辞。counter 来自 lessonCounterLabel，如「第 3 节 / 共 6 节」。 */
-export function flowReturnBackLesson(counter: string, knowledgePoint: string): string {
-  return `「学习」${counter} · ${knowledgePoint}`;
-}
-
-/** 当前动线里「下一步」应该去哪：全部节完成且无遗留实操作 → 总结，否则回学习正文。 */
+/** 当前动线里「下一步」应该去哪：全部节完成且无遗留实操作 → 总结，否则进下一节学习。 */
 export function flowReturnNextLabel(flow: StudyFlowView): string {
   const allLessonsDone = flow.totalLessons > 0
     && flow.completedLessons >= flow.totalLessons
@@ -118,12 +120,11 @@ export function flowReturnNextLabel(flow: StudyFlowView): string {
   return allLessonsDone ? FLOW_RETURN_NEXT_SUMMARY : FLOW_RETURN_NEXT_LESSON;
 }
 
-/** 回到哪一节的完整措辞。活动挂在有教材的节上时给出节次与知识点。 */
+/** 回到哪一节的完整措辞。知识点用中文通称，内部 id 不上界面。 */
 export function flowReturnBackLabel(flow: StudyFlowView, activeNodeId: string | undefined): string {
   const cycle = flow.cycles.find((item) => item.nodeId === activeNodeId);
   if (cycle === undefined) return FLOW_RETURN_BACK_CYCLE;
-  const counter = lessonCounterLabel(cycle.index, cycle.total);
-  return flowReturnBackLesson(counter, cycle.knowledgePointId);
+  return `第 ${cycle.index} 节 · ${knowledgePointLabel(cycle.knowledgePointId)}`;
 }
 
 /* ---------- 客观题作答 ---------- */

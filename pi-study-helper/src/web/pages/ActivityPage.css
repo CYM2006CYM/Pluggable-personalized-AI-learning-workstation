@@ -112,7 +112,7 @@
   border-top: 1px solid var(--rule);
 }
 
-/* 回流动线提示卡 */
+/* 当前位置与下一步 */
 [data-page="activity"] .flow-return {
   padding: var(--space-4);
 }
@@ -132,16 +132,23 @@
   padding: 0;
 }
 
+/*
+ * 标签列用 auto 而不是固定宽度：标签最长五个字
+ * （「完成后回到」），固定窄列会把「当前环节」「下一步」
+ * 折成「当前/环节」「下一/步」两截。
+ */
 [data-page="activity"] .flow-return-list > div {
   display: grid;
-  grid-template-columns: var(--space-6) minmax(0, 1fr);
-  gap: var(--space-2);
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--space-2) var(--space-3);
+  align-items: baseline;
 }
 
 [data-page="activity"] .flow-return-list dt {
   color: var(--text-soft);
   font-size: var(--fs-caption);
   line-height: var(--lh-caption);
+  white-space: nowrap;
 }
 
 [data-page="activity"] .flow-return-list dd {

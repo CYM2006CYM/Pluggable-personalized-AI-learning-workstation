@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { useBootstrap } from "../api/use-bootstrap.js";
 import { AUX_NAV_LABELS, SHELL_LABELS } from "../copy/ui-copy.js";
@@ -34,22 +34,44 @@ function stepFromPathname(pathname: string): StudyStepId | undefined {
 }
 
 export function AppShell() {
-  // 侧栏可折叠。收起后只剩圆点，环节名交给 hover 浮层补。
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  // 侧栏默认收成一条圆点轨道;悬停轨道弹出毛玻璃动线面板,
+  // 底部按钮可把面板钉住为常驻展开(触屏没有 hover,靠这个按钮)。
+  const [pinned, setPinned] = useState(false);
   const location = useLocation();
   const parts = location.pathname.split("/").filter(Boolean);
   const head = parts[0];
   const sessionId = parts.length >= 2 ? parts[1] : undefined;
   const currentStep = stepFromPathname(location.pathname);
-  const activeNodeId = head === "learn" ? parts[2] : undefined;
 
   // 没有会话时侧栏整条动线置灰,不需要请求 bootstrap。页面自己会取数。
   const bootstrap = useBootstrap(sessionId, sessionId !== undefined);
   const session = bootstrap.data?.session;
 
+  /*
+   * AppShell 是父布局,页面之间切换不会重挂载。bootstrap 若只在进入会话时
+   * 拉一次,侧栏就永远停在会话刚建立时的快照上——诊断做完、路径确认、人已经
+   * 在第 3 节做测试,侧栏还画着「诊断进行中,其余尚未解锁」。路由每变一次
+   * 就对齐一次快照;同一次导航里页面自己也在拉 bootstrap,in-flight 合并
+   * 保证不会多发请求。
+   */
+  const pathname = location.pathname;
+  const reloadBootstrap = bootstrap.reload;
+  useEffect(() => {
+    if (sessionId !== undefined) void reloadBootstrap();
+  }, [pathname, reloadBootstrap, sessionId]);
+
+  // 动线模型需要一个 nodeId:学习页 URL 直接带它;活动页 URL 带的是
+  // activityId,用路径节点把 activityId 映射回 nodeId。映射不到时维持
+  // undefined,由动线模型按「第一个未完成的节」兜底。
+  const flowActiveNodeId = head === "learn"
+    ? parts[2]
+    : head === "activity" && parts[2] !== undefined && session !== undefined
+      ? session.path?.nodes.find((node) => node.activityIds.includes(parts[2]!))?.nodeId
+      : undefined;
+
   const context = buildFlowContext(session, {
     ...(currentStep === undefined ? {} : { currentStep }),
-    ...(activeNodeId === undefined ? {} : { activeNodeId }),
+    ...(flowActiveNodeId === undefined ? {} : { activeNodeId: flowActiveNodeId }),
     hasActivity: currentStep === "activity",
   });
   const flow = buildStudyFlow(session?.path?.nodes ?? [], context);
@@ -60,27 +82,37 @@ export function AppShell() {
     : flow.steps;
 
   return (
-    <div className="app-shell" data-sidebar={sidebarOpen ? "open" : "collapsed"}>
+    <div className="app-shell" data-sidebar={pinned ? "pinned" : "rail"}>
       <aside className="app-sidebar" id="app-sidebar">
         <div className="brand-block">
+          <span className="brand-mark" aria-hidden="true">Pi</span>
           <strong>Pi Study Helper</strong>
           <span>本地演示模式</span>
         </div>
         <div className="sidebar-flow">
-          <StudyStepper flow={{ ...flow, steps }} orientation="vertical" />
+          {/*
+            两个实例,恰好一个可见:
+            - 轨道(rail):只留圆点动线,常驻;
+            - 面板:悬停轨道时渐显的毛玻璃卡,逐节进度平铺在内;
+              钉住时停靠为常规侧栏内容。
+          */}
+          <StudyStepper flow={{ ...flow, steps }} orientation="vertical" variant="rail" />
+          <div className="sidebar-panel">
+            <StudyStepper flow={{ ...flow, steps }} orientation="vertical" progress="inline" />
+          </div>
         </div>
         {/* 折叠按钮。它是同一个按钮，靠 aria-expanded 告诉读屏软件现在是哪一边。 */}
         <button
           type="button"
           className="sidebar-toggle"
-          aria-expanded={sidebarOpen}
+          aria-expanded={pinned}
           aria-controls="app-sidebar"
-          title={sidebarOpen ? SHELL_LABELS.collapseSidebar : SHELL_LABELS.expandSidebar}
-          onClick={() => setSidebarOpen((open) => !open)}
+          title={pinned ? SHELL_LABELS.collapseSidebar : SHELL_LABELS.expandSidebar}
+          onClick={() => setPinned((open) => !open)}
         >
           <span className="sidebar-toggle-icon" aria-hidden="true" />
           <span className="sidebar-toggle-text">
-            {sidebarOpen ? SHELL_LABELS.collapseSidebar : SHELL_LABELS.expandSidebar}
+            {pinned ? SHELL_LABELS.collapseSidebar : SHELL_LABELS.expandSidebar}
           </span>
         </button>
       </aside>

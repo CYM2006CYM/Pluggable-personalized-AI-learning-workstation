@@ -1,3 +1,5 @@
 .workbuddy/
 .idea/
 .scratch/
+# 本地一键启动脚本(内含 API 密钥,禁止入库)
+/启动demo-live.bat

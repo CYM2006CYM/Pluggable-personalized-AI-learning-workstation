@@ -464,7 +464,7 @@ export function ActivityPage() {
   </PageFrame>;
 }
 
-/** 回流动线提示卡：告诉用户当前环节、回到哪一节、下一步是什么。 */
+/** 当前位置与下一步：告诉用户当前环节、做完回到哪一节、接下来去哪。 */
 function FlowReturnCard({ flow, activeNodeId }: { flow: StudyFlowView; activeNodeId?: string }) {
   return <section className="flow-return activity-card" aria-label={FLOW_RETURN_TITLE}>
     <h3 className="flow-return-title">{FLOW_RETURN_TITLE}</h3>

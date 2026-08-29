@@ -110,3 +110,24 @@ export const LEARN_PAGE_COPY = {
   exampleHeading: "示例",
   mistakeHeading: "常见误区",
 } as const;
+
+/**
+ * 正文动线各站点的动作短语。
+ *
+ * 一节正文在视觉上是一条小动线:先问为什么学,再拆解要学什么,
+ * 然后看一遍示范,最后轮到学习者自己做——和左侧栏的大动线
+ * (准备 → 诊断 → 分析 → 学习 → 总结)是同一套「站点」语言。
+ * 误区与术语依据是附录,不占站点。
+ */
+const STATION_LABELS: Readonly<Record<string, string>> = {
+  intuition: "为什么学",
+  concepts: "学什么",
+  walkthrough: "看示范",
+  "final-task": "该你做",
+};
+
+const FALLBACK_STATION = "学习站";
+
+export function stationLabel(moduleId: string): string {
+  return STATION_LABELS[moduleId] ?? FALLBACK_STATION;
+}

@@ -72,13 +72,14 @@ h3 {
 .app-shell {
   min-height: 100vh;
   display: grid;
-  grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
+  /* 默认收成一条圆点轨道;悬停轨道弹出毛玻璃动线面板,按钮可钉住展开。 */
+  grid-template-columns: var(--sidebar-w-collapsed) minmax(0, 1fr);
   transition: grid-template-columns var(--dur-base) var(--ease);
 }
 
-/* 收起后侧栏只剩一列圆点：宽度、文字一起收，动线结构不丢。 */
-.app-shell[data-sidebar="collapsed"] {
-  grid-template-columns: var(--sidebar-w-collapsed) minmax(0, 1fr);
+/* 钉住后面板停靠为常规侧栏内容,轨道让位。 */
+.app-shell[data-sidebar="pinned"] {
+  grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -125,12 +126,41 @@ h3 {
   font-size: 11px;
 }
 
+/* 轨道态的品牌圆章:文字让位后仍有一个可辨认的品牌锚点 */
+.brand-block .brand-mark {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: var(--space-6);
+  height: var(--space-6);
+  border: 1px solid var(--rule);
+  border-radius: 50%;
+  color: var(--accent);
+  background: var(--card);
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-caption);
+}
+
+.app-shell[data-sidebar="rail"] .brand-mark {
+  display: inline-flex;
+}
+
 /* 步骤条容器。旧导航（primary-nav / nav-link / nav-index / session-identity）
-   已随 Stepper 接入下线，相关样式一并移除。 */
+   已随 Stepper 接入下线，相关样式一并移除。
+   溢出滚动交给轨道实例;面板悬浮在容器之外,容器不能裁它。 */
 .sidebar-flow {
+  position: relative;
   min-width: 0;
   flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
   padding: var(--space-4) 0;
+  overflow: visible;
+}
+
+.app-shell[data-sidebar="rail"] .sidebar-flow > .study-stepper[data-variant="rail"] {
+  flex: 1 1 auto;
   overflow-y: auto;
 }
 
@@ -169,28 +199,108 @@ h3 {
   transition: transform var(--dur-fast) var(--ease);
 }
 
-.app-shell[data-sidebar="collapsed"] .sidebar-toggle-icon {
+.app-shell[data-sidebar="rail"] .sidebar-toggle-icon {
   transform: rotate(-135deg) translate(1px, -1px); /* 反过来指向「展开」 */
 }
 
-/* 收起态：品牌名、环节名、按钮文字全部让位，圆点和连线保留。 */
-.app-shell[data-sidebar="collapsed"] .brand-block > strong,
-.app-shell[data-sidebar="collapsed"] .brand-block > span,
-.app-shell[data-sidebar="collapsed"] .sidebar-toggle-text,
-.app-shell[data-sidebar="collapsed"] .sidebar-flow .stepper-label {
+/* 轨道态：品牌名、环节名、按钮文字全部让位，圆点、连线与品牌圆章保留。 */
+.app-shell[data-sidebar="rail"] .brand-block > strong,
+.app-shell[data-sidebar="rail"] .brand-block > span:not(.brand-mark),
+.app-shell[data-sidebar="rail"] .sidebar-toggle-text {
   display: none;
 }
 
-.app-shell[data-sidebar="collapsed"] .brand-block {
-  justify-content: center;
+.app-shell[data-sidebar="rail"] .brand-block {
+  align-items: center;
   padding: 0 0 var(--space-4);
 }
 
-.app-shell[data-sidebar="collapsed"] .sidebar-toggle {
+.app-shell[data-sidebar="rail"] .sidebar-toggle {
   justify-content: center;
 }
 
+/* ---------- 毛玻璃动线面板 ---------- */
+
+/*
+ * 收起态悬停轨道时,从主内容区边缘渐显一张毛玻璃卡,
+ * 完整呈现动线(环节名 + 逐节进度)。它悬浮在内容之上,
+ * 不占文档流、不推开正文;键盘 focus 进入侧栏时同样弹出。
+ */
+.sidebar-panel {
+  position: absolute;
+  top: var(--space-3);
+  left: calc(100% + var(--space-2));
+  z-index: 40;
+  width: var(--sidebar-panel-w);
+  max-height: calc(100vh - var(--space-7));
+  overflow-y: auto;
+  padding: var(--space-4);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  background: var(--glass);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.1);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.1);
+  box-shadow: var(--shadow-4);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(-6px);
+  transition: opacity var(--dur-base) var(--ease), transform var(--dur-base) var(--ease),
+    visibility var(--dur-base) var(--ease);
+  pointer-events: none;
+}
+
+/* 悬停桥:指针从轨道跨过 8px 缝隙进入面板的途中,面板不消失 */
+.sidebar-panel::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 100%;
+  width: var(--space-2);
+  height: 100%;
+}
+
+.app-sidebar:hover .sidebar-panel,
+.app-sidebar:focus-within .sidebar-panel {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(0);
+  pointer-events: auto;
+}
+
+/* 钉住态:面板停靠,不再是悬浮玻璃 */
+.app-shell[data-sidebar="pinned"] .sidebar-flow > .study-stepper[data-variant="rail"] {
+  display: none;
+}
+
+.app-shell[data-sidebar="pinned"] .sidebar-panel {
+  position: static;
+  width: auto;
+  max-height: none;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition: none;
+  pointer-events: auto;
+  overflow-y: auto;
+}
+
+.app-shell[data-sidebar="pinned"] .sidebar-panel::before {
+  display: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .sidebar-panel {
+    transition: opacity var(--dur-fast) var(--ease);
+    transform: none;
+  }
+
   .sidebar-toggle,
   .sidebar-toggle-icon {
     transition: none;
@@ -1416,447 +1526,6 @@ h3 {
 .metric-list dd {
   text-align: right;
 }
-
-.learn-layout {
-  display: grid;
-  /* 目录侧栏已下线，功能并入左侧 Stepper；正文独占整行以保证阅读宽度 */
-  grid-template-columns: minmax(0, 1fr);
-  gap: 20px;
-  align-items: start;
-}
-
-.learning-content {
-  min-width: 0;
-  display: grid;
-  gap: 14px;
-}
-
-.lesson-objectives {
-  min-width: 0;
-  border-top: 4px solid var(--green);
-}
-
-.objective-columns {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 28px;
-  margin-top: 18px;
-}
-
-.objective-columns > div + div {
-  padding-left: 28px;
-  border-left: 1px solid var(--line);
-}
-
-.objective-columns h3 {
-  margin-bottom: 10px;
-  font-size: 14px;
-}
-
-.objective-columns ul {
-  display: grid;
-  gap: 8px;
-  margin: 0;
-  padding-left: 20px;
-  color: #3d4943;
-  line-height: 1.65;
-}
-
-.lesson-personal-tip {
-  padding: 16px 20px;
-  border-left: 4px solid var(--blue);
-  background: #edf5f9;
-}
-
-.lesson-personal-tip.is-unavailable {
-  border-left-color: var(--amber);
-  background: #fff8e8;
-}
-
-.lesson-personal-tip.is-loading {
-  border-left-color: var(--blue);
-  background: #edf5f9;
-}
-
-.lesson-personal-tip-heading {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.lesson-personal-tip-heading strong {
-  max-width: min(70%, 520px);
-  color: #285b79;
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-  line-height: 1.5;
-  overflow-wrap: anywhere;
-  text-align: right;
-}
-
-.lesson-personal-tip-title {
-  min-width: 0;
-  display: grid;
-  gap: 3px;
-}
-
-.lesson-personal-tip-title small {
-  color: #607b8a;
-  font-size: 11px;
-}
-
-.lesson-personal-tip.is-unavailable .lesson-personal-tip-heading strong {
-  color: #815d18;
-}
-
-.lesson-personal-tip > .button {
-  margin-top: 10px;
-}
-
-.lesson-personal-tip span {
-  color: #285b79;
-  font-size: 12px;
-  font-weight: 800;
-}
-
-.lesson-personal-tip p {
-  margin: 6px 0 0;
-  line-height: 1.65;
-}
-
-.lesson-guide {
-  margin-top: 12px;
-}
-
-.lesson-personal-tip .lesson-guide-overview {
-  max-width: 920px;
-  margin: 0;
-  color: #173d50;
-  font-size: 16px;
-  font-weight: 700;
-  line-height: 1.75;
-}
-
-.lesson-guide-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  margin-top: 16px;
-  border-top: 1px solid #cbdde6;
-}
-
-.lesson-guide-grid section {
-  min-width: 0;
-  padding: 14px 18px 14px 0;
-  border-bottom: 1px solid #cbdde6;
-}
-
-.lesson-guide-grid section:nth-child(2n) {
-  padding-right: 0;
-  padding-left: 18px;
-  border-left: 1px solid #cbdde6;
-}
-
-.lesson-guide-grid span,
-.lesson-guide-question span {
-  display: block;
-  margin-bottom: 5px;
-}
-
-.lesson-personal-tip .lesson-guide-grid p,
-.lesson-personal-tip .lesson-guide-question p {
-  margin: 0;
-  color: #304d5c;
-}
-
-.lesson-guide-question {
-  margin-top: 14px;
-  padding: 12px 14px;
-  border-left: 3px solid #2e789e;
-  background: rgb(255 255 255 / 62%);
-}
-
-.lesson-controls {
-  min-width: 0;
-  min-height: 52px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 6px 4px 6px 14px;
-  border-bottom: 1px solid var(--line);
-  color: var(--muted);
-  font-size: 12px;
-}
-
-.lesson-controls > div {
-  display: flex;
-  gap: 4px;
-}
-
-.lesson-manual {
-  min-width: 0;
-  display: grid;
-  gap: 10px;
-}
-
-.lesson-module {
-  min-width: 0;
-  width: 100%;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--surface);
-  content-visibility: auto;
-  contain-intrinsic-size: 120px;
-}
-
-.lesson-module summary {
-  min-height: 70px;
-  display: grid;
-  gap: 5px;
-  padding: 16px 48px 16px 20px;
-  cursor: pointer;
-  position: relative;
-  list-style: none;
-}
-
-.lesson-module summary::-webkit-details-marker {
-  display: none;
-}
-
-.lesson-module summary::after {
-  content: "+";
-  position: absolute;
-  right: 20px;
-  top: 22px;
-  color: var(--green);
-  font-size: 20px;
-  line-height: 1;
-}
-
-.lesson-module[open] summary::after {
-  content: "−";
-}
-
-.lesson-module summary span {
-  color: var(--green-dark);
-  font-size: 16px;
-  font-weight: 800;
-}
-
-.lesson-module summary small {
-  color: var(--muted);
-  font-size: 12px;
-  line-height: 1.5;
-}
-
-.lesson-module-body {
-  min-width: 0;
-  padding: 4px 22px 26px;
-  border-top: 1px solid var(--line);
-}
-
-.lesson-subheading {
-  margin: 24px 0 10px;
-  color: #26332e;
-  font-size: 15px;
-}
-
-.lesson-paragraph,
-.lesson-list {
-  color: #35413b;
-  line-height: 1.82;
-}
-
-.lesson-paragraph {
-  margin-bottom: 14px;
-}
-
-.lesson-list {
-  display: grid;
-  gap: 7px;
-  padding-left: 22px;
-}
-
-.lesson-code {
-  width: 100%;
-  min-width: 0;
-  max-width: 100%;
-  margin: 14px 0 18px;
-  padding: 16px 18px;
-  overflow-x: auto;
-  color: #e7f2ec;
-  border: 1px solid #3f4e48;
-  border-radius: 4px;
-  background: #202a26;
-  font-family: "Cascadia Code", Consolas, "Microsoft YaHei", monospace;
-  font-size: 13px;
-  line-height: 1.65;
-  white-space: pre;
-}
-
-.lesson-callout {
-  margin: 16px 0;
-  padding: 14px 16px;
-  border-left: 3px solid var(--blue);
-  background: #f0f6f9;
-}
-
-.lesson-callout.warning {
-  border-left-color: var(--amber);
-  background: #fff7ea;
-}
-
-.lesson-callout.term {
-  border-left-color: var(--green);
-  background: #edf6f1;
-}
-
-.lesson-callout p {
-  margin: 6px 0 0;
-  line-height: 1.65;
-}
-
-.lesson-terms {
-  margin: 0;
-}
-
-.lesson-terms > div {
-  display: grid;
-  grid-template-columns: minmax(100px, 150px) minmax(0, 1fr);
-  gap: 16px;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--line);
-}
-
-.lesson-terms dt {
-  font-weight: 800;
-}
-
-.lesson-terms dd {
-  margin: 0;
-  color: var(--muted);
-  line-height: 1.6;
-}
-
-.lesson-sources {
-  display: grid;
-  gap: 10px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.lesson-sources li {
-  padding: 12px 14px;
-  border-left: 2px solid var(--line);
-  background: #f7f9f7;
-}
-
-.lesson-sources span,
-.lesson-sources small {
-  display: block;
-}
-
-.lesson-sources span {
-  line-height: 1.6;
-}
-
-.lesson-sources small {
-  margin-top: 6px;
-  color: var(--muted);
-}
-
-.lesson-blocked {
-  border-left: 4px solid var(--red);
-}
-
-.lesson-blocked p {
-  color: var(--muted);
-  line-height: 1.65;
-}
-
-.lesson-footer {
-  padding: 16px 4px 4px;
-}
-
-.content-band,
-.source-panel,
-.context-strip {
-  padding: 22px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--surface);
-}
-
-.objective-band {
-  border-left: 4px solid var(--green);
-}
-
-.objective-band h2 {
-  max-width: 780px;
-  line-height: 1.5;
-}
-
-.explanation-list {
-  display: grid;
-  gap: 13px;
-  margin: 0;
-  padding-left: 22px;
-  color: #35413b;
-  line-height: 1.7;
-}
-
-.split-band {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 28px;
-}
-
-.split-band p:last-child {
-  margin-bottom: 0;
-  color: #46534d;
-  line-height: 1.7;
-}
-
-.source-panel summary {
-  cursor: pointer;
-  color: var(--green-dark);
-  font-weight: 700;
-}
-
-.source-panel ul {
-  margin-bottom: 0;
-  color: var(--muted);
-  font-size: 12px;
-}
-
-.context-strip {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 20px;
-  background: #f7faf8;
-}
-
-.context-strip strong,
-.context-strip span {
-  display: block;
-}
-
-.context-strip span {
-  margin-top: 6px;
-  color: #46534d;
-  font-size: 13px;
-  line-height: 1.6;
-}
-
-.context-strip small {
-  flex: 0 0 auto;
-  color: var(--muted);
-  font-size: 11px;
-}
-
 .activity-layout {
   display: grid;
   grid-template-columns: 250px minmax(0, 1fr);
@@ -2798,6 +2467,48 @@ h3 {
 
   .brand-block {
     padding-bottom: 12px;
+  }
+
+  /*
+   * 窄屏下侧栏变成静态条,没有「悬停轨道」的舞台:
+   * 无论钉住与否,都停靠显示完整动线面板。
+   * 选择器用裸 [data-sidebar] 与状态规则同权重,靠源顺序取胜。
+   */
+  .app-shell[data-sidebar] .sidebar-flow > .study-stepper[data-variant="rail"] {
+    display: none;
+  }
+
+  .app-shell[data-sidebar] .sidebar-panel {
+    position: static;
+    width: auto;
+    max-height: none;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+    transition: none;
+    pointer-events: auto;
+    overflow-y: visible;
+  }
+
+  .app-shell[data-sidebar] .sidebar-panel::before {
+    display: none;
+  }
+
+  .app-shell[data-sidebar] .brand-block > strong,
+  .app-shell[data-sidebar] .brand-block > span:not(.brand-mark),
+  .app-shell[data-sidebar] .sidebar-toggle-text {
+    display: block;
+  }
+
+  .app-shell[data-sidebar] .brand-mark {
+    display: none;
   }
 
   .topbar {
