@@ -22,6 +22,15 @@
   .stepper-mark::after {
     animation: none !important;
   }
+
+  /* 状态切换的底色/描边/印章环过渡一律退化为瞬时切换（!important 是因为
+     本块位于各规则之前，靠 !important 压过后面的普通声明） */
+  .stepper-mark,
+  .lesson-item,
+  .lesson-index,
+  .lesson-text {
+    transition: none !important;
+  }
 }
 
 .study-stepper .visually-hidden {
@@ -101,7 +110,8 @@
   border: 1px solid var(--rule);
   border-radius: 50%;
   background: var(--card);
-  transition: background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
+  transition: background var(--dur-base) var(--ease), border-color var(--dur-base) var(--ease),
+    box-shadow var(--dur-base) var(--ease);
 }
 
 .stepper-mark::after {
@@ -129,6 +139,8 @@
 .stepper-item[data-status="completed"] .stepper-mark {
   border-color: var(--step-completed);
   background: var(--step-completed);
+  /* 印章：实心绿圆 + 内侧一圈细白环（rgba 白环是印章高光允许的字面值） */
+  box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.75), inset 0 0 0 3px var(--step-completed);
 }
 
 .stepper-item[data-status="completed"] .stepper-node {
@@ -146,6 +158,9 @@
 .stepper-item[data-status="current"] .stepper-label {
   color: var(--step-current);
   font-weight: var(--fw-medium);
+  /* 荧光笔划痕：垫在文字的底部 42%，只加横向外扩，纵向盒模型不动 */
+  background: linear-gradient(to top, var(--highlighter) 0 42%, transparent 42%);
+  padding: 0 var(--space-1);
 }
 
 .stepper-item[data-status="current"] .stepper-mark {
@@ -251,6 +266,9 @@
   border-radius: var(--radius-sm);
   font-size: var(--fs-caption);
   line-height: var(--lh-caption);
+  /* 五态切换：底色/描边/印章环的过渡（reduced-motion 见文件头部降级块） */
+  transition: background var(--dur-base) var(--ease), border-color var(--dur-base) var(--ease),
+    box-shadow var(--dur-base) var(--ease);
 }
 
 .lesson-index {
@@ -264,41 +282,51 @@
   border-radius: 50%;
   color: var(--text-soft);
   background: var(--card);
+  transition: background var(--dur-base) var(--ease), border-color var(--dur-base) var(--ease),
+    box-shadow var(--dur-base) var(--ease);
 }
 
 .lesson-text {
   color: var(--text-soft);
+  transition: background var(--dur-base) var(--ease), color var(--dur-base) var(--ease),
+    box-shadow var(--dur-base) var(--ease);
 }
 
-/* 独立标记：跳过教学但保留实操的节，用暖色区分于「已跳过」 */
+/* 独立标记：跳过教学但保留实操的节，用暖色区分于「已跳过」；
+   稍放大并加内白环，让角标感更清楚 */
 .lesson-flag {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
   margin-left: auto;
   border-radius: 50%;
   background: var(--step-teaching-skipped);
+  box-shadow: inset 0 0 0 1px var(--card);
+  pointer-events: none;
 }
 
 .lesson-item[data-status="completed"] .lesson-index {
   border-color: var(--step-completed);
   background: var(--step-completed);
   color: var(--card);
+  /* 印章：实心绿圆 + 内侧一圈细白环 */
+  box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.75), inset 0 0 0 3px var(--step-completed);
 }
 
 .lesson-item[data-status="completed"] .lesson-text {
   color: var(--text);
 }
 
-.lesson-item[data-status="current"] {
-  background: var(--step-current-bg);
-}
-
+/*
+  current 的主记号是荧光笔：去掉旧整行底色，只在本节文字下方留一道
+  半透明荧光划痕，一行只保留一件手账元素。
+*/
 .lesson-item[data-status="current"] .lesson-index {
   border-color: var(--step-current);
   color: var(--step-current);
 }
 
 .lesson-item[data-status="current"] .lesson-text {
+  background: linear-gradient(to top, var(--highlighter) 0 42%, transparent 42%);
   color: var(--text);
   font-weight: var(--fw-medium);
 }
@@ -319,7 +347,12 @@
   color: var(--step-skipped-text);
 }
 
+/* 便签盖住：删除线文字垫一张微旋的小白纸片，像贴上去盖住原文 */
 .lesson-item[data-status="skipped"] .lesson-text {
+  background: var(--card);
+  box-shadow: var(--shadow-1);
+  padding: 0 var(--space-1);
+  transform: rotate(-1deg);
   color: var(--step-skipped-text);
   text-decoration: line-through;
 }
@@ -363,6 +396,41 @@
 
 .study-stepper[data-orientation="vertical"] .stepper-node {
   align-self: stretch;
+}
+
+/* ---------- 当前环节页签（手账索引） ---------- */
+
+/*
+ * 竖向完整实例里，当前环节外凸为一页白色页签——「一本翻到一半的手账」
+ * 的索引页。整条动线同一时刻只有这一枚页签，其余环节维持圆点+文字。
+ *
+ * 几何零位移：
+ * - ::before 用负 inset 外扩（左探 --sidebar-pad-x 到侧栏左缘），不碰
+ *   .stepper-node 的盒模型、不加 transform——圆点与连线的中轴对齐保持
+ *   原样（连线 margin 公式依赖节点 padding，不能动）。
+ * - isolation: isolate 把 z-index:-1 的页签圈在节点自己的层叠上下文里，
+ *   让它垫在文字/圆点之下、又不会沉到侧栏背景之下——钉住态面板是静态
+ *   盒子（无 z-index，不产生层叠上下文），没有这层隔离页签会整体隐身。
+ * - :not([data-variant="rail"])：桌面收起轨道与移动端横滚条都走 rail
+ *   实例，只有圆点，不做页签。
+ */
+.study-stepper[data-orientation="vertical"]:not([data-variant="rail"]) .stepper-node {
+  position: relative;
+  isolation: isolate;
+}
+
+.study-stepper[data-orientation="vertical"]:not([data-variant="rail"])
+  .stepper-item[data-status="current"] .stepper-node::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+  inset: calc(-1 * var(--space-1)) calc(-1 * var(--space-2)) calc(-1 * var(--space-1))
+    calc(-1 * var(--sidebar-pad-x));
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  box-shadow: var(--shadow-1);
 }
 
 .study-stepper[data-orientation="vertical"] .stepper-connector {

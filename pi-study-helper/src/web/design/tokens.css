@@ -1,23 +1,28 @@
 /*
- * 设计 token —— 米色纸感视觉体系。
+ * 设计 token —— 牛皮纸质感视觉体系（全站底色为折中牛皮纸，卡片为白色便签）。
  *
- * 本文件只新增变量，不修改、不删除任何现有样式（清理旧变量在 ticket 16）。
- * 因此这里刻意避开 styles.css 已占用的名字：--ink / --muted / --line /
+ * 本文件原则上只新增变量、不删变量：清理旧变量统一留给 ticket 16。
+ * 材质升级经用户批准后，本票允许调整既有 token 的值——变量名保持不变
+ * （--paper / --card-soft / --rule / --text-soft / --shadow-1..5 / --glass
+ * 等仅调整取值），旧名删除仍只发生在 ticket 16。
+ * 新名刻意避开 styles.css 已占用的名字：--ink / --muted / --line /
  * --surface / --surface-soft / --radius 全部改用新名，避免新旧两套在渐进
  * 替换期互相覆盖。
  */
 
 :root {
   /* ---------- 配色：表面与文字 ---------- */
-  --paper: #f7f4ee; /* 页面背景 */
-  --card: #ffffff; /* 卡片表面 */
-  --card-soft: #f1ede6; /* 次级区域 */
-  --rule: #e3ddd3; /* 分隔线 */
+  --paper: #ecdec3; /* 页面背景（折中牛皮纸，比真牛皮 #d5c4a5 浅一档） */
+  --card: #ffffff; /* 卡片表面（牛皮纸上的白色便签） */
+  --card-soft: #f4ecdc; /* 次级区域（暖奶油） */
+  --rule: #d9cbb0; /* 分隔线（在牛皮底和白卡上都要能读出边线） */
   --text: #2b2823; /* 正文 */
-  --text-soft: #7a736a; /* 次要文字 */
+  --text-soft: #695f52; /* 次要文字（略深于首版定稿 #6b6357，使牛皮底上对比 ≥ 4.5:1） */
+  --paper-edge: rgba(255, 252, 244, 0.92); /* 暖白半透明面（topbar） */
 
   /* ---------- 配色：强调与语义 ---------- */
   --accent: #3d5a4c; /* 当前环节、主操作 */
+  --accent-glass: rgba(61, 90, 76, 0.86); /* 主操作毛玻璃底（白字在白卡/牛皮底上折算对比 ≥5:1） */
   --accent-soft: #e8ede9; /* 当前环节浅底 */
   --warm: #b0674a; /* 需要注意、待处理 */
   --success: #4e7a5e; /* 已完成、答对 */
@@ -31,6 +36,17 @@
   --step-skipped-line: var(--rule);
   --step-skipped-text: var(--text-soft);
   --step-teaching-skipped: var(--warm);
+
+  /* ---------- 纸感材质：纹理与便签 ---------- */
+  --noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.09'/%3E%3C/svg%3E"); /* 全站噪点颗粒（data-URI，离线可用；0.09 磨砂感，再高会脏） */
+  --grid-line: rgba(150, 120, 70, 0.1); /* 纸面网格线 */
+  --grid-size: 24px; /* 纸面网格间距 */
+  --ref-blue: #5a7a8c; /* 术语便签（蓝灰） */
+  --ref-blue-soft: #e7edf0; /* 术语便签浅底 */
+  --note-cream: #fbf3dc; /* 米黄导学便签底 */
+  --note-orange-soft: #f9e9dc; /* 误区便签底（暖色系） */
+  --highlighter: rgba(255, 214, 90, 0.5); /* 荧光笔 */
+  --tape: rgba(255, 250, 235, 0.65); /* 胶带 */
 
   /* ---------- 字体 ---------- */
   --font-serif: "Source Han Serif SC", "Noto Serif SC", "Songti SC", "SimSun", serif;
@@ -80,16 +96,17 @@
   --radius-lg: 16px;
 
   /* ---------- 阴影 ---------- */
-  --shadow-1: 0 1px 2px rgba(43, 40, 35, 0.06);
-  --shadow-2: 0 1px 3px rgba(43, 40, 35, 0.08), 0 1px 2px rgba(43, 40, 35, 0.04);
-  --shadow-3: 0 4px 10px rgba(43, 40, 35, 0.08), 0 1px 3px rgba(43, 40, 35, 0.05);
-  --shadow-4: 0 10px 24px rgba(43, 40, 35, 0.1), 0 2px 6px rgba(43, 40, 35, 0.06);
-  --shadow-5: 0 20px 44px rgba(43, 40, 35, 0.14), 0 4px 12px rgba(43, 40, 35, 0.08);
+  /* 暖棕基色：白卡在牛皮纸上的投影，强度较旧值略提 */
+  --shadow-1: 0 1px 2px rgba(101, 78, 48, 0.09);
+  --shadow-2: 0 1px 3px rgba(101, 78, 48, 0.12), 0 2px 6px rgba(101, 78, 48, 0.07);
+  --shadow-3: 0 4px 10px rgba(101, 78, 48, 0.12), 0 1px 3px rgba(101, 78, 48, 0.08);
+  --shadow-4: 0 10px 24px rgba(101, 78, 48, 0.15), 0 2px 6px rgba(101, 78, 48, 0.09);
+  --shadow-5: 0 20px 44px rgba(101, 78, 48, 0.2), 0 4px 12px rgba(101, 78, 48, 0.12);
 
   /* ---------- 毛玻璃浮层 ---------- */
   /* 悬停时渐显的进度卡片。backdrop-filter 是浏览器原生能力，离线可用。 */
-  --glass: rgba(255, 255, 255, 0.74);
-  --glass-border: rgba(227, 221, 211, 0.9);
+  --glass: rgba(255, 252, 244, 0.78);
+  --glass-border: rgba(227, 213, 184, 0.9);
   --glass-blur: 10px;
 
   /* ---------- 动效 ---------- */
@@ -102,4 +119,5 @@
   --sidebar-w: 232px; /* 侧栏展开宽度 */
   --sidebar-w-collapsed: 68px; /* 侧栏收起后只剩圆点列的宽度 */
   --sidebar-panel-w: 280px; /* 收起态悬停弹出的毛玻璃动线面板宽度 */
+  --sidebar-pad-x: 14px; /* 侧栏左右内边距——当前环节页签外凸的基准 */
 }

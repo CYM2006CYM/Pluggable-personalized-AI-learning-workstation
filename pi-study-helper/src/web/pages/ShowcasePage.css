@@ -108,6 +108,12 @@
   background: var(--card-soft);
 }
 
+/* available 是「下一节可学」：标题垫一道荧光笔划痕。
+   展示页克制，只做这一处词汇对齐，locked 维持既有浅底。 */
+.showcase-path-node[data-status="available"] .showcase-node-main strong {
+  background: linear-gradient(to top, var(--highlighter) 0 42%, transparent 42%);
+}
+
 .showcase-node-seq {
   flex: 0 0 auto;
   padding: var(--space-1) var(--space-2);

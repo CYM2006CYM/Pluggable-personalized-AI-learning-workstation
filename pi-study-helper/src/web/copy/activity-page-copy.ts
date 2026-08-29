@@ -238,6 +238,12 @@ export function verdictLabel(verdict: string | undefined): string {
 
 export const NO_POINT_DETAIL = "无逐点明细";
 export const QUIZ_SCORE_NONE = "未形成";
+
+/** 客观题得分按百分制展示（0–1 评分折算为 0–100 分，四舍五入到整数分）。 */
+export function quizScoreLabel(score: number): string {
+  return `${Math.round(score * 100)} 分`;
+}
+
 export const PASSED_POINTS_LABEL = "通过测试点";
 export const METRIC_EXECUTION = "执行状态";
 export const EXECUTION_COMPLETED = "执行完成";

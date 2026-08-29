@@ -47,16 +47,31 @@ export function entryModeLabel(mode: string | undefined): string {
 /**
  * 页面级文案。
  *
- * 分区分工(三类卡片):
- * - 任务卡(会话设置):全页唯一主操作卡,承载「现在要做什么」,含「开始学习」主按钮。
+ * 分区分工(扉页视觉升级后):
+ * - 扉页主标题:三段拼接,荧光笔只圈住 titlePhrase,tsx 不作字面拼接。
+ * - 三问三卡(会话设置):「你想学什么 / 从哪里开始 / 你的底子怎样」三张索引卡,
+ *   承载全部表单控件与「开始学习」主按钮。
  * - 信息卡(当前教材):默认折叠,只在需要确认材料信息时展开。
- * - 可恢复会话列表:同一组并列卡,样式一致。
+ * - 书签夹页:有可恢复会话时以织带书签呈现,复用 resume* 文案。
  */
 export const START_PAGE_COPY = {
   /** PageFrame 眉标与标题。 */
   eyebrow: "学习入口",
   title: "开始一次新的学习会话",
   summary: "选好资料包与入口,再回答三个问卷问题,就能开始。所有正式进度由本地服务保存,随时可以接着学。",
+
+  /** 扉页主标题三段:荧光笔圈住 titlePhrase,tsx 不拼字。 */
+  titleLead: "开始一次",
+  titlePhrase: "新的学习",
+  titleTail: "会话",
+
+  /** 扉页三问的卡标题。 */
+  question1Title: "你想学什么",
+  question2Title: "从哪里开始",
+  question3Title: "你的底子怎样",
+
+  /** 书签夹页(可恢复会话):小字「上次读到」+ 衬线资料包名。 */
+  bookmarkKicker: "上次读到",
 
   /** 任务卡(会话设置)。 */
   taskKicker: "现在要做什么",

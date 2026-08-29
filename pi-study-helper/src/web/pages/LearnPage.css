@@ -81,6 +81,12 @@
   border-radius: var(--radius-lg);
   background: var(--card);
   box-shadow: var(--shadow-2);
+  transition: transform var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease);
+}
+
+[data-page="learn"] .learn-task:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-3);
 }
 
 [data-page="learn"] .lesson-blocked {
@@ -266,8 +272,9 @@
   padding: var(--space-4) var(--space-5);
   border: 1px solid var(--rule);
   border-left: var(--space-1) solid var(--accent);
-  border-radius: var(--radius-md);
-  background: var(--accent-soft);
+  /* 左上角小圆角 + 其余大圆角:撕下来的米黄导学便签 */
+  border-radius: 2px var(--radius-lg) var(--radius-lg) var(--radius-lg);
+  background: var(--note-cream);
 }
 
 [data-page="learn"] .lesson-personal-tip.is-unavailable {
@@ -412,6 +419,10 @@
 [data-page="learn"] .lesson-briefing {
   display: grid;
   gap: var(--space-5);
+  /* 简报幕垫一张草稿纸:格线只从卡与卡的空隙透出,极淡不抢内容 */
+  background-image:
+    repeating-linear-gradient(0deg, var(--grid-line) 0 1px, transparent 1px var(--grid-size)),
+    repeating-linear-gradient(90deg, var(--grid-line) 0 1px, transparent 1px var(--grid-size));
 }
 
 [data-page="learn"] .briefing-band {
@@ -434,6 +445,7 @@
 }
 
 [data-page="learn"] .spread-page {
+  position: relative;
   min-width: 0;
   display: grid;
   gap: var(--space-3);
@@ -443,6 +455,30 @@
   border-radius: var(--radius-lg);
   background: var(--card);
   box-shadow: var(--shadow-2);
+  transition: transform var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease);
+}
+
+/* 对页各贴一枚胶带(一页 -2deg、一页 +1.5deg 交错),压边不压内容 */
+[data-page="learn"] .spread-page::before {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  top: -9px;
+  left: 50%;
+  width: 76px;
+  height: 20px;
+  transform: translateX(-50%) rotate(-2deg);
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0)), var(--tape);
+  box-shadow: var(--shadow-1);
+}
+
+[data-page="learn"] .spread-page:nth-of-type(2)::before {
+  transform: translateX(-50%) rotate(1.5deg);
+}
+
+[data-page="learn"] .spread-page:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-3);
 }
 
 [data-page="learn"] .spread-page-heading {
@@ -632,6 +668,12 @@
   border-radius: var(--radius-lg);
   background: var(--card);
   box-shadow: var(--shadow-2);
+  transition: transform var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease);
+}
+
+[data-page="learn"] .lesson-module:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-3);
 }
 
 [data-page="learn"] .lesson-module[data-role="final-task"] {
@@ -742,11 +784,73 @@
   padding: var(--space-4) var(--space-5) var(--space-5);
 }
 
+/* ---------- 正文里的提示便签:误区/术语/注意都撕成一张暖橙便签 ----------
+ *
+ * TSX 里是 <aside class="lesson-callout {tone}">,tone 按契约取值
+ * info / warning / term(实际内容多为术语定义)。tone 差异落在左缘与
+ * strong 标题上:warning=warm(默认)、info=accent、term=ref-blue。
+ */
+
+[data-page="learn"] .lesson-callout {
+  margin: var(--space-3) 0;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--warm);
+  border-radius: 2px var(--radius-sm) var(--radius-sm) var(--radius-sm);
+  background: var(--note-orange-soft);
+  box-shadow: var(--shadow-1);
+  color: var(--text);
+}
+
+[data-page="learn"] .lesson-callout > strong {
+  display: block;
+  margin-bottom: var(--space-1);
+  color: var(--warm);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-ui);
+}
+
+[data-page="learn"] .lesson-callout p {
+  margin: 0;
+  color: var(--text);
+  line-height: var(--lh-body);
+}
+
+[data-page="learn"] .lesson-callout.warning {
+  border-left-color: var(--warm);
+}
+
+[data-page="learn"] .lesson-callout.warning > strong {
+  color: var(--warm);
+}
+
+[data-page="learn"] .lesson-callout.info {
+  border-left-color: var(--accent);
+}
+
+[data-page="learn"] .lesson-callout.info > strong {
+  color: var(--accent);
+}
+
+[data-page="learn"] .lesson-callout.term {
+  border-left-color: var(--ref-blue);
+}
+
+[data-page="learn"] .lesson-callout.term > strong {
+  color: var(--ref-blue);
+}
+
 /* ---------- 站点导航条 ---------- */
+
+[data-page="learn"] .stack-nav-sentinel {
+  height: 0;
+}
 
 [data-page="learn"] .stack-nav {
   position: sticky;
   top: var(--space-3);
+  transition: background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease),
+    box-shadow var(--dur-fast) var(--ease);
   z-index: 20;
   display: flex;
   align-items: center;
@@ -758,6 +862,25 @@
   border-radius: var(--radius-md);
   background: var(--card);
   box-shadow: var(--shadow-2);
+}
+
+/*
+ * 吸顶落定缓冲:哨兵越线的瞬间播一段沉降动画(-6px 归位),
+ * 同时便签浮起影子、切换成毛玻璃面——内容从条下穿过时被晕开,
+ * 吸住这件事本身被「演」出来,不再硬碰硬。松开时无离场动画。
+ */
+[data-page="learn"] .stack-nav.is-stuck {
+  animation: stack-nav-settle var(--dur-base) var(--ease);
+  background: var(--glass);
+  border-color: var(--glass-border);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.1);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.1);
+  box-shadow: var(--shadow-3);
+}
+
+@keyframes stack-nav-settle {
+  from { transform: translateY(calc(var(--space-2) * -0.75)); }
+  to { transform: none; }
 }
 
 [data-page="learn"] .stack-nav-state {
@@ -826,8 +949,13 @@
     opacity: 0;
   }
 
+  [data-page="learn"] .stack-nav,
   [data-page="learn"] .stack-nav-ticks button {
     transition: none;
+  }
+
+  [data-page="learn"] .stack-nav.is-stuck {
+    animation: none;
   }
 }
 
@@ -908,6 +1036,13 @@
   color: var(--text);
   font-size: var(--fs-ui);
   line-height: var(--lh-ui);
+}
+
+/* 附录卡读作灰蓝参考便签:仅覆写纸面与左缘,合写块其余规则原样保留 */
+[data-page="learn"] .learn-fact,
+[data-page="learn"] .lesson-module.is-info {
+  border-left: var(--space-1) solid var(--ref-blue);
+  background: var(--ref-blue-soft);
 }
 
 /* ---------- 旧版卡片的阅读区元素 ---------- */
@@ -1004,6 +1139,8 @@
 [data-page="learn"] .lesson-position-dots i[data-status="completed"] {
   border-color: var(--step-completed);
   background: var(--step-completed);
+  /* 盖章:实心绿点内侧压一圈细白环(点径 8px,环取 1px 保持绿芯可见) */
+  box-shadow: inset 0 0 0 1px var(--card);
 }
 
 [data-page="learn"] .lesson-position-dots i[data-status="current"] {
@@ -1244,5 +1381,16 @@
   [data-page="learn"] .learn-fact > summary::after,
   [data-page="learn"] .lesson-module.is-info > summary::after {
     transition: none;
+  }
+
+  /* 手账悬停抬起整体降级:不位移、不换阴影 */
+  [data-page="learn"] .learn-task,
+  [data-page="learn"] .learn-task:hover,
+  [data-page="learn"] .spread-page,
+  [data-page="learn"] .spread-page:hover,
+  [data-page="learn"] .lesson-module,
+  [data-page="learn"] .lesson-module:hover {
+    transition: none;
+    transform: none;
   }
 }

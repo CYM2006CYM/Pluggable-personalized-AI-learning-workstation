@@ -1,0 +1,1 @@
+(async () => { const b = document.querySelector(".cta-start") ?? document.querySelector(".button.primary"); if (b) b.scrollIntoView({ block: "center" }); await new Promise((r) => setTimeout(r, 300)); return b ? "ok" : "no cta"; })()

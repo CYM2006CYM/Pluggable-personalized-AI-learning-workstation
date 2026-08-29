@@ -75,6 +75,9 @@ body {
   border-left: var(--space-1) solid var(--accent);
   border-radius: var(--radius-md);
   background: var(--accent-soft);
+  /* 草稿纸格线（WP4 全页唯一手账元素）：叠在原 accent-soft 底上 */
+  background-image: repeating-linear-gradient(0deg, var(--grid-line) 0 1px, transparent 1px var(--grid-size)),
+    repeating-linear-gradient(90deg, var(--grid-line) 0 1px, transparent 1px var(--grid-size));
 }
 
 .diagnostic-orientation-title {
@@ -263,16 +266,31 @@ body {
   font-weight: var(--fw-medium);
   cursor: pointer;
   transition: background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease),
-    box-shadow var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+    box-shadow var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease),
+    transform var(--dur-fast) var(--ease);
 }
 
+/* 主操作 = 悬浮玻璃键(与 .button.primary 同一手法,见 styles.css):毛玻璃底
+   + 顶缘反光 + 悬浮影,悬停底边铰链 3D 翘起,按下压回。 */
 .diagnostic-btn--primary {
-  background: var(--accent);
+  border-color: var(--accent);
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.30), rgba(255, 255, 255, 0) 44%), var(--accent-glass);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.15);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.15);
   color: var(--card);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.38), var(--shadow-3);
+  transform-origin: 50% 100%;
 }
 
 .diagnostic-btn--primary:hover:not(:disabled) {
-  box-shadow: var(--shadow-2);
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0) 48%), var(--accent-glass);
+  transform: perspective(420px) rotateX(8deg) translateY(-2px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), var(--shadow-4);
+}
+
+.diagnostic-btn--primary:active:not(:disabled) {
+  transform: perspective(420px) rotateX(-5deg) translateY(1px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), var(--shadow-2);
 }
 
 .diagnostic-btn--secondary {
@@ -437,6 +455,12 @@ body {
   .diagnostic-page .progress-track span,
   .diagnostic-info summary::before {
     transition: none;
+  }
+
+  /* 玻璃键的 3D 翘起在减弱动效下整体关闭 */
+  .diagnostic-btn--primary:hover:not(:disabled),
+  .diagnostic-btn--primary:active:not(:disabled) {
+    transform: none;
   }
 }
 

@@ -222,6 +222,25 @@
   [data-page="path"] .path-caret {
     transition: none;
   }
+
+  /* 节点五态的状态过渡退化瞬时切换（!important 是因为本块位于各规则
+     之前，靠 !important 压过后面的普通声明） */
+  [data-page="path"] .path-evidence-node,
+  [data-page="path"] .path-evidence-main strong,
+  [data-page="path"] .path-status-badge {
+    transition: none !important;
+  }
+
+  /* hover 抬起属于动效：不抬；skipped 便签行保留自己的静态投影与微旋 */
+  [data-page="path"] .path-evidence-node:not([data-status="locked"]):not([data-status="skipped"]):hover {
+    transform: none !important;
+    box-shadow: none !important;
+  }
+
+  [data-page="path"] .path-evidence-node[data-status="skipped"]:hover {
+    transform: none !important;
+    box-shadow: var(--shadow-1) !important;
+  }
 }
 
 /* ---------- 路径明细：诊断证据的展示，不再是伪步骤条 ---------- */
@@ -245,6 +264,9 @@
   border-left-color: var(--step-locked);
   border-radius: var(--radius-md);
   background: var(--card);
+  /* 此页第一次有状态过渡：底色/边条/阴影/抬起（reduced-motion 见下）+ hover 抬起 */
+  transition: background var(--dur-base) var(--ease), border-color var(--dur-base) var(--ease),
+    box-shadow var(--dur-base) var(--ease), transform var(--dur-base) var(--ease);
 }
 
 [data-page="path"] .path-evidence-main {
@@ -258,6 +280,7 @@
   color: var(--text);
   font-size: var(--fs-body);
   line-height: var(--lh-body);
+  transition: background var(--dur-base) var(--ease), color var(--dur-base) var(--ease);
 }
 
 [data-page="path"] .path-evidence-main span {
@@ -301,6 +324,8 @@
   line-height: var(--lh-caption);
   font-weight: var(--fw-medium);
   white-space: nowrap;
+  transition: background var(--dur-base) var(--ease), border-color var(--dur-base) var(--ease),
+    box-shadow var(--dur-base) var(--ease), color var(--dur-base) var(--ease);
 }
 
 [data-page="path"] .path-evidence-node[data-status="completed"] {
@@ -309,12 +334,18 @@
 
 [data-page="path"] .path-evidence-node[data-status="completed"] .path-status-badge {
   border-color: var(--step-completed);
-  color: var(--step-completed);
+  background: var(--step-completed);
+  color: var(--card);
+  /* 印章：实心绿徽章 + 内侧一圈细白环（rgba 白环是印章高光允许的字面值） */
+  box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.75), inset 0 0 0 3px var(--step-completed);
 }
 
+/*
+  available 与 in_progress 是「可学/进行中」一族：荧光笔划过标题，
+  代替原来的整行浅底——一行只保留一件手账元素。
+*/
 [data-page="path"] .path-evidence-node[data-status="available"] {
   border-left-color: var(--step-current);
-  background: var(--accent-soft);
 }
 
 [data-page="path"] .path-evidence-node[data-status="available"] .path-status-badge {
@@ -323,9 +354,13 @@
   background: var(--card);
 }
 
+[data-page="path"] .path-evidence-node[data-status="available"] .path-evidence-main strong,
+[data-page="path"] .path-evidence-node[data-status="in_progress"] .path-evidence-main strong {
+  background: linear-gradient(to top, var(--highlighter) 0 42%, transparent 42%);
+}
+
 [data-page="path"] .path-evidence-node[data-status="in_progress"] {
   border-left-color: var(--step-current);
-  background: var(--accent-soft);
 }
 
 [data-page="path"] .path-evidence-node[data-status="in_progress"] .path-status-badge {
@@ -347,6 +382,11 @@
 
 [data-page="path"] .path-evidence-node[data-status="skipped"] {
   border-left-color: var(--step-skipped-line);
+  /* 便签盖住：整行垫成一张微旋的小纸片，删除线保留；shadow-1 是便签的
+     静态投影，hover 抬起时换 shadow-3（见下方 hover 块） */
+  background: var(--card);
+  box-shadow: var(--shadow-1);
+  transform: rotate(-1deg);
 }
 
 [data-page="path"] .path-evidence-node[data-status="skipped"] .path-evidence-main strong {
@@ -360,7 +400,8 @@
   color: var(--step-skipped-text);
 }
 
-/* 跳过教学但保留实操：暖色虚线圈 + 暖色文本，与「已跳过」区分开 */
+/* 跳过教学但保留实操：暖色虚线圈 + 暖色文本，与「已跳过」区分开。
+   徽章垫暖色浅底，角标感更清楚 */
 [data-page="path"] .path-evidence-node[data-status="teaching-skipped"] {
   border-left-color: var(--step-teaching-skipped);
   border-left-style: dashed;
@@ -371,7 +412,20 @@
   border-color: var(--step-teaching-skipped);
   border-style: dashed;
   color: var(--step-teaching-skipped);
-  background: var(--card);
+  background: var(--note-orange-soft);
+}
+
+/* hover 抬起只属于可进入的节点：locked 不抬；便签行抬起时保留自身微旋 */
+@media (hover: hover) {
+  [data-page="path"] .path-evidence-node:not([data-status="locked"]):not([data-status="skipped"]):hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-3);
+  }
+
+  [data-page="path"] .path-evidence-node[data-status="skipped"]:hover {
+    transform: translateY(-2px) rotate(-1deg);
+    box-shadow: var(--shadow-3);
+  }
 }
 
 /* ---------- 时间与诊断依据 ---------- */

@@ -289,10 +289,14 @@
   font-size: var(--fs-body);
   line-height: var(--lh-body);
   cursor: pointer;
+  /* WP4 微抬：只动 transform/box-shadow，答题选项别太跳 */
+  transition: transform var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease);
 }
 
 [data-page="activity"] .answer-option:hover {
   border-color: var(--accent);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-2);
 }
 
 [data-page="activity"] .answer-option:has(input:checked) {
@@ -320,6 +324,13 @@
 
 [data-page="activity"] .option-copy {
   min-width: 0;
+}
+
+/* WP4 新增动效（answer-option 微抬）的降级开关 */
+@media (prefers-reduced-motion: reduce) {
+  [data-page="activity"] .answer-option {
+    transition: none;
+  }
 }
 
 /* ---------- 代码题作答 ---------- */
@@ -354,7 +365,9 @@
   outline-offset: 2px;
 }
 
-/* 代码评测封闭态提示 */
+/* 代码评测封闭态提示：暖橙便签条（WP4 手账点缀）。
+   覆盖 styles.css 里的全局 .notice-line 旧定义（同特异性下本文件后加载胜出，
+   且这里选择器特异性更高）；styles.css 旧规则不许改动。 */
 [data-page="activity"] .notice-line,
 .activity-state-panel .notice-line {
   margin: var(--space-4) 0 0;
@@ -363,7 +376,7 @@
   border-left: 3px solid var(--warm);
   border-radius: var(--radius-md);
   color: var(--text-soft);
-  background: var(--card-soft);
+  background: var(--note-orange-soft);
   font-size: var(--fs-ui);
   line-height: var(--lh-ui);
 }
@@ -789,8 +802,41 @@
   margin-top: var(--space-4);
 }
 
+/* 可复验样例：左上角别一枚回形针（WP4 手账点缀，纯装饰、不拦截点击）。
+   一张白纸片（::before）垫在回形针（::after）背后，让暖色针在浅底上读得出。 */
 [data-page="activity"] .csv-sample {
+  position: relative;
   min-width: 0;
+}
+
+/* 回形针背后的白纸片：var(--card) 圆角小片 + 一档暖阴影 */
+[data-page="activity"] .csv-sample::before {
+  content: "";
+  position: absolute;
+  top: -9px;
+  left: -6px;
+  width: 26px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  box-shadow: var(--shadow-1);
+  transform: rotate(-8deg);
+  pointer-events: none;
+}
+
+/* 回形针本体：内联 SVG data-URI（双环描边针，约 18×28px）。
+   注意：data-URI 内无法引用 CSS var，SVG 描边色写死 #b0674a，对应 --warm。 */
+[data-page="activity"] .csv-sample::after {
+  content: "";
+  position: absolute;
+  top: -5px;
+  left: -2px;
+  width: 18px;
+  height: 28px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='28' viewBox='0 0 18 28' fill='none'%3E%3Cpath d='M3 7L3 21A3 3 0 0 0 6 24L12 24A3 3 0 0 0 15 21L15 7A3 3 0 0 0 12 4L6 4A3 3 0 0 0 3 7ZM11.5 9.5L11.5 17.5A1.5 1.5 0 0 1 10 19L8 19A1.5 1.5 0 0 1 6.5 17.5L6.5 9.5A1.5 1.5 0 0 1 8 8L10 8A1.5 1.5 0 0 1 11.5 9.5Z' stroke='%23b0674a' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  transform: rotate(-8deg);
+  pointer-events: none;
 }
 
 [data-page="activity"] .csv-sample-heading {

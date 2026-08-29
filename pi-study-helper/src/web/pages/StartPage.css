@@ -1,81 +1,214 @@
 /*
- * StartPage(学习入口页)样式 —— 米色纸感视觉体系。
+ * StartPage(学习入口页)样式 —— 教师手账本「扉页」。
  *
- * 全部颜色、字号、间距、圆角、阴影都从 design/tokens.css 取,
- * 本文件不出现任何硬编码色值与字号。间距走 --space-*,字阶走 --fs-*。
- * 唯一的例外是折叠箭头的三角图案尺寸,属于不可避免的图案维度,与
- * StudyStepper 的格栅(3px/5px)、箭头(3px/4px)同类。
+ * 全部颜色、字号、间距、圆角、阴影都从 design/tokens.css 取。
+ * 颜色字面值只允许两处:胶带反光渐变的 rgba 白、印章内环的 rgba 白
+ * (与 StudyStepper 印章、LearnPage 胶带同一套手法)。
  *
- * 分区分工(三类卡片):
- * - .start-task:任务卡(会话设置),全页唯一主操作卡,白卡 + 阴影 + 唯一主按钮。
- * - .info-card:信息卡(当前教材),浅米色次级卡,默认折叠(<details> 不带 open)。
- * - .resume-item:可恢复会话,同一组并列卡,样式一致。
+ * 页面结构(扉页预算 8 件装饰):
+ * - 扉页标题区 .sp-heading:eyebrow 小标签(前压一枚 40px 胶带::before)、
+ *   荧光笔圈住关键词的衬线大标题、印章(::after,44px Pi 圆章,标题区右上角)。
+ * - 三问三卡 .sp-card:白便签 + 32px 数字圆章 + 衬线卡标题,表单控件全部保留原
+ *   受控逻辑,只换容器;「时长由系统估算」挪进第❸卡底部作卡内小注。
+ * - 右栏桌面拼贴 .sp-side:.sp-collage 整块 aria-hidden(纯 CSS 装饰),自上而下
+ *   纸叠(.sp-stack,错位纸边同 LearnPage .lesson-stack)、信纸(.sp-letter,
+ *   未写字行 + 一枚荧光笔痕 + 左上胶带)、五枚页签扇形(.sp-fan,旋转依次
+ *   -6°/-3°/0°/3°/6°,「学习」实底反白外伸);书签夹页 .sp-bookmark 是真实按钮,
+ *   放在 aria-hidden 之外,桌面挂纸叠右缘下垂,窄屏退成横向织带条。
+ * - 教材信息卡 .info-card:默认折叠,样式沿用 WP4(左上胶带)。
  */
 
+/* ---------- 扉页隐藏 PageFrame 通栏标题(由 .sp-heading 语义替代) ---------- */
+
+.page-frame:has(.start-page) .page-heading {
+  display: none;
+}
+
+/* ---------- 页面底座:双栏扉页 ---------- */
+
 .start-page {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-5);
-  width: min(var(--read-width), 100%);
-  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  column-gap: var(--space-6);
+  row-gap: var(--space-6);
+  align-items: start;
 }
 
-/* ---------- 任务卡(会话设置):主操作 ---------- */
+.sp-heading {
+  position: relative;
+  grid-column: 1;
+  min-width: 0;
+}
 
-.start-task {
-  margin: 0;
-  padding: var(--space-6);
+.sp-main {
+  grid-column: 1;
+  min-width: 0;
+}
+
+.sp-side {
+  position: relative;
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  min-width: 0;
+}
+
+/* ---------- 扉页标题区 ---------- */
+
+/* 胶带贴片:压在 eyebrow 小标签上缘(40px,预算第 1 件) */
+.sp-eyebrow {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  margin: var(--space-4) 0 var(--space-3);
+  padding: var(--space-1) var(--space-3);
   border: 1px solid var(--rule);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-sm);
   background: var(--card);
-  box-shadow: var(--shadow-2);
-}
-
-.task-heading {
-  margin-bottom: var(--space-5);
-}
-
-.task-kicker {
-  margin: 0 0 var(--space-1);
+  box-shadow: var(--shadow-1);
   color: var(--accent);
   font-size: var(--fs-caption);
-  font-weight: var(--fw-medium);
+  font-weight: var(--fw-bold);
   letter-spacing: var(--ls-wide);
   line-height: var(--lh-caption);
 }
 
-.task-title {
+.sp-eyebrow::before {
+  content: "";
+  position: absolute;
+  top: -10px;
+  left: -5px;
+  width: 40px;
+  height: var(--space-4);
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0)), var(--tape);
+  box-shadow: var(--shadow-1);
+  transform: rotate(-3deg);
+  pointer-events: none;
+}
+
+.sp-title {
+  max-width: calc(100% - var(--space-7));
   margin: 0 0 var(--space-2);
   color: var(--text);
   font-family: var(--font-serif);
-  font-size: var(--fs-h2);
-  line-height: var(--lh-h2);
+  font-size: clamp(30px, 4vw, 40px);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-display);
+  letter-spacing: var(--ls-tight);
 }
 
-.task-lede {
+/* 荧光笔痕:圈住关键词,垫在文字底部 40%(预算第 2 件) */
+.sp-phrase {
+  background: linear-gradient(to top, var(--highlighter) 0 40%, transparent 40%);
+  padding: 0 var(--space-1);
+}
+
+/* Pi 绿印章:44px 圆章盖在标题区右上角(预算第 3 件) */
+.sp-heading::after {
+  content: "Pi";
+  position: absolute;
+  top: -10px;
+  right: 0;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: var(--shadow-1), inset 0 0 0 1.5px rgba(255, 255, 255, 0.75), inset 0 0 0 3px var(--accent);
+  color: var(--card);
+  font-family: var(--font-serif);
+  font-size: var(--fs-h3);
+  font-weight: var(--fw-bold);
+  transform: rotate(8deg);
+  pointer-events: none;
+}
+
+.sp-summary {
+  max-width: var(--read-width);
   margin: 0;
   color: var(--text-soft);
   font-size: var(--fs-ui);
   line-height: var(--lh-ui);
 }
 
-.start-form-grid {
+/* ---------- 三问三卡:表和控件只换容器,受控逻辑不动 ---------- */
+
+.sp-form {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-5);
+  margin: 0;
+}
+
+.sp-card {
+  display: grid;
   gap: var(--space-4);
-}
-
-.start-field {
-  display: grid;
-  gap: var(--space-2);
   align-content: start;
-  color: var(--text);
-  font-size: var(--fs-ui);
-  font-weight: var(--fw-medium);
-  line-height: var(--lh-ui);
+  padding: var(--space-5);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+  box-shadow: var(--shadow-2);
+  /* WP4 hover 抬起:只动 transform/box-shadow */
+  transition: transform var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease);
 }
 
-.start-select {
+.sp-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-3);
+}
+
+.sp-card-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* 32px 数字圆章:三张索引卡一致(预算第 4 件,一组) */
+.sp-card-no {
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-family: var(--font-serif);
+  font-size: var(--fs-h3);
+  font-weight: var(--fw-bold);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.sp-card-title {
+  margin: 0;
+  color: var(--text);
+  font-family: var(--font-serif);
+  font-size: 18px;
+  font-weight: var(--fw-bold);
+  line-height: 1.4;
+  letter-spacing: var(--ls-tight);
+}
+
+.sp-card-body {
+  display: grid;
+  gap: var(--space-3);
+}
+
+/* 字段小标签(原 label 文案不动) */
+.sp-field {
+  display: grid;
+  gap: var(--space-1);
+  align-content: start;
+  color: var(--text-soft);
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-caption);
+}
+
+.sp-select {
   width: 100%;
   padding: var(--space-2) var(--space-3);
   border: 1px solid var(--rule);
@@ -87,37 +220,43 @@
   line-height: var(--lh-body);
 }
 
-.start-select:focus-visible {
+.sp-select:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
 }
 
-.start-mode-field {
+.sp-mode-field {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
   margin: 0;
   padding: var(--space-3) var(--space-4);
   border: 1px solid var(--rule);
   border-radius: var(--radius-md);
+  background: var(--card);
 }
 
-.start-mode-field legend {
-  padding: 0 var(--space-1);
-  color: var(--text);
+.sp-mode-field legend {
+  grid-column: 1 / -1;
+  padding: 0;
+  color: var(--text-soft);
   font-size: var(--fs-caption);
   font-weight: var(--fw-medium);
   line-height: var(--lh-caption);
 }
 
-.start-choice-row {
-  display: flex;
+.sp-choice-row {
+  display: inline-flex;
   align-items: center;
   gap: var(--space-2);
-  min-height: var(--space-6);
+  min-height: var(--space-5);
   color: var(--text);
   font-size: var(--fs-ui);
   line-height: var(--lh-ui);
 }
 
-.start-time-note {
+/* 时长提示:第❸卡底部卡内小注 */
+.sp-time-note {
   display: grid;
   gap: var(--space-1);
   align-content: center;
@@ -126,18 +265,20 @@
   background: var(--card-soft);
 }
 
-.start-time-note strong {
+.sp-time-note strong {
   color: var(--text);
   font-size: var(--fs-ui);
   font-weight: var(--fw-medium);
   line-height: var(--lh-ui);
 }
 
-.start-time-note span {
+.sp-time-note span {
   color: var(--text-soft);
   font-size: var(--fs-caption);
   line-height: var(--lh-caption);
 }
+
+/* ---------- 表单页脚与主操作 ---------- */
 
 .task-footer {
   display: flex;
@@ -145,7 +286,6 @@
   justify-content: space-between;
   flex-wrap: wrap;
   gap: var(--space-4);
-  margin-top: var(--space-5);
   padding-top: var(--space-4);
   border-top: 1px solid var(--rule);
 }
@@ -157,44 +297,49 @@
   line-height: var(--lh-caption);
 }
 
-.cta-start {
+/* 扉页 CTA:玻璃质感/3D 悬停全部由 .button.primary 提供(见 styles.css)。
+   双类选择器抬特异性:styles.css 在打包顺序里位于页面 CSS 之后,
+   单类 .cta-start 的尺寸会被 .button 基类反超。 */
+.button.cta-start {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex: 0 0 auto;
-  padding: var(--space-3) var(--space-5);
-  border: 0;
+  padding: var(--space-4) var(--space-7);
   border-radius: var(--radius-md);
-  background: var(--accent);
-  color: var(--paper);
   font-family: inherit;
   font-size: var(--fs-body);
   font-weight: var(--fw-medium);
   line-height: var(--lh-body);
   cursor: pointer;
-  transition: filter var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
 }
 
-.cta-start:hover:not(:disabled) {
-  filter: brightness(0.94);
-}
-
-.cta-start:active:not(:disabled) {
-  transform: translateY(1px);
-}
-
-.cta-start:disabled {
+.button.cta-start:disabled {
   background: var(--card-soft);
   color: var(--text-soft);
   cursor: not-allowed;
 }
 
-/* ---------- 信息卡(当前教材):次级、默认折叠 ---------- */
+/* ---------- 教材信息卡:默认折叠(样式沿用 WP4) ---------- */
 
 .info-card {
+  position: relative;
   border: 1px solid var(--rule);
   border-radius: var(--radius-lg);
   background: var(--card-soft);
+}
+
+.info-card::before {
+  content: "";
+  position: absolute;
+  top: -9px;
+  left: 18px;
+  width: 60px;
+  height: var(--space-5);
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0)), var(--tape);
+  box-shadow: var(--shadow-1);
+  transform: rotate(-3deg);
+  pointer-events: none;
 }
 
 .info-card summary {
@@ -268,121 +413,289 @@
   line-height: var(--lh-ui);
 }
 
-/* ---------- 可恢复会话:同一组并列卡 ---------- */
+/* ---------- 桌面拼贴:纸叠(预算第 5 件胶带) ---------- */
 
-.resume-group {
-  display: grid;
-  gap: var(--space-3);
+.sp-collage {
+  position: relative;
+  z-index: 1;
+  pointer-events: none;
 }
 
-.resume-group-heading {
+/* 纸叠:两页错位微旋的纸边(同 LearnPage .lesson-stack 手法) */
+.sp-stack {
+  position: relative;
+  width: min(286px, 100%);
+  margin-left: auto;
+}
+
+.sp-stack::before,
+.sp-stack::after {
+  content: "";
+  position: absolute;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  background: var(--card-soft);
+  pointer-events: none;
+}
+
+.sp-stack::before {
+  inset: var(--space-4) calc(var(--space-2) * -1) calc(var(--space-2) * -1) var(--space-4);
+  transform: rotate(0.8deg);
+  opacity: 0.8;
+}
+
+.sp-stack::after {
+  inset: var(--space-2) calc(var(--space-1) * -1) calc(var(--space-1) * -1) var(--space-2);
+  transform: rotate(-0.5deg);
+  opacity: 0.55;
+}
+
+/* 信纸:几条未写的字行,其中一行叠荧光笔痕 */
+.sp-letter {
+  position: relative;
+  z-index: 1;
   display: grid;
+  gap: var(--space-3);
+  align-content: start;
+  height: 164px;
+  padding: var(--space-4);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+  box-shadow: var(--shadow-2);
+}
+
+.sp-line {
+  display: block;
+  height: 10px;
+  border-radius: var(--radius-sm);
+  background: var(--card-soft);
+}
+
+/* 荧光笔痕:叠在字行底部 40%(预算第 6 件),略长于其他字行但不越出纸边 */
+.sp-line-highlight {
+  background: linear-gradient(to top, var(--highlighter) 0 40%, transparent 40%), var(--card-soft);
+  width: 104%;
+}
+
+.sp-line-short {
+  width: 64%;
+}
+
+/* 信纸左上胶带(预算第 5 件) */
+.sp-letter::before {
+  content: "";
+  position: absolute;
+  top: -9px;
+  left: 16px;
+  width: 60px;
+  height: var(--space-5);
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0)), var(--tape);
+  box-shadow: var(--shadow-1);
+  transform: rotate(-3deg);
+  pointer-events: none;
+}
+
+/* ---------- 桌面拼贴:五枚索引页签扇形(预算第 7 件) ---------- */
+
+.sp-fan {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
   gap: var(--space-1);
-}
-
-.resume-heading {
-  margin: 0;
-  color: var(--text);
-  font-family: var(--font-serif);
-  font-size: var(--fs-h3);
-  line-height: var(--lh-h3);
-}
-
-.resume-lede {
-  margin: 0;
-  color: var(--text-soft);
-  font-size: var(--fs-caption);
-  line-height: var(--lh-caption);
-}
-
-.resume-list {
-  display: grid;
-  gap: var(--space-3);
-  margin: 0;
+  margin: var(--space-5) 0 0;
   padding: 0;
   list-style: none;
 }
 
-.resume-item {
+.sp-tab {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--space-4);
-  padding: var(--space-4) var(--space-5);
+  justify-content: center;
+  width: 120px;
+  height: 34px;
   border: 1px solid var(--rule);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm) 2px 2px var(--radius-sm);
   background: var(--card);
   box-shadow: var(--shadow-1);
+  color: var(--text-soft);
+  font-family: var(--font-serif);
+  font-size: var(--fs-ui);
+  line-height: var(--lh-ui);
+  transform-origin: right center;
+  transform: rotate(var(--tab-rotate));
 }
 
-.resume-item-main {
+/* 「学习」页签:实底反白并外伸 6px,是整本书的「当前页」 */
+.sp-tab-accent {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--card);
+  transform: rotate(var(--tab-rotate)) translateX(6px);
+}
+
+/* ---------- 书签夹页(仅在有可恢复会话时渲染,预算第 8 件) ---------- */
+
+/* 书签从纸叠左缘夹进去、向左下垂(层级压在拼贴之下,像夹在书里的织带),
+   右缘锚定跟随纸叠;绝不压到下方右对齐的页签扇。 */
+.sp-bookmark-wrap {
+  position: absolute;
+  top: 118px;
+  right: 236px;
+  z-index: 0;
+  transform: rotate(-6deg);
+}
+
+.sp-bookmark {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+  width: 150px;
+  height: 160px;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--accent);
+  border-radius: 2px 2px var(--radius-sm) var(--radius-sm);
+  background: var(--accent-soft);
+  box-shadow: var(--shadow-2);
+  color: var(--text);
+  text-align: left;
+  font-family: inherit;
+  cursor: pointer;
+  /* 燕尾缺口:底部中央,同一个板式 */
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 62% 100%, 50% 82%, 38% 100%, 0 100%);
+}
+
+.sp-bookmark:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.sp-bookmark:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.sp-bookmark-text {
   display: grid;
   gap: var(--space-1);
   min-width: 0;
 }
 
-.resume-item-title {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  margin: 0;
+.sp-bookmark-kicker {
+  color: var(--text-soft);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+}
+
+.sp-bookmark-name {
   color: var(--text);
-  font-size: var(--fs-ui);
-  font-weight: var(--fw-medium);
-  line-height: var(--lh-ui);
+  font-family: var(--font-serif);
+  font-size: var(--fs-h3);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-h3);
+  overflow-wrap: anywhere;
 }
 
-.resume-stage {
-  display: inline-flex;
-  align-items: center;
-  padding: var(--space-1) var(--space-2);
-  border-radius: var(--radius-sm);
-  background: var(--accent-soft);
+.sp-bookmark-cta {
+  margin-top: auto;
   color: var(--accent);
   font-size: var(--fs-caption);
   font-weight: var(--fw-medium);
   line-height: var(--lh-caption);
 }
 
-.resume-item-meta {
-  margin: 0;
-  color: var(--text-soft);
-  font-size: var(--fs-caption);
-  line-height: var(--lh-caption);
+/* ---------- 进场:级联上浮(只在 no-preference 下生效) ---------- */
+
+@keyframes card-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
-.resume-cta {
-  flex: 0 0 auto;
-  padding: var(--space-2) var(--space-4);
-  border: 1px solid var(--rule);
-  border-radius: var(--radius-sm);
-  background: var(--card);
-  color: var(--accent);
-  font-family: inherit;
-  font-size: var(--fs-ui);
-  font-weight: var(--fw-medium);
-  line-height: var(--lh-ui);
-  cursor: pointer;
-  transition: border-color var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease);
+@media (prefers-reduced-motion: no-preference) {
+  .sp-card {
+    animation: card-rise var(--dur-base) var(--ease) backwards;
+  }
+
+  .sp-card:nth-child(2) {
+    animation-delay: 60ms;
+  }
+
+  .sp-card:nth-child(3) {
+    animation-delay: 120ms;
+  }
+
+  .sp-collage {
+    animation: card-rise var(--dur-base) var(--ease) 180ms backwards;
+  }
+
+  .sp-bookmark-wrap {
+    animation: card-rise var(--dur-base) var(--ease) 240ms backwards;
+  }
 }
 
-.resume-cta:hover:not(:disabled) {
-  border-color: var(--accent);
-  background: var(--accent-soft);
-}
+/* ---------- 窄屏:单栏扉页,拼贴移到标题下方、索引卡之上 ---------- */
 
-.resume-cta:disabled {
-  color: var(--text-soft);
-  cursor: not-allowed;
+@media (max-width: 980px) {
+  .start-page {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sp-heading,
+  .sp-main,
+  .sp-side {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  /* 书签退化:横向织带条,燕尾改右侧,插在索引卡上方 */
+  .sp-bookmark-wrap {
+    position: static;
+    margin-top: 0;
+    transform: none;
+  }
+
+  .sp-bookmark {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    height: 64px;
+    padding: var(--space-2) var(--space-4);
+    /* 燕尾改右侧 */
+    clip-path: polygon(0 0, 100% 0, 100% 44%, 88% 50%, 100% 56%, 100% 100%, 0 100%);
+  }
+
+  .sp-bookmark-text {
+    gap: var(--space-1);
+  }
+
+  .sp-bookmark-cta {
+    margin-top: 0;
+    flex: 0 0 auto;
+  }
 }
 
 /* ---------- 减少动效 ---------- */
 
 @media (prefers-reduced-motion: reduce) {
+  /* 手账悬停抬起整体降级:不位移、不换阴影 */
+  .sp-card,
+  .sp-card:hover {
+    transition: none;
+    transform: none;
+    box-shadow: var(--shadow-2);
+  }
+
   .cta-start,
   .info-card-chevron,
-  .resume-cta {
+  .sp-bookmark {
     transition: none;
   }
 }

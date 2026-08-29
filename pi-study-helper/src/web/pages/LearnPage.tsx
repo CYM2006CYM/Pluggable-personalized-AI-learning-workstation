@@ -193,6 +193,25 @@ function RichLessonView({
   const dirRef = useRef<1 | -1>(1);
   const studyRef = useRef<HTMLElement | null>(null);
   const stationTotal = readingModules.length;
+
+  /*
+   * 吸顶缓冲:站点导航条吸住/松开的瞬间只靠 position:sticky 会显得硬。
+   * 哨兵元素贴在导航条原位,滚出视口顶线(扣除吸顶位移)即视为吸住,
+   * 交给 CSS 播落定动画并浮起影子;松开时交还原位,不做离场动画。
+   */
+  const [stackStuck, setStackStuck] = useState(false);
+  const stackSentinelRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const sentinel = stackSentinelRef.current;
+    if (sentinel === null || typeof IntersectionObserver !== "function") return;
+    const observer = new IntersectionObserver(
+      (entries) => setStackStuck(!(entries[entries.length - 1]?.isIntersecting ?? true)),
+      // 顶部收缩量与吸顶位移 top: var(--space-3) 对齐
+      { rootMargin: "-12px 0px 0px 0px" },
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [act, stationTotal]);
   const goToStation = (target: number) => {
     const next = Math.max(0, Math.min(stationTotal - 1, target));
     if (next === station) return;
@@ -223,7 +242,8 @@ function RichLessonView({
         <button type="button" className="button text-button" onClick={backToBriefing}>{LESSON_ACTS.backToBriefing}</button>
       </div>
       {stationTotal === 0 ? null : <>
-        <nav className="stack-nav" aria-label={STATION_STACK.navAria}>
+        <div className="stack-nav-sentinel" ref={stackSentinelRef} aria-hidden="true" />
+        <nav className={`stack-nav${stackStuck ? " is-stuck" : ""}`} aria-label={STATION_STACK.navAria}>
           <button type="button" className="button secondary stack-nav-step" disabled={station === 0} onClick={() => goToStation(station - 1)}>{STATION_STACK.prev}</button>
           <div className="stack-nav-state">
             <span className="stack-nav-count">{STATION_STACK.count(station + 1, stationTotal)}</span>
