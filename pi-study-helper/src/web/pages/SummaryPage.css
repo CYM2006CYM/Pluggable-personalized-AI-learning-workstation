@@ -372,3 +372,50 @@
   font-size: var(--fs-caption);
   line-height: var(--lh-caption);
 }
+
+/* ---------- 整页空态（复用 .state-panel 模式，纸面换成本页 token） ----------
+ *
+ * SummaryPage.tsx 在会话快照缺失时渲染 state-panel + summary-empty 组合；
+ * styles.css 里的 .state-panel 旧规则不许改动，这里只覆盖纸面与文字，
+ * 与本页其他卡保持同一套牛皮纸材质。
+ */
+
+.summary-empty {
+  gap: var(--space-3);
+  border: 1px solid var(--rule);
+  border-left: var(--space-1) solid var(--step-locked);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+  box-shadow: var(--shadow-2);
+}
+
+.summary-empty .state-code {
+  color: var(--accent);
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-caption);
+  letter-spacing: var(--ls-wide);
+  text-transform: none;
+}
+
+.summary-empty h2 {
+  margin: 0;
+  color: var(--text);
+  font-family: var(--font-serif);
+  font-size: var(--fs-h2);
+  line-height: var(--lh-h2);
+  letter-spacing: var(--ls-tight);
+}
+
+.summary-empty p:not(.state-code) {
+  max-width: var(--read-width);
+  margin: 0;
+  color: var(--text-soft);
+  font-size: var(--fs-ui);
+  line-height: var(--lh-ui);
+}
+
+.summary-empty .button-row {
+  margin-top: var(--space-2);
+  gap: var(--space-3);
+}

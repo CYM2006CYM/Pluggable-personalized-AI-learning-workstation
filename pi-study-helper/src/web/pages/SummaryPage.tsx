@@ -10,6 +10,7 @@ import { useAgentRun } from "../hooks/use-agent-run.js";
 import { useAsyncActionProgress } from "../hooks/use-async-action-progress.js";
 import { knowledgeStatusLabel, masteryLabel, profileStatusLabel } from "../copy/ui-copy.js";
 import { knowledgePointLabel } from "../learning-labels.js";
+import { STABLE_LAYOUT } from "../styles/layout-contract.js";
 import "./SummaryPage.css";
 import {
   ARCHIVE_CARD,
@@ -18,6 +19,7 @@ import {
   MASTERY_GAINS,
   NEXT_TASK,
   PROFILE_DETAIL,
+  SUMMARY_EMPTY,
   SUMMARY_JOURNEY,
   SUMMARY_OUTCOME,
   SUMMARY_PAGE,
@@ -69,7 +71,7 @@ export function SummaryPage() {
   return <PageFrame eyebrow={SUMMARY_PAGE.eyebrow} title={SUMMARY_PAGE.title} summary={resolvedOutput?.summary ?? SUMMARY_PAGE.pageSummaryFallback} back={{ to: "/", label: SUMMARY_PAGE.backToMenu }}>
     {bootstrap.loading ? <PageStatePanel page="summary" state="loading" /> : null}
     {!bootstrap.loading && error ? <PageStatePanel page="summary" state={isApiError(error) && error.status === 409 ? "conflict" : "error"} code={isApiError(error) ? error.code : error.message} detail={SUMMARY_STATE_COPY.conflictDetail} onRetry={() => { setActionError(undefined); setSummaryRequestId(newRequestId("web-complete-session")); setAttempted(false); void bootstrap.reload(); }} /> : null}
-    {!bootstrap.loading && error === undefined && session === undefined ? <PageStatePanel page="summary" state="empty" /> : null}
+    {!bootstrap.loading && error === undefined && session === undefined ? <section className="state-panel summary-empty" data-state="empty" aria-live="polite" style={{ minHeight: STABLE_LAYOUT.statePanelMinHeight }}><p className="state-code">{SUMMARY_EMPTY.code}</p><h2>{SUMMARY_EMPTY.heading}</h2><p>{SUMMARY_EMPTY.body}</p><div className="button-row"><Link className="button secondary" to="/">{SUMMARY_PAGE.backToMenu}</Link><Link className="button primary" to="/">{SUMMARY_EMPTY.startNew}</Link></div></section> : null}
     {!bootstrap.loading && error === undefined && session !== undefined && generating ? <SummaryGenerationPipeline run={agentRun.run} transport={agentRun.transport} elapsedText={actionProgress.text ?? SUMMARY_STATE_COPY.generatingElapsedFallback} /> : null}
     {!bootstrap.loading && error === undefined && session?.view.status === "completed" && resolvedOutput === undefined ? <><PageStatePanel page="summary" state="recovery" code="COMPLETED_SUMMARY_ARCHIVE_MISSING" detail={SUMMARY_STATE_COPY.archiveMissingDetail} /><SummaryJourney session={session} profile={profile} unresolved={unresolved} diagnosticSkipped={diagnosticSkipped} /></> : null}
     {!bootstrap.loading && error === undefined && resolvedOutput !== undefined && session !== undefined ? <SummaryJourney session={session} output={resolvedOutput} profile={profile} unresolved={unresolved} diagnosticSkipped={diagnosticSkipped} /> : null}

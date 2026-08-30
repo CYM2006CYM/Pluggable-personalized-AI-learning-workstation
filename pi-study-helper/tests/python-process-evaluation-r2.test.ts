@@ -21,9 +21,10 @@ const testDirectory = dirname(fileURLToPath(import.meta.url));
 const projectRoot = resolve(testDirectory, "..");
 const profileRoot = resolve(projectRoot, "fixtures/profiles/pandas-cleaning-v2-draft");
 const runnerScript = resolve(projectRoot, "scripts/python-evaluator.py");
-const pythonExecutable = process.platform === "win32"
-  ? execFileSync("where.exe", ["python"], { encoding: "utf8" }).split(/\r?\n/u).find(Boolean) ?? "python"
-  : execFileSync("which", ["python"], { encoding: "utf8" }).trim();
+const pythonExecutable = process.env.PI_PYTHON_EXECUTABLE
+  ?? (process.platform === "win32"
+    ? execFileSync("where.exe", ["python"], { encoding: "utf8" }).split(/\r?\n/u).find(Boolean) ?? "python"
+    : execFileSync("which", ["python"], { encoding: "utf8" }).trim());
 const environment = JSON.parse(await readFile(resolve(profileRoot, "environments/environment-lock.json"), "utf8")) as MeasuredNodeEnvironment;
 
 async function formalInput(activityId: string): Promise<PrepareEvaluationInput> {

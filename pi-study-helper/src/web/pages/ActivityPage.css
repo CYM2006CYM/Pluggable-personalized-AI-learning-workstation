@@ -807,6 +807,9 @@
 [data-page="activity"] .csv-sample {
   position: relative;
   min-width: 0;
+  /* 回形针与纸片用负偏移定位、不占布局；必须留出左侧装饰槽，
+     否则纸片会压住标题首字（「输入 CSV」被盖成只剩半个字）。 */
+  padding-left: 30px;
 }
 
 /* 回形针背后的白纸片：var(--card) 圆角小片 + 一档暖阴影 */
@@ -907,6 +910,120 @@
 
 .activity-pipeline-slot {
   margin: 0 0 var(--space-5);
+}
+
+/*
+ * 流水线收纳条:与学习页同一套抽屉（那边是 [data-page="learn"] 前缀,
+ * 这里管线槽在 .activity-layout 之外,故以槽位本身为 scope）。
+ * 默认只露一条状态带,展开后是完整八工位工作台;失败时自动展开。
+ */
+.activity-pipeline-slot .pipeline-drawer {
+  width: 100%;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-md);
+  background: var(--card);
+  box-shadow: var(--shadow-1);
+}
+
+.activity-pipeline-slot .pipeline-drawer > summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--space-7);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  list-style: none;
+  transition: background var(--dur-fast) var(--ease);
+}
+
+.activity-pipeline-slot .pipeline-drawer > summary:hover {
+  background: var(--card-soft);
+}
+
+.activity-pipeline-slot .pipeline-drawer > summary::-webkit-details-marker {
+  display: none;
+}
+
+/* 机房的点是空心的:同一条动线,不同的角色 */
+.activity-pipeline-slot .kicker-dot.drawer-dot {
+  flex: 0 0 auto;
+  border-color: var(--text-soft);
+  background: transparent;
+}
+
+.activity-pipeline-slot .pipeline-drawer[data-state="running"] .drawer-dot,
+.activity-pipeline-slot .pipeline-drawer[data-state="discovering"] .drawer-dot {
+  border-color: var(--accent);
+  background: var(--accent);
+  animation: activity-drawer-breathe 1.6s var(--ease) infinite;
+}
+
+@keyframes activity-drawer-breathe {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+.activity-pipeline-slot .pipeline-drawer[data-state="failed"] .drawer-dot,
+.activity-pipeline-slot .pipeline-drawer[data-state="timeout"] .drawer-dot {
+  border-color: var(--warm);
+  background: var(--warm);
+}
+
+.activity-pipeline-slot .pipeline-drawer-title {
+  flex: 0 0 auto;
+  color: var(--text);
+  font-size: var(--fs-ui);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-ui);
+}
+
+.activity-pipeline-slot .pipeline-drawer-status {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-soft);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.activity-pipeline-slot .pipeline-drawer[data-state="running"] .pipeline-drawer-status,
+.activity-pipeline-slot .pipeline-drawer[data-state="discovering"] .pipeline-drawer-status {
+  color: var(--accent);
+}
+
+.activity-pipeline-slot .pipeline-drawer[data-state="failed"] .pipeline-drawer-status,
+.activity-pipeline-slot .pipeline-drawer[data-state="timeout"] .pipeline-drawer-status {
+  color: var(--warm);
+}
+
+.activity-pipeline-slot .pipeline-drawer-toggle {
+  flex: 0 0 auto;
+  color: var(--accent);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+}
+
+.activity-pipeline-slot .pipeline-drawer-body {
+  padding: 0 0 var(--space-4);
+  border-top: 1px dashed var(--rule);
+}
+
+/* 展开态去掉组件自带的外框:工作台住在抽屉里,不再另开一张卡 */
+.activity-pipeline-slot .pipeline-drawer-body .agent-pipeline {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .activity-pipeline-slot .pipeline-drawer[data-state="running"] .drawer-dot,
+  .activity-pipeline-slot .pipeline-drawer[data-state="discovering"] .drawer-dot {
+    animation: none;
+  }
 }
 
 /* ---------- 页面级按钮：米色纸感（仅作用本页布局内的按钮） ---------- */

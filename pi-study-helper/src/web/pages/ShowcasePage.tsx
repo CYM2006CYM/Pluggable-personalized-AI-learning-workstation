@@ -73,7 +73,6 @@ export function ShowcasePage() {
             <p className="section-kicker">{PAGE_COPY.pathKicker}</p>
             <h2 className="showcase-case-title">
               {personaLabel(selected.semantic.personaType)}
-              <code className="showcase-case-id">{selected.input.caseId}</code>
             </h2>
           </div>
           <span className="status-tag">{estimatedTotalText(totalMinutes)}</span>
@@ -118,6 +117,7 @@ export function ShowcasePage() {
             <p className="showcase-hash-note">{PAGE_COPY.hash.note}</p>
             <dl className="showcase-hash-list">
               <div><dt>{PAGE_COPY.hash.seal}</dt><dd>{FORMAL_SHOWCASE_SEAL}</dd></div>
+              <div><dt>{PAGE_COPY.hash.caseId}</dt><dd>{selected.input.caseId}</dd></div>
               <div><dt>{PAGE_COPY.hash.input}</dt><dd>{selected.input.sha256}</dd></div>
               <div><dt>{PAGE_COPY.hash.path}</dt><dd>{selected.pathSha256}</dd></div>
               <div><dt>{PAGE_COPY.hash.output}</dt><dd>{selected.outputSha256}</dd></div>

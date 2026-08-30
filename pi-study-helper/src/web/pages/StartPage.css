@@ -322,6 +322,11 @@
 
 /* ---------- 教材信息卡:默认折叠(样式沿用 WP4) ---------- */
 
+/* 与表单页脚拉开一档：CTA 是主操作，不该贴着下方信息卡的上缘与胶带 */
+.start-material {
+  margin-top: var(--space-6);
+}
+
 .info-card {
   position: relative;
   border: 1px solid var(--rule);
@@ -547,6 +552,7 @@
 }
 
 .sp-bookmark {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -562,8 +568,23 @@
   text-align: left;
   font-family: inherit;
   cursor: pointer;
-  /* 燕尾缺口:底部中央,同一个板式 */
-  clip-path: polygon(0 0, 100% 0, 100% 100%, 62% 100%, 50% 82%, 38% 100%, 0 100%);
+  /* 燕尾缺口:底部中央收窄到 42%–58%,避免读成大面积缺角 */
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 58% 100%, 50% 86%, 42% 100%, 0 100%);
+}
+
+/* 燕尾切口的缝线:clip-path 连边框一起裁掉,切边无描边时读作「缺角」;
+   用两段 1.5px 描边沿切边补线,尾巴才是「剪出来的燕尾」。
+   描边色写死 #3d5a4c 对应 --accent(data-URI 内无法引用 CSS var,同回形针先例)。 */
+.sp-bookmark::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: calc(50% - 12px);
+  width: 24px;
+  height: 22px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='22' viewBox='0 0 24 22' fill='none'%3E%3Cpath d='M1,21 L12,1 L23,21' stroke='%233d5a4c' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  pointer-events: none;
 }
 
 .sp-bookmark:focus-visible {
@@ -668,8 +689,14 @@
     width: 100%;
     height: 64px;
     padding: var(--space-2) var(--space-4);
-    /* 燕尾改右侧 */
-    clip-path: polygon(0 0, 100% 0, 100% 44%, 88% 50%, 100% 56%, 100% 100%, 0 100%);
+    /* 横向织带不做燕尾:窄条上右缘切口读作破损,圆角回到四角一致 */
+    clip-path: none;
+    border-radius: var(--radius-sm);
+  }
+
+  /* 桌面燕尾的缝线随缺口一并退场 */
+  .sp-bookmark::after {
+    content: none;
   }
 
   .sp-bookmark-text {

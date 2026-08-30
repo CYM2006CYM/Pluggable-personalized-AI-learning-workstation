@@ -82,7 +82,10 @@ export const LEARN_PAGE_COPY = {
   tipStructuredStatus: "已生成",
   tipLegacyStatus: "旧版提醒",
   tipLoadingBody: "Agent 正在读取本节正式正文、章节关系和学情信息，并执行 Generator、Hunter 与 Judge 审核；正文已可正常阅读。",
-  tipUnavailableBody: "本次没有形成通过审核的个性化提醒，继续使用完整正式正文，不影响本节学习。",
+  /** 导学未生成时右页的便签占位：标题 + 含义 + 下一步，不冒充正文。 */
+  tipEmptyTitle: "导学未生成",
+  tipEmptyBody: "AI 导学这次没有形成通过审核的内容；本节正文不受影响，可以直接开始学习。",
+  tipEmptyNext: "可以先完成本节学习并作答正式活动；导学由 AI 在诊断后生成，之后回到简报即可查看。",
   tipRegenerate: "重新生成提醒",
   tipUpgrade: "升级课前导学",
 

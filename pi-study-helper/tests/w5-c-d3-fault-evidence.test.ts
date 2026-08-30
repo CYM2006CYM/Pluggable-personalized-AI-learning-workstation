@@ -11,7 +11,7 @@ import { PythonProcessCodeEvaluationAdapter } from "../src/infrastructure/python
 const packageRoot = resolve(import.meta.dirname, "..");
 const profileRoot = resolve(packageRoot, "fixtures/profiles/pandas-cleaning-revision-3-draft");
 const outputPath = resolve(packageRoot, "scripts/w5-c-d3-validation/fault-observations.json");
-const pythonExecutable = process.env.W5_C_D3_PYTHON ?? (process.platform === "win32"
+const pythonExecutable = process.env.PI_PYTHON_EXECUTABLE ?? process.env.W5_C_D3_PYTHON ?? (process.platform === "win32"
   ? execFileSync("where.exe", ["python"], { encoding: "utf8" }).split(/\r?\n/u).find(Boolean) ?? "python"
   : "python");
 const environment = JSON.parse(await readFile(resolve(profileRoot, "environments/environment-lock.json"), "utf8"));

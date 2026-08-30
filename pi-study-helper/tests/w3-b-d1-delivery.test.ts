@@ -30,7 +30,7 @@ async function hash(path: string): Promise<{ sha256: string; byteLength: number;
 }
 
 async function runPython(args: string[], cwd = profileRoot): Promise<string> {
-  const result = await execFile("python", args, {
+  const result = await execFile(process.env.PI_PYTHON_EXECUTABLE ?? "python", args, {
     cwd,
     env: { ...process.env, PYTHONDONTWRITEBYTECODE: "1" },
   });

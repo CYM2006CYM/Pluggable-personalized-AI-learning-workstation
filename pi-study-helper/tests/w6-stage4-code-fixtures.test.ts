@@ -31,6 +31,7 @@ async function hash(relative: string): Promise<string> {
 }
 
 function findPython(): string {
+  if (process.env.PI_PYTHON_EXECUTABLE) return process.env.PI_PYTHON_EXECUTABLE;
   const command = process.platform === "win32" ? "where.exe" : "which";
   return execFileSync(command, ["python"], { encoding: "utf8" }).split(/\r?\n/u).find(Boolean) ?? "python";
 }

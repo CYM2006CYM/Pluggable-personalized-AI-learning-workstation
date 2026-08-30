@@ -22,6 +22,7 @@ const solutionFiles: Readonly<Record<string, string>> = {
 };
 
 function findPython(): string {
+  if (process.env.PI_PYTHON_EXECUTABLE) return process.env.PI_PYTHON_EXECUTABLE;
   return execFileSync("where.exe", ["python"], { encoding: "utf8" }).split(/\r?\n/u).find(Boolean) ?? "python";
 }
 function hash(value: string): string { return createHash("sha256").update(value, "utf8").digest("hex"); }

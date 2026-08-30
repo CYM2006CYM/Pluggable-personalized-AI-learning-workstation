@@ -27,6 +27,17 @@ export const SUMMARY_STATE_COPY = {
   archiveMissingDetail: "会话已完成，但这次的总结归档缺失；系统不会凭空补造一份历史总结。",
 } as const;
 
+/**
+ * 整页空态：会话快照缺失时的占位（标题 + 一句说明 + 下一步指引）。
+ * 结构对齐 PageStatePanel 的空态，只在本页换纸面材质。
+ */
+export const SUMMARY_EMPTY = {
+  code: "暂无总结",
+  heading: "没有可回顾的学习会话",
+  body: "当前没有可展示的会话总结。返回主菜单选择一个已有会话，或开始一次新的学习。",
+  startNew: "开始新会话",
+} as const;
+
 /** 顶部指标条（会话指标）的标签。值一律运行时给，不写死。 */
 export const SUMMARY_STATS = {
   metricsLabel: "会话指标",

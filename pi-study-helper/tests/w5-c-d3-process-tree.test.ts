@@ -10,6 +10,7 @@ const profileRoot = resolve(projectRoot, "fixtures/profiles/pandas-cleaning-revi
 const outputPath = process.env.W5_C_D3_PROCESS_TREE_OUTPUT;
 
 function pythonExecutable(): string {
+  if (process.env.PI_PYTHON_EXECUTABLE) return process.env.PI_PYTHON_EXECUTABLE;
   return execFileSync("where.exe", ["python"], { encoding: "utf8" }).split(/\r?\n/u).find(Boolean) ?? "python";
 }
 function processAlive(pid: number): boolean {

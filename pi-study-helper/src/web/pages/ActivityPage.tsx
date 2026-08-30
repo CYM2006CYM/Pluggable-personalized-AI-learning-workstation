@@ -12,7 +12,8 @@ import { api, isApiError, isEvaluatorFailure, newRequestId, quizScore, type Eval
 import { useBootstrap } from "../api/use-bootstrap.js";
 import { PageFrame } from "../components/PageFrame.js";
 import { PageStatePanel } from "../components/PageStatePanel.js";
-import { AgentPipeline, AgentPipelineDiscovery } from "../components/AgentPipeline.js";
+import { AgentPipeline, AgentPipelineDiscovery, agentPipelineSummary, type PipelineResourceKind } from "../components/AgentPipeline.js";
+import { AGENT_PIPELINE_STATUS_FALLBACK, PIPELINE_DRAWER } from "../copy/learn-page-copy.js";
 import { PaperFlip } from "../components/PaperFlip.js";
 import { downloadAgentRunExport } from "../api/agent-run-client.js";
 import { useAsyncActionProgress } from "../hooks/use-async-action-progress.js";
@@ -421,15 +422,62 @@ export function ActivityPage() {
     hasActivity: opened !== undefined,
   });
   const flowView = buildStudyFlow(session?.path?.nodes ?? [], flowContext);
-  return <PageFrame eyebrow={activityEyebrowLabel(opened?.activity.kind)} title={title} summary={summary} back={{ to: activityNodeId === undefined ? `/path/${sessionId}` : `/learn/${sessionId}/${activityNodeId}`, label: BACK_TO_LESSON_LABEL }} actions={<span className="header-badge">{opened?.kind === "quiz" ? questionSourceLabel(opened.activity.questionSource) : opened?.kind === "code" ? HEADER_BADGE_NODE_PYTHON : HEADER_BADGE_LOADING}</span>}>
+
+  /*
+   * 流水线收纳:与学习页同一套「默认收纳成状态带、展开即完整八工位工作台」。
+   * 活动页的主角是题目本身,机房不该喧宾夺主;运行失败时自动展开。
+   */
+  const [pipelineOpen, setPipelineOpen] = useState(false);
+  const pipelineFailed = agentRun.run?.status === "failed";
+  useEffect(() => {
+    if (pipelineFailed) setPipelineOpen(true);
+  }, [pipelineFailed]);
+  // 本页的运行要么服务本轮题组要么服务代码批改,标签沿用题组口径。
+  const pipelineResourceKind: PipelineResourceKind = "quiz";
+  const pipelineBody = agentRun.run !== undefined
+    ? <AgentPipeline run={agentRun.run} mode={agentRun.transport === "complete" ? "snapshot" : "live"} resourceKind={pipelineResourceKind} onExport={() => downloadAgentRunExport(agentRun.run!.runId).then(() => undefined)} />
+    : agentRequestId !== undefined
+      ? <AgentPipelineDiscovery resourceKind={pipelineResourceKind} statusText={actionProgress.text ?? AGENT_DISCOVERY_PENDING} />
+      : null;
+  const pipelineSummary = agentPipelineSummary(
+    agentRun.run,
+    pipelineResourceKind,
+    agentRun.run === undefined && agentRequestId !== undefined
+      ? actionProgress.text ?? AGENT_PIPELINE_STATUS_FALLBACK
+      : undefined,
+  );
+  const pipeline = pipelineBody === null ? null : <details
+    className="pipeline-drawer"
+    data-state={pipelineSummary.state}
+    open={pipelineOpen}
+  >
+    <summary onClick={(event) => { event.preventDefault(); setPipelineOpen((open) => !open); }} aria-label={PIPELINE_DRAWER.toggleAria}>
+      <span className="kicker-dot drawer-dot" aria-hidden="true" />
+      <span className="pipeline-drawer-title">{PIPELINE_DRAWER.title}</span>
+      <span className="pipeline-drawer-status" role="status">{pipelineSummary.text}</span>
+      <span className="pipeline-drawer-toggle" aria-hidden="true">{pipelineOpen ? PIPELINE_DRAWER.collapse : PIPELINE_DRAWER.view}</span>
+    </summary>
+    <div className="pipeline-drawer-body">{pipelineBody}</div>
+  </details>;
+
+  /*
+   * 头部徽章只在「有话可说」时出现:「加载中」仅属于真实加载/恢复中,
+   * 空态与错误态不再残留一枚永远转不完的假加载徽章。
+   */
+  const headerBadgeLabel = bootstrap.loading || recovering
+    ? HEADER_BADGE_LOADING
+    : opened?.kind === "quiz" ? questionSourceLabel(opened.activity.questionSource)
+      : opened?.kind === "code" ? HEADER_BADGE_NODE_PYTHON
+        : submittedProgress !== undefined ? activityProgressLabel(submittedProgress.status)
+          : undefined;
+  return <PageFrame eyebrow={activityEyebrowLabel(opened?.activity.kind)} title={title} summary={summary} back={{ to: activityNodeId === undefined ? `/path/${sessionId}` : `/learn/${sessionId}/${activityNodeId}`, label: BACK_TO_LESSON_LABEL }} actions={headerBadgeLabel === undefined ? undefined : <span className="header-badge">{headerBadgeLabel}</span>}>
     {bootstrap.loading || recovering ? <PageStatePanel page="activity" state="loading" /> : null}
     {!bootstrap.loading && !recovering && error ? <PageStatePanel page="activity" state={isApiError(error) && error.status === 409 ? "conflict" : "error"} code={isApiError(error) ? error.code : error.message} onRetry={() => { setActionError(undefined); void bootstrap.reload(); }} /> : null}
     {!bootstrap.loading && !recovering && error === undefined && recoveryError !== undefined ? <ActivityRecoveryFailure error={recoveryError} attempts={recoveryAttempts} hasBrowserDraft={localDraft.length > 0} activityNodeId={activityNodeId} sessionId={sessionId} onRetry={() => { setRecoveryError(undefined); setRecoveryTrigger((current) => current + 1); }} /> : null}
     {refreshBlocked ? <ActivityRecoveryFailure error={new Error("ACTIVITY_SAFE_VIEW_INCOMPLETE")} attempts={recoveryAttempts} hasBrowserDraft={localDraft.length > 0} activityNodeId={activityNodeId} sessionId={sessionId} /> : null}
     {!bootstrap.loading && !recovering && error === undefined && recoveryError === undefined && !refreshBlocked && opened === undefined && submittedProgress !== undefined ? <section className="state-panel recovery-state activity-state-panel" data-state="recovery" aria-live="polite" style={{ minHeight: STABLE_LAYOUT.statePanelMinHeight }}><p className="state-code">{RECOVERED_STATE_CODE}</p><h2>{retryPending ? RECOVERED_RETRY_HEADING : RECOVERED_DONE_HEADING}</h2><p>{recoveredBodyLabel(activityProgressLabel(submittedProgress.status), activityResultLabel(submittedProgress.result))}</p><div className="button-row">{activityNodeId === undefined ? null : <button type="button" className="button secondary" onClick={() => navigate(`/learn/${sessionId}/${activityNodeId}`)}>{BACK_TO_LESSON_LABEL}</button>}<button type="button" className="button primary" disabled={busy} onClick={() => void advance(retryPending)}>{retryPending ? RETRY_MODIFY_BUTTON : CONTINUE_NEXT_BUTTON}</button></div></section> : null}
     {!bootstrap.loading && !recovering && error === undefined && recoveryError === undefined && !refreshBlocked && opened === undefined && submittedProgress === undefined ? <PageStatePanel page="activity" state="empty" /> : null}
-    {!bootstrap.loading && error === undefined && recoveryError === undefined && agentRun.run !== undefined ? <div className="activity-pipeline-slot"><AgentPipeline run={agentRun.run} mode={agentRun.transport === "complete" ? "snapshot" : "live"} onExport={() => downloadAgentRunExport(agentRun.run!.runId).then(() => undefined)} /></div>
-      : !bootstrap.loading && error === undefined && recoveryError === undefined && agentRequestId !== undefined ? <div className="activity-pipeline-slot"><AgentPipelineDiscovery statusText={actionProgress.text ?? AGENT_DISCOVERY_PENDING} /></div> : null}
+    {!bootstrap.loading && error === undefined && recoveryError === undefined && pipeline !== null ? <div className="activity-pipeline-slot">{pipeline}</div> : null}
     {!bootstrap.loading && error === undefined && recoveryError === undefined && opened !== undefined ? <div className="activity-layout" data-page="activity">
       <aside className="activity-brief">
         <details className="activity-info activity-card">

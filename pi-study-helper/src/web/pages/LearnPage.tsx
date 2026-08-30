@@ -315,7 +315,11 @@ function RichLessonView({
           </header>
           <small className="spread-variant">{card.personalizedTip?.lessonVariantLabel ?? lesson.label}</small>
           {tipLoading ? <p className="spread-tip-body">{LEARN_PAGE_COPY.tipLoadingBody}</p>
-            : tip === undefined ? <p className="spread-tip-body">{LEARN_PAGE_COPY.tipUnavailableBody}</p>
+            : tip === undefined ? <aside className="spread-tip-empty">
+                <strong>{LEARN_PAGE_COPY.tipEmptyTitle}</strong>
+                <p>{LEARN_PAGE_COPY.tipEmptyBody}</p>
+                <p className="spread-tip-empty-next">{LEARN_PAGE_COPY.tipEmptyNext}</p>
+              </aside>
               : hasStructuredLessonGuideBody(tip) ? <>
                 <p className="spread-overview">{tip.lessonOverview}</p>
                 <div className="lesson-guide-grid">

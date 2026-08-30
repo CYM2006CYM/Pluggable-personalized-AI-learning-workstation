@@ -12,6 +12,7 @@ const profileRoot = resolve(projectRoot, "fixtures/profiles/pandas-cleaning-revi
 const outputPath = process.env.W5_C_D3_FAULT_MATRIX_OUTPUT;
 
 function findPython(): string {
+  if (process.env.PI_PYTHON_EXECUTABLE) return process.env.PI_PYTHON_EXECUTABLE;
   const command = process.platform === "win32" ? "where.exe" : "which";
   return execFileSync(command, ["python"], { encoding: "utf8" }).split(/\r?\n/u).find(Boolean) ?? "python";
 }

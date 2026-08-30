@@ -11,7 +11,7 @@ import { experienceLabel, knowledgeStatusLabel, masteryLabel } from "./ui-copy.j
  * 3. 唯一保留的英文原值是校验哈希与案例编号（caseId）：
  *    - 哈希是案例数据「可复验证据」，与完成归档哈希同性质，受既有测试锁定；
  *    - caseId 是案例的公开稳定标识，评审核对 JSON 证据时需要它，
- *      以技术角标形式挂在中文画像名旁边，不作为主文案。
+ *      低调收进「校验与归档信息」折叠区，不作为主文案。
  */
 
 const FALLBACK_GENERIC = "暂未标注";
@@ -32,6 +32,8 @@ export const PAGE_COPY = {
     summary: "校验与归档信息",
     note: "下方的摘要用于核验你看到的案例数据与生成结果未被改动，评审可据此复现。",
     seal: "内容归档校验码",
+    /** caseId 是公开稳定标识，供评审核对 JSON 证据，低调收在本折叠区。 */
+    caseId: "案例编号（评审对照）",
     input: "输入摘要",
     path: "路径摘要",
     output: "输出摘要",

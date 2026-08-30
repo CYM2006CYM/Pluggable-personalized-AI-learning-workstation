@@ -71,21 +71,6 @@
   line-height: var(--lh-h2);
 }
 
-/* 案例编号：公开的稳定标识，供评审核对 JSON 证据，不作主文案 */
-.showcase-case-id {
-  display: inline-block;
-  max-width: 100%;
-  padding: var(--space-1) var(--space-2);
-  border: 1px solid var(--rule);
-  border-radius: var(--radius-sm);
-  background: var(--card-soft);
-  color: var(--text-soft);
-  font-family: var(--font-mono);
-  font-size: var(--fs-mono);
-  line-height: var(--lh-mono);
-  overflow-wrap: anywhere;
-}
-
 .showcase-path-list {
   display: grid;
   gap: var(--space-2);

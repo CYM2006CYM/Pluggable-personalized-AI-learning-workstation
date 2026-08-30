@@ -1,13 +1,11 @@
 /*
  * 设计 token —— 牛皮纸质感视觉体系（全站底色为折中牛皮纸，卡片为白色便签）。
  *
- * 本文件原则上只新增变量、不删变量：清理旧变量统一留给 ticket 16。
- * 材质升级经用户批准后，本票允许调整既有 token 的值——变量名保持不变
- * （--paper / --card-soft / --rule / --text-soft / --shadow-1..5 / --glass
- * 等仅调整取值），旧名删除仍只发生在 ticket 16。
- * 新名刻意避开 styles.css 已占用的名字：--ink / --muted / --line /
- * --surface / --surface-soft / --radius 全部改用新名，避免新旧两套在渐进
- * 替换期互相覆盖。
+ * 本文件是全站配色、字阶、间距、圆角、阴影的唯一真相源（ticket 16 已删除
+ * styles.css 里的旧冷调变量：--ink / --muted / --line / --surface /
+ * --surface-soft / --green / --green-dark / --amber / --red / --blue /
+ * --sidebar / --radius，及 --pipeline-* / --summary-* 局部别名）。
+ * 新增变量时名字不得与上述历史旧名撞车，避免回归时两套变量互相覆盖。
  */
 
 :root {
