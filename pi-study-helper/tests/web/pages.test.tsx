@@ -400,7 +400,8 @@ describe("W4 real API pages", () => {
 
     await click(button(host, "进入正式活动"));
     expect(button(host, "正在生成并审核题组（已处理 0 秒）").disabled).toBe(true);
-    expect(host.querySelector('.async-action-status[role="status"]')?.textContent).toContain("正在生成并审核题组（已处理 0 秒）");
+    // 按钮自身已回显同一状态文字,按钮外的状态行不再重复展示(状态去重)
+    expect(host.querySelector('.async-action-status[role="status"]')).toBeNull();
     expect(host.querySelectorAll(".agent-station")).toHaveLength(8);
     expect(host.querySelector('.agent-pipeline[data-mode="discovery"]')?.textContent).toContain("正在等待服务端登记真实运行");
     expect(host.querySelectorAll('.agent-station.is-running')).toHaveLength(0);

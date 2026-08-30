@@ -27,6 +27,15 @@ textarea {
   letter-spacing: 0;
 }
 
+/* 代码统一走等宽 token 栈（JetBrains Mono → Cascadia → Consolas）；
+   各页面再按场景覆盖字号与容器（教学代码块、合同卡、哈希行等）。 */
+code,
+pre,
+kbd,
+samp {
+  font-family: var(--font-mono);
+}
+
 button,
 a {
   -webkit-tap-highlight-color: transparent;
@@ -582,7 +591,7 @@ h3 {
 
 .agent-workbench {
   display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(260px, 0.85fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: 22px;
   padding: 22px;
 }
@@ -611,15 +620,20 @@ h3 {
 }
 
 .agent-workbench-summary dl {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: var(--space-6);
+  row-gap: var(--space-2);
   margin: 0;
+  padding-top: var(--space-3);
   border-top: 1px solid var(--rule);
 }
 
 .agent-workbench-summary dl > div {
   min-width: 0;
-  padding: 12px 10px 0 0;
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
 }
 
 .agent-workbench-summary dt,
@@ -630,35 +644,44 @@ h3 {
 }
 
 .agent-workbench-summary dd {
-  margin: 4px 0 0;
+  margin: 0;
   overflow-wrap: anywhere;
   font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
   font-size: 12px;
 }
 
 .agent-workbench-metrics {
-  align-content: start;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  border-top: 1px solid var(--rule);
-  border-left: 1px solid var(--rule);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
 }
 
 .agent-metric {
   min-width: 0;
-  min-height: 68px;
-  display: grid;
-  align-content: center;
-  gap: 5px;
-  padding: 10px 12px;
-  border-right: 1px solid var(--rule);
-  border-bottom: 1px solid var(--rule);
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+  background: var(--card-soft);
 }
 
 .agent-metric strong {
   overflow-wrap: anywhere;
   color: var(--text);
   font-size: 13px;
+}
+
+.agent-metric.is-source {
+  border-color: transparent;
+  background: transparent;
+}
+
+.agent-metric.is-source span,
+.agent-metric.is-source strong {
+  color: var(--text-soft);
 }
 
 .agent-audit-details {
@@ -796,8 +819,6 @@ h3 {
     width: 100%;
   }
 
-  .agent-workbench-summary dl,
-  .agent-workbench-metrics,
   .agent-audit-grid,
   .agent-remediation-basis dl {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1209,6 +1230,24 @@ h3 {
   border-left: 4px solid var(--step-locked);
   border-radius: var(--radius-sm);
   background: var(--card);
+}
+
+/* 短暂处理不闪屏：加载面板延迟 200ms 才淡入——0.1s 级的后台处理完全不出现
+   加载页，能被感知的等待才平滑浮现。占位高度由 minHeight 保证，无布局跳动。 */
+.state-panel[data-state="loading"] {
+  opacity: 0;
+  animation: state-panel-reveal var(--dur-base) var(--ease) 200ms forwards;
+}
+
+@keyframes state-panel-reveal {
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .state-panel[data-state="loading"] {
+    opacity: 1;
+    animation: none;
+  }
 }
 
 .state-panel p:not(.state-code) {

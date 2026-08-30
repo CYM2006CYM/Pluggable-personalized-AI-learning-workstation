@@ -345,23 +345,28 @@
   line-height: var(--lh-body);
 }
 
+/*
+ * 四段导学统一为「小标题 + 正文」的连续排版:单列阅读流,段间只留行距,
+ * 不再画格间框线(border-bottom / 偶数列 border-left 已全部移除);
+ * 导学总览与四段之间保留一条虚线分隔。
+ */
 [data-page="learn"] .lesson-guide-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  margin-top: var(--space-4);
-  border-top: 1px solid var(--rule);
+  gap: var(--space-3);
+  margin-top: 0;
+  border-top: 1px dashed var(--rule);
 }
 
 [data-page="learn"] .lesson-guide-grid section {
   min-width: 0;
-  padding: var(--space-3) var(--space-4) var(--space-3) 0;
-  border-bottom: 1px solid var(--rule);
+  padding: 0;
+  border: 0;
 }
 
-[data-page="learn"] .lesson-guide-grid section:nth-child(2n) {
-  padding-right: 0;
-  padding-left: var(--space-4);
-  border-left: 1px solid var(--rule);
+[data-page="learn"] .lesson-guide-grid section p {
+  margin: 0;
+  color: var(--text);
+  line-height: var(--lh-body);
 }
 
 [data-page="learn"] .lesson-guide-grid span,
@@ -575,12 +580,6 @@
   line-height: var(--lh-ui);
 }
 
-[data-page="learn"] .lesson-guide-grid {
-  grid-template-columns: minmax(0, 1fr);
-  margin-top: 0;
-  border-top: 1px dashed var(--rule);
-}
-
 /* 引导问题通栏:从引入滑向正文的钩子 */
 [data-page="learn"] .question-band {
   display: grid;
@@ -641,6 +640,14 @@
 
 [data-page="learn"] .study-footer {
   margin-top: var(--space-2);
+}
+
+/* 生成等待时按钮下方的一行克制提示:指向简报界面的流水线状态带,不设框线 */
+[data-page="learn"] .lesson-generation-hint {
+  margin: var(--space-1) 0 0;
+  color: var(--text-soft);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
 }
 
 /* ---------- 正文阅读区:站点纸张堆叠 ----------
@@ -1385,13 +1392,9 @@
     text-align: left;
   }
 
-  [data-page="learn"] .lesson-guide-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
   [data-page="learn"] .lesson-guide-grid section,
   [data-page="learn"] .lesson-guide-grid section:nth-child(2n) {
-    padding: var(--space-3) 0;
+    padding: 0;
     border-left: 0;
   }
 
@@ -1438,4 +1441,48 @@
     transition: none;
     transform: none;
   }
+}
+/* ---------- 教学阅读排版（痛点#4）：正文字号/字重与代码容器 ----------
+ * 演示机装有 Noto Serif SC 可变字体：教学正文用 450 字重解决「过度纤细」；
+ * 不支持小数权重的回落字体按浏览器匹配规则取最近的 400，安全降级。
+ * 等宽字体栈由 tokens --font-mono 提供（JetBrains Mono 本地打包）。 */
+
+[data-page="learn"] .lesson-paragraph,
+[data-page="learn"] .lesson-list,
+[data-page="learn"] .lesson-callout p {
+  font-family: var(--font-serif);
+  font-size: var(--fs-body);
+  font-weight: 450;
+  line-height: var(--lh-body);
+}
+
+/* 行内代码：轻量识别——同字号暖纸底、无独立边框，不打断句子阅读 */
+[data-page="learn"] .lesson-paragraph code,
+[data-page="learn"] .lesson-list code,
+[data-page="learn"] .lesson-callout code,
+[data-page="learn"] .question-band code {
+  padding: 1px 5px;
+  border-radius: var(--radius-sm);
+  background: var(--note-cream);
+  font-size: 0.9em;
+}
+
+/* 独立代码块：比白卡深一档的暖纸底 + 明确边界 + 横向滚动防裁切，
+   承担完整代码阅读，不再是页面底部的小字附属品 */
+[data-page="learn"] .lesson-code {
+  margin: var(--space-3) 0;
+  padding: var(--space-3) var(--space-4);
+  overflow-x: auto;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+  background: var(--card-soft);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: var(--fs-mono);
+  line-height: var(--lh-mono);
+}
+
+[data-page="learn"] .lesson-code code {
+  font: inherit;
+  white-space: pre;
 }

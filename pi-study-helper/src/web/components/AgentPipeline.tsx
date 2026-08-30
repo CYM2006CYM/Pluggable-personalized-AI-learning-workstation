@@ -69,6 +69,16 @@ function originLabel(origin: SafeAgentRunView["resultOrigin"], resourceKind: Pip
   return "处理中";
 }
 
+/** 指标值的显示层映射：内部枚举直出看不懂时，在这里转成人话；未知值原样显示。 */
+const METRIC_VALUE_COPY: Record<string, string> = {
+  ai_live: "AI 实时生成",
+  ai_recorded: "AI 录制回放",
+};
+
+function metricValueLabel(value: string): string {
+  return METRIC_VALUE_COPY[value] ?? value;
+}
+
 function runStatusLabel(run: SafeAgentRunView, resourceKind: PipelineResourceKind, stale: boolean): string {
   if (stale) return "已超时，已停止等待";
   if (run.status === "running") return "运行中";
@@ -255,9 +265,9 @@ export function AgentPipeline({ run, mode = "snapshot", resourceKind = "quiz", i
             <div><dt>事件序号</dt><dd>#{active.sequence}</dd></div>
           </dl>
         </div>
-        <div className="agent-workbench-metrics" aria-label="当前工位公开指标">
-          {active.metrics.length === 0 ? <p>本工位没有额外公开指标。</p> : active.metrics.map((metric) => <div className={`agent-metric tone-${metric.tone}`} key={metric.metricId}><span>{metric.label}</span><strong>{metric.value}</strong></div>)}
-        </div>
+        {active.metrics.length === 0 ? null : <div className="agent-workbench-metrics" aria-label="当前工位公开指标">
+          {active.metrics.map((metric) => <div className={`agent-metric tone-${metric.tone}${metric.label.includes("来源") ? " is-source" : ""}`} key={metric.metricId}><span>{metric.label}</span><strong>{metricValueLabel(metric.value)}</strong></div>)}
+        </div>}
         <details className="agent-audit-details">
           <summary>查看安全审计详情</summary>
           <div className="agent-audit-grid">

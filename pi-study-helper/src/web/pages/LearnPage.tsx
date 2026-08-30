@@ -143,6 +143,7 @@ function RichLessonView({
   tipProgressText,
   onGenerateTip,
   onEnterActivity,
+  generationPending,
 }: {
   card: LearningCardSafeView & { selectedLesson: SelectedLessonSafeView };
   flow: StudyFlowView;
@@ -153,6 +154,8 @@ function RichLessonView({
   tipProgressText?: string;
   onGenerateTip: () => void;
   onEnterActivity?: () => void;
+  /** 打开活动/生成导学正在等待时,在正文页提示可去简报界面查看流水线状态带。 */
+  generationPending: boolean;
 }) {
   const lessonLocation = useLocation();
   const lessonNavigate = useNavigate();
@@ -300,7 +303,10 @@ function RichLessonView({
           lesson={lesson}
         />)}
       </section>}
-      <div className="study-footer">{footer}</div>
+      <div className="study-footer">
+        {footer}
+        {generationPending === false ? null : <p className="lesson-generation-hint">{LEARN_PAGE_COPY.generationHint}</p>}
+      </div>
     </section>
   );
 
@@ -574,7 +580,8 @@ export function LearnPage() {
     <div className="task-footer">
       <span className="quiet-label">{LEARN_PAGE_COPY.reviewNote}</span>
       <div className="button-row">
-        {actionProgress.text === undefined ? null : <span className="async-action-status" role="status" aria-live="polite">{actionProgress.text}</span>}
+        {/* 重新学习按钮会回显同一状态文字时,不再重复一行状态 */}
+        {actionProgress.text === undefined || (next.relearnAllowed === true && next.activity !== undefined) ? null : <span className="async-action-status" role="status" aria-live="polite">{actionProgress.text}</span>}
         {next.currentNodeId === undefined ? null : <button type="button" className="button secondary" disabled={busy || tipBusy} onClick={() => navigate(`/learn/${sessionId}/${next.currentNodeId}`)}>{LEARN_PAGE_COPY.backToCurrent}</button>}
         {next.relearnAllowed === true && next.activity !== undefined ? <button type="button" className="button primary async-action-button" disabled={busy || tipBusy || displayCard === undefined} onClick={() => void open()}>{actionProgress.text ?? LEARN_PAGE_COPY.relearnSection}</button> : null}
       </div>
@@ -584,7 +591,7 @@ export function LearnPage() {
       <span className="quiet-label">{activityKindLabel(next.activity?.kind)}</span>
       {next.activity === undefined
         ? <button type="button" className="button primary" onClick={() => { setNext(undefined); void bootstrap.reload(); }}>{LEARN_PAGE_COPY.retryRead}</button>
-        : <><span className="async-action-status" role="status" aria-live="polite">{actionProgress.text ?? ""}</span><button type="button" className="button primary async-action-button" disabled={busy || tipBusy || (displayCard === undefined && !isLegacyHelper)} onClick={() => void open()}>{tipBusy ? actionProgress.text ?? LEARN_PAGE_COPY.generatingReminderFallback : actionProgress.text ?? LEARN_PAGE_COPY.enterActivity}</button></>}
+        : <>{actionProgress.text !== undefined && next.activity !== undefined ? null : <span className="async-action-status" role="status" aria-live="polite">{actionProgress.text ?? ""}</span>}<button type="button" className="button primary async-action-button" disabled={busy || tipBusy || (displayCard === undefined && !isLegacyHelper)} onClick={() => void open()}>{tipBusy ? actionProgress.text ?? LEARN_PAGE_COPY.generatingReminderFallback : actionProgress.text ?? LEARN_PAGE_COPY.enterActivity}</button></>}
     </div>
   );
 
@@ -608,7 +615,7 @@ export function LearnPage() {
                 <button type="button" className="button primary" onClick={() => { setNext(undefined); void bootstrap.reload(); }}>{LEARN_PAGE_COPY.reloadSession}</button>
               </section>
               : displayCard.selectedLesson === undefined ? <LegacyLessonView card={displayCard} readiness={next.contentReadiness} pipeline={pipeline} footer={taskFooter} />
-                : <RichLessonView card={displayCard as LearningCardSafeView & { selectedLesson: SelectedLessonSafeView }} flow={flowView} activeNodeId={activeNodeId} pipeline={pipeline} footer={taskFooter} tipLoading={tipBusy} tipProgressText={tipBusy ? actionProgress.text : undefined} onGenerateTip={() => { setTipAttemptedNodeId(undefined); void prepareTip(); }} onEnterActivity={next.activity === undefined || reviewingEarlierLesson ? undefined : () => void open()} />}
+                : <RichLessonView card={displayCard as LearningCardSafeView & { selectedLesson: SelectedLessonSafeView }} flow={flowView} activeNodeId={activeNodeId} pipeline={pipeline} footer={taskFooter} tipLoading={tipBusy} tipProgressText={tipBusy ? actionProgress.text : undefined} onGenerateTip={() => { setTipAttemptedNodeId(undefined); void prepareTip(); }} onEnterActivity={next.activity === undefined || reviewingEarlierLesson ? undefined : () => void open()} generationPending={busy || tipBusy} />}
         </article>
       </div>
     </> : null}

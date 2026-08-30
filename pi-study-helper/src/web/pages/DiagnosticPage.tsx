@@ -114,10 +114,12 @@ export function DiagnosticPage() {
   const error = actionError ?? bootstrap.error;
   const state = error === undefined ? undefined : isApiError(error) && error.status === 409 ? "conflict" : "error";
   return <PageFrame eyebrow={session?.view.mode === "chapter" ? copy.eyebrowChapter : copy.eyebrowRecommended} title={copy.title} summary={copy.summary} back={{ to: "/", label: copy.backLabel }}>
-    {bootstrap.loading ? <PageStatePanel page="diagnostic" state="loading" /> : null}
+    {/* 首载才显示整页加载；提交后的短 reload 保留当前题目（render-through），
+        由题目自身的 busy 态与 PaperFlip 过渡衔接，消除 0.1 秒级闪屏 */}
+    {bootstrap.loading && session === undefined ? <PageStatePanel page="diagnostic" state="loading" /> : null}
     {!bootstrap.loading && error ? <PageStatePanel page="diagnostic" state={state!} code={isApiError(error) ? error.code : error.message} onRetry={() => { setActionError(undefined); void bootstrap.reload(); }} /> : null}
     {!bootstrap.loading && error === undefined && session === undefined ? <PageStatePanel page="diagnostic" state="empty" /> : null}
-    {!bootstrap.loading && error === undefined && session !== undefined ? <div className="diagnostic-page" data-page="diagnostic">
+    {error === undefined && session !== undefined ? <div className="diagnostic-page" data-page="diagnostic">
       <section className="diagnostic-orientation" aria-labelledby="diagnostic-orientation-title">
         <h2 id="diagnostic-orientation-title" className="diagnostic-orientation-title">{copy.orientation.title}</h2>
         <p>{copy.orientation.body}</p>

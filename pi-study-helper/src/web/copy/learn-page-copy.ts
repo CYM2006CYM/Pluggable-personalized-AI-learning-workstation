@@ -107,6 +107,10 @@ export const LEARN_PAGE_COPY = {
   stepByStepHeading: "分步理解",
   exampleHeading: "示例",
   mistakeHeading: "常见误区",
+
+  /* ---------- 正文页生成等待提示 ---------- */
+  /** 正文页等待生成时,指引去简报界面展开流水线状态带;中性措辞,不暗示会中断或重启生成。 */
+  generationHint: "实时多 Agent 任务链正在状态带运行：返回简报界面即可展开「AI 学习资源流水线」查看工作台，不影响生成。",
 } as const;
 
 /* ---------- 站点纸张堆叠导航 ----------

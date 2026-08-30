@@ -10,11 +10,13 @@
  *   荧光笔圈住关键词的衬线大标题、印章(::after,44px Pi 圆章,标题区右上角)。
  * - 三问三卡 .sp-card:白便签 + 32px 数字圆章 + 衬线卡标题,表单控件全部保留原
  *   受控逻辑,只换容器;「时长由系统估算」挪进第❸卡底部作卡内小注。
- * - 右栏桌面拼贴 .sp-side:.sp-collage 整块 aria-hidden(纯 CSS 装饰),自上而下
- *   纸叠(.sp-stack,错位纸边同 LearnPage .lesson-stack)、信纸(.sp-letter,
- *   未写字行 + 一枚荧光笔痕 + 左上胶带)、五枚页签扇形(.sp-fan,旋转依次
- *   -6°/-3°/0°/3°/6°,「学习」实底反白外伸);书签夹页 .sp-bookmark 是真实按钮,
- *   放在 aria-hidden 之外,桌面挂纸叠右缘下垂,窄屏退成横向织带条。
+ * - 右栏桌面拼贴 .sp-side:.sp-collage(有可恢复会话时承载真实信息,信纸与页签扇
+ *   各自处理 aria-hidden;无会话时信纸是纯装饰占位线,整块 aria-hidden),自上而下
+ *   纸叠(.sp-stack,错位纸边同 LearnPage .lesson-stack)、信纸(.sp-letter,无会话为
+ *   未写字行 + 一枚荧光笔痕 + 左上胶带;有会话为真实信息:课程名 / 进行到:阶段 /
+ *   目标·入口)、五枚页签扇形(.sp-fan,旋转依次 -6°/-3°/0°/3°/6°,「学习」实底反白
+ *   外伸);书签夹页 .sp-bookmark 是真实按钮,放在 aria-hidden 之外,桌面挂纸叠右缘
+ *   下垂,窄屏退成横向织带条。
  * - 教材信息卡 .info-card:默认折叠,样式沿用 WP4(左上胶带)。
  */
 
@@ -424,6 +426,8 @@
   position: relative;
   z-index: 1;
   pointer-events: none;
+  /* 整组轻反馈(悬停右栏时整体上浮,见 .sp-side:hover 规则):只动 transform */
+  transition: transform var(--dur-base) var(--ease);
 }
 
 /* 纸叠:两页错位微旋的纸边(同 LearnPage .lesson-stack 手法) */
@@ -455,7 +459,13 @@
   opacity: 0.55;
 }
 
-/* 信纸:几条未写的字行,其中一行叠荧光笔痕 */
+/* 悬停右栏:拼贴整组轻微上浮(比书签的反馈更轻,只动 transform、不挪阴影)。
+   pointer-events 在 .sp-collage 上是 none,组悬停挂在整栏 .sp-side 上。 */
+.sp-side:hover .sp-collage {
+  transform: translateY(-2px);
+}
+
+/* 信纸(无可恢复会话):几条未写的字行,其中一行叠荧光笔痕 */
 .sp-letter {
   position: relative;
   z-index: 1;
@@ -468,6 +478,44 @@
   border-radius: var(--radius-lg);
   background: var(--card);
   box-shadow: var(--shadow-2);
+}
+
+/* 信纸(有可恢复会话):占位线换成真实信息——课程名大字、阶段小签、目标/入口小字。
+   仍是一张手账纸片(同上边框/纸色/胶带),文字用 --text/--text-soft 分层。 */
+.sp-letter-info {
+  gap: var(--space-2);
+}
+
+.sp-letter-name {
+  overflow-wrap: anywhere;
+  color: var(--text);
+  font-family: var(--font-serif);
+  font-size: var(--fs-h2);
+  line-height: var(--lh-h2);
+  font-weight: var(--fw-bold);
+}
+
+/* 「进行到:学习中」:浅底小签,呼应页签扇的印章语言,但不抢「学习」实底页签 */
+.sp-letter-stage {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-caption);
+}
+
+/* 目标 · 入口:小字垫在纸底,像信末落款 */
+.sp-letter-meta {
+  margin-top: auto;
+  overflow-wrap: anywhere;
+  color: var(--text-soft);
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
 }
 
 .sp-line {
@@ -568,8 +616,23 @@
   text-align: left;
   font-family: inherit;
   cursor: pointer;
+  /* 悬停/聚焦轻微上浮 + 阴影升档,active 回落;只动 transform/box-shadow */
+  transition: transform var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease);
   /* 燕尾缺口:底部中央收窄到 42%–58%,避免读成大面积缺角 */
   clip-path: polygon(0 0, 100% 0, 100% 100%, 58% 100%, 50% 86%, 42% 100%, 0 100%);
+}
+
+/* 书签反馈是全组最明显的一档:上浮 2px + 阴影升一档,不晃动、不缩放、不动点击区域 */
+.sp-bookmark:hover:not(:disabled),
+.sp-bookmark:focus-visible {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-3);
+}
+
+/* 按下回落:回到常驻阴影,位移归零 */
+.sp-bookmark:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: var(--shadow-1);
 }
 
 /* 燕尾切口的缝线:clip-path 连边框一起裁掉,切边无描边时读作「缺角」;
@@ -722,7 +785,20 @@
 
   .cta-start,
   .info-card-chevron,
-  .sp-bookmark {
+  .sp-bookmark,
+  .sp-collage {
     transition: none;
+  }
+
+  /* 书签与拼贴的悬停/按压位移全部关闭;阴影升档保留(颜色/阴影反馈不依赖动效) */
+  .sp-bookmark:hover:not(:disabled),
+  .sp-bookmark:focus-visible,
+  .sp-bookmark:active:not(:disabled),
+  .sp-side:hover .sp-collage {
+    transform: none;
+  }
+
+  .sp-bookmark:active:not(:disabled) {
+    box-shadow: var(--shadow-2);
   }
 }

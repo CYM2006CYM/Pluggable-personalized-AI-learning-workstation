@@ -7,8 +7,8 @@ import { routeForSession } from "../api/navigation.js";
 import { useBootstrap } from "../api/use-bootstrap.js";
 import { PageFrame } from "../components/PageFrame.js";
 import { PageStatePanel } from "../components/PageStatePanel.js";
-import { experienceLabel, stepLabel } from "../copy/ui-copy.js";
-import { EXPLANATION_PREFERENCES, modalityLabel, START_PAGE_COPY } from "../copy/start-page-copy.js";
+import { experienceLabel, stageLabel, stepLabel } from "../copy/ui-copy.js";
+import { EXPLANATION_PREFERENCES, entryModeLabel, modalityLabel, START_PAGE_COPY } from "../copy/start-page-copy.js";
 import { readStudyResumeLocation } from "../state/study-resume-storage.js";
 import "./StartPage.css";
 
@@ -122,18 +122,29 @@ export function StartPage() {
             <p className="sp-summary">{START_PAGE_COPY.summary}</p>
           </header>
 
-          {/* 右栏桌面拼贴:纯装饰部分整块 aria-hidden;书签夹页保留真实交互,放在 aria-hidden 之外 */}
+          {/* 右栏桌面拼贴:无可恢复会话时信纸是占位线,整块 aria-hidden;
+              有可恢复会话时信纸换成真实信息(读屏可读),页签扇与占位线各自保持 aria-hidden */}
           <div className="sp-side">
-            <div className="sp-collage" aria-hidden="true">
+            <div className="sp-collage" aria-hidden={recoverableSession === undefined ? "true" : undefined}>
               <div className="sp-stack">
-                <div className="sp-letter">
-                  <span className="sp-line" />
-                  <span className="sp-line sp-line-highlight" />
-                  <span className="sp-line" />
-                  <span className="sp-line sp-line-short" />
+                <div className={recoverableSession === undefined ? "sp-letter" : "sp-letter sp-letter-info"}>
+                  {recoverableSession === undefined ? (
+                    <>
+                      <span className="sp-line" />
+                      <span className="sp-line sp-line-highlight" />
+                      <span className="sp-line" />
+                      <span className="sp-line sp-line-short" />
+                    </>
+                  ) : (
+                    <>
+                      <span className="sp-letter-name">{profileNameOf(bootstrap.data!.profiles, recoverableSession.subjectId) ?? START_PAGE_COPY.fallbackLabel}</span>
+                      <span className="sp-letter-stage">{START_PAGE_COPY.letterStagePrefix}：{stageLabel(recoverableSession.stage)}</span>
+                      <span className="sp-letter-meta">{goalTitleOf(bootstrap.data!.goals, recoverableSession.goalId) ?? START_PAGE_COPY.fallbackLabel} · {entryModeLabel(recoverableSession.mode)}</span>
+                    </>
+                  )}
                 </div>
               </div>
-              <ul className="sp-fan">
+              <ul className="sp-fan" aria-hidden="true">
                 {FAN_STEPS.map((step, index) => (
                   <li key={step} className={step === "lesson" ? "sp-tab sp-tab-accent" : "sp-tab"} style={{ "--tab-rotate": `${(index - 2) * 3}deg` } as CSSProperties}>
                     {stepLabel(step)}

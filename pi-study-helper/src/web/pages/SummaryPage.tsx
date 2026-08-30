@@ -190,7 +190,14 @@ function UnresolvedItems({ session, items }: { session: SessionRecoverySafeView;
           <strong>{item.title}</strong>
           <span>{unresolvedLine(item)}</span>
         </div>
-        <Link className="summary-revisit" to={`/learn/${session.sessionId}/${item.nodeId}`}>{UNRESOLVED.reviewLink}</Link>
+        <Link className="summary-revisit" to={`/learn/${session.sessionId}/${item.nodeId}`}>
+          {/* 返回箭头:纯装饰,文案仍由 .summary-revisit 的可见文本承担 */}
+          <svg className="summary-revisit-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+            <path d="M13.5 2.5v4.25a.75.75 0 0 1-.75.75H4" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M7.5 4 4 7.5l3.5 3.5" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          <span>{UNRESOLVED.reviewLink}</span>
+        </Link>
       </li>)}
     </ul>}
   </section>;

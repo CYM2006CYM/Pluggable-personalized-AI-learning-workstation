@@ -111,4 +111,7 @@ export const START_PAGE_COPY = {
 
   /** 兜底中文通称。 */
   fallbackLabel: FALLBACK_LABEL,
+
+  /** 拼贴信纸(可恢复会话信息卡):阶段前缀,与 stageLabel 拼接成「进行到:学习中」。 */
+  letterStagePrefix: "进行到",
 } as const;
