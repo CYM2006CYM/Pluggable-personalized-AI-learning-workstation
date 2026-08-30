@@ -171,6 +171,12 @@ describe("adaptive Generator prompts", () => {
     expect(cardPrompt).not.toContain("当前活动只允许生成 artifactKind=quiz");
     expect(quizPrompt).toContain("artifactKind=quiz");
     expect(quizPrompt).toContain("4 至 6 道");
+    expect(quizPrompt).toContain("正文事实表");
+    expect(quizPrompt).toContain("唯一可核验的知识点");
+    expect(quizPrompt).toContain("干扰项必须是与题干相关");
+    expect(quizPrompt).toContain("生成前自检六件事");
+    expect(quizPrompt).toContain("personalizationContext=");
+    expect(quizPrompt).toContain("需要支持时，优先生成直接检验正文核心规则");
     expect(quizPrompt).toContain("正确答案位置");
     expect(quizPrompt).toContain("覆盖 A、B、C、D");
     expect(quizPrompt).toContain('"options":["正确选项1","干扰选项1-2"');
@@ -310,9 +316,47 @@ describe("AdaptiveContentService", () => {
       .resolves.toMatchObject({ status: "accepted", card });
     expect(generatorCalls).toBe(2);
     expect(port.calls[1]?.safeContext).toMatchObject({
-      repairInstruction: expect.stringMatching(/candidate_card_guiding_question_context_dependent.*从未读过本节.*核心矛盾/u),
+      repairInstruction: expect.stringMatching(/candidate_card_guiding_question_context_dependent.*无需任何正文上下文.*核心矛盾/u),
     });
     expect(port.calls.map((call) => call.graphId)).toEqual(["generator", "generator", "hunter", "judge"]);
+  });
+
+  it("keeps one extra card repair after a transient Generator provider error", async () => {
+    const contextDependentCard = {
+      ...card,
+      example: "为什么这张表在清洗流程中还不能直接使用？",
+    };
+    let generatorCalls = 0;
+    const port = providerByGraph(generator({ artifactKind: "card", riskLevel: "low", card }), cleanHunter);
+    port.execute = vi.fn(async (input): Promise<ModelExecutionResult> => {
+      port.calls.push({ graphId: input.graphId, safeContext: structuredClone(input.safeContext) });
+      if (input.graphId === "generator") {
+        generatorCalls += 1;
+        if (generatorCalls === 1 || generatorCalls === 3) {
+          return generator({ artifactKind: "card", riskLevel: "low", card: contextDependentCard });
+        }
+        if (generatorCalls === 2) {
+          return { status: "provider_error", sourceRefs: [], traceSummary: "transient provider error", modelId: "deepseek-chat", promptVersion: "w4-d2-v1" };
+        }
+        return generator({ artifactKind: "card", riskLevel: "low", card });
+      }
+      if (input.graphId === "hunter") return cleanHunter;
+      if (input.graphId === "judge") return judge;
+      return { status: "provider_error", sourceRefs: [], traceSummary: "unexpected", modelId: "deepseek-chat", promptVersion: "w4-d2-v1" };
+    });
+    const { instance } = service(port);
+
+    await expect(instance.prepareCard({ profileRevision: 3, knowledgePointId: source.knowledgePointId, excludedArtifactIds: [] }))
+      .resolves.toMatchObject({ status: "accepted", card });
+    expect(generatorCalls).toBe(4);
+    expect(port.calls.map((call) => call.graphId)).toEqual(["generator", "generator", "generator", "generator", "hunter", "judge"]);
+    expect(port.calls[1]?.safeContext).toMatchObject({
+      repairInstruction: expect.stringContaining("candidate_card_guiding_question_context_dependent"),
+    });
+    expect(port.calls[2]?.safeContext).not.toHaveProperty("repairInstruction");
+    expect(port.calls[3]?.safeContext).toMatchObject({
+      repairInstruction: expect.stringContaining("candidate_card_guiding_question_context_dependent"),
+    });
   });
 
   it("将真实Generator到Judge执行过程追加到同一安全run", async () => {
@@ -477,7 +521,21 @@ describe("AdaptiveContentService", () => {
   it("runs every low-risk quiz through Generator, Hunter, and Judge", async () => {
     const port = providerByGraph(generator({ artifactKind: "quiz", riskLevel: "low", questions }), cleanHunter);
     const { instance } = service(port);
-    await expect(instance.prepareQuiz({ profileRevision: 3, activityId: "act-read-csv", retryNumber: 0, excludedQuestionIds: [] }))
+    const personalizationContext = {
+      knowledgeStatus: "support_needed" as const,
+      mastery: 0.4,
+      confidence: 0.7,
+      validEvidenceCount: 2,
+      evidenceFormCount: 2,
+      explanationPreference: "step_by_step" as const,
+    };
+    await expect(instance.prepareQuiz({
+      profileRevision: 3,
+      activityId: "act-read-csv",
+      retryNumber: 0,
+      excludedQuestionIds: [],
+      personalizationContext,
+    }))
       .resolves.toMatchObject({
         status: "accepted",
         questions,
@@ -491,8 +549,10 @@ describe("AdaptiveContentService", () => {
     expect(port.calls[0]?.safeContext).toMatchObject({ context: {
       allowedSourceIds: ["src-pandas-read-csv"],
       teachingContent: source.publicSourceSummary,
+      personalizationContext,
     } });
-    expect(JSON.stringify(port.calls)).not.toMatch(/KnowledgeState|activityProgress|mastery|Evidence/u);
+    expect(port.calls.every((call) => JSON.stringify(call.safeContext).includes("personalizationContext"))).toBe(true);
+    expect(JSON.stringify(port.calls)).not.toMatch(/KnowledgeState|activityProgress/u);
   });
 
   it("balances an all-A model quiz before review, caching, and publication", async () => {
@@ -1606,7 +1666,10 @@ describe("AdaptiveContentService", () => {
       generatorSignal = signal;
       return pending.promise;
     }) };
-    const { instance, store } = service(port, new InMemoryW4PrivateRuntimeStore(), clock);
+    const { instance, store } = service(port, new InMemoryW4PrivateRuntimeStore(), clock, {
+      fallbackAfterMs: 15_000,
+      discardAfterMs: 15_000,
+    });
     const result = instance.prepareCard({ profileRevision: 3, knowledgePointId: source.knowledgePointId, excludedArtifactIds: [] });
     await vi.waitFor(() => expect(clock.sleepers.length).toBeGreaterThan(0)); clock.advance(15_000);
     await expect(result).resolves.toEqual({ status: "unavailable" });
@@ -1634,7 +1697,10 @@ describe("AdaptiveContentService", () => {
     await agentRuns.append(run.runId, { role: "source", label: "教学依据准备", status: "succeeded", startedAt, finishedAt: startedAt, durationMs: 0, attemptNumber: 1, publicSummary: "正文绑定完成。" });
     await agentRuns.append(run.runId, { role: "profile", label: "学情画像分析", status: "running", startedAt, attemptNumber: 1, publicSummary: "正在读取画像。" });
     await agentRuns.append(run.runId, { role: "profile", label: "学情画像分析", status: "succeeded", startedAt, finishedAt: startedAt, durationMs: 0, attemptNumber: 1, publicSummary: "画像读取完成。" });
-    const { instance, store } = service(port, new InMemoryW4PrivateRuntimeStore(), clock, undefined, agentRuns);
+    const { instance, store } = service(port, new InMemoryW4PrivateRuntimeStore(), clock, {
+      fallbackAfterMs: 15_000,
+      discardAfterMs: 15_000,
+    }, agentRuns);
     const result = instance.prepareCard({
       profileRevision: 3, knowledgePointId: source.knowledgePointId, excludedArtifactIds: [], agentRunId: run.runId,
     });

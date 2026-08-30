@@ -4,7 +4,7 @@ import type {
   OpenActivityInput,
   QuizActivityDraftOutput,
 } from "../contracts/facade.js";
-import { PUBLIC_RECOMMENDATION_MAX_LENGTH, type AdaptiveContentPort, type ContinueActivityWithGapInput, type ContinueActivityWithGapOutput, type LessonVariantId, type NodeActivityProgress, type QuizQuestionPrivate, type QuizRemediationContext, type QuizRemediationSafeView, type QuizSubmitActivityInput } from "../contracts/index.js";
+import { PUBLIC_RECOMMENDATION_MAX_LENGTH, type AdaptiveContentPort, type ContinueActivityWithGapInput, type ContinueActivityWithGapOutput, type LessonPersonalizationContext, type LessonVariantId, type NodeActivityProgress, type QuizQuestionPrivate, type QuizRemediationContext, type QuizRemediationSafeView, type QuizSubmitActivityInput } from "../contracts/index.js";
 import { calculateKnowledgeStates } from "../domain/knowledge-state.js";
 import {
   DeterministicQuizRuntime,
@@ -101,7 +101,7 @@ export class QuizActivityRuntime {
 
   constructor(private readonly options: QuizActivityRuntimeOptions) {
     this.now = options.now ?? (() => new Date());
-    this.dynamicGenerationTimeoutMs = options.dynamicGenerationTimeoutMs ?? 120_000;
+    this.dynamicGenerationTimeoutMs = options.dynamicGenerationTimeoutMs ?? 150_000;
     if (!Number.isInteger(this.dynamicGenerationTimeoutMs) || this.dynamicGenerationTimeoutMs <= 0) {
       throw new RangeError("dynamicGenerationTimeoutMs must be a positive integer");
     }
@@ -169,6 +169,15 @@ export class QuizActivityRuntime {
       targetKnowledgePointIds,
       snapshot.latestCommit.evidenceVersion,
     );
+    const knowledgeState = snapshot.knowledgeStates.find((item) => item.knowledgePointId === assets.activity.primaryKnowledgePointId);
+    const personalizationContext: LessonPersonalizationContext = {
+      knowledgeStatus: knowledgeState?.status ?? "unverified",
+      mastery: knowledgeState?.mastery ?? null,
+      confidence: knowledgeState?.confidence ?? 0,
+      validEvidenceCount: knowledgeState?.validEvidenceCount ?? 0,
+      evidenceFormCount: knowledgeState?.evidenceFormCount ?? 0,
+      explanationPreference: snapshot.diagnosticDraft?.background?.explanation_preference ?? "step_by_step",
+    };
     const agentRun = assets.legacyQuestion === undefined && this.options.agentRuns !== undefined
       ? await this.options.agentRuns.create({
           requestId: input.requestId,
@@ -190,6 +199,7 @@ export class QuizActivityRuntime {
           retryNumber,
           excludedQuestionIds,
           lessonVariantId,
+          personalizationContext,
           targetKnowledgePointIds,
           ...(agentRun === undefined ? {} : { agentRunId: agentRun.runId }),
           ...(remediationContext === undefined ? {} : { remediationContext }),

@@ -154,32 +154,47 @@ function RichLessonView({
   onGenerateTip: () => void;
   onEnterActivity?: () => void;
 }) {
+  const lessonLocation = useLocation();
+  const lessonNavigate = useNavigate();
   const lesson = card.selectedLesson;
   const defaults = new Set(DEFAULT_OPEN_MODULES[lesson.variantId]);
   const [openState, setOpenState] = useState<Partial<Record<LessonModuleId, boolean>>>({});
   const isOpen = (moduleId: LessonModuleId) => openState[moduleId] ?? defaults.has(moduleId);
   const structuredTipReady = hasStructuredLessonGuide(card.personalizedTip);
-  const readingModules = lesson.modules.filter((module) => !INFO_MODULE_IDS.has(module.moduleId));
-  const infoModules = lesson.modules.filter((module) => INFO_MODULE_IDS.has(module.moduleId));
+  const readingModules = useMemo(() => lesson.modules.filter((module) => !INFO_MODULE_IDS.has(module.moduleId)), [lesson.modules]);
+  const infoModules = useMemo(() => lesson.modules.filter((module) => INFO_MODULE_IDS.has(module.moduleId)), [lesson.modules]);
+  const stationFromHash = (hash: string) => {
+    if (!hash.startsWith("#study/")) return 0;
+    let moduleId: string;
+    try {
+      moduleId = decodeURIComponent(hash.slice("#study/".length));
+    } catch {
+      return 0;
+    }
+    const index = readingModules.findIndex((module) => module.moduleId === moduleId);
+    return index < 0 ? 0 : index;
+  };
+  const replaceStudyHash = (hash: string) => {
+    lessonNavigate({ pathname: lessonLocation.pathname, search: lessonLocation.search, hash }, { replace: true });
+  };
 
   /*
    * 分幕:#study 对应学习幕。进出都直接改状态,hashchange 只服务
    * 浏览器前进/后退;返回简报用 replaceState 抹掉哈希,不留历史垃圾。
    */
   const [act, setAct] = useState<"briefing" | "study">(
-    () => (typeof window === "undefined" ? "briefing" : window.location.hash === "#study" ? "study" : "briefing"),
+    () => lessonLocation.hash.startsWith("#study") ? "study" : "briefing",
   );
   useEffect(() => {
-    const onHash = () => setAct(window.location.hash === "#study" ? "study" : "briefing");
-    window.addEventListener("hashchange", onHash);
-    return () => window.removeEventListener("hashchange", onHash);
-  }, []);
+    setAct(lessonLocation.hash.startsWith("#study") ? "study" : "briefing");
+  }, [lessonLocation.hash]);
   const openStudy = () => {
-    window.location.hash = "study";
+    const moduleId = readingModules[0]?.moduleId;
+    replaceStudyHash(moduleId === undefined ? "#study" : `#study/${encodeURIComponent(moduleId)}`);
     setAct("study");
   };
   const backToBriefing = () => {
-    window.history.replaceState(null, "", window.location.pathname + window.location.search);
+    replaceStudyHash("");
     setAct("briefing");
   };
 
@@ -188,11 +203,15 @@ function RichLessonView({
    * 翻站后把学习幕顶部滚回视口——否则上一站很长、下一站很短时,
    * 视口会悬在空白里。
    */
-  const [station, setStation] = useState(0);
+  const [station, setStation] = useState(() => stationFromHash(lessonLocation.hash));
   const [leaving, setLeaving] = useState<number | null>(null);
   const dirRef = useRef<1 | -1>(1);
   const studyRef = useRef<HTMLElement | null>(null);
   const stationTotal = readingModules.length;
+  useEffect(() => {
+    if (!lessonLocation.hash.startsWith("#study")) return;
+    setStation(stationFromHash(lessonLocation.hash));
+  }, [lessonLocation.hash, readingModules]);
 
   /*
    * 吸顶缓冲:站点导航条吸住/松开的瞬间只靠 position:sticky 会显得硬。
@@ -218,6 +237,8 @@ function RichLessonView({
     dirRef.current = next > station ? 1 : -1;
     setLeaving(station);
     setStation(next);
+    const moduleId = readingModules[next]?.moduleId;
+    replaceStudyHash(moduleId === undefined ? "#study" : `#study/${encodeURIComponent(moduleId)}`);
     requestAnimationFrame(() => {
       const el = studyRef.current;
       if (el === null || typeof el.scrollIntoView !== "function") return;

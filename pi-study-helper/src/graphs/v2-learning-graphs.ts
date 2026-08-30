@@ -499,14 +499,18 @@ function generatorPrompt(input: GeneratorInput): string {
       GENERATOR_CARD_EXAMPLE,
     ] : [
       "当前活动只允许生成 artifactKind=quiz 的客观题，禁止生成卡片、主观题、评分、路径或学习状态。",
-      "必须生成 4 至 6 道彼此不同的中文单选题；每题必须覆盖正文中的一个明确概念、代码行为、反例或修正方法，不能重复换句或脱离正文。",
+      "先在内部从 teachingContent 提取『正文事实表』：每行只记录正文明确写出的概念、操作、代码行为、反例、限制或修正方法，并保留对应的原文依据；事实表不能出现在输出中。随后让每道题只绑定一行事实，禁止凭章节标题、模型常识或未提供的资料补写规则。",
+      "必须生成 4 至 6 道彼此不同的中文单选题；题组应尽量覆盖正文中不同模块或不同事实，不能把同一个事实换句重复四次，也不能为了凑题量引入正文外知识。若正文事实不足，宁可让候选被审核拒绝，也不能编造。",
+      "每道题都必须有清楚的作答对象、一个唯一可核验的知识点和一个唯一正确结论；题干要能脱离其他题独立理解。优先使用『根据正文中的规则，哪项做法/判断正确』这类可核验问法，避免『以下都对』『最合适』等没有判定边界的模糊措辞。",
+      "干扰项必须是与题干相关、但被正文中的明确条件或反例否定的说法；不得用正文没有出现的API、参数、版本行为或常识制造干扰项。选项之间不能只是同义改写，且不能出现两个都能被正文支持的选项。",
       "每题必须包含且只能包含 questionId、kind、prompt、options、correctAnswer、explanation、sourceAnchorIds；kind 固定为 single_choice。",
-      "options 必须是 2 至 6 个不重复的中文字符串；correctAnswer 必须逐字等于 options 中的一个选项；explanation 必须解释为什么正确并回扣正文；sourceAnchorIds 必须非空。",
+      "options 必须是 4 个不重复的中文字符串（只有正文明确只能二选一时才允许 2 至 3 个）；correctAnswer 必须逐字等于 options 中的一个选项；explanation 必须先说明唯一正确结论，再用正文事实解释其余选项为什么不成立，且不得引入正文外信息；sourceAnchorIds 必须非空。",
       "必须主动打散整组题的正确答案位置，不能把正确项都放在第一个选项。按题目可用选项数尽量均匀覆盖 A、B、C、D 等位置；4 道且均为至少 4 个选项时应覆盖 A/B/C/D，5 至 6 道时各可用位置出现次数之差不超过 1。不要在题干或解析中透露位置规律。",
       "每道题必须独立作答。生成完成后逐题扫描 prompt、options 和 explanation：不得引用上一题、下一题、第几题或第几问，也不得出现『前题已给出答案』『参照另一题结论』『直接保留另一题答案』等跨题提示。",
+      "生成前自检六件事：正文是否逐字支持考点；是否只有一个正确项；答案与解析是否一致；干扰项是否确实被正文否定；题目之间是否重复或互相泄露；正确答案位置是否分散。任何一项不满足都要先改写再输出。",
       "questionId 使用短 ASCII 标识符（例如 quiz-read-csv-1），不得包含空格、路径、答案、Evidence 或私有信息。",
       "candidateFeedback 必须严格是 {artifactKind,riskLevel,questions}，不能加字段。",
-      "下面是包含四道题的完整结构示例。只能模仿结构，内容和 source ID 必须来自本次输入：",
+      "下面是包含四道题的完整结构示例。只能模仿结构，内容和 source ID 必须来自本次输入；示例中的正确答案、题干和选项不能照抄：",
       GENERATOR_QUIZ_EXAMPLE,
     ]),
     "最外层必须只包含 artifactId、candidateFeedback、rationale、citedSourceIds、riskFlags 五个字段。artifactId 是短 ASCII 标识符；rationale 说明题组覆盖了哪些正文模块；低风险题 riskFlags 必须为 []。",
@@ -517,9 +521,13 @@ function generatorPrompt(input: GeneratorInput): string {
     `allowedSourceIds=${JSON.stringify(context.allowedSourceIds ?? context.sourceIds)}`,
     `sourceSummary=${input.allowedSourcesSummary}`,
     `teachingContent=${context.teachingContent ?? context.sourceSummary}`,
-    ...(isCard && context.personalizationContext !== undefined
+    ...(context.personalizationContext !== undefined
       ? [`personalizationContext=${JSON.stringify(context.personalizationContext)}`]
       : []),
+    ...(context.personalizationContext === undefined ? [] : [
+      "personalizationContext 是安全的学情事实，只用于决定题目强调方式，不得把掌握度、置信度、证据数量或画像字段原样写入题目、选项、解析或任何外层字段。",
+      "当画像显示需要支持时，优先生成直接检验正文核心规则、边界和常见误区的题；当画像显示已有基础时，增加同一正文事实的轻量迁移或反例辨析；讲解偏好 guided/concise/practice 只改变题干和解析的表达方式，不能改变事实、答案或题型。",
+    ]),
     ...(context.retryContext === undefined ? [] : [
       "这是重做题组。retryContext.missedQuestions 是上一轮答错题目的安全复盘事实，learnerProfileSummary 是学情画像的辅助说明。",
       "新题必须同时以 teachingContent 为权威依据，并逐个重复考察 missedQuestions 暴露的薄弱知识；不得只生成泛化基础题。",

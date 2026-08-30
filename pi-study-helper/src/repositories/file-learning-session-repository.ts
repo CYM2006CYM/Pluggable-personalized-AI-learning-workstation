@@ -889,17 +889,25 @@ export class FileLearningSessionRepository implements LearningSessionRepository,
 
   async listBoundSnapshots(): Promise<SessionSnapshot[]> {
     await mkdir(this.familiesRoot, { recursive: true });
-    const snapshots: SessionSnapshot[] = [];
+    const snapshots: Array<{ snapshot: SessionSnapshot; modifiedAtMs: number }> = [];
     for (const family of (await readdir(this.familiesRoot, { withFileTypes: true })).sort((left, right) => left.name.localeCompare(right.name, "en"))) {
       if (!family.isDirectory()) continue;
       const root = resolveInside(this.familiesRoot, family.name, "_user", "learning_sessions");
       if (!(await exists(root))) continue;
       for (const session of (await readdir(root, { withFileTypes: true })).sort((left, right) => left.name.localeCompare(right.name, "en"))) {
-        if (!session.isDirectory() || !(await exists(resolve(root, session.name, "checkpoints", "latest.json")))) continue;
-        snapshots.push(this.publicSnapshot(await this.loadStoredSnapshot(resolve(root, session.name))));
+        const directory = resolve(root, session.name);
+        const latestPath = resolve(directory, "checkpoints", "latest.json");
+        if (!session.isDirectory() || !(await exists(latestPath))) continue;
+        snapshots.push({
+          snapshot: this.publicSnapshot(await this.loadStoredSnapshot(directory)),
+          modifiedAtMs: (await stat(latestPath)).mtimeMs,
+        });
       }
     }
-    return snapshots;
+    return snapshots
+      .sort((left, right) => right.modifiedAtMs - left.modifiedAtMs
+        || left.snapshot.sessionId.localeCompare(right.snapshot.sessionId, "en"))
+      .map(({ snapshot }) => snapshot);
   }
 
   async getQuizAttempt(input: GetSessionSnapshotInput & { activityId: string; attemptId: string }): Promise<QuizAttemptSnapshot | undefined> {

@@ -5,6 +5,7 @@ import { AUX_NAV_LABELS, SHELL_LABELS } from "../copy/ui-copy.js";
 import { StudyStepper } from "../components/StudyStepper.js";
 import type { StudyStepId } from "../flow/study-flow.js";
 import { buildFlowContext, buildStudyFlow } from "../flow/study-flow.js";
+import { rememberStudyLocation } from "../state/study-resume-storage.js";
 
 /*
  * 全站骨架。侧栏的动线步骤条由动线模型驱动，不再由这里手工拼装导航项。
@@ -56,6 +57,9 @@ export function AppShell() {
    */
   const pathname = location.pathname;
   const reloadBootstrap = bootstrap.reload;
+  useEffect(() => {
+    rememberStudyLocation(location);
+  }, [location.hash, location.pathname, location.search]);
   useEffect(() => {
     if (sessionId !== undefined) void reloadBootstrap();
   }, [pathname, reloadBootstrap, sessionId]);

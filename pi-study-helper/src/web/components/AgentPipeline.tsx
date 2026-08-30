@@ -18,7 +18,7 @@ const ROLE_COPY: Record<AgentStageRole, { index: string; label: string; shortLab
   publish: { index: "08", label: "发布题组或固定保障", shortLabel: "发布" },
 };
 
-const STALE_RUNNING_RUN_AFTER_MS = 120_000;
+const STALE_RUNNING_RUN_AFTER_MS = 150_000;
 
 function roleCopy(role: AgentStageRole, resourceKind: PipelineResourceKind) {
   if (resourceKind === "tip" && role === "generator") return { ...ROLE_COPY[role], label: "Generator生成个性化提醒" };

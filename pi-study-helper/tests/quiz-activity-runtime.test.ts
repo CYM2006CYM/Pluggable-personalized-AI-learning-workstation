@@ -309,10 +309,29 @@ describe("QuizActivityRuntime", () => {
     const retry = await runtime.openActivity({ requestId: "retry-open", sessionId: view.sessionId, sessionVersion: afterFirst.sessionVersion, profileRevision: 3, activityId: "quiz", activityVersion: 1, pathVersion: afterFirst.path!.pathVersion });
 
     expect(profileCalls).toBe(1);
-    expect(requests[0]).toMatchObject({ retryNumber: 0, targetKnowledgePointIds: ["kp"] });
+    expect(requests[0]).toMatchObject({
+      retryNumber: 0,
+      targetKnowledgePointIds: ["kp"],
+      personalizationContext: {
+        knowledgeStatus: "unverified",
+        mastery: null,
+        confidence: 0,
+        validEvidenceCount: 0,
+        evidenceFormCount: 0,
+        explanationPreference: "step_by_step",
+      },
+    });
     expect(requests[1]).toMatchObject({
       retryNumber: 1,
       targetKnowledgePointIds: ["kp"],
+      personalizationContext: {
+        knowledgeStatus: "learning",
+        mastery: 0.5,
+        confidence: 0.25,
+        validEvidenceCount: 1,
+        evidenceFormCount: 1,
+        explanationPreference: "step_by_step",
+      },
       excludedQuestionIds: firstQuestions.map((question) => question.questionId),
       remediationContext: {
         previousAttemptId: first.attemptId,

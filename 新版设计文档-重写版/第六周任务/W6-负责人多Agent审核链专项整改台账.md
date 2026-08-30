@@ -252,7 +252,7 @@
 - `parseGeneratorArtifact()` 现在显式返回 `DeterministicSafetyAudit`；标准化类型只有 `none` 和 `quiz_option_order_balanced`，输入/输出候选均使用完整SHA-256绑定。
 - checkpoint与accepted审核证明保存Safety审计；候选恢复时必须存在Safety输出哈希且与当前候选一致，否则拒绝恢复。
 - Hunter和Judge输入新增只读 `safetySummary`，两套提示词明确说明当前审核对象是Safety输出版本，选项顺序调整不代表Generator原始输出已经均衡，也不改变答案语义。
-- 公开Safety工位显示标准化类型及前后哈希短摘要；私有checkpoint保留完整哈希。实时提示词版本由 `w4-d2-v18` 提升为 `w4-d2-v19`。
+- 公开Safety工位显示标准化类型及前后哈希短摘要；私有checkpoint保留完整哈希。实时提示词版本由 `w4-d2-v19` 提升为 `w4-d2-v20`，并补充课前总领问题的正反例、自检规则和一次额外的个性化导学修复机会。
 - 验证：`npm run typecheck`通过；生产链、合同、兼容编排器、实时图工厂和六节live条件测试 `197/197` 通过，另有 `2` 项真实live环境条件测试按既有条件跳过。
 
 ### 2026-08-28 MA-11 开始
@@ -330,7 +330,7 @@
 - 修复 `AgentPipeline` 时间线把 `依据：src-...` 追加到时间下方小字的问题；来源仍可在当前工位的“安全审计详情”中查看，避免移动端窄布局被长来源标识撑乱。
 - 修复客观题打开时只检查 `run.stages.length===0` 的恢复漏洞：同一请求复用只写完“依据”工位的半截run时，服务端现在逐项确认“依据”和“画像”均已成功；缺失工位会补写后再进入Generator，不会永久停在第一步。
 - 新增半截run回归测试；`tests/quiz-activity-runtime.test.ts` 与 `tests/web/agent-pipeline.test.tsx` 共 `22/22` 通过，`npm run typecheck` 通过。
-- 截图中的具体记录属于此前中途终止后留下的 `status=running` 历史run；更新代码并重新打开/重试同一活动后会补齐并继续，超过120秒的真正未收束run仍按前端超时状态显示，不会伪装成完成。
+- 截图中的具体记录属于此前中途终止后留下的 `status=running` 历史run；更新代码并重新打开/重试同一活动后会补齐并继续，超过150秒的真正未收束run仍按前端超时状态显示，不会伪装成完成。
 - 复核：`npm run build:web` 通过；时间线与半截run回归 `22/22` 通过；未使用独立 Playwright 截图，因为当前环境未安装 `playwright` Python 模块，视觉验证以既有 React 测试、CSS构建和DOM合同为依据。
 
 ### 2026-08-28 诊断跳过后的路径可开始状态修复
@@ -339,6 +339,22 @@
 - 修复：`PathPage` 增加顺序展示投影。跳过/已完成节点不占用开始位；第一个未完成节点保留“可以开始”；之后所有未完成节点显示“等待先修”。服务端原始路径和 `getNextStep` 合同不改写，实际进入学习仍由服务端按当前最早未完成节点决定。
 - 新增 Web 回归测试，覆盖“1个可开始 + 1个已跳过 + 2个后续可用”的场景，断言状态依次为“可以开始、已跳过、等待先修、等待先修”。
 - 验证：路径页、路径引擎和路径运行时定向测试 `77/77` 通过；`npm run typecheck`、`npm run build:web`、`git diff --check` 通过。
+
+### 2026-08-30 客观题Generator个性化生成规则增强
+
+- 问题：客观题原有结构合同较完整，但 Generator 没有像个性化课前导学一样明确执行“先读正文、结合画像重点、再生成并自检”的过程；遇到正文外知识、题目多解、解析矛盾、干扰项无依据、题目重复或重做题组遗漏错题时，模型容易形成低质量候选并进入固定保障。
+- 修复：通用 `v2-learning-graphs` 与真实live使用的 `w4-d-graph-factory` 同步增强客观题提示。要求模型内部建立正文事实表，每题绑定一个明确事实；题干必须有唯一判定边界；干扰项必须由正文条件或反例否定；解析先给唯一结论再逐项回扣正文；重做题组必须覆盖每个错题知识点并结合学情画像；输出前自检正文依据、唯一答案、解析一致性、题目独立性、重复性和答案位置分布。
+- 数据链路：`AdaptiveContentPort.prepareQuiz` 新增可选 `personalizationContext`；`QuizActivityRuntime` 现在从当前章节知识状态和讲解偏好构造画像事实，并在首次题组与重做题组一并传给 Generator、Hunter 和 Judge。画像摘要参与缓存/恢复绑定，不同学情不会误复用同一题组；对外题面仍不暴露掌握度和证据字段。
+- 修复提示：按题量、题干、选项、答案、解析、来源、题面复用、答案分布等失败类别提供更具体的重写要求，要求改变题面而不是只换ID，并保留正文知识点。客观题提示现在也显式接收 `personalizationContext`，但禁止把掌握度、置信度或证据数量写入题目。
+- 版本：真实live Generator提示版本由 `w4-d2-v20` 升为 `w4-d2-v21`；录制题组仍只用于离线演示和回归，不能当作实时AI验收证据。
+- 验证：`tests/adaptive-content-service.test.ts`、`tests/quiz-activity-runtime.test.ts`、`tests/w4-d-graph-factory.test.ts`、`tests/v2-learning-graphs.test.ts` 共 `75/75` 通过；覆盖画像传递、重做错题上下文、结构修复、答案位置标准化、跨题泄漏和Provider重试。真实API未调用，未记录虚假的 `LIVE_MODEL_PASS`。
+
+### 2026-08-30 多Agent审核链上限统一为150秒
+
+- 按当前运行要求，将 Adaptive 内容服务默认值及生产 `demo:live` 组合根中的 `fallbackAfterMs` 与 `discardAfterMs` 统一为 `150_000`（150秒）。模型执行超过该上限时，由内容链收束当前run并进入固定保障，不再使用120秒窗口。
+- 将客观题运行时默认值及生产组合根的 `dynamicGenerationTimeoutMs` 统一为 `150_000`（150秒），作为内容链未正常返回时的外层兜底；前端 `AgentPipeline` 的 stale running 判断也统一为150秒，页面显示与服务端上限一致。
+- 测试中用于快速模拟竞态的自定义 `5ms`、`60_000`、`90_000` 等预算保留原值，它们不是产品默认配置；历史记录中的120/125秒仅保留为当时版本的审计证据。
+- 验证结果：AgentPipeline、Adaptive内容服务、Quiz运行时定向测试共 `76/76` 通过；`npm run typecheck`、`npm run build:web`、`npm run check:docs` 和 `git diff --check` 均通过。未调用真实API，未提交、未推送。
 
 ## 7. 上下文恢复规则
 

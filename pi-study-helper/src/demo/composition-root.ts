@@ -111,7 +111,7 @@ export async function createDemoRuntime(options: DemoRuntimeOptions): Promise<De
     agentRuns,
     ...(options.liveConfig === undefined
       ? {}
-      : { fallbackAfterMs: 120_000, discardAfterMs: 120_000 }),
+      : { fallbackAfterMs: 150_000, discardAfterMs: 150_000 }),
   });
   const capability = new CapabilityTaskService({
     modelExecutionPort,
@@ -140,7 +140,7 @@ export async function createDemoRuntime(options: DemoRuntimeOptions): Promise<De
     pathSuffix,
     profileAgent,
     agentRuns,
-    dynamicGenerationTimeoutMs: 125_000,
+    dynamicGenerationTimeoutMs: 150_000,
     now: options.now,
   });
   const codeAssets = new ProfileFamilyCodeActivityAssetResolver(profiles);

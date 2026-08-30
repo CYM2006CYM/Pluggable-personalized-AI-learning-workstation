@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { mkdir, mkdtemp, readFile, readdir, rm, stat, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, readdir, rm, stat, utimes, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
@@ -132,6 +132,19 @@ afterEach(async () => {
 });
 
 describe("FileLearningSessionRepository", () => {
+  it("lists the most recently persisted unfinished session first", async () => {
+    const { root, repo, view: first } = await repository();
+    const second = await repo.create({
+      requestId: "create-2", subjectId: "smoke-subject", mode: "recommended", goalId: "goal-1",
+      availableMinutes: 10, profileRevision: 2, diagnosticRequired: true,
+    });
+    const sessionRoot = resolve(root, "profile_families", "smoke-subject", "_user", "learning_sessions");
+    await utimes(resolve(sessionRoot, first.sessionId, "checkpoints", "latest.json"), new Date("2026-07-30T10:00:00.000Z"), new Date("2026-07-30T10:00:00.000Z"));
+    await utimes(resolve(sessionRoot, second.sessionId, "checkpoints", "latest.json"), new Date("2026-07-30T11:00:00.000Z"), new Date("2026-07-30T11:00:00.000Z"));
+
+    expect((await repo.listBoundSnapshots()).map((snapshot) => snapshot.sessionId)).toEqual([second.sessionId, first.sessionId]);
+  });
+
   it("creates a session and reads only the committed snapshot", async () => {
     const { repo, view } = await repository();
     const snapshot = await repo.getSnapshot({ sessionId: view.sessionId, sessionVersion: 1, profileRevision: 2 });

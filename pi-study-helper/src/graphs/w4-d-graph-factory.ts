@@ -1,6 +1,6 @@
 import { Type, agentNode, defineSingleAgentGraph, type Graph } from "pi-loop-graph-sdk";
 
-export const W4_D_LIVE_PROMPT_VERSION = "w4-d2-v19";
+export const W4_D_LIVE_PROMPT_VERSION = "w4-d2-v21";
 
 const ContextInput = Type.Object({
   runId: Type.String(),
@@ -185,25 +185,31 @@ function graph(id: string, goal: string, output: typeof GeneratorOutput | typeof
         "个性化提醒必须是简洁中文，基于当前所选正文版本和 personalizationContext 形成真正的课前导学；不得替换或删减正式正文，不得改变路径、掌握状态、题目答案或判分。",
         "若 personalizationContext.journey 存在，它是权威章节顺序。objective 用 1 至 2 句说明本节在整条清洗链的位置和要解决的问题；explanation 必须恰好 3 条，依次写『承接前文』『本节学习主线』『引向下一节』。第一节说明它是起点，最后一节说明它负责收束验证，禁止编造不存在的章节关系。",
         "commonMistake 要写成耐心、具体、可执行的学习建议，告诉学生重点关注什么、按什么顺序理解、如何自检。",
-        "example 必须是一个可贯穿本节全部正文的总领问题：先用日常语言交代问题对象和情境，再追问本节要解决的核心矛盾，让从未读过本节的学生也能立刻理解。",
-        "example 不得依赖正文尚未介绍的样例、具体数字、固定列数、裸变量名、代码表达式或『这张表、上述示例、这里』等悬空指代；不得只考查局部细节，也不得写成代码作业。只输出问题本身，不要重复『带着这个问题进入正文』标签。",
+        "字段名 example 是历史接口名称，实际含义是 guidingQuestion（课前总领问题），不是让你举一个样例；必须是一个可贯穿本节全部正文的总领问题：先用日常语言交代问题对象和情境，再追问本节要解决的核心矛盾，让从未读过本节的学生也能立刻理解。",
+        "example 不得依赖正文尚未介绍的样例、具体数字、固定列数、裸变量名、代码表达式或『这张表、上述示例、这里、该结果』等悬空指代；不得只考查局部细节，也不得写成代码作业。只输出问题本身，不要重复『带着这个问题进入正文』标签。",
+        "example 合格范式是『为什么一段程序即使运行成功，也不能单独证明数据已经满足后续使用要求？』或『如何把原始数据中的结构、缺失和类型问题逐步检查清楚，才能得到可信的清洗结果？』；不合格范式是『为什么这张表还不能使用？』『列数是7时应该怎么办？』『这里的代码哪里错了？』。生成后逐字自检：若出现数字、代码符号、变量名，或『这/该/那+表/数据/结果/代码/示例/列/行』、『上述/前文/这里』，必须整句重写后再输出。",
         "表达必须匹配所选正文版本和 explanationPreference：guided 耐心分步，concise 聚焦主线，practice 强调案例观察；不得混入其他版本正文。还要根据学情调整提醒重点，但禁止展示掌握度、置信度、证据计数或冒充新的诊断结论。",
         "下面是 card 的完整结构示例。只能模仿结构，知识点、时间、内容和 source ID 必须来自本次输入：",
         GENERATOR_CARD_EXAMPLE,
-        "kind=mcq 时，只生成 artifactKind=quiz 的 4 至 6 道彼此不同的中文单选题；每题覆盖正文明确写出的概念、代码行为、反例或修正方法，不得超出正文，不得只根据活动标题猜题。生成完成后逐题扫描 prompt、options 和 explanation，删除所有对上一题、下一题、第几题或第几问及其答案、正确项或结论的引用，确保每题可独立作答。",
+        "kind=mcq 时，只生成 artifactKind=quiz 的 4 至 6 道彼此不同的中文单选题；先从 safeContext.context.teachingContent 提取内部『正文事实表』，每道题绑定一个正文明确写出的概念、操作、代码行为、反例、限制或修正方法，并保留原文依据。不能只根据章节标题、模型常识或未提供的资料猜题；正文事实不足时不得编造。",
+        "每道题必须有清楚的作答对象、唯一可核验结论和明确判定边界；优先使用能由正文直接核对的问法，避免『最合适』『以下都对』等模糊题干。干扰项必须与题干相关、但被正文中的明确条件或反例否定，不能引入正文外 API、参数、版本行为或常识；选项不能只是同义改写。",
+        "每题 explanation 必须先说明唯一正确结论，再逐项回扣正文事实解释其他选项为何不成立；不能与 correctAnswer 矛盾，不能补充正文没有的事实。生成完成后逐题扫描 prompt、options 和 explanation，删除所有对上一题、下一题、第几题或第几问及其答案、正确项或结论的引用，确保每题可独立作答。",
+        "生成前逐题自检：考点是否在正文；是否只有一个正确项；答案和解析是否一致；干扰项是否被正文否定；题目之间是否重复或互相泄露；正确答案位置是否分散。任何一项不满足，先改写再输出。",
         "若 safeContext.context.retryContext 存在，这是重做题组：必须同时依据 teachingContent、上一轮 missedQuestions 和 learnerProfileSummary 出题。每个 missedQuestions 暴露的薄弱知识至少由一道新题重复考察；画像只用于确定重点，不能改写正文事实或判分。",
+        "若 safeContext.context.personalizationContext 存在，客观题也必须按课前导学的个性化规则处理：需要支持时优先检验正文核心规则、边界和常见误区，已有基础时增加同一正文事实的轻量迁移或反例辨析；explanationPreference 只改变表达方式，不能改变事实、答案或题型。不得把掌握度、置信度、证据数量或画像字段原样写入题目、选项、解析或外层字段。",
         "重做题组必须更换题面、场景或代码片段，严禁逐字复用任何旧 prompt，严禁复用 retryContext.excludedQuestionIds 中的 questionId。新 questionId 应包含本轮重做标识，例如 r1、r2。",
-        "每题必须且只能包含 questionId、kind、prompt、options、correctAnswer、explanation、sourceAnchorIds；kind 固定为 single_choice。options 为 2 至 6 个不重复字符串，correctAnswer 必须逐字等于其中一个选项，explanation 必须回扣正文。",
+        "每题必须且只能包含 questionId、kind、prompt、options、correctAnswer、explanation、sourceAnchorIds；kind 固定为 single_choice。options 默认提供 4 个不重复中文字符串（正文明确只能二选一时才允许 2 至 3 个），correctAnswer 必须逐字等于其中一个选项，explanation 必须回扣正文。",
         "必须主动打散整组题的正确答案位置，不能把正确项都放在第一个选项。按题目可用选项数尽量均匀覆盖 A、B、C、D 等位置；4 道且均为至少 4 个选项时应覆盖 A/B/C/D，5 至 6 道时各可用位置出现次数之差不超过 1。不要在题干或解析中透露位置规律。",
         "每道题必须独立作答。题干、选项和解析都不得引用上一题、下一题、第一问或其他第几问，不得出现『前题已给出答案』『参照另一题结论』『直接保留另一题答案』等跨题提示。",
         "外层必须且只能包含 artifactId、candidateFeedback、rationale、citedSourceIds、riskFlags。artifactId 使用短 ASCII ID；低风险 quiz 的 riskFlags 必须为 []。",
         "riskLevel=high 只用于答案唯一性依赖多步推理、版本敏感行为、题干假设可能歧义，或你对候选答案仍有不确定性的题组；此时 riskFlags 必须列出具体风险。riskLevel=low 时 riskFlags 必须为空。不得随意升高或隐藏风险。",
         "quiz 的 candidateFeedback 必须直接输出为 JSON 对象（不是转义后的 JSON 字符串），并严格包含 artifactKind、riskLevel、questions 三个字段；不要输出 Markdown、代码围栏、说明文字或第二个 JSON。",
-        "下面是包含四道题的完整结构示例。只能模仿结构，内容和 source ID 必须来自本次输入：",
+        "下面是包含四道题的完整结构示例。只能模仿结构，内容和 source ID 必须来自本次输入；示例中的正确答案、题干和选项不能照抄：",
         GENERATOR_QUIZ_EXAMPLE,
         "不得输出 hidden tests、reference solution、Rubric、私有答案、分数、Evidence、KnowledgeState、路径、主机路径、凭据、token 或媒体位置；quiz 的 correctAnswer 只允许在 candidateFeedback 内部出现，后端会在公开结果中移除答案。",
         "若 safeContext.repairInstruction 存在，这是一次修复尝试：必须逐字阅读其中的失败类别和具体修复要求，重新输出完整五字段 JSON，不解释修复过程。",
         "修复类别若为 candidate_question_id_excluded，必须逐项避开 retryContext.excludedQuestionIds；若为 candidate_question_prompt_reused，必须改写题面但保留对应薄弱知识的考察。",
+        "修复类别若涉及题干、选项、答案或解析，必须重新回到 teachingContent 的正文事实表核对，不得只做表面换词；若是重做题组，还必须让每个 missedQuestions 的薄弱知识至少由一道新题覆盖，并同时参考 personalizationContext 的学习重点。",
       ]
     : id === "hunter"
       ? [

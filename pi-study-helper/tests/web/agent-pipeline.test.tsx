@@ -109,7 +109,7 @@ describe("AgentPipeline visual prototype", () => {
     const host = await render(fixture());
     expect(host.querySelector('[data-timeout="true"]')).not.toBeNull();
     expect(host.textContent).toContain("已超时，已停止等待");
-    expect(host.textContent).toContain("超过120秒");
+    expect(host.textContent).toContain("超过150秒");
     expect(host.textContent).toContain("超时未完成");
     expect(host.textContent).not.toContain("180.0 秒");
   });

@@ -8,6 +8,7 @@ import { appRoutes } from "../../src/web/app/routes.js";
 import { PageStatePanel } from "../../src/web/components/PageStatePanel.js";
 import { writeActivityDraft } from "../../src/web/state/activity-draft-storage.js";
 import { useUiStore } from "../../src/web/state/ui-store.js";
+import { rememberStudyLocation } from "../../src/web/state/study-resume-storage.js";
 import {
   bootstrap,
   codeSubmission,
@@ -33,6 +34,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
   useUiStore.setState({ activityDrafts: {} });
   sessionStorage.clear();
+  localStorage.clear();
   document.body.innerHTML = "";
 });
 
@@ -123,6 +125,28 @@ describe("W4 real API pages", () => {
       .toEqual(["逐步讲解", "重点速览", "案例优先"]);
     expect((host.querySelector('select[aria-label="讲解偏好"]') as HTMLSelectElement).value).toBe("step_by_step");
     expect(host.textContent).not.toContain("Mock DTO");
+  });
+
+  it("uses the browser's latest-reading session instead of the first unsorted recovery entry", async () => {
+    const oldSession = recovery();
+    oldSession.sessionId = "session-old";
+    oldSession.view = { ...oldSession.view, sessionId: "session-old" };
+    const currentSession = recovery();
+    currentSession.sessionId = "session-current";
+    currentSession.view = { ...currentSession.view, sessionId: "session-current" };
+    const landing = bootstrap();
+    landing.recoverableSessions = [oldSession.view, currentSession.view];
+    rememberStudyLocation({ pathname: "/learn/session-current/node-basic", search: "", hash: "#study/walkthrough" });
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(ok(landing))
+      .mockResolvedValue(ok(bootstrap(currentSession)));
+    const { host, router } = await renderRoute("/", fetchMock);
+
+    await click(host.querySelector<HTMLButtonElement>(".sp-bookmark")!);
+
+    expect(String(fetchMock.mock.calls[1]?.[0])).toContain("recoverSessionId=session-current");
+    expect(router.state.location.pathname).toBe("/learn/session-current/node-basic");
+    expect(router.state.location.hash).toBe("#study/walkthrough");
   });
 
   it("selects a safe Profile and binds its subjectId to the new session", async () => {
@@ -424,6 +448,17 @@ describe("W4 real API pages", () => {
     await click(button(host, "返回简报"));
     expect(host.querySelector(".lesson-briefing")).not.toBeNull();
     expect(host.querySelector(".lesson-study")).toBeNull();
+  });
+
+  it("restores the exact lesson station encoded by the last-read bookmark", async () => {
+    const richStep = richLearningStep();
+    const fetchMock = vi.fn().mockResolvedValueOnce(ok(bootstrap(recovery()))).mockResolvedValueOnce(ok(richStep));
+    const { host } = await renderRoute("/learn/session-w4/node-basic#study/walkthrough", fetchMock);
+
+    expect(host.querySelector(".lesson-briefing")).toBeNull();
+    expect(host.querySelector(".lesson-study")).not.toBeNull();
+    expect(host.querySelector(".lesson-paper.is-active .lesson-module")?.getAttribute("data-role")).toBe("walkthrough");
+    expect(host.querySelector(".stack-nav-count")?.textContent).toContain("第 3 站");
   });
 
   it("collapses the personalized-tip pipeline into a status drawer below the reminder, keeping a live elapsed timer", async () => {

@@ -9,6 +9,7 @@ import { PageFrame } from "../components/PageFrame.js";
 import { PageStatePanel } from "../components/PageStatePanel.js";
 import { experienceLabel, stepLabel } from "../copy/ui-copy.js";
 import { EXPLANATION_PREFERENCES, modalityLabel, START_PAGE_COPY } from "../copy/start-page-copy.js";
+import { readStudyResumeLocation } from "../state/study-resume-storage.js";
 import "./StartPage.css";
 
 const EXPERIENCE = ["none", "basic", "comfortable", "uncertain"] as const;
@@ -88,7 +89,7 @@ export function StartPage() {
     try {
       const recovered = await api.getBootstrap(sessionId);
       if (recovered.session === undefined) throw new Error("session_not_found");
-      navigate(routeForSession(recovered.session));
+      navigate(routeForSession(recovered.session, readStudyResumeLocation()));
     } catch (error) {
       setActionError(error instanceof Error ? error : new Error("recovery_failed"));
     } finally {
@@ -100,7 +101,9 @@ export function StartPage() {
   const activeProfile = bootstrap.data?.profiles.find((profile) => profile.subjectId === subjectId)
     ?? bootstrap.data?.profiles[0];
   const activeGoalTitle = goalTitleOf(bootstrap.data?.goals ?? [], goalId) ?? START_PAGE_COPY.fallbackLabel;
-  const recoverableSession = bootstrap.data?.recoverableSessions[0];
+  const resumeLocation = readStudyResumeLocation();
+  const recoverableSession = bootstrap.data?.recoverableSessions.find((session) => session.sessionId === resumeLocation?.sessionId)
+    ?? bootstrap.data?.recoverableSessions[0];
   return (
     <PageFrame eyebrow={START_PAGE_COPY.eyebrow} title={START_PAGE_COPY.title} summary={START_PAGE_COPY.summary}>
       {bootstrap.loading ? <PageStatePanel page="start" state="loading" /> : null}

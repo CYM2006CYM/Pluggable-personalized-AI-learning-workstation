@@ -375,7 +375,7 @@ export interface AdaptiveContentPort {
       acceptedCardSha256: string;
     };
   }>;
-  prepareQuiz(input: { profileRevision: number; activityId: string; retryNumber: number; excludedQuestionIds: string[]; lessonVariantId?: LessonVariantId; targetKnowledgePointIds?: string[]; remediationContext?: QuizRemediationContext; agentRunId?: string }): Promise<{
+  prepareQuiz(input: { profileRevision: number; activityId: string; retryNumber: number; excludedQuestionIds: string[]; lessonVariantId?: LessonVariantId; targetKnowledgePointIds?: string[]; personalizationContext?: LessonPersonalizationContext; remediationContext?: QuizRemediationContext; agentRunId?: string }): Promise<{
     status: "accepted" | "unavailable";
     reasonCode?: AdaptiveContentUnavailableReason;
     questions?: QuizQuestionPrivate[];

@@ -512,27 +512,27 @@ function generatorRepairInstruction(detail: string, artifactKind: AdaptiveArtifa
     candidate_card_guiding_question_not_chinese: "example 必须是无需翻译即可理解的中文问题。",
     candidate_card_guiding_question_not_a_question: "example 必须以中文或英文问号结尾。",
     candidate_card_guiding_question_missing_guiding_verb: "example 必须用『为什么、如何、怎样、怎么』之一提出可贯穿本节正文的核心问题。",
-    candidate_card_guiding_question_context_dependent: "example 必须让从未读过本节的学生也能独立看懂：删除样例中的具体数字、裸变量名、代码符号，以及『这张表、上述示例、这里』等悬空指代；改问贯穿本节正文的核心矛盾。",
+    candidate_card_guiding_question_context_dependent: "字段名 example 实际是课前总领问题，不是样例。请整句重写为无需任何正文上下文即可理解的问题：先用日常语言说明对象和情境，再追问本节要解决的核心矛盾。禁止具体数字、裸变量名、代码符号，以及『这张表、上述示例、这里、该结果』等悬空指代。例如可写『为什么一段程序即使运行成功，也不能单独证明数据已经满足后续使用要求？』；不要解释修复过程，只返回完整五字段 JSON。",
     candidate_questions_array: "questions 必须是 JSON 数组。",
-    candidate_question_count: "questions 必须包含 4 至 6 道彼此不同的题，不能照抄单题结构示例。",
+    candidate_question_count: "questions 必须包含 4 至 6 道彼此不同的中文单选题；先从教学正文提取事实表再出题，不能照抄单题结构示例或为凑题量编造正文外知识。",
     candidate_question_not_object: "每道题必须是 JSON 对象。",
     candidate_question_fields: "每道题只能包含 questionId、kind、prompt、options、correctAnswer、explanation、sourceAnchorIds 七个字段。",
     candidate_question_id: "每道题的 questionId 必须是唯一的短 ASCII 标识符。",
     candidate_question_id_excluded: "不得复用输入中 excludedQuestionIds 已排除的 questionId。",
-    candidate_question_prompt: "每道题必须提供非空、无敏感信息的中文 prompt。",
-    candidate_question_prompt_reused: "不得逐字复用上一轮错题题干；必须更换题面，但继续考察对应的薄弱知识。",
-    candidate_question_explanation: "每道题必须提供基于教学正文的非空中文 explanation。",
-    candidate_question_sources: "每道题的 sourceAnchorIds 必须非空，且只能逐字复制 allowedSourceIds。",
-    candidate_question_options: "每道题必须提供 2 至 6 个非空字符串选项。",
-    candidate_question_options_duplicate: "同一道题的 options 不得重复。",
+    candidate_question_prompt: "每道题必须提供非空、无敏感信息、可脱离其他题独立理解的中文完整题干；题干要明确作答对象和唯一判定边界，不要只写关键词或使用『最合适』等模糊问法。",
+    candidate_question_prompt_reused: "不得逐字复用上一轮错题题干；必须更换题面（场景、问法或代码片段至少改变一项），但继续考察对应的薄弱知识，并保持该知识点来自正文。",
+    candidate_question_explanation: "每道题必须提供基于教学正文的非空中文 explanation：先说明唯一正确结论，再回扣正文事实解释其余选项为何不成立；不能引入正文外信息，也不能与 correctAnswer 矛盾。",
+    candidate_question_sources: "每道题的 sourceAnchorIds 必须非空，且只能逐字复制 allowedSourceIds；引用必须能覆盖题干考查的正文事实。",
+    candidate_question_options: "每道题应提供 4 个不重复的中文字符串选项（正文明确只能二选一时才允许 2 至 3 个）；选项必须互斥，且均围绕同一正文事实。",
+    candidate_question_options_duplicate: "同一道题的 options 不得重复或仅作同义改写；保留一个明确结论，其余选项必须是被正文条件或反例否定的干扰项。",
     candidate_question_cross_answer_hint: "每道题必须能够独立作答。逐题扫描 prompt、options 和 explanation，删除所有同时包含‘上一题/下一题/第几题/第几问’与‘答案/正确项/结论/参照’的句子；不得用其他题已给出的信息提示答案。修复后再次逐字段自检，任何跨题引用都不能保留。",
     candidate_question_kind: "当前动态 quiz 只允许中文单选题；每道题的 kind 必须逐字写为 single_choice，不得输出 judgment 或其他题型。",
-    candidate_question_answer: "correctAnswer 必须是字符串，并与 options 中某个选项逐字一致。",
-    candidate_question_ids_duplicate: "4 至 6 道题的 questionId 必须全部唯一。",
+    candidate_question_answer: "correctAnswer 必须是字符串，并与 options 中某个选项逐字一致；重新逐项核对正文，确保只有这一项被正文唯一支持，答案与 explanation 一致。",
+    candidate_question_ids_duplicate: "4 至 6 道题的 questionId 必须全部唯一，并使用短 ASCII 标识符。",
     candidate_question_answer_distribution_empty: "题组不得为空。",
     candidate_question_answer_distribution_invalid: "每道题的 correctAnswer 必须能在本题 options 中定位。",
-    candidate_question_answer_distribution_concentrated: "正确答案位置必须在可用选项位置间分散；有三个以上可用位置时至少覆盖三个位置。",
-    candidate_question_answer_distribution_imbalanced: "正确答案位置分布不得明显失衡；四至六题时同一位置通常不得超过两次。",
+    candidate_question_answer_distribution_concentrated: "重新排列每题 options（不得改变选项文本、correctAnswer 语义或 explanation），让正确答案位置至少覆盖三个可用位置；四题且四选项时必须覆盖 A/B/C/D。",
+    candidate_question_answer_distribution_imbalanced: "重新排列每题 options，让正确答案在可用位置间尽量均匀；四至六题时同一位置通常不得超过两次，不能全部落在 A。",
     candidate_risk_flags_mismatch: "riskLevel=low 时外层 riskFlags 必须为空；riskLevel=high 时必须列出具体风险。",
     graph_output_schema: "外层必须且只能返回 artifactId、candidateFeedback、rationale、citedSourceIds、riskFlags 五个字段。",
     status_invalid_output: "上一轮外层结构不是有效的五字段 JSON，请严格按输出 Schema 重新生成。",
@@ -692,8 +692,8 @@ export class AdaptiveContentService implements AdaptiveContentPort {
     if (!safeId(options.modelId) || !safeId(options.promptVersion)) throw new TypeError("modelId and promptVersion must be stable IDs");
     this.#options = options;
     this.#clock = options.clock ?? defaultClock();
-    this.#fallbackAfterMs = options.fallbackAfterMs ?? 15_000;
-    this.#discardAfterMs = options.discardAfterMs ?? 60_000;
+    this.#fallbackAfterMs = options.fallbackAfterMs ?? 150_000;
+    this.#discardAfterMs = options.discardAfterMs ?? 150_000;
     if (!(this.#fallbackAfterMs > 0 && this.#discardAfterMs >= this.#fallbackAfterMs)) {
       throw new RangeError("Adaptive content deadlines must satisfy 0 < fallback <= discard");
     }
@@ -725,11 +725,12 @@ export class AdaptiveContentService implements AdaptiveContentPort {
     }
   }
 
-  async prepareQuiz(input: { profileRevision: number; activityId: string; retryNumber: number; excludedQuestionIds: string[]; lessonVariantId?: LessonVariantId; targetKnowledgePointIds?: string[]; remediationContext?: QuizRemediationContext; agentRunId?: string }) {
+  async prepareQuiz(input: { profileRevision: number; activityId: string; retryNumber: number; excludedQuestionIds: string[]; lessonVariantId?: LessonVariantId; targetKnowledgePointIds?: string[]; personalizationContext?: LessonPersonalizationContext; remediationContext?: QuizRemediationContext; agentRunId?: string }) {
     try {
       const sourceContext = await this.#options.sourceProvider.forQuiz(input);
       const context: AdaptiveContentSourceContext = {
         ...sourceContext,
+        ...(input.personalizationContext === undefined ? {} : { personalizationContext: clone(input.personalizationContext) }),
         ...(input.remediationContext === undefined ? {} : { remediationContext: clone(input.remediationContext) }),
       };
       const key = this.#key("quiz", context, input.excludedQuestionIds, input.retryNumber);
@@ -980,10 +981,15 @@ export class AdaptiveContentService implements AdaptiveContentPort {
         : "judge-repair";
       let providerRetries = 0;
       let candidateRepairs = 0;
-      const generatorAttemptOffset = (checkpoint.judgeRevisionCount ?? 0) * 3;
+      // Cards have one extra repair opportunity because their guiding question
+      // has a stricter self-contained-language contract than quiz fields. A
+      // transient provider error must not consume the final semantic repair.
+      const maxGeneratorAttempts = artifactKind === "card" ? 4 : 3;
+      const maxCandidateRepairs = artifactKind === "card" ? 3 : 2;
+      const generatorAttemptOffset = (checkpoint.judgeRevisionCount ?? 0) * maxGeneratorAttempts;
       // A transient provider retry and a malformed-candidate repair are separate
       // budgets. A recovered provider must still get one precise schema repair.
-      for (let attempt = 0; attempt < 3; attempt += 1) {
+      for (let attempt = 0; attempt < maxGeneratorAttempts; attempt += 1) {
         const attemptNumber = generatorAttemptOffset + attempt + 1;
         const generatorInput = nextAttempt === "initial" || nextAttempt === "provider-retry"
           ? baseGeneratorInput
@@ -1029,7 +1035,7 @@ export class AdaptiveContentService implements AdaptiveContentPort {
           && !containsAdaptiveAuthorityViolation({ rationale: generatorResult.payload.rationale, riskFlags: generatorResult.payload.riskFlags });
         if (!outerValid) {
           generatorDetail = generatorResult.status === "ok" ? generatorFailureDetail(generatorResult, context) : `status_${generatorResult.status}`;
-          const hasNextAttempt = attempt + 1 < 3;
+          const hasNextAttempt = attempt + 1 < maxGeneratorAttempts;
           const canProviderRetry = hasNextAttempt && generatorResult.status === "provider_error" && providerRetries < 1;
           const canRepair = hasNextAttempt
             && (generatorResult.status === "ok" || generatorResult.status === "invalid_output")
@@ -1105,8 +1111,8 @@ export class AdaptiveContentService implements AdaptiveContentPort {
         }
         artifact = undefined;
         delete checkpoint.safetyAudit;
-        const hasNextAttempt = attempt + 1 < 3;
-        const canRepair = hasNextAttempt && candidateRepairs < 2;
+        const hasNextAttempt = attempt + 1 < maxGeneratorAttempts;
+        const canRepair = hasNextAttempt && candidateRepairs < maxCandidateRepairs;
         await this.#finishPublicStage(
           agentRunId,
           "safety",
