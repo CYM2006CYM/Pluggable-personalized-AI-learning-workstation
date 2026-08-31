@@ -1,0 +1,13 @@
+
+> pi-study-helper@0.1.0 test
+> vitest run --maxWorkers=1
+
+
+ RUN  v4.1.10 C:/Users/win11/AppData/Local/Temp/w5-d1-a-candidate-66b0558378e44d94b8aa609a0887320f/pi-study-helper
+
+
+ Test Files  87 passed (87)
+      Tests  765 passed | 1 skipped (766)
+   Start at  16:59:25
+   Duration  221.16s (transform 2.54s, setup 0ms, import 25.55s, tests 161.86s, environment 16.39s)
+

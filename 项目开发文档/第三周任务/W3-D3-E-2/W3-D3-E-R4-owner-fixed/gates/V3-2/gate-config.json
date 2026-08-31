@@ -1,0 +1,65 @@
+﻿{
+    "schemaVersion":  "w3-d3-gate-config-v1",
+    "contractVersion":  "W3-C5/W3-R2",
+    "deliveryStage":  "W3-D3",
+    "executionPolicy":  "PLAN_ONLY_D3_EXPLICIT_W3_D4_TOKEN_REQUIRED",
+    "evidenceSha256Method":  "SHA-256 over raw file bytes; lowercase hexadecimal",
+    "gate":  "V3-2",
+    "title":  "原始预算与边界fixture",
+    "purpose":  "验证20例原始预算不可行结构、全部掌握和缺失先修fixture。",
+    "ownerOnFailure":  "A",
+    "requiredInputIds":  [
+                             "w3-start-commit",
+                             "development-20",
+                             "owner-profile-approval",
+                             "a-d1-v3-2-evidence",
+                             "a-d3-formal-commit",
+                             "a-d3-deterministic-test-files",
+                             "b-task-bundles-file",
+                             "c-environment-lock"
+                         ],
+    "commands":  [
+                     {
+                         "id":  "v3-2-original-budget",
+                         "executable":  "npm.cmd",
+                         "arguments":  [
+                                           "test",
+                                           "--",
+                                           "--maxWorkers=1",
+                                           "--run",
+                                           "tests/path-engine-development-20.test.ts"
+                                       ],
+                         "workingDirectory":  "pi-study-helper",
+                         "expectedExitCode":  0
+                     }
+                 ],
+    "expectedMetrics":  {
+                            "expectedTestItems":  220,
+                            "originalCases":  20,
+                            "runsPerCase":  10,
+                            "boundaryFixtures":  2,
+                            "boundaryRunsPerFixture":  10,
+                            "illegalPathCount":  0,
+                            "projectionRuleVersion":  "w3-v3-original-budget-v1"
+                        },
+    "mechanicalPassConditions":  [
+                                     "20例原始预算结果结构均合法",
+                                     "全部掌握fixture确定且先修可跳过",
+                                     "缺失先修fixture不跨越先修闭包",
+                                     "非法路径为0"
+                                 ],
+    "outputContract":  [
+                           "v3-2-command-evidence.json",
+                           "v3-2-path-evidence.json",
+                           "v3-2-file-hashes.sha256"
+                       ],
+    "testLayer":  "确定性层",
+    "d47Decision":  "W3-D47-TEST-LAYERS-1",
+    "failureClassifications":  [
+                                   "CODE_DEFECT",
+                                   "ENVIRONMENT_MISMATCH",
+                                   "AUDIT_INPUT_INCOMPLETE",
+                                   "LIVE_NOT_RUN",
+                                   "MOCK_FALLBACK_USED"
+                               ]
+}

@@ -1,0 +1,136 @@
+{
+  "schemaVersion": 1,
+  "candidate": "W5-D4-E",
+  "generatedAtUtc": "2026-08-22T11:20:20.420Z",
+  "mode": "FINAL_PACKAGE",
+  "currentChecks": [
+    {
+      "id": "command-statistics",
+      "status": "PASS"
+    },
+    {
+      "id": "command-status",
+      "status": "PASS"
+    },
+    {
+      "id": "environment",
+      "status": "PASS"
+    },
+    {
+      "id": "independent-validation",
+      "status": "PASS"
+    },
+    {
+      "id": "closed-state",
+      "status": "PASS"
+    },
+    {
+      "id": "formal-showcase-source",
+      "status": "PASS"
+    },
+    {
+      "id": "browser",
+      "status": "PASS"
+    },
+    {
+      "id": "security",
+      "status": "PASS"
+    },
+    {
+      "id": "screenshots",
+      "status": "PASS"
+    },
+    {
+      "id": "formal-scope",
+      "status": "PASS"
+    },
+    {
+      "id": "formal-host-paths",
+      "status": "PASS",
+      "findings": []
+    },
+    {
+      "id": "audit-scope",
+      "status": "PASS"
+    },
+    {
+      "id": "manifest-set",
+      "status": "PASS"
+    },
+    {
+      "id": "manifest-hashes",
+      "status": "PASS"
+    },
+    {
+      "id": "zip-list",
+      "status": "PASS"
+    },
+    {
+      "id": "sidecar",
+      "status": "PASS"
+    },
+    {
+      "id": "zip-file-set",
+      "status": "PASS"
+    },
+    {
+      "id": "zip-list-match",
+      "status": "PASS"
+    },
+    {
+      "id": "zip-entry-hashes",
+      "status": "PASS"
+    },
+    {
+      "id": "zip-forbidden-content",
+      "status": "PASS"
+    },
+    {
+      "id": "report",
+      "status": "PASS"
+    }
+  ],
+  "negativeSelfTests": [
+    {
+      "id": "missing-test-statistics-fails",
+      "status": "PASS"
+    },
+    {
+      "id": "statistics-exit-conflict-fails",
+      "status": "PASS"
+    },
+    {
+      "id": "d2-evidence-rejected",
+      "status": "PASS"
+    },
+    {
+      "id": "png-rejected-from-formal",
+      "status": "PASS"
+    },
+    {
+      "id": "archive-missing-entry-fails",
+      "status": "PASS"
+    },
+    {
+      "id": "archive-extra-entry-fails",
+      "status": "PASS"
+    },
+    {
+      "id": "host-path-fails",
+      "status": "PASS"
+    },
+    {
+      "id": "preview-entry-fails",
+      "status": "PASS"
+    },
+    {
+      "id": "wrong-sidecar-hash-fails",
+      "status": "PASS"
+    },
+    {
+      "id": "wrong-zip-name-fails",
+      "status": "PASS"
+    }
+  ],
+  "status": "PASS"
+}

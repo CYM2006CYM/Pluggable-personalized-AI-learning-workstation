@@ -1,0 +1,36 @@
+
+> pi-study-helper@0.1.0 verify
+> npm run typecheck && npm test -- --maxWorkers=1 && npm run check:docs && npm run smoke:extension && npm run check:release
+
+
+> pi-study-helper@0.1.0 typecheck
+> tsc --noEmit && tsc -p tsconfig.test.json && tsc -p tsconfig.web.json
+
+
+> pi-study-helper@0.1.0 test
+> vitest run --maxWorkers=1
+
+
+ RUN  v4.1.10 C:/Users/win11/AppData/Local/Temp/w5-d1-a-candidate-66b0558378e44d94b8aa609a0887320f/pi-study-helper
+
+
+ Test Files  87 passed (87)
+      Tests  765 passed | 1 skipped (766)
+   Start at  17:04:02
+   Duration  181.49s (transform 2.21s, setup 0ms, import 22.08s, tests 142.83s, environment 730ms)
+
+
+> pi-study-helper@0.1.0 check:docs
+> node scripts/check-doc-links.mjs
+
+已检查 81 个项目 Markdown 文件，本地链接全部有效。
+
+> pi-study-helper@0.1.0 smoke:extension
+> node scripts/smoke-extension.mjs
+
+pi 已成功解析并初始化 Pi Study Helper extension。
+
+> pi-study-helper@0.1.0 check:release
+> node scripts/check-release.mjs
+
+Release check passed: 517 tracked files, no private data or secrets found.

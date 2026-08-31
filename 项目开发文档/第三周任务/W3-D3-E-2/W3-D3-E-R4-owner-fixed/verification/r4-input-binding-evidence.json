@@ -1,0 +1,257 @@
+﻿{
+    "schemaVersion":  "w3-d3-input-binding-evidence-r4-v1",
+    "contractVersion":  "W3-C5/W3-R2",
+    "deliveryStage":  "W3-D3",
+    "fullV3Status":  "NOT_RUN_D3",
+    "repositoryHead":  "07a5822badf1d8e082f32dbb21705c4a150819e9",
+    "repositoryOriginMain":  "07a5822badf1d8e082f32dbb21705c4a150819e9",
+    "inputCount":  33,
+    "frozenCount":  31,
+    "pendingCount":  2,
+    "checks":  [
+                   {
+                       "id":  "repository-head",
+                       "kind":  "exact-commit",
+                       "passed":  true,
+                       "actual":  "07a5822badf1d8e082f32dbb21705c4a150819e9"
+                   },
+                   {
+                       "id":  "repository-origin-main",
+                       "kind":  "exact-commit",
+                       "passed":  true,
+                       "actual":  "07a5822badf1d8e082f32dbb21705c4a150819e9"
+                   },
+                   {
+                       "id":  "w3-start-commit",
+                       "kind":  "git-ancestor",
+                       "passed":  true,
+                       "actual":  "f190326a4a906b46e4001484ffa30a7839b82ed2"
+                   },
+                   {
+                       "id":  "b-formal-commit",
+                       "kind":  "git-ancestor",
+                       "passed":  true,
+                       "actual":  "277805b4dc612548f4dcdf4f91189abb4ef5c8e3"
+                   },
+                   {
+                       "id":  "b-task-bundles-file",
+                       "kind":  "raw-byte-sha256",
+                       "passed":  true,
+                       "actual":  "3ca1df592f78366a73bf07c1ea82a9dc8a5eb24ae92da20fbab1d8f7a9894426"
+                   },
+                   {
+                       "id":  "b-asset-inspect",
+                       "kind":  "assetBundleHash",
+                       "passed":  true,
+                       "actual":  "bcc38620bdacede9d690ee62efbedaf8f0aee8dabaa55e9b7ca5b2452d29905c"
+                   },
+                   {
+                       "id":  "b-asset-practical",
+                       "kind":  "assetBundleHash",
+                       "passed":  true,
+                       "actual":  "3273308c4c9829b263a550c2d69eb40e5098b4e0802399c2334053afb3d6815c"
+                   },
+                   {
+                       "id":  "c-formal-commit",
+                       "kind":  "git-ancestor",
+                       "passed":  true,
+                       "actual":  "8f8e2c71dfd6128307fb7bcdcaf04c7c99a5c9cd"
+                   },
+                   {
+                       "id":  "c-binding-fix-commit",
+                       "kind":  "git-ancestor",
+                       "passed":  true,
+                       "actual":  "8648620213463701319d089a5ab088e62e243af0"
+                   },
+                   {
+                       "id":  "c-environment-lock",
+                       "kind":  "raw-byte-sha256",
+                       "passed":  true,
+                       "actual":  "59917d1528d031f46a1e76359d99628e810f2dfa78a92d66e03386c860fbaf43"
+                   },
+                   {
+                       "id":  "c-environment-hash",
+                       "kind":  "environmentHash",
+                       "passed":  true,
+                       "actual":  "9e73aebc1b5191b24ee91b27994cf48d596c757695738074de6d846ee2cf5b76"
+                   },
+                   {
+                       "id":  "c-formal-binding-evidence",
+                       "kind":  "raw-byte-sha256",
+                       "passed":  true,
+                       "actual":  "69c1394920ddd21639607ca727e5ebe1bb292ef51724534a8cebbb73ab048514"
+                   },
+                   {
+                       "id":  "owner-profile-approval",
+                       "kind":  "raw-byte-sha256",
+                       "passed":  true,
+                       "actual":  "498ef406b554d75a09f2d8a2c7a97ac439091eb0dccf8688fe24f9a63fb986b4"
+                   },
+                   {
+                       "id":  "development-20",
+                       "kind":  "raw-byte-sha256",
+                       "passed":  true,
+                       "actual":  "1b238dfae09e5c6ea942329a3a0fd952ad9c190edd9666335ad735301cb27876"
+                   },
+                   {
+                       "id":  "a-d1-v3-1-evidence",
+                       "kind":  "raw-byte-sha256",
+                       "passed":  true,
+                       "actual":  "f29d9fb982d2647b2b440496d02585a06fa5ae8e5b27f384f00493d2a27a820b"
+                   },
+                   {
+                       "id":  "a-d1-v3-2-evidence",
+                       "kind":  "raw-byte-sha256",
+                       "passed":  true,
+                       "actual":  "02f9f7754ad5e9197555803d90c668d63f5b8a05cc59b0db902a30f76543754a"
+                   },
+                   {
+                       "id":  "a-d3-formal-commit",
+                       "kind":  "git-ancestor",
+                       "passed":  true,
+                       "actual":  "07a5822badf1d8e082f32dbb21705c4a150819e9"
+                   },
+                   {
+                       "id":  "a-d3-deterministic-test-files",
+                       "kind":  "raw-byte-sha256",
+                       "passed":  true,
+                       "actual":  "1822295cda112b7e2f50b059eb6abbc2a456b2335ac91edc98de6b432d1e04e9"
+                   },
+                   {
+                       "id":  "a-d3-deterministic-test-files/profile-v2-activation.test.ts",
+                       "kind":  "declared-test-sha256",
+                       "passed":  true,
+                       "actual":  "0f2dbd7253609ed3b66c5b283715b6536ecc05be9848679ea409f54b646497b4"
+                   },
+                   {
+                       "id":  "a-d3-deterministic-test-files/profile-bound-session-runtime.test.ts",
+                       "kind":  "declared-test-sha256",
+                       "passed":  true,
+                       "actual":  "404c2ace7e166a18406d86d651b77492b1e761ba26d2683d793e6c4194d4f974"
+                   },
+                   {
+                       "id":  "a-d3-deterministic-test-files/activity-runtime-service.test.ts",
+                       "kind":  "declared-test-sha256",
+                       "passed":  true,
+                       "actual":  "71553d55a856e40cd2fbc0f777b81ae7ec471158601327a800f0259f7929393d"
+                   },
+                   {
+                       "id":  "a-d3-deterministic-test-files/file-activity-repository.test.ts",
+                       "kind":  "declared-test-sha256",
+                       "passed":  true,
+                       "actual":  "2418b0fcce6e4a8e9b65640b3a5209e8dc840dd92b2ad8b1b52c15d1d812ad4a"
+                   },
+                   {
+                       "id":  "a-d3-deterministic-test-files/file-learning-session-repository.test.ts",
+                       "kind":  "declared-test-sha256",
+                       "passed":  true,
+                       "actual":  "e230a956931cd7653aa0677d0b327d72cecbb16c6658951b697312de9aab009b"
+                   },
+                   {
+                       "id":  "d-d3-formal-commit",
+                       "kind":  "pending-marker",
+                       "passed":  true,
+                       "actual":  "PENDING"
+                   },
+                   {
+                       "id":  "d-d3-fixed-trace-test-manifest",
+                       "kind":  "pending-marker",
+                       "passed":  true,
+                       "actual":  "PENDING"
+                   },
+                   {
+                       "id":  "e-d1-sealed-annotations",
+                       "kind":  "e-owned-external-not-available-to-owner",
+                       "passed":  true,
+                       "actual":  "NOT_REVERIFIED"
+                   },
+                   {
+                       "id":  "e-d1-seal-record",
+                       "kind":  "e-owned-external-not-available-to-owner",
+                       "passed":  true,
+                       "actual":  "NOT_REVERIFIED"
+                   },
+                   {
+                       "id":  "w2-difficulty-gold",
+                       "kind":  "raw-byte-sha256",
+                       "passed":  true,
+                       "actual":  "68c69bdd26433c24833817b99f8e1b76453016d225ac00d8ef4b2f5bf522234a"
+                   },
+                   {
+                       "id":  "w2-path-constraints",
+                       "kind":  "raw-byte-sha256",
+                       "passed":  true,
+                       "actual":  "65b28c78e45eb43d0e086588474b92b2369d8c4a2e97c2663b47ffff2926a315"
+                   },
+                   {
+                       "id":  "w2-adjudication-log",
+                       "kind":  "raw-byte-sha256",
+                       "passed":  true,
+                       "actual":  "3363ea72a4af6c754044e5a43998cb8f15197f9d62da8aa5e247162bcb922ad3"
+                   },
+                   {
+                       "id":  "final-60-frozen-input",
+                       "kind":  "raw-byte-sha256",
+                       "passed":  true,
+                       "actual":  "4fcc7c3e2c605f912890ddec5af7d4fa875c861d1636dcaf425a63ddb17f4b9d"
+                   },
+                   {
+                       "id":  "e-d2-r2-package",
+                       "kind":  "e-owned-external-not-available-to-owner",
+                       "passed":  true,
+                       "actual":  "NOT_REVERIFIED"
+                   },
+                   {
+                       "id":  "e-d2-r2-hash-report",
+                       "kind":  "e-owned-external-not-available-to-owner",
+                       "passed":  true,
+                       "actual":  "NOT_REVERIFIED"
+                   },
+                   {
+                       "id":  "owner-difficulty-gold-candidate",
+                       "kind":  "raw-byte-sha256",
+                       "passed":  true,
+                       "actual":  "15e28f4cf6807fbdc2aa3d1daae25219605be6a14325853a52cd9270765ad395"
+                   },
+                   {
+                       "id":  "owner-path-constraints-candidate",
+                       "kind":  "raw-byte-sha256",
+                       "passed":  true,
+                       "actual":  "86c8663c2ad55d80a86ebbd618f554480c395ea0d772f3e807318c3ce2fd3819"
+                   },
+                   {
+                       "id":  "owner-adjudication-public-index",
+                       "kind":  "raw-byte-sha256",
+                       "passed":  true,
+                       "actual":  "6a57019bc9909cbf69dd46216ee1db72a0e3ce9815913bd07c69b3da74bc8373"
+                   },
+                   {
+                       "id":  "owner-freeze-record-candidate",
+                       "kind":  "raw-byte-sha256",
+                       "passed":  true,
+                       "actual":  "bec68216bb9bb92f81c30f556cdd2685aff0b41e92be5f56dfde7f8fb5d98042"
+                   },
+                   {
+                       "id":  "owner-public-attestation",
+                       "kind":  "raw-byte-sha256",
+                       "passed":  true,
+                       "actual":  "76ce273c5f78e4305b5440039ce567d37893412df3bb25c6a14413471f1876b6"
+                   },
+                   {
+                       "id":  "owner-candidate-verification",
+                       "kind":  "raw-byte-sha256",
+                       "passed":  true,
+                       "actual":  "d08a0ced1ff8f78f7d194bab18ed5e982403f0c7efbcc8c7b161f8c4671ab317"
+                   },
+                   {
+                       "id":  "d47-ruling",
+                       "kind":  "raw-byte-sha256",
+                       "passed":  true,
+                       "actual":  "ab7f390325d772c11e663c83c394e794f6bc764b76eaf769488e1b6281363445"
+                   }
+               ],
+    "errors":  [
+
+               ],
+    "status":  "INPUT_BINDING_PASS_D3"
+}

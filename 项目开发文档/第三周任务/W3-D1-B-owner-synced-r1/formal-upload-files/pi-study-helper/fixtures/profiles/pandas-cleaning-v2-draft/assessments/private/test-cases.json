@@ -1,0 +1,117 @@
+{
+  "tests": [
+    {
+      "testId": "test-structure-hidden",
+      "visibility": "hidden",
+      "fileRef": "assessments/private/tests/test-structure-hidden.py",
+      "fixtureRefs": [
+        "dataset-public-orders"
+      ],
+      "dimensionId": "structure",
+      "blocking": true,
+      "assetHash": "sha256:935f988b1d21ebd927fec8015328599376ca0ce05be593130130c9ede7c4dc4e"
+    },
+    {
+      "testId": "test-missing-hidden",
+      "visibility": "hidden",
+      "fileRef": "assessments/private/tests/test-missing-hidden.py",
+      "fixtureRefs": [
+        "dataset-public-orders"
+      ],
+      "dimensionId": "missing",
+      "blocking": true,
+      "assetHash": "sha256:8d798c0cecd733579901a04630dbcdcb0333efaef731568467dda003abaa3e0f"
+    },
+    {
+      "testId": "test-duplicates-hidden",
+      "visibility": "hidden",
+      "fileRef": "assessments/private/tests/test-duplicates-hidden.py",
+      "fixtureRefs": [
+        "dataset-public-orders"
+      ],
+      "dimensionId": "duplicates",
+      "blocking": true,
+      "assetHash": "sha256:7f9449a3e924c734314649ffd056465ce19e3971e15b9a806c928360472b3be3"
+    },
+    {
+      "testId": "test-types-hidden",
+      "visibility": "hidden",
+      "fileRef": "assessments/private/tests/test-types-hidden.py",
+      "fixtureRefs": [
+        "dataset-public-orders"
+      ],
+      "dimensionId": "types",
+      "blocking": true,
+      "assetHash": "sha256:b3153bab7097369623ae2d6bfa8eae11f8414646d006030836f07e5e1e3b3285"
+    },
+    {
+      "testId": "test-practical-hidden-01",
+      "visibility": "hidden",
+      "fileRef": "assessments/private/tests/test-practical-hidden-01.py",
+      "fixtureRefs": [
+        "dataset-private-variant-01"
+      ],
+      "dimensionId": "invariants",
+      "blocking": true,
+      "assetHash": "sha256:6d762bf0059d7fb77368dbcdd42eb810d565e3c593008c8eced76262d7b20829"
+    },
+    {
+      "testId": "test-practical-hidden-02",
+      "visibility": "hidden",
+      "fileRef": "assessments/private/tests/test-practical-hidden-02.py",
+      "fixtureRefs": [
+        "dataset-private-variant-02"
+      ],
+      "dimensionId": "engineering",
+      "dimensionId": "invariants",
+      "blocking": true,
+      "assetHash": "sha256:e501c858969bd6ccefaf21585ad125fc7a26dc9a178b6c09cc52e16137ba5cd1"
+    },
+    {
+      "testId": "test-practical-hidden-structure",
+      "visibility": "hidden",
+      "fileRef": "assessments/private/tests/test-practical-hidden-structure.py",
+      "fixtureRefs": ["dataset-private-variant-02"],
+      "dimensionId": "structure",
+      "blocking": true,
+      "assetHash": "sha256:8092b3b4fbced655acb2a0fb65d94b84cfe44a197a824271503ebc57ac39e5c3"
+    },
+    {
+      "testId": "test-practical-hidden-missing",
+      "visibility": "hidden",
+      "fileRef": "assessments/private/tests/test-practical-hidden-missing.py",
+      "fixtureRefs": ["dataset-private-variant-02"],
+      "dimensionId": "missing",
+      "blocking": true,
+      "assetHash": "sha256:4da0a6df601fdad50d4481c6fce02dcc3b7f377c0d1b91a50e8af2b524d452f5"
+    },
+    {
+      "testId": "test-practical-hidden-duplicates",
+      "visibility": "hidden",
+      "fileRef": "assessments/private/tests/test-practical-hidden-duplicates.py",
+      "fixtureRefs": ["dataset-private-variant-02"],
+      "dimensionId": "duplicates",
+      "blocking": true,
+      "assetHash": "sha256:bceba5a6f97dac2df6929061b0e0590758e0e5edfaf76dfd5c8d9f9e7a0d0566"
+    },
+    {
+      "testId": "test-practical-hidden-types",
+      "visibility": "hidden",
+      "fileRef": "assessments/private/tests/test-practical-hidden-types.py",
+      "fixtureRefs": ["dataset-private-variant-02"],
+      "dimensionId": "types",
+      "blocking": true,
+      "assetHash": "sha256:a8d5cbe461f3ac525e3a954af39270b0306bf446bdb0baa9c9d7e92b7613ddf6"
+    },
+    {
+      "testId": "test-practical-engineering-static",
+      "visibility": "hidden",
+      "fileRef": "assessments/private/tests/test-practical-engineering-static.py",
+      "fixtureRefs": ["dataset-private-variant-02"],
+      "dimensionId": "engineering",
+      "blocking": false,
+      "assetHash": "sha256:4482632a8c545b1f9efdaa4558d40fe6e67b4c38ea96486d99c0b92f5c1887d0"
+    }
+  ],
+  "note": "Private assertions remain server-side and are not included in public projections."
+}

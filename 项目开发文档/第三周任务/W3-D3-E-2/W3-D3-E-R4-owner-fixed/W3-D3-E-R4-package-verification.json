@@ -1,0 +1,19 @@
+{
+  "schemaVersion": "w3-d3-e-r4-package-verification-v1",
+  "contractVersion": "W3-C5/W3-R2",
+  "expectedPayloadCount": 58,
+  "jsonParse": "PASS",
+  "duplicateJsonKeys": 0,
+  "powerShellParse": "PASS",
+  "baselineStructure": "PASS",
+  "inputBinding": "PASS_WITH_DECLARED_OWNER_MACHINE_SKIP_FOR_E_OWNED_EXTERNAL_FILES",
+  "ownerSafeHandoffCompatibility": "PASS",
+  "syntheticCounterexamples": "7/7 PASS",
+  "planMode": "8/8 PASS",
+  "d4Readiness": "NOT_READY_D_PENDING_AS_EXPECTED",
+  "forbiddenOwnerOnlyPayloadCount": 0,
+  "payloadMismatchCount": 0,
+  "formalV3Conclusion": "NOT_PRODUCED_D3",
+  "gitStatus": "NOT_COMMITTED / NOT_PUSHED",
+  "uploadLock": "NOT_REQUESTED"
+}

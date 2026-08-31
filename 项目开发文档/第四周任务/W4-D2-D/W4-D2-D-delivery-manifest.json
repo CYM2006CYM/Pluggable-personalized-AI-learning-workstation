@@ -1,0 +1,49 @@
+﻿{
+    "schemaVersion":  1,
+    "candidate":  "W4-D2-D",
+    "createdAt":  "2026-08-14T07:40:22.8934502Z",
+    "head":  "6b8d87541919ffba64bcc2845bfad47ffffcdf0a",
+    "originMain":  "6b8d87541919ffba64bcc2845bfad47ffffcdf0a",
+    "aCommit":  "4c52eb7c78fa80007aa9a8ab4e00768d71d3f3f5",
+    "bCommit":  "56398ab5f44283e9c10b6d66ec2f0732cc043790",
+    "revision3Seal":  {
+                          "entryCount":  78,
+                          "assetTreeSha256":  "e118fd65c4583821f686cba4faab5990a81d2149a8f73cf89af2c376ba15b352"
+                      },
+    "archives":  [
+                     {
+                         "name":  "W4-D2-D-safe-transfer-6b8d875.zip",
+                         "bytes":  44274,
+                         "sha256":  "909654d7b33decff8b17477cfedc3a61e61113ba7dddf36a002661e612e86806",
+                         "entries":  31,
+                         "purpose":  "safe-transfer"
+                     },
+                     {
+                         "name":  "W4-D2-D-owner-audit-6b8d875.zip",
+                         "bytes":  68190,
+                         "sha256":  "0d1246427df3755a373d46103d07041f435c677e02c8b30ba3c1d2d5063e92cb",
+                         "entries":  58,
+                         "purpose":  "owner-audit-with-raw-command-logs"
+                     }
+                 ],
+    "sidecars":  [
+                     "W4-D2-D-safe-transfer-6b8d875.zip.sha256",
+                     "W4-D2-D-owner-audit-6b8d875.zip.sha256"
+                 ],
+    "validation":  {
+                       "dTargeted":  "4 files / 27 passed",
+                       "affected":  "7 files / 179 passed",
+                       "typecheck":  "PASS",
+                       "recordings":  "13 / six classes / sensitive matches 0",
+                       "verify":  "73 of 74 files; 716 passed, 1 failed, 1 skipped",
+                       "knownLimitation":  "pre-existing W2 V2-6 fixed timeout only",
+                       "live":  "LIVE_NOT_RUN"
+                   },
+    "releaseState":  "NOT_COMMITTED_NOT_PUSHED_UPLOAD_LOCK_NOT_REQUESTED",
+    "claims":  [
+                   "no persistent Profile activation",
+                   "no HTTP/Web change",
+                   "no C start",
+                   "no W4 GO"
+               ]
+}

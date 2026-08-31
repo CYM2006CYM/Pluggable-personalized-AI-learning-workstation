@@ -1,0 +1,18 @@
+﻿{
+    "schemaVersion":  "w3-d3-e-r4-self-test-v1",
+    "contractVersion":  "W3-C5/W3-R2",
+    "executionStatus":  "NOT_RUN_D3",
+    "gateConclusion":  "NOT_PRODUCED_D3",
+    "checks":  {
+                   "safeSchemaAccepted":  true,
+                   "first20ContentMutationRejected":  true,
+                   "first20AdjudicationHashMutationRejected":  true,
+                   "d3ReadinessPlanAccepted":  true,
+                   "emptyFixedTraceCommandsDetected":  true,
+                   "missingD4TokenRejected":  true,
+                   "dPendingBlocksD4Execute":  true
+               },
+    "allPassed":  true,
+    "workDirectory":  "C:\\Users\\win11\\AppData\\Local\\Temp\\w3-d3-e-r4-self-test-062dc3bb44684aeba429b6760d6e3c93",
+    "note":  "Synthetic rejection tests only; no D4, Python evaluator, formal 60-case system, real key, or online model was run."
+}

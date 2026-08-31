@@ -1,0 +1,88 @@
+﻿{
+    "schemaVersion":  "w3-d3-gate-evidence-template-v1",
+    "contractVersion":  "W3-C5/W3-R2",
+    "deliveryStage":  "W3-D3",
+    "gate":  "V3-8",
+    "gateConfigSha256":  null,
+    "resolvedInputManifestSha256":  null,
+    "testedCommit":  null,
+    "environment":  null,
+    "originalCommands":  [
+                             {
+                                 "id":  "v3-8-web-tests",
+                                 "executable":  "npm.cmd",
+                                 "arguments":  [
+                                                   "run",
+                                                   "test:web"
+                                               ],
+                                 "workingDirectory":  "pi-study-helper",
+                                 "expectedExitCode":  0
+                             },
+                             {
+                                 "id":  "v3-8-typecheck",
+                                 "executable":  "npm.cmd",
+                                 "arguments":  [
+                                                   "run",
+                                                   "typecheck"
+                                               ],
+                                 "workingDirectory":  "pi-study-helper",
+                                 "expectedExitCode":  0
+                             },
+                             {
+                                 "id":  "v3-8-web-boundary",
+                                 "executable":  "powershell.exe",
+                                 "arguments":  [
+                                                   "-NoProfile",
+                                                   "-ExecutionPolicy",
+                                                   "Bypass",
+                                                   "-File",
+                                                   "{ToolRoot}/Test-WebBoundary.ps1",
+                                                   "-WebRoot",
+                                                   "{RepositoryRoot}/pi-study-helper/src/web",
+                                                   "-SourceRoot",
+                                                   "{RepositoryRoot}/pi-study-helper/src",
+                                                   "-OutputFile",
+                                                   "{OutputRoot}/v3-8-web-boundary.json"
+                                               ],
+                                 "workingDirectory":  ".",
+                                 "expectedExitCode":  0
+                             }
+                         ],
+    "expectedMetrics":  {
+                            "expectedTestItems":  81,
+                            "routeCount":  6,
+                            "pageStateCases":  30,
+                            "activityModes":  4,
+                            "obsoleteLearnRouteMatches":  0,
+                            "draftTransitionChecks":  3,
+                            "leakMatches":  0
+                        },
+    "actualMetrics":  null,
+    "rawOutputFiles":  [
+
+                       ],
+    "exitCodes":  [
+
+                  ],
+    "evidenceFiles":  [
+                          "v3-8-command-evidence.json",
+                          "v3-8-web-boundary.json",
+                          "v3-8-file-hashes.sha256"
+                      ],
+    "evidenceSha256":  [
+
+                       ],
+    "failureOwner":  "E",
+    "executionStatus":  "NOT_RUN_D3",
+    "gateConclusion":  "NOT_PRODUCED_D3",
+    "notes":  "D4执行时复制本模板到证据目录填写；不得修改D3冻结原件。",
+    "testLayer":  "确定性层",
+    "d47Decision":  "W3-D47-TEST-LAYERS-1",
+    "failureClassifications":  [
+                                   "CODE_DEFECT",
+                                   "ENVIRONMENT_MISMATCH",
+                                   "AUDIT_INPUT_INCOMPLETE",
+                                   "LIVE_NOT_RUN",
+                                   "MOCK_FALLBACK_USED"
+                               ]
+}

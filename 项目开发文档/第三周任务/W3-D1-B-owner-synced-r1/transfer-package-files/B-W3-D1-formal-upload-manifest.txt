@@ -1,0 +1,27 @@
+BASE_HEAD=d50ad4e8c0fe8e1ec3822b164e973897e6aeca91
+FORMAL_FILE_COUNT=23
+HASH_MODE=raw-bytes-in-transfer-package
+
+eaefe9cfbbf8f6144e8299abfc0d82b66cb9ffe8dd1d783e841c5bdfac2690bf  evaluation/golden/annotations/b-final-021-060.jsonl
+4a1e2c82a77cb63d58b5030e7315bccd32cb3e708d316e767a7004c339ab47e9  evaluation/golden/annotations/B岗位W3-D1封存与校验报告.md
+fa242a6d371903b4a3cb5e908be15d71efd9f4c5053078e88a547811765e33e2  evaluation/golden/annotations/b-final-021-060.seal.candidate.json
+bdbb6f405794dd44d6bca25c4f05a648364fe378ddab61e9870ecc3deaa83cff  evaluation/golden/annotations/handoff-w3-d1-b.md
+e5aa6b3f025a4fb142813751b2e1a97ff993623f8696826515aa3e01ddc068fb  evaluation/golden/annotations/w3-d1-b-candidate-manifest.json
+72fc6d27376f39e10e719dc3e31ca0e995101ef1a51073f34d0b3e38685cfc1b  evaluation/golden/annotations/w3-d1-b-verification-evidence.md
+bbbc9105cc5a836c4e5f50fc379c9b67c1e61c27c1fd81934136cbbe4bfe94e3  pi-study-helper/fixtures/profiles/pandas-cleaning-v2-draft/activities/learning-activities.json
+3ca1df592f78366a73bf07c1ea82a9dc8a5eb24ae92da20fbab1d8f7a9894426  pi-study-helper/fixtures/profiles/pandas-cleaning-v2-draft/assessments/private/task-bundles.json
+373ced00c649cad669b300cad61f884018726fd9c34b276329104056635bc27c  pi-study-helper/fixtures/profiles/pandas-cleaning-v2-draft/assessments/private/test-cases.json
+8092b3b4fbced655acb2a0fb65d94b84cfe44a197a824271503ebc57ac39e5c3  pi-study-helper/fixtures/profiles/pandas-cleaning-v2-draft/assessments/private/tests/test-practical-hidden-structure.py
+4da0a6df601fdad50d4481c6fce02dcc3b7f377c0d1b91a50e8af2b524d452f5  pi-study-helper/fixtures/profiles/pandas-cleaning-v2-draft/assessments/private/tests/test-practical-hidden-missing.py
+bceba5a6f97dac2df6929061b0e0590758e0e5edfaf76dfd5c8d9f9e7a0d0566  pi-study-helper/fixtures/profiles/pandas-cleaning-v2-draft/assessments/private/tests/test-practical-hidden-duplicates.py
+a8d5cbe461f3ac525e3a954af39270b0306bf446bdb0baa9c9d7e92b7613ddf6  pi-study-helper/fixtures/profiles/pandas-cleaning-v2-draft/assessments/private/tests/test-practical-hidden-types.py
+4482632a8c545b1f9efdaa4558d40fe6e67b4c38ea96486d99c0b92f5c1887d0  pi-study-helper/fixtures/profiles/pandas-cleaning-v2-draft/assessments/private/tests/test-practical-engineering-static.py
+b84d461a05207f6fa17f808af0f1b67889c88b6cc550962a9378135178e26df8  pi-study-helper/fixtures/profiles/pandas-cleaning-v2-draft/quality/prepare-w3-b-d1-delivery.py
+2d61f917984621e77c7d9b2631ea02b84d0fd60bd0dc1d78889686368c6a979d  pi-study-helper/fixtures/profiles/pandas-cleaning-v2-draft/quality/build-w3-d1-package.py
+17e824dca7d71bdeaef2464df981aa71d41ba7da3111cebd824e046405bbd0bd  pi-study-helper/fixtures/profiles/pandas-cleaning-v2-draft/quality/verify-w3-b-static-check.py
+ddf44428d6c9ab25dfbd6db3e45bf408ad2ec9fdee60965b48833f4e8f75306f  pi-study-helper/fixtures/profiles/pandas-cleaning-v2-draft/quality/c-execution-evidence.json
+1636ef618ad0ae09ff1c3bd2f313df8d3d64aa96bf218d68cda33bd15f381aed  pi-study-helper/tests/pandas-cleaning-v2-assets.test.ts
+01f9c2fd0b356dd04c729fc8bd7b6f87bf1a84ecc9e1cf419d9a4bc31db883ac  pi-study-helper/tests/w3-b-d1-delivery.test.ts
+880a988dabd30c1067621ca5323b5c89c13449cbd60ad93b50f850b22f0388dd  pi-study-helper/fixtures/profiles/pandas-cleaning-v2-draft/rubrics/rubric-practical.json
+5547a5b20a403e546c29aed3510cac982f1ab0467ae26de2425fbf97eb19357f  pi-study-helper/fixtures/profiles/pandas-cleaning-v2-draft/rubrics/rubric-structure.json
+4472528da92359df20d0d494e4f42a74d06b04e37fec4fe2bd809ecac23034a2  w3-d1-b-rectified-candidate.zip

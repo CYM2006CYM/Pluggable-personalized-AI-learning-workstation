@@ -1,0 +1,83 @@
+{
+  "schemaVersion": "w3-d3-owner-readonly-gold-candidate-v1",
+  "recordType": "owner_readonly_gold_candidate_freeze",
+  "status": "OWNER_READONLY_GOLD_CANDIDATE",
+  "contractVersion": "W3-C5/W3-R2",
+  "decisionBasis": "D44",
+  "baseCommit": "bd1b599524ef2e3362d14a422d97debbf240f70f",
+  "createdAt": "2026-08-09T08:07:37.754Z",
+  "scope": {
+    "firstCaseId": "final-001",
+    "lastCaseId": "final-060",
+    "totalCaseCount": 60,
+    "newlyAdjudicatedCaseCount": 40
+  },
+  "qualification": {
+    "status": "PASS",
+    "sha256": "da1da245d18b0c59bb36cae75cb2449b7e6d9076e88435e78eddf4584f6bcb0f",
+    "qualifiedAt": "2026-08-09T01:46:50+08:00"
+  },
+  "sourceHashes": {
+    "frozenInputNormalizedSha256": "b77ba4902003ba20bc5b233c4797838eb26325d1b38fd02bc68ba02206cb1d1c",
+    "bAnnotationNormalizedSha256": "eaefe9cfbbf8f6144e8299abfc0d82b66cb9ffe8dd1d783e841c5bdfac2690bf",
+    "eAnnotationRawSha256": "af450ede185be215e12e5d13688ebc7b34cb3af9816f50803e5612c2219da266",
+    "mechanicalDifferencesSha256": "7eff39cf01d543b8a83e745a7d27275f564969f9879fa59f08917d779f33c125",
+    "dualSealQualificationSha256": "da1da245d18b0c59bb36cae75cb2449b7e6d9076e88435e78eddf4584f6bcb0f"
+  },
+  "adjudicationMethod": {
+    "kind": "FROZEN_INPUT_SIGNATURE_PRECEDENT",
+    "signatureCount": 5,
+    "description": "目标、预算和诊断答案同签名时复用W2已冻结负责人裁决；B/E结构化意见必须分别复现同签名既有双标模式，否则停止生成。",
+    "decisionCounts": {
+      "B_WITH_FORBIDDEN_ACTION_UNION": 8,
+      "RETAIN_B": 32
+    }
+  },
+  "payload": {
+    "difficulty": {
+      "file": "difficulty-gold.candidate.jsonl",
+      "sha256": "15e28f4cf6807fbdc2aa3d1daae25219605be6a14325853a52cd9270765ad395",
+      "byteLength": 69836,
+      "lineCount": 60
+    },
+    "paths": {
+      "file": "path-constraints.candidate.jsonl",
+      "sha256": "86c8663c2ad55d80a86ebbd618f554480c395ea0d772f3e807318c3ce2fd3819",
+      "byteLength": 85088,
+      "lineCount": 60
+    },
+    "adjudication": {
+      "file": "adjudication-log.candidate.jsonl",
+      "sha256": "1f82357499c95b133b60970a92c5bb6de43b797fc5b7691826f4143f3b67fd95",
+      "byteLength": 313612,
+      "lineCount": 60
+    },
+    "differences": {
+      "file": "mechanical-differences-owner-only.jsonl",
+      "sha256": "7eff39cf01d543b8a83e745a7d27275f564969f9879fa59f08917d779f33c125",
+      "byteLength": 44224,
+      "lineCount": 40
+    }
+  },
+  "checks": {
+    "dualSealQualificationPass": true,
+    "schemaValid": true,
+    "coverage60Of60": true,
+    "stableCaseOrder": true,
+    "first20RawBytesPreserved": true,
+    "final021To060NegotiationStatus": "SKIPPED_BY_D44",
+    "sealedOriginalsModified": false,
+    "formal60SystemRunBeforeFreezeCount": 0
+  },
+  "access": {
+    "readonlyCandidate": true,
+    "formalGold": false,
+    "gitUploadAuthorized": false,
+    "visibleToE": "candidate payload and freeze hashes only",
+    "hiddenFromE": [
+      "B/E sealed originals",
+      "mechanical differences",
+      "owner working notes"
+    ]
+  }
+}

@@ -1,0 +1,187 @@
+{
+  "schemaVersion": 1,
+  "candidate": "W4-D2-D-3",
+  "root": "w4-d2-d3-package-stage-20260814",
+  "files": [
+    {
+      "path": "新版设计文档-重写版\\第四周任务\\handoff-w4-d-d2.md",
+      "bytes": 3725,
+      "sha256": "6405d50816b31c0360f87859e6499628f321fe09076061ecc93e873747769182"
+    },
+    {
+      "path": "baseline-and-hashes.json",
+      "bytes": 509,
+      "sha256": "681db678d2d3b4557d25638338c267b6ecb5080ac1f66d5a8b99faaade3bfef1"
+    },
+    {
+      "path": "d-r1-test-mapping.md",
+      "bytes": 2714,
+      "sha256": "10ecf9f856d811e9891add9e26a1b78650d3b3f8cf8f9e8b30db8d179895b44e"
+    },
+    {
+      "path": "environment-facts.json",
+      "bytes": 246,
+      "sha256": "ca6890db4530f0b7e902fc03c7bcbbbe82f12b5e7be3a261feb71209ec0c920d"
+    },
+    {
+      "path": "git-status.txt",
+      "bytes": 1194,
+      "sha256": "c4f6020523fc4f478c3cdf929b63b92ee740ee044e16c2cec1a9f2b30eb736f4"
+    },
+    {
+      "path": "pi-study-helper\\.gitignore",
+      "bytes": 448,
+      "sha256": "42295c6642dd4e1fd80bf4781de5116ae0a5fa13793e1518c64bafab1cea23b0"
+    },
+    {
+      "path": "pi-study-helper\\fixtures\\model-prompts\\w4\\capability-scorer.md",
+      "bytes": 460,
+      "sha256": "e555e0381b7517f58c97c92ffcc8af86b15e35cf4d2d927cfd07cb4bebd8954a"
+    },
+    {
+      "path": "pi-study-helper\\fixtures\\model-prompts\\w4\\defender.md",
+      "bytes": 178,
+      "sha256": "a3eeb0431840ae836b496a457e558bdd7acbc53b7715f17f0d869365d05cf0fb"
+    },
+    {
+      "path": "pi-study-helper\\fixtures\\model-prompts\\w4\\generator.md",
+      "bytes": 353,
+      "sha256": "63726a43c74397539e59af08e082d3483510ac2630e562911ba2138029b046a1"
+    },
+    {
+      "path": "pi-study-helper\\fixtures\\model-prompts\\w4\\hunter.md",
+      "bytes": 271,
+      "sha256": "2be646fe34d16d99b3556015b15d7bd1abd5faad7f65364ce7f9300fc7aa1ce2"
+    },
+    {
+      "path": "pi-study-helper\\fixtures\\model-prompts\\w4\\judge.md",
+      "bytes": 192,
+      "sha256": "618d1388a3f8d0b16bad3cc07a90121133a32abd714237ea729ed1d8055b3b31"
+    },
+    {
+      "path": "pi-study-helper\\fixtures\\model-prompts\\w4\\model-configuration.json",
+      "bytes": 362,
+      "sha256": "ab58ea6d3a7d3d44e5ab53d12b5e1dc72e9ac9ccc8b4c7994e8dca490bea9bec"
+    },
+    {
+      "path": "pi-study-helper\\fixtures\\model-prompts\\w4\\README.md",
+      "bytes": 373,
+      "sha256": "1e4730444f53e2a7e42a142bbf3e01dcd4aee7129288970f51977f5bcc1bc18d"
+    },
+    {
+      "path": "pi-study-helper\\fixtures\\model-responses\\w4\\recorded-responses.json",
+      "bytes": 7505,
+      "sha256": "4dc9fae61d7d179947fe24ed661b5a6826484f9c27e79a0b2fc39a55a186061c"
+    },
+    {
+      "path": "pi-study-helper\\fixtures\\model-responses\\w4\\validate-w4-recordings.mjs",
+      "bytes": 2166,
+      "sha256": "2cabd3cfbb3b1984b6bcc989ce63070023e3331cd6d1a3c383851b2e8c0ec2ff"
+    },
+    {
+      "path": "pi-study-helper\\scripts\\w4-d-validation\\command-results.json",
+      "bytes": 10284,
+      "sha256": "0bd779836895fbcb1ea5b5ad740dcb6b98a5f82e57fd32818f8fca9c54532a95"
+    },
+    {
+      "path": "pi-study-helper\\scripts\\w4-d-validation\\proposed-submit-manifest.json",
+      "bytes": 6062,
+      "sha256": "ba42819646feece1ba15e2ed5627d61db374272622577bef6ffe33103c483c5a"
+    },
+    {
+      "path": "pi-study-helper\\scripts\\w4-d-validation\\recorded-response-index.json",
+      "bytes": 3577,
+      "sha256": "c9b208f81bf43c12fc7e2ae87ec156570d933c68bd28b0361c67cc4f37edfbf2"
+    },
+    {
+      "path": "pi-study-helper\\scripts\\w4-d-validation\\scope-audit.md",
+      "bytes": 1615,
+      "sha256": "46966c576b84bca2bfd3eb44c0d46d99c75129396d486ae5cc6a306a7259244c"
+    },
+    {
+      "path": "pi-study-helper\\scripts\\w4-d-validation\\security-scan-result.json",
+      "bytes": 3335,
+      "sha256": "f7da92f4b0efc39f4579a731b47c1d5b5f12c2f8600d3586b612e91be3c9b415"
+    },
+    {
+      "path": "pi-study-helper\\scripts\\w4-d-validation\\test-mapping.md",
+      "bytes": 3172,
+      "sha256": "d9194f3d3b723974bb101b0ecf30578947e23992fb97430590a25817611a090e"
+    },
+    {
+      "path": "pi-study-helper\\scripts\\w4-d-validation\\validation-report.md",
+      "bytes": 4510,
+      "sha256": "7af1b02cb6e4e1e1f9ed38868e9d6817d0a5c09cd7ad9a46c08184bc16fe6a6c"
+    },
+    {
+      "path": "pi-study-helper\\src\\application\\adaptive-content-service.ts",
+      "bytes": 31706,
+      "sha256": "ac606f5570abf53d6c06fd1a4a4e09e33dd8b5d0065b5196a5eb31dc8b1d64ae"
+    },
+    {
+      "path": "pi-study-helper\\src\\application\\capability-task-service.ts",
+      "bytes": 14735,
+      "sha256": "a247b3981f44f013a752e6c7808bf0048ee75b408bef1bcddefa682fa628d0b3"
+    },
+    {
+      "path": "pi-study-helper\\src\\graphs\\w4-d-graph-factory.ts",
+      "bytes": 3820,
+      "sha256": "217cba6fcaf404a3dee280d8c39e56632ca6ecf169c9f45bba3883af31382b47"
+    },
+    {
+      "path": "pi-study-helper\\src\\infrastructure\\profile-adaptive-source-provider.ts",
+      "bytes": 4822,
+      "sha256": "dbb9272ca6e23bc889287690294babf07844efb778da3351bb7c648f1193a434"
+    },
+    {
+      "path": "pi-study-helper\\src\\infrastructure\\session-capability-evidence-provider.ts",
+      "bytes": 8100,
+      "sha256": "d1ae45ba8ff213e3335ca88c64cce2f0bc5d9142d622e1339e3b8e4ce0f88695"
+    },
+    {
+      "path": "pi-study-helper\\src\\infrastructure\\w4-private-runtime-store.ts",
+      "bytes": 2575,
+      "sha256": "9dcac463c234b685f1416aa7990bcad04b0cf55db8469cbdf4cc221e98549af2"
+    },
+    {
+      "path": "pi-study-helper\\tests\\adaptive-content-service.test.ts",
+      "bytes": 15036,
+      "sha256": "60b0ee8add8ae136076361495850106b3e1ed2769072620ae8e4800c5c0e2e96"
+    },
+    {
+      "path": "pi-study-helper\\tests\\capability-task-service.test.ts",
+      "bytes": 8066,
+      "sha256": "03760f965660b033b1552b3a2967611983feb90944b0901ef6b1883a58452c7f"
+    },
+    {
+      "path": "pi-study-helper\\tests\\session-capability-evidence-provider.test.ts",
+      "bytes": 7645,
+      "sha256": "f2baf76baf819c710aa377d3a5184bd80e02e661b689ecb3abb8ac56134128dc"
+    },
+    {
+      "path": "pi-study-helper\\tests\\w4-d-fixed-fallback-integration.test.ts",
+      "bytes": 5365,
+      "sha256": "bcd64707851e4835fdd82af39f22f0a707d31c63fa1998507dc675fdff17d97e"
+    },
+    {
+      "path": "pi-study-helper\\tests\\w4-d-formal-ad-binding.test.ts",
+      "bytes": 15944,
+      "sha256": "89d54ea3d00ce09ab98504a37080dcc28e4d0242d9b98a2641c24719fb587770"
+    },
+    {
+      "path": "pi-study-helper\\tests\\w4-d-graph-factory.test.ts",
+      "bytes": 1914,
+      "sha256": "09d349f97f9e0e359d95ebb0c6bacb5c06840e360b255af249213e5888e3c848"
+    },
+    {
+      "path": "pi-study-helper\\tests\\w4-d-recorded-responses.test.ts",
+      "bytes": 5584,
+      "sha256": "dea91bab83cffa37fbe923e005abad08a797425caf7c19eb5996031d63e1c5d8"
+    },
+    {
+      "path": "rectification-closure-report.md",
+      "bytes": 1334,
+      "sha256": "671c91174533fbeec77e472655b0882e88a4923b35ceb284985b577bb22f579f"
+    }
+  ]
+}

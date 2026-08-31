@@ -1,0 +1,27 @@
+﻿{
+    "schemaVersion":  "w3-d4-readiness-r4-v1",
+    "contractVersion":  "W3-C5/W3-R2",
+    "mode":  "Plan",
+    "requiredInputIds":  [
+                             "a-d3-formal-commit",
+                             "a-d3-deterministic-test-files",
+                             "d-d3-formal-commit",
+                             "d-d3-fixed-trace-test-manifest",
+                             "owner-difficulty-gold-candidate",
+                             "owner-path-constraints-candidate",
+                             "owner-adjudication-public-index",
+                             "owner-freeze-record-candidate",
+                             "owner-public-attestation",
+                             "owner-candidate-verification"
+                         ],
+    "pendingInputIds":  [
+                            "d-d3-formal-commit",
+                            "d-d3-fixed-trace-test-manifest"
+                        ],
+    "fixedTraceCommandsReady":  false,
+    "errors":  [
+
+               ],
+    "readiness":  "NOT_READY_FOR_D4_EXECUTION",
+    "fullV3ConclusionAllowed":  false
+}

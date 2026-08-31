@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "status": "RUN_COMPLETE",
+  "dataMode": "MEASURED_FROM_LOCAL_WEB_API",
+  "runRoot": "full-e2e-20260901-final",
+  "summary": "三组独立 Session 已完成诊断、路径、活动、代码评测、错题补救和最终总结。实时客观题 AgentRun 不存在 fallback。",
+  "cases": [
+    {
+      "caseId": "CASE-A-BEGINNER",
+      "sessionId": "session-1450921263725c865c33493a",
+      "activityCount": 14,
+      "aiLiveQuizRunCount": 7,
+      "codePassCount": 6,
+      "remediationStatus": "improved",
+      "completed": true
+    },
+    {
+      "caseId": "CASE-B-INTERMEDIATE",
+      "sessionId": "session-afda89ac567093a4dbfd341c",
+      "activityCount": 10,
+      "aiLiveQuizRunCount": 5,
+      "codePassCount": 4,
+      "remediationStatus": "improved",
+      "completed": true
+    },
+    {
+      "caseId": "CASE-C-ADVANCED",
+      "sessionId": "session-aaba543301a8835595c57504",
+      "activityCount": 4,
+      "aiLiveQuizRunCount": 2,
+      "codePassCount": 1,
+      "remediationStatus": "improved",
+      "completed": true
+    }
+  ],
+  "activityAgentRuns": {
+    "total": 14,
+    "statusSucceeded": 14,
+    "resultOriginAiLive": 14,
+    "fallback": 0,
+    "generatorExecuted": 10,
+    "reviewCacheReused": 4,
+    "safetyExecuted": 10,
+    "hunterExecuted": 10,
+    "hunterHighRiskFindings": 0,
+    "defenderExecuted": 0,
+    "defenderSkippedReason": "Hunter 未报告 high 风险问题，按条件路由直接交 Judge。",
+    "judgeAccepted": 10,
+    "publishSucceeded": 14,
+    "averageDurationMs": 37642.9,
+    "maxDurationMs": 83336
+  },
+  "personalizedTipAgentRuns": {
+    "total": 11,
+    "resultOriginAiLive": 11,
+    "statusSucceeded": 11
+  },
+  "codeEvaluation": {
+    "completedActivities": 11,
+    "passedActivities": 11,
+    "testPointsPerActivity": 5,
+    "passedTestPoints": 55
+  },
+  "safetyBoundary": {
+    "apiKeysIncluded": false,
+    "hiddenTestsIncluded": false,
+    "privateRubricsIncluded": false,
+    "referenceSolutionsIncluded": false,
+    "rawCodeSubmissionsIncluded": false
+  }
+}

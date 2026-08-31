@@ -1,0 +1,80 @@
+﻿{
+    "schemaVersion":  "w3-d3-gate-config-v1",
+    "contractVersion":  "W3-C5/W3-R2",
+    "deliveryStage":  "W3-D3",
+    "testLayer":  "确定性层",
+    "d47Decision":  "W3-D47-TEST-LAYERS-1",
+    "executionPolicy":  "PLAN_ONLY_D3_EXPLICIT_W3_D4_TOKEN_REQUIRED",
+    "evidenceSha256Method":  "SHA-256 over raw file bytes; lowercase hexadecimal",
+    "gate":  "V3-4",
+    "title":  "C边界与正式事实所有权",
+    "purpose":  "扫描C源码和公共输出，确认C止于ActivityResult且不写正式事实。",
+    "ownerOnFailure":  "C（若A事务公开缺口则点名A）",
+    "requiredInputIds":  [
+                             "c-formal-commit",
+                             "c-binding-fix-commit",
+                             "c-environment-lock",
+                             "a-d3-formal-commit",
+                             "a-d3-deterministic-test-files"
+                         ],
+    "commands":  [
+                     {
+                         "id":  "v3-4-port-tests",
+                         "executable":  "npm.cmd",
+                         "arguments":  [
+                                           "test",
+                                           "--",
+                                           "--maxWorkers=1",
+                                           "--run",
+                                           "tests/code-evaluation-port.test.ts",
+                                           "tests/evaluation-protocol.test.ts",
+                                           "tests/activity-runtime-service.test.ts",
+                                           "tests/profile-bound-session-runtime.test.ts"
+                                       ],
+                         "workingDirectory":  "pi-study-helper",
+                         "expectedExitCode":  0
+                     },
+                     {
+                         "id":  "v3-4-source-scan",
+                         "executable":  "powershell.exe",
+                         "arguments":  [
+                                           "-NoProfile",
+                                           "-ExecutionPolicy",
+                                           "Bypass",
+                                           "-File",
+                                           "{ToolRoot}/Test-CBoundary.ps1",
+                                           "-RepositoryRoot",
+                                           "{RepositoryRoot}",
+                                           "-OutputFile",
+                                           "{OutputRoot}/v3-4-source-scan.json"
+                                       ],
+                         "workingDirectory":  ".",
+                         "expectedExitCode":  0
+                     }
+                 ],
+    "expectedMetrics":  {
+                            "expectedTestItems":  6,
+                            "cFilesScanned":  4,
+                            "forbiddenWriteMatches":  0,
+                            "publicReturnType":  "ActivityResult",
+                            "formalFactsOwner":  "A"
+                        },
+    "mechanicalPassConditions":  [
+                                     "C源码不导入正式事实仓储能力",
+                                     "C无Attempt/Evidence/KnowledgeState/Path写入",
+                                     "公共返回只为ActivityResult",
+                                     "正式事实由A事务仓储公开"
+                                 ],
+    "outputContract":  [
+                           "v3-4-command-evidence.json",
+                           "v3-4-source-scan.json",
+                           "v3-4-file-hashes.sha256"
+                       ],
+    "failureClassifications":  [
+                                   "CODE_DEFECT",
+                                   "ENVIRONMENT_MISMATCH",
+                                   "AUDIT_INPUT_INCOMPLETE",
+                                   "LIVE_NOT_RUN",
+                                   "MOCK_FALLBACK_USED"
+                               ]
+}

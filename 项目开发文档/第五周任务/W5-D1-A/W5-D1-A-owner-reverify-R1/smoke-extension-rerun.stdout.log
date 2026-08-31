@@ -1,0 +1,5 @@
+
+> pi-study-helper@0.1.0 smoke:extension
+> node scripts/smoke-extension.mjs
+
+pi 已成功解析并初始化 Pi Study Helper extension。

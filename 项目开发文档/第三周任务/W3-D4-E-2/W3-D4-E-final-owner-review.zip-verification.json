@@ -1,0 +1,19 @@
+﻿{
+    "schemaVersion":  "w3-d4-e-final-zip-entry-recheck-v1",
+    "checkedAt":  "2026-08-10T22:50:26.2007764+08:00",
+    "zip":  "W3-D4-E-final-owner-review.zip",
+    "zipSha256":  "48bca13aff9a9491ea4ed76730eb554230a1a9a4c382a15ed1a5404891c013fa",
+    "manifestEntries":  143,
+    "zipFileEntries":  145,
+    "matchedManifestEntries":  143,
+    "missingCount":  0,
+    "mismatchCount":  0,
+    "missing":  [
+
+                ],
+    "mismatches":  [
+
+                   ],
+    "payloadDirectoryRecheckPresent":  true,
+    "status":  "PASS"
+}

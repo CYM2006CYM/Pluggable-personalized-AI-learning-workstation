@@ -1,0 +1,18 @@
+﻿{
+    "schemaVersion":  1,
+    "candidate":  "W4-D2-D-2",
+    "createdAt":  "2026-08-14T19:08:00+08:00",
+    "status":  "NOT_COMMITTED_NOT_PUSHED_UPLOAD_LOCK_NOT_REQUESTED",
+    "safeTransfer":  {
+                         "file":  "W4-D2-D-2-safe-transfer-6b8d875.zip",
+                         "sha256":  "989cb6fbd5611841e159bf28649664dd646e06081e87401d6b09be955e0faa84",
+                         "bytes":  57766
+                     },
+    "ownerAudit":  {
+                       "file":  "W4-D2-D-2-owner-audit-6b8d875.zip",
+                       "sha256":  "7c7f973dcb29ef6fc1ef8870f4fb98ea786ad6895df6949cda8b089ce3d3f86c",
+                       "bytes":  63075
+                   },
+    "verify":  "exitCode=1; sole failure W2 V2-6 30s timeout; D scope PASS",
+    "liveStatus":  "LIVE_NOT_RUN"
+}

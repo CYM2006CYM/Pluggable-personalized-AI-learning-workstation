@@ -1,0 +1,8 @@
+
+> pi-study-helper@0.1.0 verify
+> npm run typecheck && npm test -- --maxWorkers=1 && npm run check:docs && npm run smoke:extension && npm run check:release
+
+
+> pi-study-helper@0.1.0 typecheck
+> tsc --noEmit && tsc -p tsconfig.test.json && tsc -p tsconfig.web.json
+

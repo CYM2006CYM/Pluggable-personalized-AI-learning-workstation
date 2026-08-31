@@ -1,0 +1,22 @@
+﻿{
+    "manifest":  "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\outputs\\W4-D1-B-3-release-final-v3-delivery-manifest.json",
+    "owner":  {
+                  "formalCommandResultsIncluded":  true,
+                  "byteLength":  239220,
+                  "zipEntryCount":  214,
+                  "finalRawCommandLogsIncluded":  true,
+                  "sha256":  "d74814fba925b0c4fbeaf5915080b39dfcac047475551a7874f11c702f331c6d",
+                  "sidecar":  "d74814fba925b0c4fbeaf5915080b39dfcac047475551a7874f11c702f331c6d  W4-D1-B-3-release-final-v3-owner-audit.zip",
+                  "privateAnswerIncluded":  true
+              },
+    "sidecarsExternal":  true,
+    "zipContainsOwnSidecar":  false,
+    "status":  "PASS",
+    "transport":  {
+                      "privateAnswerExcluded":  true,
+                      "sha256":  "bb0dfdf19a1da171e49cad4f1db85184bd159ebf020f04d4c5e62557134321ea",
+                      "byteLength":  79503,
+                      "zipEntryCount":  50,
+                      "sidecar":  "bb0dfdf19a1da171e49cad4f1db85184bd159ebf020f04d4c5e62557134321ea  W4-D1-B-3-release-final-v3-transport.zip"
+                  }
+}

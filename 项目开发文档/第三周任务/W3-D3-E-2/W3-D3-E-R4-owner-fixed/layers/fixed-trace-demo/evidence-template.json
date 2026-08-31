@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "w3-d4-fixed-trace-evidence-r4-v1",
+  "contractVersion": "W3-C5/W3-R2",
+  "deliveryStage": "W3-D4",
+  "executionStatus": "NOT_RUN_D3",
+  "dFormalCommit": "PENDING",
+  "testFiles": [],
+  "commands": [],
+  "traceClasses": {},
+  "onlineModelStatus": "LIVE_NOT_RUN",
+  "fallbackStatus": "NOT_EVALUATED",
+  "evidenceSha256": "PENDING",
+  "layerConclusion": "NOT_PRODUCED_D3"
+}

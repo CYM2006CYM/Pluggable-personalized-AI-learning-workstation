@@ -1,0 +1,4 @@
+
+> pi-study-helper@0.1.0 smoke:extension
+> node scripts/smoke-extension.mjs
+

@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "evidenceId": "C_D33_STEPS_1_5_PASS",
+  "evidenceType": "owner_independent_v2_3_environment_verification",
+  "contract": "W2-C2/W2-R5",
+  "contractSupplement": "W2-V2-3-ENV-1",
+  "recordedDate": "2026-08-03",
+  "executedBy": "owner",
+  "evidenceOwner": "owner",
+  "positiveRun": {
+    "status": "PASS",
+    "v23Status": "PASS",
+    "contractSupplement": "W2-V2-3-ENV-1",
+    "environment": {
+      "expectedPandas": "3.0.5",
+      "python": "3.13.14",
+      "pandas": "3.0.5",
+      "platform": "Windows 11"
+    },
+    "environmentPreflight": {
+      "status": "PASS"
+    },
+    "command": "python .\\pi-study-helper\\scripts\\w2-data-validation\\audit_v23.py --profile-root .\\pi-study-helper\\fixtures\\profiles\\pandas-cleaning-v2-draft --manifest-audit \"$evidenceDir\\formal-binding.json\" --output \"$evidenceDir\\v23-formal.json\"",
+    "exitCode": 0,
+    "classifications": [],
+    "blockers": [],
+    "result": "complete_v2_3_pass"
+  },
+  "negativeRun": {
+    "status": "BLOCKED",
+    "v23Status": "BLOCKED",
+    "contractSupplement": "W2-V2-3-ENV-1",
+    "environment": {
+      "expectedPandas": "3.0.5",
+      "python": "3.13.14",
+      "pandas": "2.3.3",
+      "platform": "Windows 11"
+    },
+    "environmentPreflight": {
+      "status": "BLOCKED"
+    },
+    "command": "python .\\pi-study-helper\\scripts\\w2-data-validation\\audit_v23.py --profile-root .\\pi-study-helper\\fixtures\\profiles\\pandas-cleaning-v2-draft --manifest-audit \"$evidenceDir\\formal-binding.json\" --output \"$evidenceDir\\v23-formal.json\"",
+    "exitCode": 2,
+    "classifications": [
+      "environment_mismatch"
+    ],
+    "blockers": [
+      "actual pandas 2.3.3 does not match required pandas 3.0.5"
+    ],
+    "bAssetReadCount": 0,
+    "bAssetDefects": [],
+    "negativeEvidenceCreated": false
+  },
+  "sourceArtifacts": [
+    {
+      "path": "pi-study-helper/scripts/w2-data-validation/audit_v23.py",
+      "sha256": "630e5b1c9c136546f2d5fd26ee2d808129229b2bc6c4dab7f108e61e15259b77"
+    },
+    {
+      "path": "pi-study-helper/scripts/w2-data-validation/requirements-w2-v23.txt",
+      "sha256": "0f7011f8e062802ab40c0bcfa852c079b99f0097f1a3ea085d2eacfef42263f9"
+    },
+    {
+      "path": "pi-study-helper/scripts/w2-data-validation/v2-3-final-report.md",
+      "sha256": "75ab0c44542ace1b0ed50b92eba621cd90cbe1ac0655548804da49e36ddab8ad"
+    },
+    {
+      "path": "pi-study-helper/scripts/w2-data-validation/handoff-w2-c.md",
+      "sha256": "1f818436d175f573f5b9426304a2d154294d1fe992b24215830174e7470b0c69"
+    }
+  ],
+  "provenance": {
+    "cHistoricalEvidenceRewritten": false,
+    "cRerunClaimed": false,
+    "ownerEvidenceMisrepresentedAsCExecution": false,
+    "bAssetsReadDuringNegativeRun": false,
+    "profileStatus": "draft"
+  },
+  "limitations": [
+    "This owner evidence supplements but does not replace C historical formal-binding.json, d5-binding-evidence.json, or v23-formal.json.",
+    "This evidence is limited to the W2-V2-3-ENV-1 audit environment decision and is not the final product environment lock.",
+    "The positive and negative runs are owner-independent evidence and must not be described as C executions."
+  ]
+}

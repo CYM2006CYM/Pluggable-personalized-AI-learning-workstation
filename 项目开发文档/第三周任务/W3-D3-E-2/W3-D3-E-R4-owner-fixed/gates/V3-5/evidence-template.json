@@ -1,0 +1,73 @@
+﻿{
+    "schemaVersion":  "w3-d3-gate-evidence-template-v1",
+    "contractVersion":  "W3-C5/W3-R2",
+    "deliveryStage":  "W3-D3",
+    "gate":  "V3-5",
+    "gateConfigSha256":  null,
+    "resolvedInputManifestSha256":  null,
+    "testedCommit":  null,
+    "environment":  null,
+    "originalCommands":  [
+                             {
+                                 "id":  "v3-5-typecheck",
+                                 "executable":  "npm.cmd",
+                                 "arguments":  [
+                                                   "run",
+                                                   "typecheck"
+                                               ],
+                                 "workingDirectory":  "pi-study-helper",
+                                 "expectedExitCode":  0
+                             },
+                             {
+                                 "id":  "v3-5-full-tests",
+                                 "executable":  "npm.cmd",
+                                 "arguments":  [
+                                                   "test",
+                                                   "--",
+                                                   "--maxWorkers=1"
+                                               ],
+                                 "workingDirectory":  "pi-study-helper",
+                                 "expectedExitCode":  0
+                             }
+                         ],
+    "expectedMetrics":  {
+                            "expectedTestItems":  6,
+                            "idempotencyCases":  1,
+                            "faultStages":  [
+                                                "attempt",
+                                                "evidence",
+                                                "knowledge_state",
+                                                "path_suffix",
+                                                "checkpoint_publish"
+                                            ],
+                            "halfWritesAllowed":  0
+                        },
+    "actualMetrics":  null,
+    "rawOutputFiles":  [
+
+                       ],
+    "exitCodes":  [
+
+                  ],
+    "evidenceFiles":  [
+                          "v3-5-command-evidence.json",
+                          "v3-5-transaction-evidence.json",
+                          "v3-5-file-hashes.sha256"
+                      ],
+    "evidenceSha256":  [
+
+                       ],
+    "failureOwner":  "A",
+    "executionStatus":  "NOT_RUN_D3",
+    "gateConclusion":  "NOT_PRODUCED_D3",
+    "notes":  "D4执行时复制本模板到证据目录填写；不得修改D3冻结原件。",
+    "testLayer":  "事务确定性层",
+    "d47Decision":  "W3-D47-TEST-LAYERS-1",
+    "failureClassifications":  [
+                                   "CODE_DEFECT",
+                                   "ENVIRONMENT_MISMATCH",
+                                   "AUDIT_INPUT_INCOMPLETE",
+                                   "LIVE_NOT_RUN",
+                                   "MOCK_FALLBACK_USED"
+                               ]
+}

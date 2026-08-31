@@ -1,0 +1,39 @@
+﻿{
+    "role":  "B",
+    "day":  "W4-D1-B-3",
+    "contract":  "W4-C2/W4-R1",
+    "status":  "CONTENT_PASS_EVIDENCE_REMEDIATION_COMPLETE_UPLOAD_LOCK_NOT_GRANTED",
+    "candidate":  {
+                      "revision2TreeSha256":  "2a4538272cc47a3451b434999d620f429e5deaa0eb0f2c3f95fa76e53d80786d",
+                      "revision2FileCount":  71,
+                      "proposedSubmitManifest":  "W4-D1-B-3-release-final-v3-proposed-submit-manifest.json",
+                      "proposedSubmitEntryCount":  95,
+                      "sealEntries":  78,
+                      "profileFileCount":  79,
+                      "assetTreeSha256":  "e118fd65c4583821f686cba4faab5990a81d2149a8f73cf89af2c376ba15b352"
+                  },
+    "packages":  [
+                     {
+                         "classification":  "ordinary-public-safe",
+                         "sha256":  "bb0dfdf19a1da171e49cad4f1db85184bd159ebf020f04d4c5e62557134321ea",
+                         "byteLength":  79503,
+                         "file":  "W4-D1-B-3-release-final-v3-transport.zip",
+                         "sidecar":  "W4-D1-B-3-release-final-v3-transport-SHA256.txt"
+                     },
+                     {
+                         "classification":  "responsible-person-complete-audit",
+                         "sha256":  "d74814fba925b0c4fbeaf5915080b39dfcac047475551a7874f11c702f331c6d",
+                         "byteLength":  239220,
+                         "file":  "W4-D1-B-3-release-final-v3-owner-audit.zip",
+                         "sidecar":  "W4-D1-B-3-release-final-v3-owner-audit-SHA256.txt"
+                     }
+                 ],
+    "evidence":  {
+                     "formalCommandResults":  "inside owner audit: b-validation/command-results.json",
+                     "bR302":  "CLOSED_BY_FINAL_PACKAGE_SIDECARS",
+                     "finalRawCommandLogs":  "inside owner audit: final-command-logs",
+                     "bR301":  "CLOSED_BY_COMPLETE_DIRECT_AND_ISOLATED_RECORDS",
+                     "bR201":  "OWNER_EVIDENCE_EXCEPTION_APPROVED"
+                 },
+    "deliveryState":  "NOT_COMMITTED / NOT_PUSHED / uploadLock=NOT_REQUESTED"
+}

@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "w3-d3-owner-candidate-package-verification-v1",
+  "status": "PASS",
+  "contractVersion": "W3-C5/W3-R2",
+  "formalGold": false,
+  "gitUploadAuthorized": false,
+  "packages": {
+    "ownerOnly": {
+      "file": "W3-D3-负责人只读gold候选-OWNER-ONLY.zip",
+      "sha256": "3082f68aefce5bbd6acd8aaf2c9375609ced7f0f2c95d6263eae63602350c4e5",
+      "fileCount": 19,
+      "manifestMismatchCount": 0
+    },
+    "eHandoff": {
+      "file": "W3-D3-负责人只读gold候选-E-HANDOFF.zip",
+      "sha256": "d9a35cee18cf4f174f0a54179fe6944ed3ee5cdd6d620fe1970e3672cff8d3e8",
+      "fileCount": 8,
+      "manifestMismatchCount": 0,
+      "forbiddenFileCount": 0,
+      "rawOpinionFieldMatchCount": 0
+    }
+  }
+}

@@ -1,0 +1,4 @@
+
+> pi-study-helper@0.1.0 typecheck
+> tsc --noEmit && tsc -p tsconfig.test.json && tsc -p tsconfig.web.json
+

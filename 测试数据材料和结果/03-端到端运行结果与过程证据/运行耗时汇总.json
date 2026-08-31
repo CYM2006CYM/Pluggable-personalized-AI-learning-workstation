@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "status": "RUN_COMPLETE",
+  "source": "Measured local Web API requests and safe AgentRun exports",
+  "generatedAt": "2026-08-31T16:57:35.3041920Z",
+  "cases": [
+    {
+      "caseId": "CASE-A-BEGINNER",
+      "sessionId": "session-1450921263725c865c33493a",
+      "startedAt": "2026-08-31T16:34:05.563Z",
+      "endedAt": "2026-08-31T16:42:15.777Z",
+      "totalDurationMs": 490214.0,
+      "activityCount": 14,
+      "aiLiveQuizCount": 7,
+      "codePassCount": 6,
+      "summaryGenerated": true,
+      "averageQuizAgentRunMs": 44841.4,
+      "maxQuizAgentRunMs": 83336.0
+    },
+    {
+      "caseId": "CASE-B-INTERMEDIATE",
+      "sessionId": "session-afda89ac567093a4dbfd341c",
+      "startedAt": "2026-08-31T16:42:15.866Z",
+      "endedAt": "2026-08-31T16:47:21.621Z",
+      "totalDurationMs": 305755.0,
+      "activityCount": 10,
+      "aiLiveQuizCount": 5,
+      "codePassCount": 4,
+      "summaryGenerated": true,
+      "averageQuizAgentRunMs": 36131.8,
+      "maxQuizAgentRunMs": 58489.0
+    },
+    {
+      "caseId": "CASE-C-ADVANCED",
+      "sessionId": "session-aaba543301a8835595c57504",
+      "startedAt": "2026-08-31T16:47:21.68Z",
+      "endedAt": "2026-08-31T16:48:21.48Z",
+      "totalDurationMs": 59800.0,
+      "activityCount": 4,
+      "aiLiveQuizCount": 2,
+      "codePassCount": 1,
+      "summaryGenerated": true,
+      "averageQuizAgentRunMs": 16225.5,
+      "maxQuizAgentRunMs": 32195.0
+    }
+  ],
+  "activityQuizAgentRunAggregate": {
+    "total": 14,
+    "averageDurationMs": 37642.9,
+    "maxDurationMs": 83336,
+    "fallbackCount": 0,
+    "aiLiveCount": 14
+  },
+  "sessionCompletionAggregate": {
+    "count": 3,
+    "averageDurationMs": 7033.3,
+    "maxDurationMs": 8302
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "fixId": "OWNER-W4-V2-6-TIMEOUT-1",
+  "baseCommit": "6b8d87541919ffba64bcc2845bfad47ffffcdf0a",
+  "files": [
+    {
+      "path": "pi-study-helper/scripts/w2-verification/v2-comprehensive-verification.test.mjs",
+      "sha256": "cd56ca61661ce696f63e31e741ac4da64ee568925f0fef4c05a37f4bca91a1b4"
+    },
+    {
+      "path": "pi-study-helper/scripts/w2-verification/v2-6-preconditions.test.mjs",
+      "sha256": "24ba955e608c94641f4594ba0104e0988a9994608344de96819719a9bbc61b75"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+    "schemaVersion":  2,
+    "candidate":  "W4-D2-D-4",
+    "commit":  "dc1693e5bfcc0bed226ff0f20613fc4b2ec88681",
+    "baseCommit":  "576d326dbcaf73d92ec56093dd010332c3936e98",
+    "status":  "COMMITTED_LOCAL / NOT_PUSHED_REMOTE / uploadLock=NOT_REQUESTED",
+    "archives":  [
+                     {
+                         "name":  "W4-D2-D-safe-transfer-dc1693e.zip",
+                         "bytes":  53171,
+                         "sha256":  "e910c0d5517bd84fb60a120c553adbc5fe733da405be7ef042d80de79697aa68",
+                         "purpose":  "safe-transfer"
+                     },
+                     {
+                         "name":  "W4-D2-D-owner-audit-dc1693e.zip",
+                         "bytes":  56792,
+                         "sha256":  "9e6d75196041f686358a5bbd242bbd5e45ea4c9942c6a86db0ee5a1ea7c9192a",
+                         "purpose":  "owner-audit"
+                     }
+                 ],
+    "sidecars":  [
+                     "W4-D2-D-safe-transfer-dc1693e.zip.sha256",
+                     "W4-D2-D-owner-audit-dc1693e.zip.sha256"
+                 ],
+    "candidateFileCount":  30,
+    "formalResult":  "D_REMEDIATION_PASS / FULL_VERIFY_PASS / LIVE_NOT_RUN",
+    "remote":  "PUSH_BLOCKED_NETWORK_UNREACHABLE"
+}

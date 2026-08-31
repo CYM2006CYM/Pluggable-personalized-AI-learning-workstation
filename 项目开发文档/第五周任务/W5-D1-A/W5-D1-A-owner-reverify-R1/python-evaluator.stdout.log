@@ -1,0 +1,13 @@
+
+> pi-study-helper@0.1.0 test
+> vitest run --run tests/python-process-evaluation.test.ts tests/python-process-evaluation-r2.test.ts --maxWorkers=1
+
+
+ RUN  v4.1.10 C:/Users/win11/AppData/Local/Temp/w5-d1-a-candidate-66b0558378e44d94b8aa609a0887320f/pi-study-helper
+
+
+ Test Files  2 passed (2)
+      Tests  26 passed (26)
+   Start at  16:46:44
+   Duration  59.45s (transform 189ms, setup 0ms, import 528ms, tests 58.48s, environment 0ms)
+

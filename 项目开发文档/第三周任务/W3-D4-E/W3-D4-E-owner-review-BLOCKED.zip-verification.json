@@ -1,0 +1,12 @@
+﻿{
+    "schemaVersion":  "w3-d4-zip-verification-v1",
+    "zipFile":  "W3-D4-E-owner-review-BLOCKED.zip",
+    "zipSha256":  "272d7ba12a218f2f51b00822042561fe983519b68f3dfd49ed057788e61eb7b8",
+    "archiveEntries":  108,
+    "manifestEntriesChecked":  105,
+    "mismatchCount":  0,
+    "mismatches":  [
+
+                   ],
+    "status":  "PASS"
+}

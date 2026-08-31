@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "candidate": "W4-D2-D-3",
+  "baseCommit": "6b8d87541919ffba64bcc2845bfad47ffffcdf0a",
+  "status": "NOT_COMMITTED / NOT_PUSHED / uploadLock=NOT_REQUESTED",
+  "safeTransfer": {
+    "file": "W4-D2-D-3-safe-transfer-6b8d875.zip",
+    "bytes": 61549,
+    "sha256": "9578d4e0e0e66d5f2baf1d3766e53f42f7e773dc5f6304042653f65161477d00"
+  },
+  "ownerAudit": {
+    "file": "W4-D2-D-3-owner-audit-6b8d875.zip",
+    "bytes": 63980,
+    "sha256": "eda3fa0590d15ee7c32b9f6f25202d8752c13725c003ebfc4c6873e2ab8c7dc7"
+  },
+  "safeSidecar": "W4-D2-D-3-safe-transfer-6b8d875.zip.sha256",
+  "ownerSidecar": "W4-D2-D-3-owner-audit-6b8d875.zip.sha256",
+  "candidateManifest": "pi-study-helper/scripts/w4-d-validation/proposed-submit-manifest.json",
+  "candidateFileCount": 30,
+  "verify": "r2/r3 exitCode=1; each 726 passed, 1 failed, 1 skipped; sole failure is pre-existing W2 V2-6 fixed 30s outer wrapper timeout; direct candidate/baseline V2-6 both exit 0 with development=20/final=60",
+  "liveStatus": "LIVE_NOT_RUN",
+  "notes": [
+    "safe transfer excludes command-results.json and all raw stdout/stderr",
+    "owner audit contains formal command-results.json and external audit materials",
+    "D must independently revalidate before requesting upload lock"
+  ]
+}

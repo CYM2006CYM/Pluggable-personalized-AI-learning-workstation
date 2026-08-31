@@ -1,0 +1,278 @@
+{
+  "schemaVersion": 1,
+  "exportedAt": "2026-08-31T16:42:22.077Z",
+  "run": {
+    "runId": "agent-a6ba4bc0ea1da2c638ae62a5f5da0a25",
+    "requestId": "qa-open-CASE-B-INTERMEDIATE-1788194541441-82b014e28b196",
+    "sessionId": "session-afda89ac567093a4dbfd341c",
+    "activityId": "act-quiz-missing-values",
+    "profileRevision": 3,
+    "pathVersion": 1,
+    "evidenceVersion": 2,
+    "status": "succeeded",
+    "currentStage": "publish",
+    "startedAt": "2026-08-31T16:42:21.729Z",
+    "finishedAt": "2026-08-31T16:42:21.936Z",
+    "durationMs": 207,
+    "resultOrigin": "ai_live",
+    "questionCount": 5,
+    "artifactSha256": "be5ef5b34dce8969e38df50da8398f0eb30727546145d65046b37d3510da58a9",
+    "stages": [
+      {
+        "eventId": "agent-a6ba4bc0ea1da2c638ae62a5f5da0a25.evt-1",
+        "sequence": 1,
+        "role": "source",
+        "label": "教学依据准备",
+        "status": "succeeded",
+        "startedAt": "2026-08-31T16:42:21.748Z",
+        "finishedAt": "2026-08-31T16:42:21.748Z",
+        "durationMs": 0,
+        "attemptNumber": 1,
+        "publicSummary": "已绑定当前章节正式中文正文；Agent只能据此生成题目，不能替换教材事实。",
+        "metrics": [
+          {
+            "metricId": "lesson-variant",
+            "label": "正文版本",
+            "value": "practice",
+            "tone": "success"
+          },
+          {
+            "metricId": "source-count",
+            "label": "公开来源",
+            "value": "1项",
+            "tone": "neutral"
+          }
+        ],
+        "issueCategories": [],
+        "sourceClaimIds": [
+          "src-pandas-missing-data"
+        ]
+      },
+      {
+        "eventId": "agent-a6ba4bc0ea1da2c638ae62a5f5da0a25.evt-2",
+        "sequence": 2,
+        "role": "profile",
+        "label": "学情画像分析",
+        "status": "running",
+        "startedAt": "2026-08-31T16:42:21.754Z",
+        "attemptNumber": 1,
+        "publicSummary": "正在读取当前会话的确定性学情事实。",
+        "metrics": [],
+        "issueCategories": [],
+        "sourceClaimIds": []
+      },
+      {
+        "eventId": "agent-a6ba4bc0ea1da2c638ae62a5f5da0a25.evt-3",
+        "sequence": 3,
+        "role": "profile",
+        "label": "学情画像分析",
+        "status": "succeeded",
+        "startedAt": "2026-08-31T16:42:21.754Z",
+        "finishedAt": "2026-08-31T16:42:21.770Z",
+        "durationMs": 16,
+        "attemptNumber": 1,
+        "publicSummary": "已建立本轮生成所需的会话画像基线。",
+        "metrics": [
+          {
+            "metricId": "missed-count",
+            "label": "上一轮错题",
+            "value": "0道",
+            "tone": "success"
+          },
+          {
+            "metricId": "evidence-count",
+            "label": "画像证据",
+            "value": "0项",
+            "tone": "neutral"
+          },
+          {
+            "metricId": "profile-source",
+            "label": "画像来源",
+            "value": "deterministic",
+            "tone": "neutral"
+          }
+        ],
+        "issueCategories": [],
+        "sourceClaimIds": []
+      },
+      {
+        "eventId": "agent-a6ba4bc0ea1da2c638ae62a5f5da0a25.evt-4",
+        "sequence": 4,
+        "role": "generator",
+        "label": "Generator生成候选内容",
+        "status": "running",
+        "startedAt": "2026-08-31T16:42:21.820Z",
+        "attemptNumber": 1,
+        "publicSummary": "正在检查已审核缓存并准备生成候选AI题组。",
+        "metrics": [
+          {
+            "metricId": "attempt",
+            "label": "执行轮次",
+            "value": "第1轮",
+            "tone": "neutral"
+          },
+          {
+            "metricId": "model",
+            "label": "模型",
+            "value": "deepseek-chat",
+            "tone": "neutral"
+          }
+        ],
+        "issueCategories": [],
+        "sourceClaimIds": []
+      },
+      {
+        "eventId": "agent-a6ba4bc0ea1da2c638ae62a5f5da0a25.evt-5",
+        "sequence": 5,
+        "role": "generator",
+        "label": "Generator生成候选内容",
+        "status": "skipped",
+        "startedAt": "2026-08-31T16:42:21.826Z",
+        "finishedAt": "2026-08-31T16:42:21.826Z",
+        "durationMs": 0,
+        "attemptNumber": 1,
+        "publicSummary": "命中同一正文、版本和上下文下的已审核题组，本次未重新调用Generator。",
+        "metrics": [
+          {
+            "metricId": "cache-source",
+            "label": "复用来源",
+            "value": "已审核缓存",
+            "tone": "neutral"
+          }
+        ],
+        "issueCategories": [],
+        "sourceClaimIds": []
+      },
+      {
+        "eventId": "agent-a6ba4bc0ea1da2c638ae62a5f5da0a25.evt-6",
+        "sequence": 6,
+        "role": "safety",
+        "label": "确定性安全检查",
+        "status": "skipped",
+        "startedAt": "2026-08-31T16:42:21.841Z",
+        "finishedAt": "2026-08-31T16:42:21.841Z",
+        "durationMs": 0,
+        "attemptNumber": 1,
+        "publicSummary": "已复用原题组的确定性安全检查结论。",
+        "metrics": [
+          {
+            "metricId": "cache-source",
+            "label": "复用来源",
+            "value": "已审核缓存",
+            "tone": "neutral"
+          }
+        ],
+        "issueCategories": [],
+        "sourceClaimIds": []
+      },
+      {
+        "eventId": "agent-a6ba4bc0ea1da2c638ae62a5f5da0a25.evt-7",
+        "sequence": 7,
+        "role": "hunter",
+        "label": "Hunter反向找错",
+        "status": "skipped",
+        "startedAt": "2026-08-31T16:42:21.866Z",
+        "finishedAt": "2026-08-31T16:42:21.866Z",
+        "durationMs": 0,
+        "attemptNumber": 1,
+        "publicSummary": "已复用原题组的Hunter审核结论。",
+        "metrics": [
+          {
+            "metricId": "cache-source",
+            "label": "复用来源",
+            "value": "已审核缓存",
+            "tone": "neutral"
+          }
+        ],
+        "issueCategories": [],
+        "sourceClaimIds": []
+      },
+      {
+        "eventId": "agent-a6ba4bc0ea1da2c638ae62a5f5da0a25.evt-8",
+        "sequence": 8,
+        "role": "defender",
+        "label": "Defender辩护",
+        "status": "skipped",
+        "startedAt": "2026-08-31T16:42:21.882Z",
+        "finishedAt": "2026-08-31T16:42:21.882Z",
+        "durationMs": 0,
+        "attemptNumber": 1,
+        "publicSummary": "已复用原题组的Defender条件执行结论。",
+        "metrics": [
+          {
+            "metricId": "cache-source",
+            "label": "复用来源",
+            "value": "已审核缓存",
+            "tone": "neutral"
+          }
+        ],
+        "issueCategories": [],
+        "sourceClaimIds": []
+      },
+      {
+        "eventId": "agent-a6ba4bc0ea1da2c638ae62a5f5da0a25.evt-9",
+        "sequence": 9,
+        "role": "judge",
+        "label": "Judge最终裁决",
+        "status": "skipped",
+        "startedAt": "2026-08-31T16:42:21.901Z",
+        "finishedAt": "2026-08-31T16:42:21.901Z",
+        "durationMs": 0,
+        "attemptNumber": 1,
+        "publicSummary": "已复用原题组的Judge接受结论。",
+        "metrics": [
+          {
+            "metricId": "cache-source",
+            "label": "复用来源",
+            "value": "已审核缓存",
+            "tone": "neutral"
+          }
+        ],
+        "issueCategories": [],
+        "sourceClaimIds": []
+      },
+      {
+        "eventId": "agent-a6ba4bc0ea1da2c638ae62a5f5da0a25.evt-10",
+        "sequence": 10,
+        "role": "publish",
+        "label": "发布题组或固定保障",
+        "status": "running",
+        "startedAt": "2026-08-31T16:42:21.920Z",
+        "attemptNumber": 1,
+        "publicSummary": "正在发布已通过多Agent审核的AI题组。",
+        "metrics": [],
+        "issueCategories": [],
+        "sourceClaimIds": []
+      },
+      {
+        "eventId": "agent-a6ba4bc0ea1da2c638ae62a5f5da0a25.evt-11",
+        "sequence": 11,
+        "role": "publish",
+        "label": "发布题组或固定保障",
+        "status": "succeeded",
+        "startedAt": "2026-08-31T16:42:21.920Z",
+        "finishedAt": "2026-08-31T16:42:21.936Z",
+        "durationMs": 16,
+        "attemptNumber": 1,
+        "publicSummary": "已发布5道审核通过的AI客观题。",
+        "metrics": [
+          {
+            "metricId": "question-count",
+            "label": "发布题量",
+            "value": "5道",
+            "tone": "success"
+          },
+          {
+            "metricId": "content-origin",
+            "label": "内容来源",
+            "value": "ai_live",
+            "tone": "success"
+          }
+        ],
+        "issueCategories": [],
+        "sourceClaimIds": []
+      }
+    ]
+  },
+  "exportSha256": "b809c2f3246e04cd4b7bd1f9440a3562c2de502c190288002d20c250c254fd4a"
+}

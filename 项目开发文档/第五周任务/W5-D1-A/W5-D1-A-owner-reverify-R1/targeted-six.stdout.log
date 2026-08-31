@@ -1,0 +1,13 @@
+
+> pi-study-helper@0.1.0 test
+> vitest run --run tests/public-execution-bundle.test.ts tests/public-execution-assets.test.ts tests/code-activity-facade-adapter.test.ts tests/web/dto-contract.test.ts tests/w4-contracts.test.ts tests/profile-v2-revision-resolution.test.ts --maxWorkers=1
+
+
+ RUN  v4.1.10 C:/Users/win11/AppData/Local/Temp/w5-d1-a-candidate-66b0558378e44d94b8aa609a0887320f/pi-study-helper
+
+
+ Test Files  6 passed (6)
+      Tests  41 passed (41)
+   Start at  16:46:37
+   Duration  4.73s (transform 580ms, setup 0ms, import 1.06s, tests 1.85s, environment 0ms)
+

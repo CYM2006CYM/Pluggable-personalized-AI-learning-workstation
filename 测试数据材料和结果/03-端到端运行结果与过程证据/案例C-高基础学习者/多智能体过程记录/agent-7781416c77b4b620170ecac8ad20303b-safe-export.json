@@ -1,0 +1,295 @@
+{
+  "schemaVersion": 1,
+  "exportedAt": "2026-08-31T16:47:27.276Z",
+  "run": {
+    "runId": "agent-7781416c77b4b620170ecac8ad20303b",
+    "requestId": "qa-tip-CASE-C-ADVANCED-1788194846901-c57985f47400c",
+    "sessionId": "session-aaba543301a8835595c57504",
+    "activityId": "node-pandas.clean.validate-result",
+    "profileRevision": 3,
+    "pathVersion": 1,
+    "evidenceVersion": 2,
+    "status": "succeeded",
+    "currentStage": "publish",
+    "startedAt": "2026-08-31T16:47:26.943Z",
+    "finishedAt": "2026-08-31T16:47:27.229Z",
+    "durationMs": 286,
+    "resultOrigin": "ai_live",
+    "questionCount": 0,
+    "artifactSha256": "a7444c747026a72da973876bd0b8cb502bc6bb577f57f87fae67658cf07bb0bf",
+    "stages": [
+      {
+        "eventId": "agent-7781416c77b4b620170ecac8ad20303b.evt-1",
+        "sequence": 1,
+        "role": "source",
+        "label": "教学依据准备",
+        "status": "running",
+        "startedAt": "2026-08-31T16:47:26.947Z",
+        "attemptNumber": 1,
+        "publicSummary": "正在绑定当前章节正式中文正文、讲解版本和公开来源。",
+        "metrics": [],
+        "issueCategories": [],
+        "sourceClaimIds": []
+      },
+      {
+        "eventId": "agent-7781416c77b4b620170ecac8ad20303b.evt-2",
+        "sequence": 2,
+        "role": "source",
+        "label": "教学依据准备",
+        "status": "succeeded",
+        "startedAt": "2026-08-31T16:47:26.947Z",
+        "finishedAt": "2026-08-31T16:47:26.966Z",
+        "durationMs": 19,
+        "attemptNumber": 1,
+        "publicSummary": "已绑定正式正文；提醒只能提供阅读辅助，不能替换教材事实。",
+        "metrics": [
+          {
+            "metricId": "lesson-variant",
+            "label": "正文版本",
+            "value": "concise",
+            "tone": "success"
+          },
+          {
+            "metricId": "lesson-position",
+            "label": "章节位置",
+            "value": "6/6",
+            "tone": "neutral"
+          },
+          {
+            "metricId": "source-count",
+            "label": "公开来源",
+            "value": "2项",
+            "tone": "neutral"
+          }
+        ],
+        "issueCategories": [],
+        "sourceClaimIds": [
+          "src-pandas-testing",
+          "src-python-security"
+        ]
+      },
+      {
+        "eventId": "agent-7781416c77b4b620170ecac8ad20303b.evt-3",
+        "sequence": 3,
+        "role": "profile",
+        "label": "学情画像分析",
+        "status": "running",
+        "startedAt": "2026-08-31T16:47:26.985Z",
+        "attemptNumber": 1,
+        "publicSummary": "正在读取当前章节的确定性学情状态和讲解偏好。",
+        "metrics": [],
+        "issueCategories": [],
+        "sourceClaimIds": []
+      },
+      {
+        "eventId": "agent-7781416c77b4b620170ecac8ad20303b.evt-4",
+        "sequence": 4,
+        "role": "profile",
+        "label": "学情画像分析",
+        "status": "succeeded",
+        "startedAt": "2026-08-31T16:47:26.985Z",
+        "finishedAt": "2026-08-31T16:47:26.998Z",
+        "durationMs": 13,
+        "attemptNumber": 1,
+        "publicSummary": "已读取本节当前掌握状态；提醒将据此选择需要优先关注的正文内容。",
+        "metrics": [
+          {
+            "metricId": "knowledge-status",
+            "label": "当前状态",
+            "value": "mastered",
+            "tone": "neutral"
+          },
+          {
+            "metricId": "mastery",
+            "label": "掌握度",
+            "value": "1.00",
+            "tone": "neutral"
+          },
+          {
+            "metricId": "evidence-count",
+            "label": "画像证据",
+            "value": "2项",
+            "tone": "neutral"
+          }
+        ],
+        "issueCategories": [],
+        "sourceClaimIds": []
+      },
+      {
+        "eventId": "agent-7781416c77b4b620170ecac8ad20303b.evt-5",
+        "sequence": 5,
+        "role": "generator",
+        "label": "Generator生成候选内容",
+        "status": "running",
+        "startedAt": "2026-08-31T16:47:27.040Z",
+        "attemptNumber": 1,
+        "publicSummary": "正在检查已审核缓存并准备生成候选个性化提醒。",
+        "metrics": [
+          {
+            "metricId": "attempt",
+            "label": "执行轮次",
+            "value": "第1轮",
+            "tone": "neutral"
+          },
+          {
+            "metricId": "model",
+            "label": "模型",
+            "value": "deepseek-chat",
+            "tone": "neutral"
+          }
+        ],
+        "issueCategories": [],
+        "sourceClaimIds": []
+      },
+      {
+        "eventId": "agent-7781416c77b4b620170ecac8ad20303b.evt-6",
+        "sequence": 6,
+        "role": "generator",
+        "label": "Generator生成候选内容",
+        "status": "skipped",
+        "startedAt": "2026-08-31T16:47:27.047Z",
+        "finishedAt": "2026-08-31T16:47:27.047Z",
+        "durationMs": 0,
+        "attemptNumber": 1,
+        "publicSummary": "命中同一正文、版本和上下文下的已审核个性化提醒，本次未重新调用Generator。",
+        "metrics": [
+          {
+            "metricId": "cache-source",
+            "label": "复用来源",
+            "value": "已审核缓存",
+            "tone": "neutral"
+          }
+        ],
+        "issueCategories": [],
+        "sourceClaimIds": []
+      },
+      {
+        "eventId": "agent-7781416c77b4b620170ecac8ad20303b.evt-7",
+        "sequence": 7,
+        "role": "safety",
+        "label": "确定性安全检查",
+        "status": "skipped",
+        "startedAt": "2026-08-31T16:47:27.059Z",
+        "finishedAt": "2026-08-31T16:47:27.059Z",
+        "durationMs": 0,
+        "attemptNumber": 1,
+        "publicSummary": "已复用原个性化提醒的确定性安全检查结论。",
+        "metrics": [
+          {
+            "metricId": "cache-source",
+            "label": "复用来源",
+            "value": "已审核缓存",
+            "tone": "neutral"
+          }
+        ],
+        "issueCategories": [],
+        "sourceClaimIds": []
+      },
+      {
+        "eventId": "agent-7781416c77b4b620170ecac8ad20303b.evt-8",
+        "sequence": 8,
+        "role": "hunter",
+        "label": "Hunter反向找错",
+        "status": "skipped",
+        "startedAt": "2026-08-31T16:47:27.077Z",
+        "finishedAt": "2026-08-31T16:47:27.077Z",
+        "durationMs": 0,
+        "attemptNumber": 1,
+        "publicSummary": "已复用原个性化提醒的Hunter审核结论。",
+        "metrics": [
+          {
+            "metricId": "cache-source",
+            "label": "复用来源",
+            "value": "已审核缓存",
+            "tone": "neutral"
+          }
+        ],
+        "issueCategories": [],
+        "sourceClaimIds": []
+      },
+      {
+        "eventId": "agent-7781416c77b4b620170ecac8ad20303b.evt-9",
+        "sequence": 9,
+        "role": "defender",
+        "label": "Defender辩护",
+        "status": "skipped",
+        "startedAt": "2026-08-31T16:47:27.090Z",
+        "finishedAt": "2026-08-31T16:47:27.090Z",
+        "durationMs": 0,
+        "attemptNumber": 1,
+        "publicSummary": "已复用原个性化提醒的Defender条件执行结论。",
+        "metrics": [
+          {
+            "metricId": "cache-source",
+            "label": "复用来源",
+            "value": "已审核缓存",
+            "tone": "neutral"
+          }
+        ],
+        "issueCategories": [],
+        "sourceClaimIds": []
+      },
+      {
+        "eventId": "agent-7781416c77b4b620170ecac8ad20303b.evt-10",
+        "sequence": 10,
+        "role": "judge",
+        "label": "Judge最终裁决",
+        "status": "skipped",
+        "startedAt": "2026-08-31T16:47:27.106Z",
+        "finishedAt": "2026-08-31T16:47:27.106Z",
+        "durationMs": 0,
+        "attemptNumber": 1,
+        "publicSummary": "已复用原个性化提醒的Judge接受结论。",
+        "metrics": [
+          {
+            "metricId": "cache-source",
+            "label": "复用来源",
+            "value": "已审核缓存",
+            "tone": "neutral"
+          }
+        ],
+        "issueCategories": [],
+        "sourceClaimIds": []
+      },
+      {
+        "eventId": "agent-7781416c77b4b620170ecac8ad20303b.evt-11",
+        "sequence": 11,
+        "role": "publish",
+        "label": "发布个性化提醒",
+        "status": "running",
+        "startedAt": "2026-08-31T16:47:27.138Z",
+        "attemptNumber": 1,
+        "publicSummary": "正在把通过审核的个性化提醒绑定到当前Session。",
+        "metrics": [],
+        "issueCategories": [],
+        "sourceClaimIds": []
+      },
+      {
+        "eventId": "agent-7781416c77b4b620170ecac8ad20303b.evt-12",
+        "sequence": 12,
+        "role": "publish",
+        "label": "发布个性化提醒",
+        "status": "succeeded",
+        "startedAt": "2026-08-31T16:47:27.138Z",
+        "finishedAt": "2026-08-31T16:47:27.229Z",
+        "durationMs": 91,
+        "attemptNumber": 1,
+        "publicSummary": "已把通过多Agent审核的个性化提醒绑定到当前Session。",
+        "metrics": [
+          {
+            "metricId": "content-origin",
+            "label": "提醒来源",
+            "value": "ai_live",
+            "tone": "success"
+          }
+        ],
+        "issueCategories": [],
+        "sourceClaimIds": [
+          "src-pandas-testing",
+          "src-python-security"
+        ]
+      }
+    ]
+  },
+  "exportSha256": "bdbda3a4a44b9ccff554ef757936e67c419a2eec7d0dc67ae41fc7707508128d"
+}

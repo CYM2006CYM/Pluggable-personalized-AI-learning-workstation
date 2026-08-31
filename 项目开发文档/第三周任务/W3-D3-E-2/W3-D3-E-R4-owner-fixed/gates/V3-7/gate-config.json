@@ -1,0 +1,89 @@
+﻿{
+    "schemaVersion":  "w3-d3-gate-config-v1",
+    "contractVersion":  "W3-C5/W3-R2",
+    "deliveryStage":  "W3-D3",
+    "testLayer":  "确定性层",
+    "d47Decision":  "W3-D47-TEST-LAYERS-1",
+    "executionPolicy":  "PLAN_ONLY_D3_EXPLICIT_W3_D4_TOKEN_REQUIRED",
+    "evidenceSha256Method":  "SHA-256 over raw file bytes; lowercase hexadecimal",
+    "gate":  "V3-7",
+    "title":  "60例gold冻结顺序与双盲资格",
+    "purpose":  "只消费负责人E安全交接、W2公开gold基线及冻结证明，验证60/60、D44终裁、前20原内容和先冻结后运行。",
+    "ownerOnFailure":  "负责人（原始盲标资格问题点名对应标注所有者）",
+    "requiredInputIds":  [
+                             "owner-difficulty-gold-candidate",
+                             "owner-path-constraints-candidate",
+                             "owner-adjudication-public-index",
+                             "owner-freeze-record-candidate",
+                             "owner-public-attestation",
+                             "owner-candidate-verification",
+                             "w2-difficulty-gold",
+                             "w2-path-constraints",
+                             "w2-adjudication-log"
+                         ],
+    "commands":  [
+                     {
+                         "id":  "v3-7-gold-freeze",
+                         "executable":  "powershell.exe",
+                         "arguments":  [
+                                           "-NoProfile",
+                                           "-ExecutionPolicy",
+                                           "Bypass",
+                                           "-File",
+                                           "{ToolRoot}/Test-GoldFreeze.ps1",
+                                           "-W2DifficultyGold",
+                                           "{InputPath:w2-difficulty-gold}",
+                                           "-W2PathConstraints",
+                                           "{InputPath:w2-path-constraints}",
+                                           "-W2AdjudicationLog",
+                                           "{InputPath:w2-adjudication-log}",
+                                           "-DifficultyGoldCandidate",
+                                           "{InputPath:owner-difficulty-gold-candidate}",
+                                           "-PathConstraintsCandidate",
+                                           "{InputPath:owner-path-constraints-candidate}",
+                                           "-PublicAdjudicationIndex",
+                                           "{InputPath:owner-adjudication-public-index}",
+                                           "-OwnerFreezeRecord",
+                                           "{InputPath:owner-freeze-record-candidate}",
+                                           "-OwnerPublicAttestation",
+                                           "{InputPath:owner-public-attestation}",
+                                           "-OwnerVerification",
+                                           "{InputPath:owner-candidate-verification}",
+                                           "-OutputFile",
+                                           "{OutputRoot}/v3-7-gold-freeze.json"
+                                       ],
+                         "workingDirectory":  ".",
+                         "expectedExitCode":  0
+                     }
+                 ],
+    "expectedMetrics":  {
+                            "expectedTestItems":  104,
+                            "candidateCaseCount":  60,
+                            "candidateCount":  2,
+                            "publicAdjudicationIndexCount":  60,
+                            "qualificationChecks":  6,
+                            "negotiationStatus":  "SKIPPED_BY_D44",
+                            "formalRunsBeforeFreeze":  0
+                        },
+    "mechanicalPassConditions":  [
+                                     "difficulty与path constraints候选均覆盖final-001至060且无重复",
+                                     "difficulty/path候选前20原字节与W2正式文件一致",
+                                     "公开终裁索引前20记录哈希与W2逐行一致，后40全部SKIPPED_BY_D44",
+                                     "负责人冻结记录及公开证明的可见文件SHA-256与实际文件一致",
+                                     "双盲资格记录PASS",
+                                     "负责人终裁与冻结状态完整",
+                                     "任何正式60例系统运行发生在冻结之后"
+                                 ],
+    "outputContract":  [
+                           "v3-7-command-evidence.json",
+                           "v3-7-gold-freeze.json",
+                           "v3-7-file-hashes.sha256"
+                       ],
+    "failureClassifications":  [
+                                   "CODE_DEFECT",
+                                   "ENVIRONMENT_MISMATCH",
+                                   "AUDIT_INPUT_INCOMPLETE",
+                                   "LIVE_NOT_RUN",
+                                   "MOCK_FALLBACK_USED"
+                               ]
+}

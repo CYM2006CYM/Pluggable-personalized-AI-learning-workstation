@@ -1,0 +1,77 @@
+﻿{
+    "schemaVersion":  "w3-d3-gate-evidence-template-v1",
+    "contractVersion":  "W3-C5/W3-R2",
+    "deliveryStage":  "W3-D3",
+    "gate":  "V3-4",
+    "gateConfigSha256":  null,
+    "resolvedInputManifestSha256":  null,
+    "testedCommit":  null,
+    "environment":  null,
+    "originalCommands":  [
+                             {
+                                 "id":  "v3-4-port-tests",
+                                 "executable":  "npm.cmd",
+                                 "arguments":  [
+                                                   "test",
+                                                   "--",
+                                                   "--maxWorkers=1",
+                                                   "--run",
+                                                   "tests/code-evaluation-port.test.ts",
+                                                   "tests/evaluation-protocol.test.ts"
+                                               ],
+                                 "workingDirectory":  "pi-study-helper",
+                                 "expectedExitCode":  0
+                             },
+                             {
+                                 "id":  "v3-4-source-scan",
+                                 "executable":  "powershell.exe",
+                                 "arguments":  [
+                                                   "-NoProfile",
+                                                   "-ExecutionPolicy",
+                                                   "Bypass",
+                                                   "-File",
+                                                   "{ToolRoot}/Test-CBoundary.ps1",
+                                                   "-RepositoryRoot",
+                                                   "{RepositoryRoot}",
+                                                   "-OutputFile",
+                                                   "{OutputRoot}/v3-4-source-scan.json"
+                                               ],
+                                 "workingDirectory":  ".",
+                                 "expectedExitCode":  0
+                             }
+                         ],
+    "expectedMetrics":  {
+                            "expectedTestItems":  4,
+                            "forbiddenWriteMatches":  0,
+                            "publicReturnType":  "ActivityResult",
+                            "formalFactsOwner":  "A"
+                        },
+    "actualMetrics":  null,
+    "rawOutputFiles":  [
+
+                       ],
+    "exitCodes":  [
+
+                  ],
+    "evidenceFiles":  [
+                          "v3-4-command-evidence.json",
+                          "v3-4-source-scan.json",
+                          "v3-4-file-hashes.sha256"
+                      ],
+    "evidenceSha256":  [
+
+                       ],
+    "failureOwner":  "C（若A事务公开缺口则点名A）",
+    "executionStatus":  "NOT_RUN_D3",
+    "gateConclusion":  "NOT_PRODUCED_D3",
+    "notes":  "D4执行时复制本模板到证据目录填写；不得修改D3冻结原件。",
+    "testLayer":  "确定性层",
+    "d47Decision":  "W3-D47-TEST-LAYERS-1",
+    "failureClassifications":  [
+                                   "CODE_DEFECT",
+                                   "ENVIRONMENT_MISMATCH",
+                                   "AUDIT_INPUT_INCOMPLETE",
+                                   "LIVE_NOT_RUN",
+                                   "MOCK_FALLBACK_USED"
+                               ]
+}

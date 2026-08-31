@@ -1,0 +1,30 @@
+﻿{
+    "schemaVersion":  "w3-d4-gold-freeze-check-r4-v1",
+    "contractVersion":  "W3-C5/W3-R2",
+    "gate":  "V3-7",
+    "candidateCounts":  {
+                            "difficulty":  60,
+                            "paths":  60,
+                            "publicIndex":  60
+                        },
+    "first20":  {
+                    "difficultyRawPrefix":  true,
+                    "pathRawPrefix":  true,
+                    "adjudicationHashesChecked":  20
+                },
+    "final021To060NegotiationStatus":  "SKIPPED_BY_D44",
+    "visibleFileSha256":  {
+                              "difficulty":  "15e28f4cf6807fbdc2aa3d1daae25219605be6a14325853a52cd9270765ad395",
+                              "paths":  "86c8663c2ad55d80a86ebbd618f554480c395ea0d772f3e807318c3ce2fd3819",
+                              "publicIndex":  "6a57019bc9909cbf69dd46216ee1db72a0e3ce9815913bd07c69b3da74bc8373",
+                              "freeze":  "bec68216bb9bb92f81c30f556cdd2685aff0b41e92be5f56dfde7f8fb5d98042",
+                              "attestation":  "76ce273c5f78e4305b5440039ce567d37893412df3bb25c6a14413471f1876b6",
+                              "verification":  "d08a0ced1ff8f78f7d194bab18ed5e982403f0c7efbcc8c7b161f8c4671ab317"
+                          },
+    "withheldMaterialRead":  false,
+    "formalGold":  false,
+    "errors":  [
+
+               ],
+    "status":  "PASS"
+}

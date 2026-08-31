@@ -1,0 +1,6 @@
+eff83e6d206d2e06ef399311b7591a0b5be89cfbc93f37deca4e65a59f2f564f  OWNER-HANDOFF.md
+811c184245f6f43e6219d8e274a218422e5cbf1b6e89a58f2dcf46230eabb86f  pi-study-helper/src/application/path-learning-facade.ts
+a884a2a7c7ecd8e9f2fc9c75dc6ae59dfc3c9cd1226895910ae2c7da1c6caa97  pi-study-helper/src/repositories/file-learning-session-repository.ts
+8a5f49b510d02a635b8c524139030f34af4783e1b2f922984aaa7a6a594656c7  pi-study-helper/src/repositories/internal-path-session-port.ts
+d4ac6a474b94a9bb84082d4ec2ea8c5860a14fe89328906decfd5f65531b7a49  pi-study-helper/tests/file-learning-session-repository.test.ts
+5735463c6970dd36e615989c585da7f8491e85075d70780fb947a91eff3ab8c8  pi-study-helper/tests/path-session-boundary.test.ts

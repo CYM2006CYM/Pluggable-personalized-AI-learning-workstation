@@ -1,0 +1,5 @@
+
+> pi-study-helper@0.1.0 check:release
+> node scripts/check-release.mjs
+
+Release check passed: 517 tracked files, no private data or secrets found.

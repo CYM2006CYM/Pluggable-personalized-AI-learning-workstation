@@ -1,0 +1,68 @@
+﻿{
+    "schemaVersion":  "w3-d3-gate-evidence-template-v1",
+    "contractVersion":  "W3-C5/W3-R2",
+    "deliveryStage":  "W3-D3",
+    "gate":  "V3-6",
+    "gateConfigSha256":  null,
+    "resolvedInputManifestSha256":  null,
+    "testedCommit":  null,
+    "environment":  null,
+    "originalCommands":  [
+                             {
+                                 "id":  "v3-6-evaluator-failures",
+                                 "executable":  "npm.cmd",
+                                 "arguments":  [
+                                                   "test",
+                                                   "--",
+                                                   "--maxWorkers=1",
+                                                   "--run",
+                                                   "tests/activity-rubric.test.ts",
+                                                   "tests/evaluation-protocol.test.ts",
+                                                   "tests/python-process-evaluation.test.ts",
+                                                   "tests/python-process-evaluation-r2.test.ts",
+                                                   "tests/knowledge-state.test.ts"
+                                               ],
+                                 "workingDirectory":  "pi-study-helper",
+                                 "expectedExitCode":  0
+                             }
+                         ],
+    "expectedMetrics":  {
+                            "expectedTestItems":  8,
+                            "taskCount":  2,
+                            "failureCategories":  [
+                                                      "dependency",
+                                                      "environment",
+                                                      "test_asset",
+                                                      "protocol"
+                                                  ],
+                            "negativeEvidenceCount":  0
+                        },
+    "actualMetrics":  null,
+    "rawOutputFiles":  [
+
+                       ],
+    "exitCodes":  [
+
+                  ],
+    "evidenceFiles":  [
+                          "v3-6-command-evidence.json",
+                          "v3-6-failure-evidence.json",
+                          "v3-6-file-hashes.sha256"
+                      ],
+    "evidenceSha256":  [
+
+                       ],
+    "failureOwner":  "C（正式事务映射问题点名A）",
+    "executionStatus":  "NOT_RUN_D3",
+    "gateConclusion":  "NOT_PRODUCED_D3",
+    "notes":  "D4执行时复制本模板到证据目录填写；不得修改D3冻结原件。",
+    "testLayer":  "评测器集成层",
+    "d47Decision":  "W3-D47-TEST-LAYERS-1",
+    "failureClassifications":  [
+                                   "CODE_DEFECT",
+                                   "ENVIRONMENT_MISMATCH",
+                                   "AUDIT_INPUT_INCOMPLETE",
+                                   "LIVE_NOT_RUN",
+                                   "MOCK_FALLBACK_USED"
+                               ]
+}

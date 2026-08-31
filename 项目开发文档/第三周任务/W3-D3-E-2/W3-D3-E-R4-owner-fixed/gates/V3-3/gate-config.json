@@ -1,0 +1,75 @@
+﻿{
+    "schemaVersion":  "w3-d3-gate-config-v1",
+    "contractVersion":  "W3-C5/W3-R2",
+    "deliveryStage":  "W3-D3",
+    "executionPolicy":  "PLAN_ONLY_D3_EXPLICIT_W3_D4_TOKEN_REQUIRED",
+    "evidenceSha256Method":  "SHA-256 over raw file bytes; lowercase hexadecimal",
+    "gate":  "V3-3",
+    "title":  "双任务错误矩阵与重复一致性",
+    "purpose":  "两个正式任务覆盖正确、部分正确和六类学习者错误，每类连续3次。",
+    "ownerOnFailure":  "C（业务资产问题点名B）",
+    "requiredInputIds":  [
+                             "b-formal-commit",
+                             "b-task-bundles-file",
+                             "b-asset-inspect",
+                             "b-asset-practical",
+                             "c-formal-commit",
+                             "c-binding-fix-commit",
+                             "c-environment-lock",
+                             "c-environment-hash",
+                             "a-d3-formal-commit"
+                         ],
+    "commands":  [
+                     {
+                         "id":  "v3-3-error-matrix",
+                         "executable":  "npm.cmd",
+                         "arguments":  [
+                                           "test",
+                                           "--",
+                                           "--maxWorkers=1",
+                                           "--run",
+                                           "tests/activity-rubric.test.ts",
+                                           "tests/python-process-evaluation.test.ts",
+                                           "tests/python-process-evaluation-r2.test.ts"
+                                       ],
+                         "workingDirectory":  "pi-study-helper",
+                         "expectedExitCode":  0
+                     }
+                 ],
+    "expectedMetrics":  {
+                            "expectedTestItems":  48,
+                            "taskCount":  2,
+                            "classificationCountPerTask":  8,
+                            "repeatCount":  3,
+                            "requiredClasses":  [
+                                                    "correct",
+                                                    "partially_correct",
+                                                    "syntax_error",
+                                                    "runtime_error",
+                                                    "test_failed",
+                                                    "timeout",
+                                                    "output_limit",
+                                                    "disallowed_import"
+                                                ]
+                        },
+    "mechanicalPassConditions":  [
+                                     "两个任务均覆盖8类结果",
+                                     "每类连续3次逐字段一致",
+                                     "错误归因符合learner/evaluator边界",
+                                     "公共结果不暴露隐藏材料"
+                                 ],
+    "outputContract":  [
+                           "v3-3-command-evidence.json",
+                           "v3-3-matrix-evidence.json",
+                           "v3-3-file-hashes.sha256"
+                       ],
+    "testLayer":  "评测器集成层",
+    "d47Decision":  "W3-D47-TEST-LAYERS-1",
+    "failureClassifications":  [
+                                   "CODE_DEFECT",
+                                   "ENVIRONMENT_MISMATCH",
+                                   "AUDIT_INPUT_INCOMPLETE",
+                                   "LIVE_NOT_RUN",
+                                   "MOCK_FALLBACK_USED"
+                               ]
+}

@@ -1,0 +1,216 @@
+{
+  "schemaVersion": 3,
+  "owner": "B",
+  "scope": {
+    "firstCaseId": "final-021",
+    "lastCaseId": "final-060",
+    "caseCount": 40
+  },
+  "w3StartCommit": "f190326a4a906b46e4001484ffa30a7839b82ed2",
+  "input": {
+    "path": "evaluation/personas/final-60.jsonl",
+    "sha256": "b77ba4902003ba20bc5b233c4797838eb26325d1b38fd02bc68ba02206cb1d1c",
+    "hashMode": "utf8-lf-normalized",
+    "byteLength": 56084
+  },
+  "annotation": {
+    "path": "evaluation/golden/annotations/b-final-021-060.jsonl",
+    "sha256": "eaefe9cfbbf8f6144e8299abfc0d82b66cb9ffe8dd1d783e841c5bdfac2690bf",
+    "hashMode": "utf8-lf-normalized",
+    "byteLength": 62896
+  },
+  "supersedes": {
+    "originalSealPath": "evaluation/golden/annotations/original/audit-only/b-final-021-060.seal.json",
+    "originalAssetTreeSha256": "557cd5bdebae5dd0e713c5a64b1058f3657be971e812e7f99d63b142ffdb1d38",
+    "annotationHashUnchanged": true
+  },
+  "qualificationStatus": "PENDING_OWNER_DUAL_SEAL_CHECK",
+  "intendedUploadSealPath": "evaluation/golden/annotations/b-final-021-060.seal.candidate.json",
+  "auditOnlySealPath": "evaluation/golden/annotations/original/audit-only/b-final-021-060.seal.json",
+  "taskBundleAssetTree": {
+    "algorithm": "sha256",
+    "entryCount": 29,
+    "entries": [
+      {
+        "path": "pi-study-helper/fixtures/profiles/pandas-cleaning-v2-draft/activities/learning-activities.json",
+        "hashMode": "normalized-text",
+        "byteLength": 12112,
+        "sha256": "bbbc9105cc5a836c4e5f50fc379c9b67c1e61c27c1fd81934136cbbe4bfe94e3"
+      },
+      {
+        "path": "pi-study-helper/fixtures/profiles/pandas-cleaning-v2-draft/assessments/private/known-wrong/wrong-practical.py",
+        "hashMode": "normalized-text",
+        "byteLength": 110,
+        "sha256": "74e323f2defd470a4693de54907421a054e3a4b53b0ed0cbcf4af26c0f39bc51"
+      },
+      {
+        "path": "pi-study-helper/fixtures/profiles/pandas-cleaning-v2-draft/assessments/private/known-wrong/wrong-structure.py",
+        "hashMode": "normalized-text",
+        "byteLength": 62,
+        "sha256": "b69266121f954761295d7ea8dce38959d7fa6d6f31925bdb86f645e1f136d973"
+      },
+      {
+        "path": "pi-study-helper/fixtures/profiles/pandas-cleaning-v2-draft/assessments/private/task-bundles.json",
+        "hashMode": "normalized-text",
+        "byteLength": 32070,
+        "sha256": "3ca1df592f78366a73bf07c1ea82a9dc8a5eb24ae92da20fbab1d8f7a9894426"
+      },
+      {
+        "path": "pi-study-helper/fixtures/profiles/pandas-cleaning-v2-draft/assessments/private/test-cases.json",
+        "hashMode": "normalized-text",
+        "byteLength": 4267,
+        "sha256": "373ced00c649cad669b300cad61f884018726fd9c34b276329104056635bc27c"
+      },
+      {
+        "path": "pi-study-helper/fixtures/profiles/pandas-cleaning-v2-draft/assessments/private/tests/test-practical-engineering-static.py",
+        "hashMode": "normalized-text",
+        "byteLength": 2246,
+        "sha256": "4482632a8c545b1f9efdaa4558d40fe6e67b4c38ea96486d99c0b92f5c1887d0"
+      },
+      {
+        "path": "pi-study-helper/fixtures/profiles/pandas-cleaning-v2-draft/assessments/private/tests/test-practical-hidden-01.py",
+        "hashMode": "normalized-text",
+        "byteLength": 626,
+        "sha256": "6d762bf0059d7fb77368dbcdd42eb810d565e3c593008c8eced76262d7b20829"
+      },
+      {
+        "path": "pi-study-helper/fixtures/profiles/pandas-cleaning-v2-draft/assessments/private/tests/test-practical-hidden-02.py",
+        "hashMode": "normalized-text",
+        "byteLength": 1854,
+        "sha256": "e501c858969bd6ccefaf21585ad125fc7a26dc9a178b6c09cc52e16137ba5cd1"
+      },
+      {
+        "path": "pi-study-helper/fixtures/profiles/pandas-cleaning-v2-draft/assessments/private/tests/test-practical-hidden-duplicates.py",
+        "hashMode": "normalized-text",
+        "byteLength": 966,
+        "sha256": "bceba5a6f97dac2df6929061b0e0590758e0e5edfaf76dfd5c8d9f9e7a0d0566"
+      },
+      {
+        "path": "pi-study-helper/fixtures/profiles/pandas-cleaning-v2-draft/assessments/private/tests/test-practical-hidden-missing.py",
+        "hashMode": "normalized-text",
+        "byteLength": 773,
+        "sha256": "4da0a6df601fdad50d4481c6fce02dcc3b7f377c0d1b91a50e8af2b524d452f5"
+      },
+      {
+        "path": "pi-study-helper/fixtures/profiles/pandas-cleaning-v2-draft/assessments/private/tests/test-practical-hidden-structure.py",
+        "hashMode": "normalized-text",
+        "byteLength": 775,
+        "sha256": "8092b3b4fbced655acb2a0fb65d94b84cfe44a197a824271503ebc57ac39e5c3"
+      },
+      {
+        "path": "pi-study-helper/fixtures/profiles/pandas-cleaning-v2-draft/assessments/private/tests/test-practical-hidden-types.py",
+        "hashMode": "normalized-text",
+        "byteLength": 1031,
+        "sha256": "a8d5cbe461f3ac525e3a954af39270b0306bf446bdb0baa9c9d7e92b7613ddf6"
+      },
+      {
+        "path": "pi-study-helper/fixtures/profiles/pandas-cleaning-v2-draft/assessments/private/tests/test-structure-hidden.py",
+        "hashMode": "normalized-text",
+        "byteLength": 292,
+        "sha256": "935f988b1d21ebd927fec8015328599376ca0ce05be593130130c9ede7c4dc4e"
+      },
+      {
+        "path": "pi-study-helper/fixtures/profiles/pandas-cleaning-v2-draft/assessments/public/test-cases.json",
+        "hashMode": "normalized-text",
+        "byteLength": 1851,
+        "sha256": "7eff3cba4069bf4b021ec55b0456c5be5f5b6d9daa5edc616c26613bb2b2af24"
+      },
+      {
+        "path": "pi-study-helper/fixtures/profiles/pandas-cleaning-v2-draft/assessments/public/tests/test-practical-public.py",
+        "hashMode": "normalized-text",
+        "byteLength": 924,
+        "sha256": "acaa0a8141a2d300452dd4bb786376da5b227c339f897325a20e4a359a0b3906"
+      },
+      {
+        "path": "pi-study-helper/fixtures/profiles/pandas-cleaning-v2-draft/assessments/public/tests/test-structure-public.py",
+        "hashMode": "normalized-text",
+        "byteLength": 408,
+        "sha256": "eca54fb129f63799fd2290d2ab13f6d1f0258894357fb656ff68c1e1e02c3ef1"
+      },
+      {
+        "path": "pi-study-helper/fixtures/profiles/pandas-cleaning-v2-draft/datasets/fixtures.json",
+        "hashMode": "normalized-text",
+        "byteLength": 818,
+        "sha256": "51c8e1b47214cfb3499efba546894030834858090b171e18060aa571dc16bd34"
+      },
+      {
+        "path": "pi-study-helper/fixtures/profiles/pandas-cleaning-v2-draft/datasets/private/orders-variant-01.csv",
+        "hashMode": "raw-binary",
+        "byteLength": 1274,
+        "sha256": "3fa17a9f134f2e861ef2b039fa3d83220b502e7f23a97d8dabfe23a52f1822b5"
+      },
+      {
+        "path": "pi-study-helper/fixtures/profiles/pandas-cleaning-v2-draft/datasets/private/orders-variant-02.csv",
+        "hashMode": "raw-binary",
+        "byteLength": 1238,
+        "sha256": "01655a4df5edcc5c173b3dca370135e5f2e6010bc7dfba6fc1263d2e30cc0f83"
+      },
+      {
+        "path": "pi-study-helper/fixtures/profiles/pandas-cleaning-v2-draft/datasets/public/orders-learning.csv",
+        "hashMode": "raw-binary",
+        "byteLength": 1669,
+        "sha256": "99b2923bfde4a6a824ed69bb410dc9c9f5d10f69e30b9bc5692ae986c6ab09f9"
+      },
+      {
+        "path": "pi-study-helper/fixtures/profiles/pandas-cleaning-v2-draft/environments/dataframe-comparisons.json",
+        "hashMode": "normalized-text",
+        "byteLength": 1776,
+        "sha256": "7a96cddf2066c80b933923fb7461b2d22aa1acb14795ede2b68678ff34d7b430"
+      },
+      {
+        "path": "pi-study-helper/fixtures/profiles/pandas-cleaning-v2-draft/environments/environment-lock.json",
+        "hashMode": "normalized-text",
+        "byteLength": 848,
+        "sha256": "f1ff33d273d0fae9de7037ea6da0f0d9e2b69314114685693072659092c9d0f0"
+      },
+      {
+        "path": "pi-study-helper/fixtures/profiles/pandas-cleaning-v2-draft/goals/learning-goals.json",
+        "hashMode": "normalized-text",
+        "byteLength": 522,
+        "sha256": "452691452d93567cf22f01210a1b6517ff3cb20c7e337a507c5afcef66de9d24"
+      },
+      {
+        "path": "pi-study-helper/fixtures/profiles/pandas-cleaning-v2-draft/knowledge/knowledge-points.json",
+        "hashMode": "normalized-text",
+        "byteLength": 2652,
+        "sha256": "79b6fdc365c77c1adc18f29098406cf0aff67f71f98f24c36f908e14374e61e6"
+      },
+      {
+        "path": "pi-study-helper/fixtures/profiles/pandas-cleaning-v2-draft/reference-solutions/solution-practical.py",
+        "hashMode": "normalized-text",
+        "byteLength": 1809,
+        "sha256": "0c142feaf8ba469e9101807d6a33eceedead6ff99f63e14c071a88912bbf4e48"
+      },
+      {
+        "path": "pi-study-helper/fixtures/profiles/pandas-cleaning-v2-draft/reference-solutions/solution-structure.py",
+        "hashMode": "normalized-text",
+        "byteLength": 220,
+        "sha256": "4408b65632045e036f9f877f6fb5af8d7ddeb31e38f118dc8756929316df55f5"
+      },
+      {
+        "path": "pi-study-helper/fixtures/profiles/pandas-cleaning-v2-draft/rubrics/rubric-practical.json",
+        "hashMode": "normalized-text",
+        "byteLength": 2427,
+        "sha256": "880a988dabd30c1067621ca5323b5c89c13449cbd60ad93b50f850b22f0388dd"
+      },
+      {
+        "path": "pi-study-helper/fixtures/profiles/pandas-cleaning-v2-draft/rubrics/rubric-structure.json",
+        "hashMode": "normalized-text",
+        "byteLength": 498,
+        "sha256": "5547a5b20a403e546c29aed3510cac982f1ab0467ae26de2425fbf97eb19357f"
+      },
+      {
+        "path": "pi-study-helper/fixtures/profiles/pandas-cleaning-v2-draft/sources/source-map.json",
+        "hashMode": "normalized-text",
+        "byteLength": 6294,
+        "sha256": "125f964a92ab064b3a2a01c3882b888a9b891f074a647f2b9df8efd395c7b32f"
+      }
+    ],
+    "sha256": "ddd23e6cd4b54725e4e00cbcdac299c0ba3cf5d6c997b6fe748767f5309df04c"
+  },
+  "recomputeCommands": [
+    "python quality/prepare-w3-b-d1-delivery.py --verify",
+    "npm.cmd test -- --run tests/w3-b-d1-delivery.test.ts"
+  ],
+  "sealedAt": "2026-08-07T06:01:26Z"
+}

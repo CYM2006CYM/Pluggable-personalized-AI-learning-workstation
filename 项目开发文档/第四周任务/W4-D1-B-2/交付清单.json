@@ -1,0 +1,63 @@
+{
+  "delivery": "W4-D1-B one-time remediation candidate",
+  "contract": "W4-C2/W4-R1",
+  "status": "NOT_COMMITTED / NOT_PUSHED / uploadLock=NOT_REQUESTED",
+  "issueIds": [
+    "B-R1-01",
+    "B-R1-02"
+  ],
+  "ordinaryTransport": {
+    "root": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\outputs\\W4-D1-B-remediation-transport-v1",
+    "purpose": "public-safe transport subset; excludes withheld body content",
+    "candidateFileBodies": 37
+  },
+  "ownerAudit": {
+    "root": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-08-12\\la\\outputs\\W4-D1-B-remediation-owner-audit-v1",
+    "purpose": "responsible-person-readable complete candidate audit input",
+    "candidateFileBodies": 79
+  },
+  "hashes": {
+    "candidateRawDirectoryTreeSha256": "99b94a40c0140b222332c1e016ad80ef301ebcfc4a438a16400f8058095aab52",
+    "revisionSealAssetTreeSha256": "2b9434577a3f682abb95b5b1e58696149ecda26a619d0c8f0ea6146c816468d4",
+    "sealEntryCount": 78
+  },
+  "requirements": {
+    "completeCandidate": [
+      "../W4-D1-B-remediation-owner-audit-v1/candidate-full/",
+      "../W4-D1-B-remediation-owner-audit-v1/audit-input.json"
+    ],
+    "ordinaryTransportZip": [
+      "../W4-D1-B-remediation-transport-v1.zip",
+      "../W4-D1-B-remediation-transport-v1-SHA256.txt"
+    ],
+    "fullManifest": [
+      "candidate-full-file-sha256.json"
+    ],
+    "privateManifest": [
+      "candidate-private-manifest.json"
+    ],
+    "seal": [
+      "evidence/revision-seal.json",
+      "evidence/a-schema-seal-result.json"
+    ],
+    "revision2Proof": [
+      "evidence/w4-b-revision-2-immutability.json"
+    ],
+    "isolation": [
+      "evidence/w4-b-answer-isolation-report.json",
+      "owner-audit-access.json"
+    ],
+    "coverage": [
+      "evidence/w4-b-coverage-matrix.json"
+    ],
+    "commandsAndEnvironment": [
+      "evidence/command-results.json"
+    ],
+    "scopeAudit": [
+      "evidence/scope-audit.md"
+    ],
+    "handoff": [
+      "handoff/handoff-w4-b-d1.md"
+    ]
+  }
+}

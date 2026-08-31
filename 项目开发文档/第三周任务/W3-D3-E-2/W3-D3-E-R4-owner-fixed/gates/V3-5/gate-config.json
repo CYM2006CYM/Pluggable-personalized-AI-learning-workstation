@@ -1,0 +1,73 @@
+﻿{
+    "schemaVersion":  "w3-d3-gate-config-v1",
+    "contractVersion":  "W3-C5/W3-R2",
+    "deliveryStage":  "W3-D3",
+    "executionPolicy":  "PLAN_ONLY_D3_EXPLICIT_W3_D4_TOKEN_REQUIRED",
+    "evidenceSha256Method":  "SHA-256 over raw file bytes; lowercase hexadecimal",
+    "gate":  "V3-5",
+    "title":  "幂等与事务无半写",
+    "purpose":  "验证requestId+attemptId幂等及每个正式提交阶段故障无半写。",
+    "ownerOnFailure":  "A",
+    "requiredInputIds":  [
+                             "a-d3-formal-commit",
+                             "owner-profile-approval",
+                             "b-task-bundles-file",
+                             "c-formal-commit",
+                             "c-binding-fix-commit"
+                         ],
+    "commands":  [
+                     {
+                         "id":  "v3-5-typecheck",
+                         "executable":  "npm.cmd",
+                         "arguments":  [
+                                           "run",
+                                           "typecheck"
+                                       ],
+                         "workingDirectory":  "pi-study-helper",
+                         "expectedExitCode":  0
+                     },
+                     {
+                         "id":  "v3-5-full-tests",
+                         "executable":  "npm.cmd",
+                         "arguments":  [
+                                           "test",
+                                           "--",
+                                           "--maxWorkers=1"
+                                       ],
+                         "workingDirectory":  "pi-study-helper",
+                         "expectedExitCode":  0
+                     }
+                 ],
+    "expectedMetrics":  {
+                            "expectedTestItems":  6,
+                            "idempotencyCases":  1,
+                            "faultStages":  [
+                                                "attempt",
+                                                "evidence",
+                                                "knowledge_state",
+                                                "path_suffix",
+                                                "checkpoint_publish"
+                                            ],
+                            "halfWritesAllowed":  0
+                        },
+    "mechanicalPassConditions":  [
+                                     "重复requestId+attemptId不重复计分",
+                                     "五个阶段逐一注入故障",
+                                     "每次失败后正式事实快照不出现半写",
+                                     "恢复后结果确定且不重复Evidence"
+                                 ],
+    "outputContract":  [
+                           "v3-5-command-evidence.json",
+                           "v3-5-transaction-evidence.json",
+                           "v3-5-file-hashes.sha256"
+                       ],
+    "testLayer":  "事务确定性层",
+    "d47Decision":  "W3-D47-TEST-LAYERS-1",
+    "failureClassifications":  [
+                                   "CODE_DEFECT",
+                                   "ENVIRONMENT_MISMATCH",
+                                   "AUDIT_INPUT_INCOMPLETE",
+                                   "LIVE_NOT_RUN",
+                                   "MOCK_FALLBACK_USED"
+                               ]
+}

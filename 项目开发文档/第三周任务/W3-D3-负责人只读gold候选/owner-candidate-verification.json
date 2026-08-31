@@ -1,0 +1,42 @@
+{
+  "schemaVersion": "w3-d3-owner-candidate-verification-v1",
+  "status": "PASS",
+  "verifiedAt": "2026-08-09T08:07:37.769Z",
+  "checks": {
+    "jsonParse": "220/220 + freeze record",
+    "candidateCoverage": "60/60 x 3",
+    "differenceCoverage": "40/40",
+    "first20RawBytesPreserved": true,
+    "d44NegotiationStatus": "40/40",
+    "freezePayloadHashes": "4/4",
+    "formalGold": false,
+    "gitUploadAuthorized": false
+  },
+  "files": {
+    "difficulty": {
+      "file": "difficulty-gold.candidate.jsonl",
+      "sha256": "15e28f4cf6807fbdc2aa3d1daae25219605be6a14325853a52cd9270765ad395",
+      "byteLength": 69836
+    },
+    "paths": {
+      "file": "path-constraints.candidate.jsonl",
+      "sha256": "86c8663c2ad55d80a86ebbd618f554480c395ea0d772f3e807318c3ce2fd3819",
+      "byteLength": 85088
+    },
+    "adjudication": {
+      "file": "adjudication-log.candidate.jsonl",
+      "sha256": "1f82357499c95b133b60970a92c5bb6de43b797fc5b7691826f4143f3b67fd95",
+      "byteLength": 313612
+    },
+    "differences": {
+      "file": "mechanical-differences-owner-only.jsonl",
+      "sha256": "7eff39cf01d543b8a83e745a7d27275f564969f9879fa59f08917d779f33c125",
+      "byteLength": 44224
+    },
+    "freeze": {
+      "file": "owner-candidate-freeze-record.json",
+      "sha256": "bec68216bb9bb92f81c30f556cdd2685aff0b41e92be5f56dfde7f8fb5d98042",
+      "byteLength": 3034
+    }
+  }
+}

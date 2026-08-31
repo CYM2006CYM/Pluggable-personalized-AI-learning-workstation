@@ -1,0 +1,86 @@
+﻿{
+    "schemaVersion":  "w3-d3-gate-config-v1",
+    "contractVersion":  "W3-C5/W3-R2",
+    "deliveryStage":  "W3-D3",
+    "executionPolicy":  "PLAN_ONLY_D3_EXPLICIT_W3_D4_TOKEN_REQUIRED",
+    "evidenceSha256Method":  "SHA-256 over raw file bytes; lowercase hexadecimal",
+    "gate":  "V3-8",
+    "title":  "六页、DTO分层与恢复交互",
+    "purpose":  "复验六页、五状态、活动四阶段、D46恢复和DTO/fixture安全边界。",
+    "ownerOnFailure":  "E",
+    "requiredInputIds":  [
+                             "e-d2-r2-package",
+                             "e-d2-r2-hash-report"
+                         ],
+    "commands":  [
+                     {
+                         "id":  "v3-8-web-tests",
+                         "executable":  "npm.cmd",
+                         "arguments":  [
+                                           "run",
+                                           "test:web"
+                                       ],
+                         "workingDirectory":  "pi-study-helper",
+                         "expectedExitCode":  0
+                     },
+                     {
+                         "id":  "v3-8-typecheck",
+                         "executable":  "npm.cmd",
+                         "arguments":  [
+                                           "run",
+                                           "typecheck"
+                                       ],
+                         "workingDirectory":  "pi-study-helper",
+                         "expectedExitCode":  0
+                     },
+                     {
+                         "id":  "v3-8-web-boundary",
+                         "executable":  "powershell.exe",
+                         "arguments":  [
+                                           "-NoProfile",
+                                           "-ExecutionPolicy",
+                                           "Bypass",
+                                           "-File",
+                                           "{ToolRoot}/Test-WebBoundary.ps1",
+                                           "-WebRoot",
+                                           "{RepositoryRoot}/pi-study-helper/src/web",
+                                           "-SourceRoot",
+                                           "{RepositoryRoot}/pi-study-helper/src",
+                                           "-OutputFile",
+                                           "{OutputRoot}/v3-8-web-boundary.json"
+                                       ],
+                         "workingDirectory":  ".",
+                         "expectedExitCode":  0
+                     }
+                 ],
+    "expectedMetrics":  {
+                            "expectedTestItems":  81,
+                            "routeCount":  6,
+                            "pageStateCases":  30,
+                            "activityModes":  4,
+                            "obsoleteLearnRouteMatches":  0,
+                            "draftTransitionChecks":  3,
+                            "leakMatches":  0
+                        },
+    "mechanicalPassConditions":  [
+                                     "六页面均可达且旧学习路由无效",
+                                     "六页各五状态及主要操作可用",
+                                     "草稿跨冲突/错误/恢复逐字保留",
+                                     "Facade DTO与页面fixture分离且泄漏扫描为0",
+                                     "前端不做评分、mastery、路径、Rubric或PASS判定"
+                                 ],
+    "outputContract":  [
+                           "v3-8-command-evidence.json",
+                           "v3-8-web-boundary.json",
+                           "v3-8-file-hashes.sha256"
+                       ],
+    "testLayer":  "确定性层",
+    "d47Decision":  "W3-D47-TEST-LAYERS-1",
+    "failureClassifications":  [
+                                   "CODE_DEFECT",
+                                   "ENVIRONMENT_MISMATCH",
+                                   "AUDIT_INPUT_INCOMPLETE",
+                                   "LIVE_NOT_RUN",
+                                   "MOCK_FALLBACK_USED"
+                               ]
+}

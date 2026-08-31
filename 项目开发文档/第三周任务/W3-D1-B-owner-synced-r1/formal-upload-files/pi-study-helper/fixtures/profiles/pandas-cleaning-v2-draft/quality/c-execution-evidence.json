@@ -1,0 +1,1487 @@
+{
+  "schemaVersion": 1,
+  "status": "candidate_evidence_only",
+  "harnessVersion": "b-candidate-evidence-v5",
+  "command": "PYTHONDONTWRITEBYTECODE=1 python quality/run-candidate-evidence.py --output quality/c-execution-evidence.json",
+  "environment": {
+    "python": "3.14.4",
+    "pandas": "3.0.5",
+    "platform": "Windows-11-10.0.26200-SP0"
+  },
+  "inputHashes": {
+    "baseline-2381f14497852a23": "4408b65632045e036f9f877f6fb5af8d7ddeb31e38f118dc8756929316df55f5",
+    "baseline-2f102cb098b329bf": "38875b16b36890674eba36211d88f0221eb84643595fc1bfdafe83601108e630",
+    "baseline-49f0986cb4063208": "36c04016fd4d14fbcc7b03f6bc4c19b1e83976c3c660641f9b47042416359f06",
+    "baseline-c5062b1b0894beb5": "0c142feaf8ba469e9101807d6a33eceedead6ff99f63e14c071a88912bbf4e48",
+    "baseline-ebe8c2b9a678f7ad": "92273b1b18f120b08174825f13986a73a8f7875182c2ee74192a69407a989386",
+    "contract-2be6b832ae4a7f4d": "d4f5780f5c321e08e34089bbcf700ad878f7ca69bbf8872617cdcd1efa27e70e",
+    "dataset-0bdd6469386e5364": "01655a4df5edcc5c173b3dca370135e5f2e6010bc7dfba6fc1263d2e30cc0f83",
+    "dataset-5b368b1c330ca30e": "99b2923bfde4a6a824ed69bb410dc9c9f5d10f69e30b9bc5692ae986c6ab09f9",
+    "dataset-b8b99c8e2191d827": "3fa17a9f134f2e861ef2b039fa3d83220b502e7f23a97d8dabfe23a52f1822b5",
+    "fixture-index-a2380e7bda87a8bf": "51c8e1b47214cfb3499efba546894030834858090b171e18060aa571dc16bd34",
+    "harness-f697c177eeab8f9c": "7bf1eb7ac3ea74db0a6af91e4e11f860057f79beaa9dd9ac848bf39b2b8bff58",
+    "known-wrong-3b245e5d3e71f0fa": "b0738bad062cada5c4c3b65cf3e32ff7ef6df8e1ca9676b75825e0e5f649cfc0",
+    "known-wrong-659e1bb7c32f8cbd": "575bc318813c0864dccee46416acbe59810ea960c655dcaf2b812b9f2e9645ef",
+    "known-wrong-87f096ea62b2aa6a": "4998136540f88314c43a527186ec2411bc925e0184f0073bcd6aeec3c3695f28",
+    "known-wrong-939ef65dcc0b4536": "b69266121f954761295d7ea8dce38959d7fa6d6f31925bdb86f645e1f136d973",
+    "known-wrong-d2ef2cf15c59a46d": "74e323f2defd470a4693de54907421a054e3a4b53b0ed0cbcf4af26c0f39bc51",
+    "test-10de988111c8add8": "f494513463a02d3168a66d9bd5c312fbc50fcdec89b2a7c20a1cfb4f64bde7f1",
+    "test-10fe278350e84cc5": "4da0a6df601fdad50d4481c6fce02dcc3b7f377c0d1b91a50e8af2b524d452f5",
+    "test-37b228a210f49246": "a8d5cbe461f3ac525e3a954af39270b0306bf446bdb0baa9c9d7e92b7613ddf6",
+    "test-3d7f0eb6a2f1bd1a": "4482632a8c545b1f9efdaa4558d40fe6e67b4c38ea96486d99c0b92f5c1887d0",
+    "test-63209607c7907101": "acaa0a8141a2d300452dd4bb786376da5b227c339f897325a20e4a359a0b3906",
+    "test-6748d919c864fd23": "8d798c0cecd733579901a04630dbcdcb0333efaef731568467dda003abaa3e0f",
+    "test-8b60da4c0da045cb": "eca54fb129f63799fd2290d2ab13f6d1f0258894357fb656ff68c1e1e02c3ef1",
+    "test-8bd5ad6eac327da2": "8092b3b4fbced655acb2a0fb65d94b84cfe44a197a824271503ebc57ac39e5c3",
+    "test-8e1d213c479849bb": "6d762bf0059d7fb77368dbcdd42eb810d565e3c593008c8eced76262d7b20829",
+    "test-92c304e42d9074bc": "b3153bab7097369623ae2d6bfa8eae11f8414646d006030836f07e5e1e3b3285",
+    "test-9fd8d8a0c8ce8f6a": "935f988b1d21ebd927fec8015328599376ca0ce05be593130130c9ede7c4dc4e",
+    "test-b89fb33a8fbbdd97": "7f9449a3e924c734314649ffd056465ce19e3971e15b9a806c928360472b3be3",
+    "test-c3ff9ffacc0f899d": "bceba5a6f97dac2df6929061b0e0590758e0e5edfaf76dfd5c8d9f9e7a0d0566",
+    "test-cb92172ee2ee13d5": "b995f2e36844821afb1d30ba4d3efae72732072a0a0d3f7985056955e40748e6",
+    "test-e7fedd59c0be28d9": "2dc5a6f931e45fbeeff890cd122aa3a5f52a42251228f1beb5a9f660a77ff1e2",
+    "test-f08ace7382ea05a5": "e501c858969bd6ccefaf21585ad125fc7a26dc9a178b6c09cc52e16137ba5cd1"
+  },
+  "baselineOutputFingerprints": {
+    "bundle-act-duplicates-v2:test-1a267c36c7c475c7:dataset-ef59e73c65dd7ba8": "sha256:606f9b9002364dad81b9003c90dcb573e4a5322f8b1b5c304394ec3f35ddef73",
+    "bundle-act-duplicates-v2:test-f0ff255966ee099c:dataset-ef59e73c65dd7ba8": "sha256:606f9b9002364dad81b9003c90dcb573e4a5322f8b1b5c304394ec3f35ddef73",
+    "bundle-act-inspect-dataframe-v2:test-542f041ce07668e9:dataset-ef59e73c65dd7ba8": "sha256:eb3aedbebf6a5aaab30c0ecdc8acf781adcd159e762da63d28fd0d563d3148d8",
+    "bundle-act-inspect-dataframe-v2:test-8fa19c5472d17777:dataset-ef59e73c65dd7ba8": "sha256:eb3aedbebf6a5aaab30c0ecdc8acf781adcd159e762da63d28fd0d563d3148d8",
+    "bundle-act-missing-v2:test-211050ecdc19f9f4:dataset-ef59e73c65dd7ba8": "sha256:2ffd9f8f434c85d7c1aee97834309af91b0849a74147f4c987052d47961e3fcc",
+    "bundle-act-missing-v2:test-cf8bcfb47e1c8eec:dataset-ef59e73c65dd7ba8": "sha256:2ffd9f8f434c85d7c1aee97834309af91b0849a74147f4c987052d47961e3fcc",
+    "bundle-act-practical-v2:test-1eb17e6fc5d98adb:dataset-9fc4d0dafa2eaa03": "sha256:bbd4255e2cebe1d8cba14ebae27f32725937e3ffb9cb908805294f22c4f38c49",
+    "bundle-act-practical-v2:test-24104f87a0b75d71:dataset-cf12008615da03ec": "sha256:54f83f223ff4c3391b5b8d984caf3f6bf901dddef1ad3c3b1b34cb3150c7eae3",
+    "bundle-act-practical-v2:test-8ee8fff0735bf9fe:dataset-9fc4d0dafa2eaa03": "sha256:f4714a9c7fbf7c51599eddd7af4a5f3978b6eff065541046ea91d32eb1719fb1",
+    "bundle-act-practical-v2:test-a937e517bfc563ec:dataset-9fc4d0dafa2eaa03": "sha256:bbd4255e2cebe1d8cba14ebae27f32725937e3ffb9cb908805294f22c4f38c49",
+    "bundle-act-practical-v2:test-b963758918649871:dataset-9fc4d0dafa2eaa03": "sha256:bbd4255e2cebe1d8cba14ebae27f32725937e3ffb9cb908805294f22c4f38c49",
+    "bundle-act-practical-v2:test-bd531783bb52e6ee:dataset-9fc4d0dafa2eaa03": "sha256:bbd4255e2cebe1d8cba14ebae27f32725937e3ffb9cb908805294f22c4f38c49",
+    "bundle-act-practical-v2:test-ca0a5007d4f6143f:dataset-9fc4d0dafa2eaa03": "sha256:bbd4255e2cebe1d8cba14ebae27f32725937e3ffb9cb908805294f22c4f38c49",
+    "bundle-act-practical-v2:test-dc048f5f59bf27cf:dataset-ef59e73c65dd7ba8": "sha256:710fc1fe82426540dbb5f8db34372e7e9ec9480909231868498a6a0c7af0275b",
+    "bundle-act-types-v2:test-327e1445c8e2971f:dataset-ef59e73c65dd7ba8": "sha256:462dae5e6806bbe77554d969a969f98b2ecfd9b65a4a948540177a97d6db2106",
+    "bundle-act-types-v2:test-d9c33b1df23ee7ca:dataset-ef59e73c65dd7ba8": "sha256:462dae5e6806bbe77554d969a969f98b2ecfd9b65a4a948540177a97d6db2106"
+  },
+  "baselineRepeatFingerprints": {
+    "bundle-act-duplicates-v2:test-1a267c36c7c475c7:dataset-ef59e73c65dd7ba8": [
+      "sha256:606f9b9002364dad81b9003c90dcb573e4a5322f8b1b5c304394ec3f35ddef73",
+      "sha256:606f9b9002364dad81b9003c90dcb573e4a5322f8b1b5c304394ec3f35ddef73",
+      "sha256:606f9b9002364dad81b9003c90dcb573e4a5322f8b1b5c304394ec3f35ddef73"
+    ],
+    "bundle-act-duplicates-v2:test-f0ff255966ee099c:dataset-ef59e73c65dd7ba8": [
+      "sha256:606f9b9002364dad81b9003c90dcb573e4a5322f8b1b5c304394ec3f35ddef73",
+      "sha256:606f9b9002364dad81b9003c90dcb573e4a5322f8b1b5c304394ec3f35ddef73",
+      "sha256:606f9b9002364dad81b9003c90dcb573e4a5322f8b1b5c304394ec3f35ddef73"
+    ],
+    "bundle-act-inspect-dataframe-v2:test-542f041ce07668e9:dataset-ef59e73c65dd7ba8": [
+      "sha256:eb3aedbebf6a5aaab30c0ecdc8acf781adcd159e762da63d28fd0d563d3148d8",
+      "sha256:eb3aedbebf6a5aaab30c0ecdc8acf781adcd159e762da63d28fd0d563d3148d8",
+      "sha256:eb3aedbebf6a5aaab30c0ecdc8acf781adcd159e762da63d28fd0d563d3148d8"
+    ],
+    "bundle-act-inspect-dataframe-v2:test-8fa19c5472d17777:dataset-ef59e73c65dd7ba8": [
+      "sha256:eb3aedbebf6a5aaab30c0ecdc8acf781adcd159e762da63d28fd0d563d3148d8",
+      "sha256:eb3aedbebf6a5aaab30c0ecdc8acf781adcd159e762da63d28fd0d563d3148d8",
+      "sha256:eb3aedbebf6a5aaab30c0ecdc8acf781adcd159e762da63d28fd0d563d3148d8"
+    ],
+    "bundle-act-missing-v2:test-211050ecdc19f9f4:dataset-ef59e73c65dd7ba8": [
+      "sha256:2ffd9f8f434c85d7c1aee97834309af91b0849a74147f4c987052d47961e3fcc",
+      "sha256:2ffd9f8f434c85d7c1aee97834309af91b0849a74147f4c987052d47961e3fcc",
+      "sha256:2ffd9f8f434c85d7c1aee97834309af91b0849a74147f4c987052d47961e3fcc"
+    ],
+    "bundle-act-missing-v2:test-cf8bcfb47e1c8eec:dataset-ef59e73c65dd7ba8": [
+      "sha256:2ffd9f8f434c85d7c1aee97834309af91b0849a74147f4c987052d47961e3fcc",
+      "sha256:2ffd9f8f434c85d7c1aee97834309af91b0849a74147f4c987052d47961e3fcc",
+      "sha256:2ffd9f8f434c85d7c1aee97834309af91b0849a74147f4c987052d47961e3fcc"
+    ],
+    "bundle-act-practical-v2:test-1eb17e6fc5d98adb:dataset-9fc4d0dafa2eaa03": [
+      "sha256:bbd4255e2cebe1d8cba14ebae27f32725937e3ffb9cb908805294f22c4f38c49",
+      "sha256:bbd4255e2cebe1d8cba14ebae27f32725937e3ffb9cb908805294f22c4f38c49",
+      "sha256:bbd4255e2cebe1d8cba14ebae27f32725937e3ffb9cb908805294f22c4f38c49"
+    ],
+    "bundle-act-practical-v2:test-24104f87a0b75d71:dataset-cf12008615da03ec": [
+      "sha256:54f83f223ff4c3391b5b8d984caf3f6bf901dddef1ad3c3b1b34cb3150c7eae3",
+      "sha256:54f83f223ff4c3391b5b8d984caf3f6bf901dddef1ad3c3b1b34cb3150c7eae3",
+      "sha256:54f83f223ff4c3391b5b8d984caf3f6bf901dddef1ad3c3b1b34cb3150c7eae3"
+    ],
+    "bundle-act-practical-v2:test-8ee8fff0735bf9fe:dataset-9fc4d0dafa2eaa03": [
+      "sha256:f4714a9c7fbf7c51599eddd7af4a5f3978b6eff065541046ea91d32eb1719fb1",
+      "sha256:f4714a9c7fbf7c51599eddd7af4a5f3978b6eff065541046ea91d32eb1719fb1",
+      "sha256:f4714a9c7fbf7c51599eddd7af4a5f3978b6eff065541046ea91d32eb1719fb1"
+    ],
+    "bundle-act-practical-v2:test-a937e517bfc563ec:dataset-9fc4d0dafa2eaa03": [
+      "sha256:bbd4255e2cebe1d8cba14ebae27f32725937e3ffb9cb908805294f22c4f38c49",
+      "sha256:bbd4255e2cebe1d8cba14ebae27f32725937e3ffb9cb908805294f22c4f38c49",
+      "sha256:bbd4255e2cebe1d8cba14ebae27f32725937e3ffb9cb908805294f22c4f38c49"
+    ],
+    "bundle-act-practical-v2:test-b963758918649871:dataset-9fc4d0dafa2eaa03": [
+      "sha256:bbd4255e2cebe1d8cba14ebae27f32725937e3ffb9cb908805294f22c4f38c49",
+      "sha256:bbd4255e2cebe1d8cba14ebae27f32725937e3ffb9cb908805294f22c4f38c49",
+      "sha256:bbd4255e2cebe1d8cba14ebae27f32725937e3ffb9cb908805294f22c4f38c49"
+    ],
+    "bundle-act-practical-v2:test-bd531783bb52e6ee:dataset-9fc4d0dafa2eaa03": [
+      "sha256:bbd4255e2cebe1d8cba14ebae27f32725937e3ffb9cb908805294f22c4f38c49",
+      "sha256:bbd4255e2cebe1d8cba14ebae27f32725937e3ffb9cb908805294f22c4f38c49",
+      "sha256:bbd4255e2cebe1d8cba14ebae27f32725937e3ffb9cb908805294f22c4f38c49"
+    ],
+    "bundle-act-practical-v2:test-ca0a5007d4f6143f:dataset-9fc4d0dafa2eaa03": [
+      "sha256:bbd4255e2cebe1d8cba14ebae27f32725937e3ffb9cb908805294f22c4f38c49",
+      "sha256:bbd4255e2cebe1d8cba14ebae27f32725937e3ffb9cb908805294f22c4f38c49",
+      "sha256:bbd4255e2cebe1d8cba14ebae27f32725937e3ffb9cb908805294f22c4f38c49"
+    ],
+    "bundle-act-practical-v2:test-dc048f5f59bf27cf:dataset-ef59e73c65dd7ba8": [
+      "sha256:710fc1fe82426540dbb5f8db34372e7e9ec9480909231868498a6a0c7af0275b",
+      "sha256:710fc1fe82426540dbb5f8db34372e7e9ec9480909231868498a6a0c7af0275b",
+      "sha256:710fc1fe82426540dbb5f8db34372e7e9ec9480909231868498a6a0c7af0275b"
+    ],
+    "bundle-act-types-v2:test-327e1445c8e2971f:dataset-ef59e73c65dd7ba8": [
+      "sha256:462dae5e6806bbe77554d969a969f98b2ecfd9b65a4a948540177a97d6db2106",
+      "sha256:462dae5e6806bbe77554d969a969f98b2ecfd9b65a4a948540177a97d6db2106",
+      "sha256:462dae5e6806bbe77554d969a969f98b2ecfd9b65a4a948540177a97d6db2106"
+    ],
+    "bundle-act-types-v2:test-d9c33b1df23ee7ca:dataset-ef59e73c65dd7ba8": [
+      "sha256:462dae5e6806bbe77554d969a969f98b2ecfd9b65a4a948540177a97d6db2106",
+      "sha256:462dae5e6806bbe77554d969a969f98b2ecfd9b65a4a948540177a97d6db2106",
+      "sha256:462dae5e6806bbe77554d969a969f98b2ecfd9b65a4a948540177a97d6db2106"
+    ]
+  },
+  "wrongRejectionMatrix": {
+    "bundle-act-duplicates-v2:wrong-duplicates:dataset-ef59e73c65dd7ba8": {
+      "1": [
+        true,
+        true
+      ],
+      "2": [
+        true,
+        true
+      ],
+      "3": [
+        true,
+        true
+      ]
+    },
+    "bundle-act-inspect-dataframe-v2:wrong-structure:dataset-ef59e73c65dd7ba8": {
+      "1": [
+        true,
+        false
+      ],
+      "2": [
+        true,
+        false
+      ],
+      "3": [
+        true,
+        false
+      ]
+    },
+    "bundle-act-missing-v2:wrong-missing:dataset-ef59e73c65dd7ba8": {
+      "1": [
+        true,
+        false
+      ],
+      "2": [
+        true,
+        false
+      ],
+      "3": [
+        true,
+        false
+      ]
+    },
+    "bundle-act-practical-v2:wrong-practical:dataset-9fc4d0dafa2eaa03": {
+      "1": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      "2": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      "3": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ]
+    },
+    "bundle-act-practical-v2:wrong-practical:dataset-cf12008615da03ec": {
+      "1": [
+        true
+      ],
+      "2": [
+        true
+      ],
+      "3": [
+        true
+      ]
+    },
+    "bundle-act-practical-v2:wrong-practical:dataset-ef59e73c65dd7ba8": {
+      "1": [
+        true
+      ],
+      "2": [
+        true
+      ],
+      "3": [
+        true
+      ]
+    },
+    "bundle-act-types-v2:wrong-types:dataset-ef59e73c65dd7ba8": {
+      "1": [
+        true,
+        true
+      ],
+      "2": [
+        true,
+        true
+      ],
+      "3": [
+        true,
+        true
+      ]
+    }
+  },
+  "results": [
+    {
+      "bundleId": "bundle-act-inspect-dataframe-v2",
+      "implementation": "baseline",
+      "testId": "test-8fa19c5472d17777",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 1,
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null,
+      "outputFingerprint": "sha256:eb3aedbebf6a5aaab30c0ecdc8acf781adcd159e762da63d28fd0d563d3148d8"
+    },
+    {
+      "bundleId": "bundle-act-inspect-dataframe-v2",
+      "implementation": "starter",
+      "testId": "test-8fa19c5472d17777",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 1,
+      "exitCode": 1,
+      "errorType": "AssertionError",
+      "errorSummary": "redacted_candidate_execution_failure",
+      "outputFingerprint": null
+    },
+    {
+      "bundleId": "bundle-act-inspect-dataframe-v2",
+      "implementation": "known_wrong:wrong-structure",
+      "testId": "test-8fa19c5472d17777",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 1,
+      "exitCode": 1,
+      "errorType": "AssertionError",
+      "errorSummary": "redacted_candidate_execution_failure",
+      "outputFingerprint": null
+    },
+    {
+      "bundleId": "bundle-act-inspect-dataframe-v2",
+      "implementation": "baseline",
+      "testId": "test-8fa19c5472d17777",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 2,
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null,
+      "outputFingerprint": "sha256:eb3aedbebf6a5aaab30c0ecdc8acf781adcd159e762da63d28fd0d563d3148d8"
+    },
+    {
+      "bundleId": "bundle-act-inspect-dataframe-v2",
+      "implementation": "starter",
+      "testId": "test-8fa19c5472d17777",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 2,
+      "exitCode": 1,
+      "errorType": "AssertionError",
+      "errorSummary": "redacted_candidate_execution_failure",
+      "outputFingerprint": null
+    },
+    {
+      "bundleId": "bundle-act-inspect-dataframe-v2",
+      "implementation": "known_wrong:wrong-structure",
+      "testId": "test-8fa19c5472d17777",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 2,
+      "exitCode": 1,
+      "errorType": "AssertionError",
+      "errorSummary": "redacted_candidate_execution_failure",
+      "outputFingerprint": null
+    },
+    {
+      "bundleId": "bundle-act-inspect-dataframe-v2",
+      "implementation": "baseline",
+      "testId": "test-8fa19c5472d17777",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 3,
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null,
+      "outputFingerprint": "sha256:eb3aedbebf6a5aaab30c0ecdc8acf781adcd159e762da63d28fd0d563d3148d8"
+    },
+    {
+      "bundleId": "bundle-act-inspect-dataframe-v2",
+      "implementation": "starter",
+      "testId": "test-8fa19c5472d17777",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 3,
+      "exitCode": 1,
+      "errorType": "AssertionError",
+      "errorSummary": "redacted_candidate_execution_failure",
+      "outputFingerprint": null
+    },
+    {
+      "bundleId": "bundle-act-inspect-dataframe-v2",
+      "implementation": "known_wrong:wrong-structure",
+      "testId": "test-8fa19c5472d17777",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 3,
+      "exitCode": 1,
+      "errorType": "AssertionError",
+      "errorSummary": "redacted_candidate_execution_failure",
+      "outputFingerprint": null
+    },
+    {
+      "bundleId": "bundle-act-inspect-dataframe-v2",
+      "implementation": "baseline",
+      "testId": "test-542f041ce07668e9",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 1,
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null,
+      "outputFingerprint": "sha256:eb3aedbebf6a5aaab30c0ecdc8acf781adcd159e762da63d28fd0d563d3148d8"
+    },
+    {
+      "bundleId": "bundle-act-inspect-dataframe-v2",
+      "implementation": "known_wrong:wrong-structure",
+      "testId": "test-542f041ce07668e9",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 1,
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null,
+      "outputFingerprint": "sha256:456a21ae627158021a5e8b44087ae7d78e2c32625b959631d126d985d643ca5a"
+    },
+    {
+      "bundleId": "bundle-act-inspect-dataframe-v2",
+      "implementation": "baseline",
+      "testId": "test-542f041ce07668e9",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 2,
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null,
+      "outputFingerprint": "sha256:eb3aedbebf6a5aaab30c0ecdc8acf781adcd159e762da63d28fd0d563d3148d8"
+    },
+    {
+      "bundleId": "bundle-act-inspect-dataframe-v2",
+      "implementation": "known_wrong:wrong-structure",
+      "testId": "test-542f041ce07668e9",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 2,
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null,
+      "outputFingerprint": "sha256:456a21ae627158021a5e8b44087ae7d78e2c32625b959631d126d985d643ca5a"
+    },
+    {
+      "bundleId": "bundle-act-inspect-dataframe-v2",
+      "implementation": "baseline",
+      "testId": "test-542f041ce07668e9",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 3,
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null,
+      "outputFingerprint": "sha256:eb3aedbebf6a5aaab30c0ecdc8acf781adcd159e762da63d28fd0d563d3148d8"
+    },
+    {
+      "bundleId": "bundle-act-inspect-dataframe-v2",
+      "implementation": "known_wrong:wrong-structure",
+      "testId": "test-542f041ce07668e9",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 3,
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null,
+      "outputFingerprint": "sha256:456a21ae627158021a5e8b44087ae7d78e2c32625b959631d126d985d643ca5a"
+    },
+    {
+      "bundleId": "bundle-act-missing-v2",
+      "implementation": "baseline",
+      "testId": "test-211050ecdc19f9f4",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 1,
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null,
+      "outputFingerprint": "sha256:2ffd9f8f434c85d7c1aee97834309af91b0849a74147f4c987052d47961e3fcc"
+    },
+    {
+      "bundleId": "bundle-act-missing-v2",
+      "implementation": "starter",
+      "testId": "test-211050ecdc19f9f4",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 1,
+      "exitCode": 1,
+      "errorType": "AssertionError",
+      "errorSummary": "redacted_candidate_execution_failure",
+      "outputFingerprint": null
+    },
+    {
+      "bundleId": "bundle-act-missing-v2",
+      "implementation": "known_wrong:wrong-missing",
+      "testId": "test-211050ecdc19f9f4",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 1,
+      "exitCode": 1,
+      "errorType": "AssertionError",
+      "errorSummary": "redacted_candidate_execution_failure",
+      "outputFingerprint": null
+    },
+    {
+      "bundleId": "bundle-act-missing-v2",
+      "implementation": "baseline",
+      "testId": "test-211050ecdc19f9f4",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 2,
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null,
+      "outputFingerprint": "sha256:2ffd9f8f434c85d7c1aee97834309af91b0849a74147f4c987052d47961e3fcc"
+    },
+    {
+      "bundleId": "bundle-act-missing-v2",
+      "implementation": "starter",
+      "testId": "test-211050ecdc19f9f4",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 2,
+      "exitCode": 1,
+      "errorType": "AssertionError",
+      "errorSummary": "redacted_candidate_execution_failure",
+      "outputFingerprint": null
+    },
+    {
+      "bundleId": "bundle-act-missing-v2",
+      "implementation": "known_wrong:wrong-missing",
+      "testId": "test-211050ecdc19f9f4",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 2,
+      "exitCode": 1,
+      "errorType": "AssertionError",
+      "errorSummary": "redacted_candidate_execution_failure",
+      "outputFingerprint": null
+    },
+    {
+      "bundleId": "bundle-act-missing-v2",
+      "implementation": "baseline",
+      "testId": "test-211050ecdc19f9f4",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 3,
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null,
+      "outputFingerprint": "sha256:2ffd9f8f434c85d7c1aee97834309af91b0849a74147f4c987052d47961e3fcc"
+    },
+    {
+      "bundleId": "bundle-act-missing-v2",
+      "implementation": "starter",
+      "testId": "test-211050ecdc19f9f4",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 3,
+      "exitCode": 1,
+      "errorType": "AssertionError",
+      "errorSummary": "redacted_candidate_execution_failure",
+      "outputFingerprint": null
+    },
+    {
+      "bundleId": "bundle-act-missing-v2",
+      "implementation": "known_wrong:wrong-missing",
+      "testId": "test-211050ecdc19f9f4",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 3,
+      "exitCode": 1,
+      "errorType": "AssertionError",
+      "errorSummary": "redacted_candidate_execution_failure",
+      "outputFingerprint": null
+    },
+    {
+      "bundleId": "bundle-act-missing-v2",
+      "implementation": "baseline",
+      "testId": "test-cf8bcfb47e1c8eec",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 1,
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null,
+      "outputFingerprint": "sha256:2ffd9f8f434c85d7c1aee97834309af91b0849a74147f4c987052d47961e3fcc"
+    },
+    {
+      "bundleId": "bundle-act-missing-v2",
+      "implementation": "known_wrong:wrong-missing",
+      "testId": "test-cf8bcfb47e1c8eec",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 1,
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null,
+      "outputFingerprint": "sha256:08c2d4ee284459f289601cf13af7e4ddd679aca1d866a742db2a17423ecc4bb7"
+    },
+    {
+      "bundleId": "bundle-act-missing-v2",
+      "implementation": "baseline",
+      "testId": "test-cf8bcfb47e1c8eec",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 2,
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null,
+      "outputFingerprint": "sha256:2ffd9f8f434c85d7c1aee97834309af91b0849a74147f4c987052d47961e3fcc"
+    },
+    {
+      "bundleId": "bundle-act-missing-v2",
+      "implementation": "known_wrong:wrong-missing",
+      "testId": "test-cf8bcfb47e1c8eec",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 2,
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null,
+      "outputFingerprint": "sha256:08c2d4ee284459f289601cf13af7e4ddd679aca1d866a742db2a17423ecc4bb7"
+    },
+    {
+      "bundleId": "bundle-act-missing-v2",
+      "implementation": "baseline",
+      "testId": "test-cf8bcfb47e1c8eec",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 3,
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null,
+      "outputFingerprint": "sha256:2ffd9f8f434c85d7c1aee97834309af91b0849a74147f4c987052d47961e3fcc"
+    },
+    {
+      "bundleId": "bundle-act-missing-v2",
+      "implementation": "known_wrong:wrong-missing",
+      "testId": "test-cf8bcfb47e1c8eec",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 3,
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null,
+      "outputFingerprint": "sha256:08c2d4ee284459f289601cf13af7e4ddd679aca1d866a742db2a17423ecc4bb7"
+    },
+    {
+      "bundleId": "bundle-act-duplicates-v2",
+      "implementation": "baseline",
+      "testId": "test-1a267c36c7c475c7",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 1,
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null,
+      "outputFingerprint": "sha256:606f9b9002364dad81b9003c90dcb573e4a5322f8b1b5c304394ec3f35ddef73"
+    },
+    {
+      "bundleId": "bundle-act-duplicates-v2",
+      "implementation": "starter",
+      "testId": "test-1a267c36c7c475c7",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 1,
+      "exitCode": 1,
+      "errorType": "AssertionError",
+      "errorSummary": "redacted_candidate_execution_failure",
+      "outputFingerprint": null
+    },
+    {
+      "bundleId": "bundle-act-duplicates-v2",
+      "implementation": "known_wrong:wrong-duplicates",
+      "testId": "test-1a267c36c7c475c7",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 1,
+      "exitCode": 1,
+      "errorType": "AssertionError",
+      "errorSummary": "redacted_candidate_execution_failure",
+      "outputFingerprint": null
+    },
+    {
+      "bundleId": "bundle-act-duplicates-v2",
+      "implementation": "baseline",
+      "testId": "test-1a267c36c7c475c7",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 2,
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null,
+      "outputFingerprint": "sha256:606f9b9002364dad81b9003c90dcb573e4a5322f8b1b5c304394ec3f35ddef73"
+    },
+    {
+      "bundleId": "bundle-act-duplicates-v2",
+      "implementation": "starter",
+      "testId": "test-1a267c36c7c475c7",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 2,
+      "exitCode": 1,
+      "errorType": "AssertionError",
+      "errorSummary": "redacted_candidate_execution_failure",
+      "outputFingerprint": null
+    },
+    {
+      "bundleId": "bundle-act-duplicates-v2",
+      "implementation": "known_wrong:wrong-duplicates",
+      "testId": "test-1a267c36c7c475c7",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 2,
+      "exitCode": 1,
+      "errorType": "AssertionError",
+      "errorSummary": "redacted_candidate_execution_failure",
+      "outputFingerprint": null
+    },
+    {
+      "bundleId": "bundle-act-duplicates-v2",
+      "implementation": "baseline",
+      "testId": "test-1a267c36c7c475c7",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 3,
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null,
+      "outputFingerprint": "sha256:606f9b9002364dad81b9003c90dcb573e4a5322f8b1b5c304394ec3f35ddef73"
+    },
+    {
+      "bundleId": "bundle-act-duplicates-v2",
+      "implementation": "starter",
+      "testId": "test-1a267c36c7c475c7",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 3,
+      "exitCode": 1,
+      "errorType": "AssertionError",
+      "errorSummary": "redacted_candidate_execution_failure",
+      "outputFingerprint": null
+    },
+    {
+      "bundleId": "bundle-act-duplicates-v2",
+      "implementation": "known_wrong:wrong-duplicates",
+      "testId": "test-1a267c36c7c475c7",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 3,
+      "exitCode": 1,
+      "errorType": "AssertionError",
+      "errorSummary": "redacted_candidate_execution_failure",
+      "outputFingerprint": null
+    },
+    {
+      "bundleId": "bundle-act-duplicates-v2",
+      "implementation": "baseline",
+      "testId": "test-f0ff255966ee099c",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 1,
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null,
+      "outputFingerprint": "sha256:606f9b9002364dad81b9003c90dcb573e4a5322f8b1b5c304394ec3f35ddef73"
+    },
+    {
+      "bundleId": "bundle-act-duplicates-v2",
+      "implementation": "known_wrong:wrong-duplicates",
+      "testId": "test-f0ff255966ee099c",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 1,
+      "exitCode": 1,
+      "errorType": "AssertionError",
+      "errorSummary": "redacted_candidate_execution_failure",
+      "outputFingerprint": null
+    },
+    {
+      "bundleId": "bundle-act-duplicates-v2",
+      "implementation": "baseline",
+      "testId": "test-f0ff255966ee099c",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 2,
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null,
+      "outputFingerprint": "sha256:606f9b9002364dad81b9003c90dcb573e4a5322f8b1b5c304394ec3f35ddef73"
+    },
+    {
+      "bundleId": "bundle-act-duplicates-v2",
+      "implementation": "known_wrong:wrong-duplicates",
+      "testId": "test-f0ff255966ee099c",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 2,
+      "exitCode": 1,
+      "errorType": "AssertionError",
+      "errorSummary": "redacted_candidate_execution_failure",
+      "outputFingerprint": null
+    },
+    {
+      "bundleId": "bundle-act-duplicates-v2",
+      "implementation": "baseline",
+      "testId": "test-f0ff255966ee099c",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 3,
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null,
+      "outputFingerprint": "sha256:606f9b9002364dad81b9003c90dcb573e4a5322f8b1b5c304394ec3f35ddef73"
+    },
+    {
+      "bundleId": "bundle-act-duplicates-v2",
+      "implementation": "known_wrong:wrong-duplicates",
+      "testId": "test-f0ff255966ee099c",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 3,
+      "exitCode": 1,
+      "errorType": "AssertionError",
+      "errorSummary": "redacted_candidate_execution_failure",
+      "outputFingerprint": null
+    },
+    {
+      "bundleId": "bundle-act-types-v2",
+      "implementation": "baseline",
+      "testId": "test-d9c33b1df23ee7ca",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 1,
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null,
+      "outputFingerprint": "sha256:462dae5e6806bbe77554d969a969f98b2ecfd9b65a4a948540177a97d6db2106"
+    },
+    {
+      "bundleId": "bundle-act-types-v2",
+      "implementation": "starter",
+      "testId": "test-d9c33b1df23ee7ca",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 1,
+      "exitCode": 1,
+      "errorType": "AssertionError",
+      "errorSummary": "redacted_candidate_execution_failure",
+      "outputFingerprint": null
+    },
+    {
+      "bundleId": "bundle-act-types-v2",
+      "implementation": "known_wrong:wrong-types",
+      "testId": "test-d9c33b1df23ee7ca",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 1,
+      "exitCode": 1,
+      "errorType": "AssertionError",
+      "errorSummary": "redacted_candidate_execution_failure",
+      "outputFingerprint": null
+    },
+    {
+      "bundleId": "bundle-act-types-v2",
+      "implementation": "baseline",
+      "testId": "test-d9c33b1df23ee7ca",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 2,
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null,
+      "outputFingerprint": "sha256:462dae5e6806bbe77554d969a969f98b2ecfd9b65a4a948540177a97d6db2106"
+    },
+    {
+      "bundleId": "bundle-act-types-v2",
+      "implementation": "starter",
+      "testId": "test-d9c33b1df23ee7ca",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 2,
+      "exitCode": 1,
+      "errorType": "AssertionError",
+      "errorSummary": "redacted_candidate_execution_failure",
+      "outputFingerprint": null
+    },
+    {
+      "bundleId": "bundle-act-types-v2",
+      "implementation": "known_wrong:wrong-types",
+      "testId": "test-d9c33b1df23ee7ca",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 2,
+      "exitCode": 1,
+      "errorType": "AssertionError",
+      "errorSummary": "redacted_candidate_execution_failure",
+      "outputFingerprint": null
+    },
+    {
+      "bundleId": "bundle-act-types-v2",
+      "implementation": "baseline",
+      "testId": "test-d9c33b1df23ee7ca",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 3,
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null,
+      "outputFingerprint": "sha256:462dae5e6806bbe77554d969a969f98b2ecfd9b65a4a948540177a97d6db2106"
+    },
+    {
+      "bundleId": "bundle-act-types-v2",
+      "implementation": "starter",
+      "testId": "test-d9c33b1df23ee7ca",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 3,
+      "exitCode": 1,
+      "errorType": "AssertionError",
+      "errorSummary": "redacted_candidate_execution_failure",
+      "outputFingerprint": null
+    },
+    {
+      "bundleId": "bundle-act-types-v2",
+      "implementation": "known_wrong:wrong-types",
+      "testId": "test-d9c33b1df23ee7ca",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 3,
+      "exitCode": 1,
+      "errorType": "AssertionError",
+      "errorSummary": "redacted_candidate_execution_failure",
+      "outputFingerprint": null
+    },
+    {
+      "bundleId": "bundle-act-types-v2",
+      "implementation": "baseline",
+      "testId": "test-327e1445c8e2971f",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 1,
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null,
+      "outputFingerprint": "sha256:462dae5e6806bbe77554d969a969f98b2ecfd9b65a4a948540177a97d6db2106"
+    },
+    {
+      "bundleId": "bundle-act-types-v2",
+      "implementation": "known_wrong:wrong-types",
+      "testId": "test-327e1445c8e2971f",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 1,
+      "exitCode": 1,
+      "errorType": "AssertionError",
+      "errorSummary": "redacted_candidate_execution_failure",
+      "outputFingerprint": null
+    },
+    {
+      "bundleId": "bundle-act-types-v2",
+      "implementation": "baseline",
+      "testId": "test-327e1445c8e2971f",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 2,
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null,
+      "outputFingerprint": "sha256:462dae5e6806bbe77554d969a969f98b2ecfd9b65a4a948540177a97d6db2106"
+    },
+    {
+      "bundleId": "bundle-act-types-v2",
+      "implementation": "known_wrong:wrong-types",
+      "testId": "test-327e1445c8e2971f",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 2,
+      "exitCode": 1,
+      "errorType": "AssertionError",
+      "errorSummary": "redacted_candidate_execution_failure",
+      "outputFingerprint": null
+    },
+    {
+      "bundleId": "bundle-act-types-v2",
+      "implementation": "baseline",
+      "testId": "test-327e1445c8e2971f",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 3,
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null,
+      "outputFingerprint": "sha256:462dae5e6806bbe77554d969a969f98b2ecfd9b65a4a948540177a97d6db2106"
+    },
+    {
+      "bundleId": "bundle-act-types-v2",
+      "implementation": "known_wrong:wrong-types",
+      "testId": "test-327e1445c8e2971f",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 3,
+      "exitCode": 1,
+      "errorType": "AssertionError",
+      "errorSummary": "redacted_candidate_execution_failure",
+      "outputFingerprint": null
+    },
+    {
+      "bundleId": "bundle-act-practical-v2",
+      "implementation": "baseline",
+      "testId": "test-dc048f5f59bf27cf",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 1,
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null,
+      "outputFingerprint": "sha256:710fc1fe82426540dbb5f8db34372e7e9ec9480909231868498a6a0c7af0275b"
+    },
+    {
+      "bundleId": "bundle-act-practical-v2",
+      "implementation": "starter",
+      "testId": "test-dc048f5f59bf27cf",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 1,
+      "exitCode": 1,
+      "errorType": "NotImplementedError",
+      "errorSummary": "redacted_candidate_execution_failure",
+      "outputFingerprint": null
+    },
+    {
+      "bundleId": "bundle-act-practical-v2",
+      "implementation": "known_wrong:wrong-practical",
+      "testId": "test-dc048f5f59bf27cf",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 1,
+      "exitCode": 1,
+      "errorType": "AssertionError",
+      "errorSummary": "redacted_candidate_execution_failure",
+      "outputFingerprint": null
+    },
+    {
+      "bundleId": "bundle-act-practical-v2",
+      "implementation": "baseline",
+      "testId": "test-dc048f5f59bf27cf",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 2,
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null,
+      "outputFingerprint": "sha256:710fc1fe82426540dbb5f8db34372e7e9ec9480909231868498a6a0c7af0275b"
+    },
+    {
+      "bundleId": "bundle-act-practical-v2",
+      "implementation": "starter",
+      "testId": "test-dc048f5f59bf27cf",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 2,
+      "exitCode": 1,
+      "errorType": "NotImplementedError",
+      "errorSummary": "redacted_candidate_execution_failure",
+      "outputFingerprint": null
+    },
+    {
+      "bundleId": "bundle-act-practical-v2",
+      "implementation": "known_wrong:wrong-practical",
+      "testId": "test-dc048f5f59bf27cf",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 2,
+      "exitCode": 1,
+      "errorType": "AssertionError",
+      "errorSummary": "redacted_candidate_execution_failure",
+      "outputFingerprint": null
+    },
+    {
+      "bundleId": "bundle-act-practical-v2",
+      "implementation": "baseline",
+      "testId": "test-dc048f5f59bf27cf",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 3,
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null,
+      "outputFingerprint": "sha256:710fc1fe82426540dbb5f8db34372e7e9ec9480909231868498a6a0c7af0275b"
+    },
+    {
+      "bundleId": "bundle-act-practical-v2",
+      "implementation": "starter",
+      "testId": "test-dc048f5f59bf27cf",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 3,
+      "exitCode": 1,
+      "errorType": "NotImplementedError",
+      "errorSummary": "redacted_candidate_execution_failure",
+      "outputFingerprint": null
+    },
+    {
+      "bundleId": "bundle-act-practical-v2",
+      "implementation": "known_wrong:wrong-practical",
+      "testId": "test-dc048f5f59bf27cf",
+      "fixtureId": "dataset-ef59e73c65dd7ba8",
+      "repeatIndex": 3,
+      "exitCode": 1,
+      "errorType": "AssertionError",
+      "errorSummary": "redacted_candidate_execution_failure",
+      "outputFingerprint": null
+    },
+    {
+      "bundleId": "bundle-act-practical-v2",
+      "implementation": "baseline",
+      "testId": "test-24104f87a0b75d71",
+      "fixtureId": "dataset-cf12008615da03ec",
+      "repeatIndex": 1,
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null,
+      "outputFingerprint": "sha256:54f83f223ff4c3391b5b8d984caf3f6bf901dddef1ad3c3b1b34cb3150c7eae3"
+    },
+    {
+      "bundleId": "bundle-act-practical-v2",
+      "implementation": "known_wrong:wrong-practical",
+      "testId": "test-24104f87a0b75d71",
+      "fixtureId": "dataset-cf12008615da03ec",
+      "repeatIndex": 1,
+      "exitCode": 1,
+      "errorType": "AssertionError",
+      "errorSummary": "redacted_candidate_execution_failure",
+      "outputFingerprint": null
+    },
+    {
+      "bundleId": "bundle-act-practical-v2",
+      "implementation": "baseline",
+      "testId": "test-24104f87a0b75d71",
+      "fixtureId": "dataset-cf12008615da03ec",
+      "repeatIndex": 2,
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null,
+      "outputFingerprint": "sha256:54f83f223ff4c3391b5b8d984caf3f6bf901dddef1ad3c3b1b34cb3150c7eae3"
+    },
+    {
+      "bundleId": "bundle-act-practical-v2",
+      "implementation": "known_wrong:wrong-practical",
+      "testId": "test-24104f87a0b75d71",
+      "fixtureId": "dataset-cf12008615da03ec",
+      "repeatIndex": 2,
+      "exitCode": 1,
+      "errorType": "AssertionError",
+      "errorSummary": "redacted_candidate_execution_failure",
+      "outputFingerprint": null
+    },
+    {
+      "bundleId": "bundle-act-practical-v2",
+      "implementation": "baseline",
+      "testId": "test-24104f87a0b75d71",
+      "fixtureId": "dataset-cf12008615da03ec",
+      "repeatIndex": 3,
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null,
+      "outputFingerprint": "sha256:54f83f223ff4c3391b5b8d984caf3f6bf901dddef1ad3c3b1b34cb3150c7eae3"
+    },
+    {
+      "bundleId": "bundle-act-practical-v2",
+      "implementation": "known_wrong:wrong-practical",
+      "testId": "test-24104f87a0b75d71",
+      "fixtureId": "dataset-cf12008615da03ec",
+      "repeatIndex": 3,
+      "exitCode": 1,
+      "errorType": "AssertionError",
+      "errorSummary": "redacted_candidate_execution_failure",
+      "outputFingerprint": null
+    },
+    {
+      "bundleId": "bundle-act-practical-v2",
+      "implementation": "baseline",
+      "testId": "test-b963758918649871",
+      "fixtureId": "dataset-9fc4d0dafa2eaa03",
+      "repeatIndex": 1,
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null,
+      "outputFingerprint": "sha256:bbd4255e2cebe1d8cba14ebae27f32725937e3ffb9cb908805294f22c4f38c49"
+    },
+    {
+      "bundleId": "bundle-act-practical-v2",
+      "implementation": "known_wrong:wrong-practical",
+      "testId": "test-b963758918649871",
+      "fixtureId": "dataset-9fc4d0dafa2eaa03",
+      "repeatIndex": 1,
+      "exitCode": 1,
+      "errorType": "AssertionError",
+      "errorSummary": "redacted_candidate_execution_failure",
+      "outputFingerprint": null
+    },
+    {
+      "bundleId": "bundle-act-practical-v2",
+      "implementation": "baseline",
+      "testId": "test-b963758918649871",
+      "fixtureId": "dataset-9fc4d0dafa2eaa03",
+      "repeatIndex": 2,
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null,
+      "outputFingerprint": "sha256:bbd4255e2cebe1d8cba14ebae27f32725937e3ffb9cb908805294f22c4f38c49"
+    },
+    {
+      "bundleId": "bundle-act-practical-v2",
+      "implementation": "known_wrong:wrong-practical",
+      "testId": "test-b963758918649871",
+      "fixtureId": "dataset-9fc4d0dafa2eaa03",
+      "repeatIndex": 2,
+      "exitCode": 1,
+      "errorType": "AssertionError",
+      "errorSummary": "redacted_candidate_execution_failure",
+      "outputFingerprint": null
+    },
+    {
+      "bundleId": "bundle-act-practical-v2",
+      "implementation": "baseline",
+      "testId": "test-b963758918649871",
+      "fixtureId": "dataset-9fc4d0dafa2eaa03",
+      "repeatIndex": 3,
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null,
+      "outputFingerprint": "sha256:bbd4255e2cebe1d8cba14ebae27f32725937e3ffb9cb908805294f22c4f38c49"
+    },
+    {
+      "bundleId": "bundle-act-practical-v2",
+      "implementation": "known_wrong:wrong-practical",
+      "testId": "test-b963758918649871",
+      "fixtureId": "dataset-9fc4d0dafa2eaa03",
+      "repeatIndex": 3,
+      "exitCode": 1,
+      "errorType": "AssertionError",
+      "errorSummary": "redacted_candidate_execution_failure",
+      "outputFingerprint": null
+    },
+    {
+      "bundleId": "bundle-act-practical-v2",
+      "implementation": "baseline",
+      "testId": "test-bd531783bb52e6ee",
+      "fixtureId": "dataset-9fc4d0dafa2eaa03",
+      "repeatIndex": 1,
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null,
+      "outputFingerprint": "sha256:bbd4255e2cebe1d8cba14ebae27f32725937e3ffb9cb908805294f22c4f38c49"
+    },
+    {
+      "bundleId": "bundle-act-practical-v2",
+      "implementation": "known_wrong:wrong-practical",
+      "testId": "test-bd531783bb52e6ee",
+      "fixtureId": "dataset-9fc4d0dafa2eaa03",
+      "repeatIndex": 1,
+      "exitCode": 1,
+      "errorType": "AssertionError",
+      "errorSummary": "redacted_candidate_execution_failure",
+      "outputFingerprint": null
+    },
+    {
+      "bundleId": "bundle-act-practical-v2",
+      "implementation": "baseline",
+      "testId": "test-bd531783bb52e6ee",
+      "fixtureId": "dataset-9fc4d0dafa2eaa03",
+      "repeatIndex": 2,
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null,
+      "outputFingerprint": "sha256:bbd4255e2cebe1d8cba14ebae27f32725937e3ffb9cb908805294f22c4f38c49"
+    },
+    {
+      "bundleId": "bundle-act-practical-v2",
+      "implementation": "known_wrong:wrong-practical",
+      "testId": "test-bd531783bb52e6ee",
+      "fixtureId": "dataset-9fc4d0dafa2eaa03",
+      "repeatIndex": 2,
+      "exitCode": 1,
+      "errorType": "AssertionError",
+      "errorSummary": "redacted_candidate_execution_failure",
+      "outputFingerprint": null
+    },
+    {
+      "bundleId": "bundle-act-practical-v2",
+      "implementation": "baseline",
+      "testId": "test-bd531783bb52e6ee",
+      "fixtureId": "dataset-9fc4d0dafa2eaa03",
+      "repeatIndex": 3,
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null,
+      "outputFingerprint": "sha256:bbd4255e2cebe1d8cba14ebae27f32725937e3ffb9cb908805294f22c4f38c49"
+    },
+    {
+      "bundleId": "bundle-act-practical-v2",
+      "implementation": "known_wrong:wrong-practical",
+      "testId": "test-bd531783bb52e6ee",
+      "fixtureId": "dataset-9fc4d0dafa2eaa03",
+      "repeatIndex": 3,
+      "exitCode": 1,
+      "errorType": "AssertionError",
+      "errorSummary": "redacted_candidate_execution_failure",
+      "outputFingerprint": null
+    },
+    {
+      "bundleId": "bundle-act-practical-v2",
+      "implementation": "baseline",
+      "testId": "test-a937e517bfc563ec",
+      "fixtureId": "dataset-9fc4d0dafa2eaa03",
+      "repeatIndex": 1,
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null,
+      "outputFingerprint": "sha256:bbd4255e2cebe1d8cba14ebae27f32725937e3ffb9cb908805294f22c4f38c49"
+    },
+    {
+      "bundleId": "bundle-act-practical-v2",
+      "implementation": "known_wrong:wrong-practical",
+      "testId": "test-a937e517bfc563ec",
+      "fixtureId": "dataset-9fc4d0dafa2eaa03",
+      "repeatIndex": 1,
+      "exitCode": 1,
+      "errorType": "KeyError",
+      "errorSummary": "redacted_candidate_execution_failure",
+      "outputFingerprint": null
+    },
+    {
+      "bundleId": "bundle-act-practical-v2",
+      "implementation": "baseline",
+      "testId": "test-a937e517bfc563ec",
+      "fixtureId": "dataset-9fc4d0dafa2eaa03",
+      "repeatIndex": 2,
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null,
+      "outputFingerprint": "sha256:bbd4255e2cebe1d8cba14ebae27f32725937e3ffb9cb908805294f22c4f38c49"
+    },
+    {
+      "bundleId": "bundle-act-practical-v2",
+      "implementation": "known_wrong:wrong-practical",
+      "testId": "test-a937e517bfc563ec",
+      "fixtureId": "dataset-9fc4d0dafa2eaa03",
+      "repeatIndex": 2,
+      "exitCode": 1,
+      "errorType": "KeyError",
+      "errorSummary": "redacted_candidate_execution_failure",
+      "outputFingerprint": null
+    },
+    {
+      "bundleId": "bundle-act-practical-v2",
+      "implementation": "baseline",
+      "testId": "test-a937e517bfc563ec",
+      "fixtureId": "dataset-9fc4d0dafa2eaa03",
+      "repeatIndex": 3,
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null,
+      "outputFingerprint": "sha256:bbd4255e2cebe1d8cba14ebae27f32725937e3ffb9cb908805294f22c4f38c49"
+    },
+    {
+      "bundleId": "bundle-act-practical-v2",
+      "implementation": "known_wrong:wrong-practical",
+      "testId": "test-a937e517bfc563ec",
+      "fixtureId": "dataset-9fc4d0dafa2eaa03",
+      "repeatIndex": 3,
+      "exitCode": 1,
+      "errorType": "KeyError",
+      "errorSummary": "redacted_candidate_execution_failure",
+      "outputFingerprint": null
+    },
+    {
+      "bundleId": "bundle-act-practical-v2",
+      "implementation": "baseline",
+      "testId": "test-1eb17e6fc5d98adb",
+      "fixtureId": "dataset-9fc4d0dafa2eaa03",
+      "repeatIndex": 1,
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null,
+      "outputFingerprint": "sha256:bbd4255e2cebe1d8cba14ebae27f32725937e3ffb9cb908805294f22c4f38c49"
+    },
+    {
+      "bundleId": "bundle-act-practical-v2",
+      "implementation": "known_wrong:wrong-practical",
+      "testId": "test-1eb17e6fc5d98adb",
+      "fixtureId": "dataset-9fc4d0dafa2eaa03",
+      "repeatIndex": 1,
+      "exitCode": 1,
+      "errorType": "AssertionError",
+      "errorSummary": "redacted_candidate_execution_failure",
+      "outputFingerprint": null
+    },
+    {
+      "bundleId": "bundle-act-practical-v2",
+      "implementation": "baseline",
+      "testId": "test-1eb17e6fc5d98adb",
+      "fixtureId": "dataset-9fc4d0dafa2eaa03",
+      "repeatIndex": 2,
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null,
+      "outputFingerprint": "sha256:bbd4255e2cebe1d8cba14ebae27f32725937e3ffb9cb908805294f22c4f38c49"
+    },
+    {
+      "bundleId": "bundle-act-practical-v2",
+      "implementation": "known_wrong:wrong-practical",
+      "testId": "test-1eb17e6fc5d98adb",
+      "fixtureId": "dataset-9fc4d0dafa2eaa03",
+      "repeatIndex": 2,
+      "exitCode": 1,
+      "errorType": "AssertionError",
+      "errorSummary": "redacted_candidate_execution_failure",
+      "outputFingerprint": null
+    },
+    {
+      "bundleId": "bundle-act-practical-v2",
+      "implementation": "baseline",
+      "testId": "test-1eb17e6fc5d98adb",
+      "fixtureId": "dataset-9fc4d0dafa2eaa03",
+      "repeatIndex": 3,
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null,
+      "outputFingerprint": "sha256:bbd4255e2cebe1d8cba14ebae27f32725937e3ffb9cb908805294f22c4f38c49"
+    },
+    {
+      "bundleId": "bundle-act-practical-v2",
+      "implementation": "known_wrong:wrong-practical",
+      "testId": "test-1eb17e6fc5d98adb",
+      "fixtureId": "dataset-9fc4d0dafa2eaa03",
+      "repeatIndex": 3,
+      "exitCode": 1,
+      "errorType": "AssertionError",
+      "errorSummary": "redacted_candidate_execution_failure",
+      "outputFingerprint": null
+    },
+    {
+      "bundleId": "bundle-act-practical-v2",
+      "implementation": "baseline",
+      "testId": "test-ca0a5007d4f6143f",
+      "fixtureId": "dataset-9fc4d0dafa2eaa03",
+      "repeatIndex": 1,
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null,
+      "outputFingerprint": "sha256:bbd4255e2cebe1d8cba14ebae27f32725937e3ffb9cb908805294f22c4f38c49"
+    },
+    {
+      "bundleId": "bundle-act-practical-v2",
+      "implementation": "known_wrong:wrong-practical",
+      "testId": "test-ca0a5007d4f6143f",
+      "fixtureId": "dataset-9fc4d0dafa2eaa03",
+      "repeatIndex": 1,
+      "exitCode": 1,
+      "errorType": "AssertionError",
+      "errorSummary": "redacted_candidate_execution_failure",
+      "outputFingerprint": null
+    },
+    {
+      "bundleId": "bundle-act-practical-v2",
+      "implementation": "baseline",
+      "testId": "test-ca0a5007d4f6143f",
+      "fixtureId": "dataset-9fc4d0dafa2eaa03",
+      "repeatIndex": 2,
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null,
+      "outputFingerprint": "sha256:bbd4255e2cebe1d8cba14ebae27f32725937e3ffb9cb908805294f22c4f38c49"
+    },
+    {
+      "bundleId": "bundle-act-practical-v2",
+      "implementation": "known_wrong:wrong-practical",
+      "testId": "test-ca0a5007d4f6143f",
+      "fixtureId": "dataset-9fc4d0dafa2eaa03",
+      "repeatIndex": 2,
+      "exitCode": 1,
+      "errorType": "AssertionError",
+      "errorSummary": "redacted_candidate_execution_failure",
+      "outputFingerprint": null
+    },
+    {
+      "bundleId": "bundle-act-practical-v2",
+      "implementation": "baseline",
+      "testId": "test-ca0a5007d4f6143f",
+      "fixtureId": "dataset-9fc4d0dafa2eaa03",
+      "repeatIndex": 3,
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null,
+      "outputFingerprint": "sha256:bbd4255e2cebe1d8cba14ebae27f32725937e3ffb9cb908805294f22c4f38c49"
+    },
+    {
+      "bundleId": "bundle-act-practical-v2",
+      "implementation": "known_wrong:wrong-practical",
+      "testId": "test-ca0a5007d4f6143f",
+      "fixtureId": "dataset-9fc4d0dafa2eaa03",
+      "repeatIndex": 3,
+      "exitCode": 1,
+      "errorType": "AssertionError",
+      "errorSummary": "redacted_candidate_execution_failure",
+      "outputFingerprint": null
+    },
+    {
+      "bundleId": "bundle-act-practical-v2",
+      "implementation": "baseline",
+      "testId": "test-8ee8fff0735bf9fe",
+      "fixtureId": "dataset-9fc4d0dafa2eaa03",
+      "repeatIndex": 1,
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null,
+      "outputFingerprint": "sha256:f4714a9c7fbf7c51599eddd7af4a5f3978b6eff065541046ea91d32eb1719fb1"
+    },
+    {
+      "bundleId": "bundle-act-practical-v2",
+      "implementation": "known_wrong:wrong-practical",
+      "testId": "test-8ee8fff0735bf9fe",
+      "fixtureId": "dataset-9fc4d0dafa2eaa03",
+      "repeatIndex": 1,
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null,
+      "outputFingerprint": "sha256:f4714a9c7fbf7c51599eddd7af4a5f3978b6eff065541046ea91d32eb1719fb1"
+    },
+    {
+      "bundleId": "bundle-act-practical-v2",
+      "implementation": "baseline",
+      "testId": "test-8ee8fff0735bf9fe",
+      "fixtureId": "dataset-9fc4d0dafa2eaa03",
+      "repeatIndex": 2,
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null,
+      "outputFingerprint": "sha256:f4714a9c7fbf7c51599eddd7af4a5f3978b6eff065541046ea91d32eb1719fb1"
+    },
+    {
+      "bundleId": "bundle-act-practical-v2",
+      "implementation": "known_wrong:wrong-practical",
+      "testId": "test-8ee8fff0735bf9fe",
+      "fixtureId": "dataset-9fc4d0dafa2eaa03",
+      "repeatIndex": 2,
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null,
+      "outputFingerprint": "sha256:f4714a9c7fbf7c51599eddd7af4a5f3978b6eff065541046ea91d32eb1719fb1"
+    },
+    {
+      "bundleId": "bundle-act-practical-v2",
+      "implementation": "baseline",
+      "testId": "test-8ee8fff0735bf9fe",
+      "fixtureId": "dataset-9fc4d0dafa2eaa03",
+      "repeatIndex": 3,
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null,
+      "outputFingerprint": "sha256:f4714a9c7fbf7c51599eddd7af4a5f3978b6eff065541046ea91d32eb1719fb1"
+    },
+    {
+      "bundleId": "bundle-act-practical-v2",
+      "implementation": "known_wrong:wrong-practical",
+      "testId": "test-8ee8fff0735bf9fe",
+      "fixtureId": "dataset-9fc4d0dafa2eaa03",
+      "repeatIndex": 3,
+      "exitCode": 0,
+      "errorType": null,
+      "errorSummary": null,
+      "outputFingerprint": "sha256:f4714a9c7fbf7c51599eddd7af4a5f3978b6eff065541046ea91d32eb1719fb1"
+    }
+  ],
+  "summary": {
+    "repeatCount": 3,
+    "baselinePassed": true,
+    "allBaselineRepeatsStable": true,
+    "allStartersRejected": true,
+    "allKnownWrongRejectedPerFixture": true,
+    "baselineOutputCount": 16
+  },
+  "overallExitCode": 0,
+  "limitations": [
+    "Candidate evidence only; C executes V2-3.",
+    "EnvironmentLock values remain pending C/owner prototype."
+  ]
+}

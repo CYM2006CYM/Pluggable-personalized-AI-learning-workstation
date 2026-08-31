@@ -1,0 +1,5 @@
+
+> pi-study-helper@0.1.0 check:docs
+> node scripts/check-doc-links.mjs
+
+已检查 81 个项目 Markdown 文件，本地链接全部有效。

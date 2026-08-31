@@ -1,0 +1,53 @@
+﻿{
+    "delivery":  "W4-D1-B-2 remediation candidate v5",
+    "contract":  "W4-C2/W4-R1",
+    "status":  "CONTENT_PASS / B-R2-01_OWNER_DECISION_OR_ORIGINAL_LOG_ARCHIVE_REQUIRED / NOT_COMMITTED / NOT_PUSHED / uploadLock=NOT_REQUESTED",
+    "baseline":  {
+                     "head":  "00037c1aa995a0ec2aec70b097fc680e193ed08a",
+                     "originMain":  "00037c1aa995a0ec2aec70b097fc680e193ed08a",
+                     "aFormalUpstream":  "4c52eb7c78fa80007aa9a8ab4e00768d71d3f3f5"
+                 },
+    "candidate":  {
+                      "profileFiles":  79,
+                      "privatePrefixFileBodies":  33,
+                      "revision2Files":  71,
+                      "revision2TreeSha256":  "2a4538272cc47a3451b434999d620f429e5deaa0eb0f2c3f95fa76e53d80786d",
+                      "sealAssetTreeSha256":  "e118fd65c4583821f686cba4faab5990a81d2149a8f73cf89af2c376ba15b352",
+                      "sealEntries":  78
+                  },
+    "proposedSubmitManifest":  {
+                                   "file":  "W4-D1-B-2-proposed-submit-manifest-v5.json",
+                                   "entryCount":  94
+                               },
+    "packages":  {
+                     "ordinaryTransport":  {
+                                               "file":  "W4-D1-B-2-transport-v5.zip",
+                                               "byteLength":  205931,
+                                               "sha256":  "ba971f0d7240007ba27539d3ff4e0bc834e673edbc6c264d7f585a94d4bc9a7a",
+                                               "sidecar":  "W4-D1-B-2-transport-v5-SHA256.txt",
+                                               "privateBodiesExcluded":  true
+                                           },
+                     "ownerCompleteAudit":  {
+                                                "file":  "W4-D1-B-2-owner-audit-v5.zip",
+                                                "byteLength":  299461,
+                                                "sha256":  "c37430cf5bc942918dc80994306fe714e4cf7f2ef30ddaa55e53c5e6d1573b0a",
+                                                "sidecar":  "W4-D1-B-2-owner-audit-v5-SHA256.txt",
+                                                "includesCompleteCandidate":  true,
+                                                "includesPrivateBodies":  true
+                                            }
+                 },
+    "evidence":  {
+                     "formalCommandResults":  "pi-study-helper/scripts/w4-b-validation/command-results.json",
+                     "bR201StopReport":  "pi-study-helper/scripts/w4-b-validation/b-r2-01-stop-report.md",
+                     "historicalReproductionLogs":  "repository-external W4-D1-B-2-historical-reproduction-logs-v3",
+                     "scopeAudit":  "pi-study-helper/scripts/w4-b-validation/scope-audit.md",
+                     "issueMapping":  "pi-study-helper/scripts/w4-b-validation/b-r2-remediation-mapping.json",
+                     "schemaSealResult":  "outputs/W4-D1-B-2-final-schema-seal.json"
+                 },
+    "supersedes":  {
+                       "deliveryManifest":  "W4-D1-B-2-delivery-manifest-v4.json",
+                       "ordinaryZip":  "W4-D1-B-2-transport-v4.zip",
+                       "ownerAuditZip":  "W4-D1-B-2-owner-audit-v4.zip",
+                       "reason":  "v5 adds labelled Python 3.14.4 reproduction, B-R2-01 stop report, and corrected delivery-manifest references"
+                   }
+}

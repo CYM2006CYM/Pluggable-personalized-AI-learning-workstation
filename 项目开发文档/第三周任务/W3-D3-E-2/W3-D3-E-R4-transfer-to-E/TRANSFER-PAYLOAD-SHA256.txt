@@ -1,0 +1,5 @@
+﻿862b88e37e2c2fc50519ef37d63aad2db6a001d68cc13935bc3b733d1562f57f  W3-D3-E-R4-owner-fixed.zip
+b39030c2969d13bee7aa938f0882fb19374f0c30ab80536677bb4fd190d1f342  W3-D3-E-R4-owner-fixed.zip.sha256
+d9a35cee18cf4f174f0a54179fe6944ed3ee5cdd6d620fe1970e3672cff8d3e8  W3-D3-负责人只读gold候选-E-HANDOFF.zip
+3aed5c1d71cc0d41de291854fb9dd912e73b5d1db042e55da364b92941bb1681  W3-D3-负责人只读gold候选-E-HANDOFF.zip.sha256
+5ee67a92b86a88fa087c0dc1822fdf0dd19907e6952efaa3248bcf8bdb26029b  给E的R4复核指令.md

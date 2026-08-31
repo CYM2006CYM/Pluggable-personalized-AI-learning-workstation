@@ -1,0 +1,65 @@
+﻿{
+    "schemaVersion":  "w3-d3-gate-config-v1",
+    "contractVersion":  "W3-C5/W3-R2",
+    "deliveryStage":  "W3-D3",
+    "executionPolicy":  "PLAN_ONLY_D3_EXPLICIT_W3_D4_TOKEN_REQUIRED",
+    "evidenceSha256Method":  "SHA-256 over raw file bytes; lowercase hexadecimal",
+    "gate":  "V3-1",
+    "title":  "180分钟投影路径确定性",
+    "purpose":  "20例按w3-v3-feasible-180-v1仅投影availableMinutes=180，每例10次。",
+    "ownerOnFailure":  "A",
+    "requiredInputIds":  [
+                             "w3-start-commit",
+                             "development-20",
+                             "owner-profile-approval",
+                             "a-d1-v3-1-evidence",
+                             "a-d3-formal-commit",
+                             "a-d3-deterministic-test-files",
+                             "b-task-bundles-file",
+                             "c-environment-lock"
+                         ],
+    "commands":  [
+                     {
+                         "id":  "v3-1-path-20x10",
+                         "executable":  "npm.cmd",
+                         "arguments":  [
+                                           "test",
+                                           "--",
+                                           "--maxWorkers=1",
+                                           "--run",
+                                           "tests/path-engine-development-20.test.ts"
+                                       ],
+                         "workingDirectory":  "pi-study-helper",
+                         "expectedExitCode":  0
+                     }
+                 ],
+    "expectedMetrics":  {
+                            "expectedTestItems":  200,
+                            "caseCount":  20,
+                            "runsPerCase":  10,
+                            "candidateCount":  20,
+                            "identicalSnapshots":  20,
+                            "actualPathLegalRate":  1,
+                            "projectionRuleVersion":  "w3-v3-feasible-180-v1"
+                        },
+    "mechanicalPassConditions":  [
+                                     "20/20均产生candidate",
+                                     "每例10次输出哈希唯一数为1",
+                                     "实际路径合法率100%",
+                                     "输入投影只改变availableMinutes"
+                                 ],
+    "outputContract":  [
+                           "v3-1-command-evidence.json",
+                           "v3-1-path-evidence.json",
+                           "v3-1-file-hashes.sha256"
+                       ],
+    "testLayer":  "确定性层",
+    "d47Decision":  "W3-D47-TEST-LAYERS-1",
+    "failureClassifications":  [
+                                   "CODE_DEFECT",
+                                   "ENVIRONMENT_MISMATCH",
+                                   "AUDIT_INPUT_INCOMPLETE",
+                                   "LIVE_NOT_RUN",
+                                   "MOCK_FALLBACK_USED"
+                               ]
+}

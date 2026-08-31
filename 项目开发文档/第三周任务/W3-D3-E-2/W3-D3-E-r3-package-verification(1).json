@@ -1,0 +1,11 @@
+﻿{
+    "schemaVersion":  "w3-d3-r3-package-verification-v1",
+    "outerZipSha256":  "ba5a5b062271ca16a98c2338a59c461557bd9d6ffea87063aa5e7ffa52eb3c4e",
+    "payloadCount":  53,
+    "payloadMatches":  true,
+    "payloadMismatches":  [
+
+                          ],
+    "r2Preserved":  true,
+    "d4Executed":  false
+}

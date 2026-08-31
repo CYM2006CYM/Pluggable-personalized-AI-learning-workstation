@@ -1,0 +1,16 @@
+{
+  "schemaVersion": "w3-d4-v3-7-evidence-r4-v1",
+  "contractVersion": "W3-C5/W3-R2",
+  "deliveryStage": "W3-D4",
+  "gate": "V3-7",
+  "executionStatus": "NOT_RUN_D3",
+  "inputManifestSha256": "PENDING_D4",
+  "ownerSafeHandoffSha256": "d9a35cee18cf4f174f0a54179fe6944ed3ee5cdd6d620fe1970e3672cff8d3e8",
+  "candidateCounts": {},
+  "first20": {},
+  "final021To060NegotiationStatus": "NOT_CHECKED_D3",
+  "withheldMaterialRead": false,
+  "formalGold": false,
+  "evidenceFiles": [],
+  "gateConclusion": "NOT_PRODUCED_D3"
+}

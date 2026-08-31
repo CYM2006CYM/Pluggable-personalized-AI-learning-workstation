@@ -1,0 +1,29 @@
+{
+  "schemaVersion": "w3-d3-fixed-trace-layer-r4-v1",
+  "contractVersion": "W3-C5/W3-R2",
+  "deliveryStage": "W3-D3",
+  "layer": "fixed-trace-demo",
+  "testEntry": "test:demo:trace or an explicit equivalent D-owned test file list",
+  "bindingStatus": "PENDING_D_FORMAL_BINDING",
+  "requiredInputIds": [
+    "d-d3-formal-commit",
+    "d-d3-fixed-trace-test-manifest"
+  ],
+  "commands": [],
+  "requiredTraceClasses": [
+    "success",
+    "invalid_json_or_schema",
+    "timeout_or_provider_error",
+    "privilege_escalation_rejected"
+  ],
+  "requiredAssertions": [
+    "ModelExecutionPort replay only",
+    "turn order and maximum turn enforced",
+    "schema validation enforced",
+    "sensitive fields absent",
+    "fallback deterministic on failure",
+    "mastery KnowledgeState path score Rubric and gold are not writable"
+  ],
+  "onlineModelStatus": "LIVE_NOT_RUN",
+  "gateConclusion": "NOT_PRODUCED_D3"
+}

@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "w3-d3-e-r4-owner-verification-v1",
+  "contractVersion": "W3-C5/W3-R2",
+  "repositoryCommit": "07a5822badf1d8e082f32dbb21705c4a150819e9",
+  "ownerSafeHandoffZipSha256": "d9a35cee18cf4f174f0a54179fe6944ed3ee5cdd6d620fe1970e3672cff8d3e8",
+  "checks": {
+    "baselineStructure": "PASS",
+    "inputBinding": "PASS_WITH_E_OWNED_EXTERNAL_FILES_NOT_REVERIFIED_ON_OWNER_MACHINE",
+    "ownerSafeHandoffSchema": "PASS",
+    "w2First20DifficultyRawPrefix": "PASS",
+    "w2First20PathRawPrefix": "PASS",
+    "w2First20AdjudicationLineHashes": "20/20 PASS",
+    "first20SameCaseIdContentMutationRejected": true,
+    "first20AdjudicationHashMutationRejected": true,
+    "missingD4TokenRejected": true,
+    "dPendingBlocksD4Execute": true,
+    "emptyFixedTraceCommandsDetected": true,
+    "v3PlanMode": "8/8 PASS"
+  },
+  "currentPendingInputIds": [
+    "d-d3-formal-commit",
+    "d-d3-fixed-trace-test-manifest"
+  ],
+  "executionBoundary": {
+    "formalD4WorkflowExecuted": false,
+    "v3_7ToolCompatibilityExecution": true,
+    "formalV3ConclusionProduced": false,
+    "formal60CaseSystemRun": false,
+    "realKeyUsed": false,
+    "onlineModelRun": false,
+    "ownerOnlyMaterialReadByETool": false
+  },
+  "status": "R4_TOOL_BASELINE_PASS_D_PENDING"
+}
