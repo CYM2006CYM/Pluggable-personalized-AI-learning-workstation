@@ -3,3 +3,12 @@
 .scratch/
 # 本地一键启动脚本(内含 API 密钥,禁止入库)
 /启动demo-live.bat
+
+# 比赛提交前的本地草稿、过程材料与调试产物
+/.zcode/
+/idea/
+/.claude/
+/最终提交材料制作/
+/需要提交的文档材料/
+/pi-study-helper/.claude/
+/pi-study-helper/.scratch-shots/
