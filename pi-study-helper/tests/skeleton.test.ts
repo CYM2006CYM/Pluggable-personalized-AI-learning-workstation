@@ -33,7 +33,7 @@ describe("工程骨架", () => {
   it("依赖声明了 pi-loop-graph-sdk", async () => {
     const pkg = await import("../package.json", { with: { type: "json" } });
     expect(pkg.default.dependencies["pi-loop-graph-sdk"]).toBe(
-      "git+https://github.com/0liveiraaa/pi-loop-graph-sdk.git#401d3e9bfa49e630196caefbabd732a3209b17a0",
+      "https://codeload.github.com/0liveiraaa/pi-loop-graph-sdk/tar.gz/401d3e9bfa49e630196caefbabd732a3209b17a0",
     );
   });
 

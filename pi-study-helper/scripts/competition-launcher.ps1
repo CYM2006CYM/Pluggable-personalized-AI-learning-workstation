@@ -141,7 +141,7 @@ function Confirm-Downloads {
   if ($script:DownloadsApproved) { return }
   Write-Host ""
   Write-Host "首次部署需要下载或安装缺失的合同运行环境和锁定依赖。" -ForegroundColor Yellow
-  Write-Host "下载来源仅包括 nodejs.org、python.org、npm registry 和锁定的 GitHub SDK。"
+  Write-Host "下载来源仅包括 nodejs.org、python.org、npm registry 和锁定提交的 GitHub SDK 源码包。"
   Write-Host "运行时优先安装在项目 .runtime 目录，DeepSeek API Key 不会保存。"
   $answer = Read-Host "输入大写 YES 继续"
   if ($answer -cne "YES") { throw "用户取消了环境安装" }
@@ -269,32 +269,6 @@ function Get-LockHash {
   return (Get-FileHash -LiteralPath (Join-Path $ProjectRoot "package-lock.json") -Algorithm SHA256).Hash.ToLowerInvariant()
 }
 
-function Ensure-Git {
-  $gitPath = Get-CommandPath "git.exe"
-  if ($gitPath) { return $gitPath }
-  Confirm-Downloads
-  $wingetPath = Get-CommandPath "winget.exe"
-  if (-not $wingetPath) {
-    throw "首次 npm ci 需要 Git，且当前机器没有 winget。请先安装 Git for Windows 后重试。"
-  }
-  Write-Step "安装 npm 锁定 SDK 所需的 Git for Windows"
-  Invoke-External $wingetPath @(
-    "install", "--id", "Git.Git", "--exact", "--source", "winget", "--silent",
-    "--accept-package-agreements", "--accept-source-agreements"
-  ) "Git for Windows 安装失败"
-  $candidates = Get-UniqueExistingPaths @(
-    "C:/Program Files/Git/cmd/git.exe",
-    (Join-Path $env:LOCALAPPDATA "Programs/Git/cmd/git.exe")
-  )
-  if ($candidates.Count -eq 0) {
-    throw "Git 已安装但当前进程尚未发现它。请关闭窗口并重新双击启动程序。"
-  }
-  $gitPath = $candidates[0]
-  $env:PATH = "$(Split-Path $gitPath -Parent);$env:PATH"
-  Write-Ok "Git for Windows 已就绪"
-  return $gitPath
-}
-
 function Ensure-NpmDependencies([string]$NpmPath) {
   $lockHash = Get-LockHash
   $stampMatches = (Test-Path -LiteralPath $DependencyStamp -PathType Leaf) -and ((Get-Content -LiteralPath $DependencyStamp -Raw).Trim() -eq $lockHash)
@@ -304,7 +278,6 @@ function Ensure-NpmDependencies([string]$NpmPath) {
     return
   }
   Confirm-Downloads
-  $null = Ensure-Git
   Write-Step "按 package-lock.json 安装项目依赖"
   Push-Location $ProjectRoot
   try { Invoke-External $NpmPath @("ci", "--no-audit", "--no-fund") "npm ci 失败" }
@@ -328,15 +301,13 @@ function Start-BrowserWhenReady {
     param($Url)
     $deadline = [DateTime]::UtcNow.AddMinutes(5)
     while ([DateTime]::UtcNow -lt $deadline) {
-      $client = New-Object Net.Sockets.TcpClient
       try {
-        $connection = $client.BeginConnect("127.0.0.1", 5173, $null, $null)
-        if ($connection.AsyncWaitHandle.WaitOne(500) -and $client.Connected) {
-          $client.EndConnect($connection)
+        $response = Invoke-WebRequest -UseBasicParsing -Uri $Url -TimeoutSec 2
+        if ($response.StatusCode -ge 200 -and $response.StatusCode -lt 400) {
           Start-Process $Url
           return
         }
-      } catch { } finally { $client.Dispose() }
+      } catch { }
       Start-Sleep -Milliseconds 500
     }
   } -ArgumentList $WebUrl
@@ -403,9 +374,15 @@ try {
     $env:OPENAI_BASE_URL = "https://api.deepseek.com/v1"
     $env:OPENAI_MODEL = "deepseek-chat"
     Remove-Item Env:OPENAI_API_KEY -ErrorAction SilentlyContinue
-    $secret = Read-Host "请输入 DeepSeek API Key（输入时不显示）" -AsSecureString
-    $env:OPENAI_API_KEY = [Net.NetworkCredential]::new("", $secret).Password
-    Remove-Variable secret
+    $providedKey = $env:PI_LAUNCHER_API_KEY
+    Remove-Item Env:PI_LAUNCHER_API_KEY -ErrorAction SilentlyContinue
+    if ([string]::IsNullOrWhiteSpace($providedKey)) {
+      $secret = Read-Host "请输入 DeepSeek API Key（输入时不显示）" -AsSecureString
+      $providedKey = [Net.NetworkCredential]::new("", $secret).Password
+      Remove-Variable secret
+    }
+    $env:OPENAI_API_KEY = $providedKey
+    $providedKey = $null
     if ([string]::IsNullOrWhiteSpace($env:OPENAI_API_KEY) -or $env:OPENAI_API_KEY.Length -lt 16 -or $env:OPENAI_API_KEY -match "^\*+$") {
       throw "DeepSeek API Key 为空、过短或仍是占位符"
     }
@@ -438,6 +415,7 @@ try {
   Write-Host "请查看《比赛方部署与启动说明.md》的故障排查章节。" -ForegroundColor Yellow
   exit 1
 } finally {
+  Remove-Item Env:PI_LAUNCHER_API_KEY -ErrorAction SilentlyContinue
   Remove-Item Env:OPENAI_API_KEY -ErrorAction SilentlyContinue
   Remove-Item Env:OPENAI_BASE_URL -ErrorAction SilentlyContinue
   Remove-Item Env:OPENAI_MODEL -ErrorAction SilentlyContinue

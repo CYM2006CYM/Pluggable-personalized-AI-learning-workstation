@@ -2,6 +2,12 @@
 
 Pi Study Helper 是一款基于 [pi](https://pi.dev) 和 [Loop Graph SDK](https://github.com/0liveiraaa/pi-loop-graph-sdk) `0.2` 的任务驱动学习助手，通过回路图组织学习活动、复习反馈与资料演进。
 
+## 比赛 Demo 一键启动（Windows 10/11 x64）
+
+比赛测评人员从 GitHub 下载 ZIP 并完整解压后，直接双击仓库根目录的 `start-pi-study-helper.cmd` 即可；也可以进入 `pi-study-helper` 双击 `start-competition-demo.cmd`。在启动窗口输入 DeepSeek API Key并点击“启动并打开网页”，程序会自动准备合同版本 Node.js、npm、Python、pandas 和 npm 依赖，随后启动实时 AI 模式并打开 `http://127.0.0.1:5173/`。
+
+无需预装 Git、Node.js、Python、Conda，也不需要管理员权限。详细步骤、联网范围和故障排查见 [比赛方部署与启动说明.md](比赛方部署与启动说明.md)。
+
 ## 功能
 
 - **三种学习模式** — 自由练习、卡片练习、章节学习

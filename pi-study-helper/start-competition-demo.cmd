@@ -4,10 +4,10 @@ chcp 65001 >nul
 title Pi Study Helper - Competition Launcher
 
 set "PROJECT_ROOT=%~dp0"
-set "LAUNCHER=%PROJECT_ROOT%scripts\competition-launcher.ps1"
+set "LAUNCHER_UI=%PROJECT_ROOT%scripts\competition-launcher-ui.ps1"
 
-if not exist "%LAUNCHER%" (
-  echo [ERROR] Launcher not found: "%LAUNCHER%"
+if not exist "%LAUNCHER_UI%" (
+  echo [ERROR] Launcher not found: "%LAUNCHER_UI%"
   echo Please keep the complete pi-study-helper directory structure.
   pause
   exit /b 1
@@ -15,15 +15,8 @@ if not exist "%LAUNCHER%" (
 
 where pwsh.exe >nul 2>nul
 if %ERRORLEVEL% EQU 0 (
-  pwsh.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%LAUNCHER%"
+  start "" pwsh.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -STA -WindowStyle Hidden -File "%LAUNCHER_UI%"
 ) else (
-  powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%LAUNCHER%"
+  start "" powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -STA -WindowStyle Hidden -File "%LAUNCHER_UI%"
 )
-
-set "EXIT_CODE=%ERRORLEVEL%"
-if not "%EXIT_CODE%"=="0" (
-  echo.
-  echo Startup did not complete. See the message above and the deployment guide.
-  pause
-)
-exit /b %EXIT_CODE%
+exit /b 0

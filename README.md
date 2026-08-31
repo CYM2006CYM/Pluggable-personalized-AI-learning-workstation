@@ -2,13 +2,20 @@
 
 本仓库是团队后续开发“可插拔个性化 AI 学习工作站”的正式开发仓库，用于六周 Pandas 个性化学习产品的编码、联调、测试和交付。
 
+## 比赛 Demo 一键启动
+
+Windows 10/11 x64 测评电脑从 GitHub 下载 ZIP 并完整解压后，直接双击仓库根目录的 `start-pi-study-helper.cmd`。在窗口中输入 DeepSeek API Key并点击“启动并打开网页”，程序会自动准备合同版本 Node.js、npm、Python、pandas 和项目依赖，随后启动实时 AI 模式并打开 `http://127.0.0.1:5173/`。
+
+无需预装 Git、Node.js、Python 或 Conda，也不需要管理员权限。完整操作和故障排查见 [`pi-study-helper/比赛方部署与启动说明.md`](pi-study-helper/比赛方部署与启动说明.md)。
+
 ## 仓库内容
 
-除本说明文件 `README.md` 外，仓库只保存以下五个项目条目：
+仓库的主要交付条目如下：
 
 ```text
 .
 ├─ README.md
+├─ start-pi-study-helper.cmd
 ├─ pi-study-helper/
 ├─ evaluation/
 ├─ pi-loop-graph-sdk-main/
@@ -18,6 +25,10 @@
 
 
 ## 文件和目录说明
+
+### `start-pi-study-helper.cmd`
+
+比赛测评入口。它只负责转发到应用目录中的图形启动器，不保存 API Key。
 
 ### `pi-study-helper/`
 
@@ -52,7 +63,7 @@ npm.cmd test
 
 ### `pi-loop-graph-sdk-main/`
 
-项目使用的 Loop Graph SDK 完整源码。当前统一基线为 `0.2.0`，负责人批准的提交为 `401d3e9bfa49e630196caefbabd732a3209b17a0`。该目录与 `pi-study-helper/package.json`、`package-lock.json` 中的 Git 固定依赖对应同一提交，必须与 `pi-study-helper/` 一起保存在仓库中。
+项目使用的 Loop Graph SDK 完整源码。当前统一基线为 `0.2.0`，负责人批准的提交为 `401d3e9bfa49e630196caefbabd732a3209b17a0`。`pi-study-helper/package.json`、`package-lock.json` 通过带 SHA-512 完整性记录的 HTTPS 源码包锁定同一提交，首次安装不依赖 Git；本目录用于源码审计与复核。
 
 它提供项目使用的图编排语言和运行机制，包括：
 
