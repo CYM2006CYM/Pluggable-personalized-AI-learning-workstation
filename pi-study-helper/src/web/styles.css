@@ -90,6 +90,7 @@ h3 {
 .app-sidebar {
   min-width: 0;
   position: sticky;
+  z-index: 50;
   top: 0;
   height: 100vh;
   display: flex;

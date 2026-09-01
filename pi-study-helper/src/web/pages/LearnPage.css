@@ -1443,12 +1443,17 @@
   }
 }
 /* ---------- 教学阅读排版（痛点#4）：正文字号/字重与代码容器 ----------
- * 演示机装有 Noto Serif SC 可变字体：教学正文用 450 字重解决「过度纤细」；
- * 不支持小数权重的回落字体按浏览器匹配规则取最近的 400，安全降级。
- * 等宽字体栈由 tokens --font-mono 提供（JetBrains Mono 本地打包）。 */
+ * 普通正文使用系统无衬线字体，降低连续阅读时的笔画噪声；重点提示卡
+ * 继续使用衬线字体维持强调，代码使用 tokens --font-mono 的等宽字体栈。 */
 
 [data-page="learn"] .lesson-paragraph,
-[data-page="learn"] .lesson-list,
+[data-page="learn"] .lesson-list {
+  font-family: var(--font-sans);
+  font-size: var(--fs-body);
+  font-weight: var(--fw-regular);
+  line-height: var(--lh-body);
+}
+
 [data-page="learn"] .lesson-callout p {
   font-family: var(--font-serif);
   font-size: var(--fs-body);
