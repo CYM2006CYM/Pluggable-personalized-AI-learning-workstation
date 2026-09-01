@@ -15,7 +15,7 @@ function defaultRouteForSession(session: SessionRecoverySafeView): string {
 
 export function routeForSession(session: SessionRecoverySafeView, resume?: StudyResumeLocation): string {
   const fallback = defaultRouteForSession(session);
-  if (resume?.sessionId !== session.view.sessionId || session.view.stage !== "learning") return fallback;
+  if (resume?.sessionId !== session.view.sessionId || !["learning", "completed"].includes(session.view.stage)) return fallback;
   if (session.currentAttempt !== undefined && session.currentAttempt.status !== "submitted") return fallback;
 
   let resumed: URL;
@@ -33,6 +33,7 @@ export function routeForSession(session: SessionRecoverySafeView, resume?: Study
     return fallback;
   }
   const node = session.path?.nodes.find((candidate) => candidate.nodeId === nodeId);
-  if (node === undefined || node.status === "completed" || node.status === "skipped") return fallback;
+  if (node === undefined) return fallback;
+  if (session.view.stage === "learning" && (node.status === "completed" || node.status === "skipped")) return fallback;
   return `${resumed.pathname}${resumed.search}${resumed.hash}`;
 }

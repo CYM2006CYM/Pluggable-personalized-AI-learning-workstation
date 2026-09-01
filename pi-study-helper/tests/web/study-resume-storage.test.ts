@@ -31,4 +31,17 @@ describe("study resume location", () => {
     session.currentAttempt = { kind: "quiz", activityId: "act-basic", attemptId: "attempt-1", status: "draft", retryNumber: 0 };
     expect(routeForSession(session, resume)).toBe("/activity/session-w4/act-basic");
   });
+
+  it("restores a bookmarked review node after the session summary is completed", () => {
+    const session = recovery({ stage: "completed" });
+    session.view = { ...session.view, status: "completed", stage: "completed" };
+    session.path = { ...session.path!, nodes: session.path!.nodes.map((node) => ({ ...node, status: "completed" })) };
+    const resume = {
+      sessionId: "session-w4",
+      route: "/learn/session-w4/node-basic#study/final-task",
+      updatedAt: "2026-08-30T09:00:00.000Z",
+    };
+
+    expect(routeForSession(session, resume)).toBe(resume.route);
+  });
 });

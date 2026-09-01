@@ -33,7 +33,9 @@ function goalTitleOf(goals: AppBootstrapSafeView["goals"], goalId: string): stri
 }
 
 export function StartPage() {
+  const [resumeLocation] = useState(readStudyResumeLocation);
   const bootstrap = useBootstrap();
+  const bookmarkedBootstrap = useBootstrap(resumeLocation?.sessionId, resumeLocation !== undefined);
   const navigate = useNavigate();
   const [mode, setMode] = useState<LearningEntryMode>("recommended");
   const [subjectId, setSubjectId] = useState("");
@@ -89,7 +91,7 @@ export function StartPage() {
     try {
       const recovered = await api.getBootstrap(sessionId);
       if (recovered.session === undefined) throw new Error("session_not_found");
-      navigate(routeForSession(recovered.session, readStudyResumeLocation()));
+      navigate(routeForSession(recovered.session, resumeLocation));
     } catch (error) {
       setActionError(error instanceof Error ? error : new Error("recovery_failed"));
     } finally {
@@ -101,9 +103,14 @@ export function StartPage() {
   const activeProfile = bootstrap.data?.profiles.find((profile) => profile.subjectId === subjectId)
     ?? bootstrap.data?.profiles[0];
   const activeGoalTitle = goalTitleOf(bootstrap.data?.goals ?? [], goalId) ?? START_PAGE_COPY.fallbackLabel;
-  const resumeLocation = readStudyResumeLocation();
-  const recoverableSession = bootstrap.data?.recoverableSessions.find((session) => session.sessionId === resumeLocation?.sessionId)
-    ?? bootstrap.data?.recoverableSessions[0];
+  const bookmarkedSession = resumeLocation !== undefined
+    && bookmarkedBootstrap.data?.session?.view.sessionId === resumeLocation.sessionId
+    ? bookmarkedBootstrap.data.session.view
+    : undefined;
+  // A stale bookmark must never silently switch the learner into an unrelated session.
+  const recoverableSession = resumeLocation === undefined
+    ? bootstrap.data?.recoverableSessions[0]
+    : bookmarkedSession;
   return (
     <PageFrame eyebrow={START_PAGE_COPY.eyebrow} title={START_PAGE_COPY.title} summary={START_PAGE_COPY.summary}>
       {bootstrap.loading ? <PageStatePanel page="start" state="loading" /> : null}

@@ -137,9 +137,9 @@ describe("W4 real API pages", () => {
     const landing = bootstrap();
     landing.recoverableSessions = [oldSession.view, currentSession.view];
     rememberStudyLocation({ pathname: "/learn/session-current/node-basic", search: "", hash: "#study/walkthrough" });
-    const fetchMock = vi.fn()
-      .mockResolvedValueOnce(ok(landing))
-      .mockResolvedValue(ok(bootstrap(currentSession)));
+    const fetchMock = vi.fn().mockImplementation((input: RequestInfo | URL) => Promise.resolve(ok(
+      String(input).includes("recoverSessionId=session-current") ? bootstrap(currentSession) : landing,
+    )));
     const { host, router } = await renderRoute("/", fetchMock);
 
     await click(host.querySelector<HTMLButtonElement>(".sp-bookmark")!);
@@ -147,6 +147,49 @@ describe("W4 real API pages", () => {
     expect(String(fetchMock.mock.calls[1]?.[0])).toContain("recoverSessionId=session-current");
     expect(router.state.location.pathname).toBe("/learn/session-current/node-basic");
     expect(router.state.location.hash).toBe("#study/walkthrough");
+  });
+
+  it("restores a completed session's bookmarked review node instead of another active session", async () => {
+    const unrelated = recovery();
+    unrelated.sessionId = "session-unrelated";
+    unrelated.view = { ...unrelated.view, sessionId: "session-unrelated" };
+    const completed = recovery({ stage: "completed" });
+    completed.sessionId = "session-completed";
+    completed.view = { ...completed.view, sessionId: "session-completed", status: "completed", stage: "completed" };
+    completed.path = { ...completed.path!, nodes: completed.path!.nodes.map((node) => ({ ...node, status: "completed" })) };
+    const landing = bootstrap();
+    landing.recoverableSessions = [unrelated.view];
+    const completedBootstrap = bootstrap(completed);
+    completedBootstrap.recoverableSessions = [unrelated.view];
+    rememberStudyLocation({ pathname: "/learn/session-completed/node-basic", search: "", hash: "#study/final-task" });
+    const fetchMock = vi.fn().mockImplementation((input: RequestInfo | URL) => {
+      const url = String(input);
+      return Promise.resolve(ok(url.includes("recoverSessionId=session-completed") ? completedBootstrap : landing));
+    });
+    const { host, router } = await renderRoute("/", fetchMock);
+
+    await click(host.querySelector<HTMLButtonElement>(".sp-bookmark")!);
+
+    expect(fetchMock.mock.calls.some((call) => String(call[0]).includes("recoverSessionId=session-unrelated"))).toBe(false);
+    expect(router.state.location.pathname).toBe("/learn/session-completed/node-basic");
+    expect(router.state.location.hash).toBe("#study/final-task");
+  });
+
+  it("does not replace a missing bookmarked session with the first unrelated recovery entry", async () => {
+    const unrelated = recovery();
+    unrelated.sessionId = "session-unrelated";
+    unrelated.view = { ...unrelated.view, sessionId: "session-unrelated" };
+    const landing = bootstrap();
+    landing.recoverableSessions = [unrelated.view];
+    rememberStudyLocation({ pathname: "/learn/session-missing/node-basic", search: "", hash: "" });
+    const fetchMock = vi.fn().mockImplementation((input: RequestInfo | URL) => {
+      const url = String(input);
+      return Promise.resolve(ok(url.includes("recoverSessionId=session-missing") ? { ...landing, session: undefined } : landing));
+    });
+    const { host } = await renderRoute("/", fetchMock);
+
+    expect(host.querySelector(".sp-bookmark")).toBeNull();
+    expect(host.textContent).not.toContain("继续学习");
   });
 
   it("selects a safe Profile and binds its subjectId to the new session", async () => {
